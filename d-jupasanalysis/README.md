@@ -3,7 +3,7 @@
 中文交互分析模型，范围按用户确认：**HKU、2027–28 本科入学、香港薪酬为主并补充海外对照**。
 
 ```bash
-cd /home/a/Documents/someProducts/jupasanalysis
+cd /home/a/Documents/someProducts/d-jupasanalysis
 npm run dev
 ```
 
@@ -44,4 +44,4 @@ npm test
 
 本次验证：计算与数据引用测试、JavaScript 语法检查通过；Chromium 实测地图选择／详情／缩放／滚动、年度切换、薪酬筛选、资助期限、成本无效输入、JSON 导出与主题保存；320px、390px、768px 的五个视图均无页面级横向溢出，浏览器无页面运行错误。宽图表和路径保留容器内横向滚动。
 
-仅在 `jupasanalysis/` 中新增文件；未提交、推送或发布。
+已发布至 https://azusalina.github.io/someProducts/jupasanalysis/ 。本地文件夹为 `d-jupasanalysis/`。

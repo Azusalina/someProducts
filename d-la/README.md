@@ -12,7 +12,7 @@ npm run dev
 
 Visit **http://127.0.0.1:3001/**. Python 3 is the only serving requirement; all browser libraries are already included. Alternatively: `python3 -m http.server 3001 --bind 127.0.0.1`.
 
-Serve over HTTP rather than opening a `file://` URL: browser modules and the local Three.js imports need it. Once served, the course and its local PDFs work without an internet connection. This is a static site and can also be served from any static host that supports `.js` module MIME types. No deployment was performed.
+Serve over HTTP rather than opening a `file://` URL: browser modules and the local Three.js imports need it. Once served, the course and its local PDFs work without an internet connection. This is a static site and can also be served from any static host that supports `.js` module MIME types. Published at https://azusalina.github.io/someProducts/la/.
 
 ## Pages
 

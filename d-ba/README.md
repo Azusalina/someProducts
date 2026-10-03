@@ -1,11 +1,11 @@
 # COST / LOGIC — BAFS 成本会计
 
-直接打开 [index.html](index.html)，无需构建、联网或安装依赖。移动或分享时保留整个 `ba` 文件夹。
+直接打开 [index.html](index.html)，无需构建、联网或安装依赖。移动或分享时保留整个 `d-ba` 文件夹。
 
 本地预览：
 
 ```bash
-python3 -m http.server 8000 --bind 127.0.0.1 --directory ba
+python3 -m http.server 8000 --bind 127.0.0.1 --directory d-ba
 ```
 
 访问 http://127.0.0.1:8000 。

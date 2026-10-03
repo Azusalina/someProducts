@@ -7,7 +7,7 @@ A small, playful website for discovering inspiring GitHub repositories and ideas
 Requires Node.js 20 or newer. No dependencies to install.
 
 ```sh
-cd gitpop
+cd d-gitpop
 npm run dev
 ```
 

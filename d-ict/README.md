@@ -4,7 +4,7 @@ An entirely English database learning companion covering the database-related co
 
 Open **index.html** in a modern browser. Keep `style.css`, `lessons.js`, `app.js` and `vendor/` together. There is no build step, account, CDN or network dependency. The SQL engine also works when the page is opened directly from disk.
 
-For a local HTTP preview, run `python3 -m http.server 8080 --bind 127.0.0.1 --directory ict` from the parent directory and visit `http://127.0.0.1:8080`.
+For a local HTTP preview, run `python3 -m http.server 8080 --bind 127.0.0.1 --directory d-ict` from the parent directory and visit `http://127.0.0.1:8080`.
 
 ## Included
 
