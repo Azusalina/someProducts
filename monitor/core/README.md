@@ -7,6 +7,7 @@ A transparent modular KDE Plasma 6 desktop widget.
 ## How to use
 
 ```bash
+./scripts/setup.sh      # first checkout: local Python dependencies
 ./scripts/start.sh      # foreground telemetry bridge
 ./scripts/preview.sh    # separate terminal: transparent Wayland preview
 ./scripts/install.sh    # optional persistent local install

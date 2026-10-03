@@ -29,15 +29,15 @@ Item {
         }
         function test_01_selectionAndStaging() {
             const saved = modules.cfg_enabledModules
-            mouseClick(findChild(modules, "module_codex"))
-            verify(modules.cfg_enabledModules.split(",").includes("codex"))
+            mouseClick(findChild(modules, "module_terminal"))
+            verify(modules.cfg_enabledModules.split(",").includes("terminal"))
             // Page values remain a draft; the host writes them only on Apply.
-            verify(!saved.includes("codex"))
+            verify(!saved.includes("terminal"))
             modules.cfg_enabledModules = saved
-            compare(findChild(modules, "module_codex").checked, false)
+            compare(findChild(modules, "module_terminal").checked, false)
             mouseClick(findChild(modules, "up_ram"))
             compare(modules.order[0], "ram")
-            compare(modules.order.length, 12)
+            compare(modules.order.length, 10)
         }
         function test_02_dragReorder() {
             const handle = findChild(modules, "configDrag_cpu")
@@ -48,7 +48,7 @@ Item {
             mouseMove(handle, 15, 30, 100)
             mouseMove(handle, point.x, point.y, 150)
             mouseRelease(handle, point.x, point.y)
-            tryCompare(modules, "cfg_moduleOrder", "ram,cpu,ping,gpu,media,note,codex,claude,resets,proton,wifi,bluetooth", 1500)
+            tryCompare(modules, "cfg_moduleOrder", "ram,cpu,ping,gpu,media,note,proton,wifi,bluetooth,terminal", 1500)
         }
         function enter(field, value) {
             mouseClick(field)

@@ -19,6 +19,11 @@ Item {
         property string backgroundColorHex: "#1b1b1b"
         property int borderWidth: 0
         property int backgroundOpacity: 0
+        property string mediaService: ""
+        property bool cavaEnabled: true
+        property int cavaOpacity: 18
+        property int terminalHeight: 230
+        property int terminalFontSize: 11
     }
     Dashboard { id: board; width: 580; height: 680; preferences: prefs }
     ConnectivityCard { id: settingsCard; x: 1000; width: 180; status: ({can_open: true, connected: true, enabled: true}) }
@@ -37,6 +42,7 @@ Item {
             prefs.textColorHex = ""
             prefs.backgroundOpacity = 0
             prefs.borderWidth = 0
+            prefs.mediaService = ""
         }
         function test_01_liveBridge() {
             tryCompare(board, "connected", true, 10000)
@@ -63,11 +69,58 @@ Item {
             compare(board.activeModules.length, 1)
         }
         function test_04_narrow() {
-            board.width = 300
+            board.width = 240
             compare(board.columnCount, 1)
+            board.width = 300
+            compare(board.columnCount, 2)
             prefs.columns = 3
+            board.width = 300
+            compare(board.columnCount, 2)
             board.width = 580
             compare(board.columnCount, 3)
+        }
+        function test_041_compactFlows() {
+            board.width = 300
+            board.height = 220
+            prefs.enabledModules = "cpu,ram,ping,gpu,media"
+            prefs.targetsText = "Local | 127.0.0.1 | ◇"
+            tryCompare(board, "connected", true, 7000)
+            wait(150)
+            const cpu = findChild(board, "tile_cpu")
+            const ram = findChild(board, "tile_ram")
+            const gpu = findChild(board, "tile_gpu")
+            const ping = findChild(board, "tile_ping")
+            const media = findChild(board, "tile_media")
+            compare(cpu.height, 54)
+            verify(ram.y === cpu.y)
+            verify(ping.y - cpu.y <= 58)
+            verify(gpu.y === ping.y)
+            verify(media.y + media.height <= 220)
+            for (const tile of [cpu, ram, gpu]) {
+                const value = findChild(tile, "metricValue")
+                const flow = findChild(tile, "metricFlow")
+                verify(value.font.pixelSize <= 9)
+                verify(flow.height >= 28)
+                verify(value.x + value.width >= tile.width - 1)
+            }
+            verify(findChild(ping, "pingFlow") !== null)
+            verify(findChild(media, "cavaFlow") !== null)
+        }
+        function test_042_pingSampleHistory() {
+            prefs.targetsText = "Local | 127.0.0.1 | ◇"
+            board.pingHistories = ({})
+            board.pingSamples = ({})
+            const sample = {pings: [{target: "127.0.0.1", checked_at: 10, ms: 12}]}
+            board.recordSamples(sample)
+            board.recordSamples(sample)
+            compare(board.pingHistories["127.0.0.1"].length, 1)
+            board.recordSamples({pings: [{target: "127.0.0.1", checked_at: 11, ms: null}]})
+            compare(board.pingHistories["127.0.0.1"][1], null)
+            board.recordSamples({pings: [{target: "127.0.0.1", checked_at: 12, ms: 0.4}]})
+            compare(board.pingHistories["127.0.0.1"][2], 0.4)
+            prefs.targetsText = "Other | other.local"
+            board.recordSamples({pings: [{target: "other.local", checked_at: 13, ms: 30}]})
+            verify(board.pingHistories["127.0.0.1"] === undefined)
         }
         function test_05_notePersistence() {
             wait(100)
@@ -119,31 +172,22 @@ Item {
             mouseClick(button)
             tryVerify(() => board.snapshot.media.players.find(p => p.service === "org.mpris.MediaPlayer2.MonitorTest").status === "Playing", 7000)
         }
-        function test_075_usageModules() {
-            toggleModule("codex")
-            toggleModule("claude")
-            toggleModule("resets")
-            compare(board.activeModules.slice(-3).join(","), "codex,claude,resets")
-            prefs.moduleOrder = LayoutTools.move(prefs.moduleOrder, "claude", -1)
-            compare(board.activeModules.slice(-3).join(","), "claude,codex,resets")
-            wait(100)
-            const card = findChild(board, "usage_codex")
-            verify(card !== null)
-            compare(card.remaining({remaining_percent: 72, expired: false, stale: false, resets_at: Date.now()/1000 + 1000}), "72% left")
-            compare(card.remaining({remaining_percent: 100, expired: true}), "Awaiting refresh")
-            compare(card.remaining({remaining_percent: 70, stale: true}), "Stale")
+        function test_075_retiredModules() {
+            prefs.moduleOrder = "cpu,codex,claude,resets,media,terminal"
+            prefs.enabledModules = "cpu,codex,claude,resets,media,terminal"
+            compare(board.activeModules.join(","), "cpu,media,terminal")
+            verify(findChild(board, "usage_codex") === null)
         }
-        function test_076_usagePreview() {
-            board.width = 360
-            board.height = 460
-            prefs.enabledModules = "codex,claude,resets"
-            wait(300)
-            let saved = false
-            verify(board.grabToImage(result => {
-                verify(result.saveToFile("../docs/preview-usage.png"))
-                saved = true
-            }))
-            tryVerify(() => saved, 3000)
+        function test_076_mediaProgress() {
+            prefs.enabledModules = "media"
+            prefs.mediaService = "org.mpris.MediaPlayer2.MonitorTest"
+            tryVerify(() => board.snapshot.media.players.some(p => p.service === prefs.mediaService), 7000)
+            wait(100)
+            const card = findChild(board, "mediaCard")
+            verify(card && card.hasProgress)
+            verify(card.progress > 0.2 && card.progress < 1)
+            verify(findChild(card, "mediaProgress") !== null)
+            verify(findChild(card, "cavaBackground") !== null)
         }
         function test_077_nativeSettingsSignals() {
             for (const kind of ["proton", "wifi", "bluetooth"]) {
@@ -176,8 +220,8 @@ Item {
             tryVerify(() => saved, 3000)
         }
         function test_08_previewAndTransparency() {
-            board.width = 360
-            board.height = 480
+            board.width = 300
+            board.height = 300
             prefs.noteText = "Make space for what matters.\nOne thought at a time."
             // Remount to read the externally changed test preference.
             toggleModule("note"); wait(20); toggleModule("note")
@@ -191,6 +235,34 @@ Item {
                 saved = true
             }))
             tryVerify(() => saved, 3000)
+        }
+        function test_085_embeddedTerminal() {
+            board.width = 580
+            board.height = 400
+            prefs.enabledModules = "terminal"
+            wait(100)
+            let card = findChild(board, "terminalCard")
+            verify(card !== null)
+            mouseClick(findChild(card, "terminalStart"))
+            tryVerify(() => card.session.length > 0 && card.frame.plain.length > 0, 7000)
+            const input = findChild(card, "terminalInput")
+            input.forceActiveFocus()
+            for (const character of "printf 'UI_%s\\n' READY") keyClick(character)
+            keyClick(Qt.Key_Return)
+            tryVerify(() => card.frame.plain.some(line => line.trim() === "UI_READY"), 10000)
+            const token = card.session
+            board.width = 360
+            prefs.enabledModules = "media,terminal"
+            wait(400)
+            card = findChild(board, "terminalCard")
+            compare(card.session, token)
+            compare(board.Window.window.color.a, 0)
+            tryVerify(() => card.frame.plain.some(line => line.trim() === "UI_READY"), 5000)
+            let saved = false
+            verify(board.grabToImage(result => { verify(result.saveToFile("../docs/preview-media-terminal.png")); saved = true }))
+            tryVerify(() => saved, 3000)
+            card.close()
+            compare(card.session, "")
         }
         function test_09_coloredPreview() {
             board.width = 360

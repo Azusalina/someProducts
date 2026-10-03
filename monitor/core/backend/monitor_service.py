@@ -7,18 +7,20 @@ import copy
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import subprocess
 import threading
 import time
 from urllib.parse import parse_qs, urlsplit
 
-from usage import UsageCollector
-from reset_news import NewsCollector
 from connectivity import ConnectivityCollector, open_settings
+from cava_audio import AudioCollector
+from terminal_sessions import TerminalManager
 
 MPRIS = 'org.mpris.MediaPlayer2'
 PLAYER = MPRIS + '.Player'
@@ -66,12 +68,21 @@ def media_snapshot():
                 props = bus('call', name, OBJECT, 'org.freedesktop.DBus.Properties',
                             'GetAll', 's', PLAYER)
                 meta = props.get('Metadata', {})
-                artists = meta.get('xesam:artist', [])
-                if isinstance(artists, str):
-                    artists = [artists]
+                def number(value, default=None):
+                    if isinstance(value, bool):
+                        return default
+                    try:
+                        value = float(value)
+                        return value if math.isfinite(value) and value >= 0 else default
+                    except (TypeError, ValueError):
+                        return default
+                duration = number(meta.get('mpris:length'))
+                position = number(props.get('Position'))
                 players.append({'service': name, 'name': name.split('.')[3],
-                                'title': meta.get('xesam:title') or 'Untitled media',
-                                'artist': ', '.join(artists),
+                                'duration': duration / 1_000_000 if duration and duration > 0 else None,
+                                'position': position / 1_000_000 if position is not None else None,
+                                'rate': number(props.get('Rate'), 1),
+                                'observed_at': time.time(),
                                 'status': props.get('PlaybackStatus', 'Stopped'),
                                 'can_control': bool(props.get('CanControl', False)),
                                 'can_pause': bool(props.get('CanPause', False)),
@@ -247,9 +258,9 @@ class Gpu:
 class Telemetry:
     def __init__(self):
         self.lock = threading.RLock()
-        self.usage = UsageCollector()
-        self.news = NewsCollector()
         self.connectivity = ConnectivityCollector()
+        self.audio = AudioCollector()
+        self.terminals = TerminalManager()
         self.snapshot = {'cpu': {}, 'ram': {}, 'gpus': [], 'media': {'players': []}}
         self.pings = OrderedDict()
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='ping')
@@ -290,8 +301,6 @@ class Telemetry:
                     self.pool.submit(self.update_ping, target, entry)
                 values.append({'target': target, **entry['value']})
             snapshot['pings'] = values
-            snapshot['usage'] = self.usage.get()
-            snapshot['reset_news'] = self.news.get()
             snapshot['connectivity'] = self.connectivity.get()
             return snapshot
 
@@ -327,6 +336,20 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(403, {'error': 'Native local client required'})
             return
         parsed = urlsplit(self.path)
+        if parsed.path == '/audio':
+            self.reply(200, self.server.telemetry.audio.get())
+            return
+        if parsed.path == '/terminal/screen':
+            try:
+                query = parse_qs(parsed.query)
+                session = self.server.telemetry.terminals.session(query.get('session', [''])[0])
+                revision = int(query.get('revision', ['-1'])[0])
+                self.reply(200, session.get(revision))
+            except (ValueError, TypeError):
+                self.reply(400, {'error': 'Invalid terminal request'})
+            except KeyError:
+                self.reply(410, {'error': 'Terminal session ended'})
+            return
         if parsed.path != '/snapshot':
             self.reply(404, {'error': 'Not found'})
             return
@@ -341,6 +364,39 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             self.reply(403, {'error': 'Native local client required'})
+            return
+        if self.path.startswith('/terminal/'):
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= 65536:
+                    raise ValueError('Invalid payload size')
+                payload = json.loads(self.rfile.read(length))
+                if not isinstance(payload, dict):
+                    raise ValueError('Invalid terminal payload')
+                manager = self.server.telemetry.terminals
+                if self.path == '/terminal/start':
+                    self.reply(200, manager.create(payload.get('columns'), payload.get('rows')))
+                    return
+                token = payload.get('session')
+                session = manager.session(token)
+                if self.path == '/terminal/input':
+                    session.input(payload.get('text'), payload.get('paste') is True)
+                elif self.path == '/terminal/resize':
+                    session.resize(payload.get('columns'), payload.get('rows'))
+                elif self.path == '/terminal/scroll':
+                    session.scroll(payload.get('direction'))
+                elif self.path == '/terminal/close':
+                    manager.close(token)
+                else:
+                    self.reply(404, {'error': 'Not found'})
+                    return
+                self.reply(200, {'ok': True})
+            except (ValueError, TypeError):
+                self.reply(400, {'error': 'Invalid terminal request'})
+            except KeyError:
+                self.reply(410, {'error': 'Terminal session ended'})
+            except (OSError, RuntimeError):
+                self.reply(503, {'error': 'Terminal could not be opened'})
             return
         if self.path == '/settings/open':
             try:
@@ -389,9 +445,12 @@ def main():
     server.daemon_threads = True
     server.telemetry = telemetry
     telemetry.thread.start()
-    telemetry.usage.thread.start()
-    telemetry.news.thread.start()
     telemetry.connectivity.thread.start()
+    telemetry.audio.thread.start()
+    telemetry.terminals.thread.start()
+    def stop_requested(*_):
+        raise KeyboardInterrupt()
+    signal.signal(signal.SIGTERM, stop_requested)
     print(f'Monitor bridge listening on 127.0.0.1:{args.port}', flush=True)
     try:
         server.serve_forever()
@@ -399,9 +458,9 @@ def main():
         pass
     finally:
         telemetry.stop.set()
-        telemetry.usage.stop.set()
-        telemetry.news.stop.set()
         telemetry.connectivity.stop.set()
+        telemetry.audio.stop.set()
+        telemetry.terminals.shutdown()
         server.server_close()
         telemetry.pool.shutdown(wait=False, cancel_futures=True)
 

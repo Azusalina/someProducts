@@ -17,16 +17,19 @@ Item {
     property string message: "Connecting…"
     property var snapshot: ({ cpu: {}, ram: {}, gpus: [], pings: [], media: { players: [] } })
     property var histories: ({ cpu: [], ram: [], gpu: [] })
+    property var pingHistories: ({})
+    property var pingSamples: ({})
     property var request: null
     property string openingSettings: ""
     property real lastSample: 0
     property int selectedGpu: 0
     onSelectedGpuChanged: histories = Object.assign({}, histories, {gpu: []})
     readonly property var activeModules: LayoutTools.sequence(preferences.moduleOrder).filter(k => preferences.enabledModules.split(",").includes(k))
-    readonly property int columnCount: width < 310 ? 1 : Math.max(1, Math.min(3, preferences.columns))
+    TerminalOwner { id: terminalOwner; active: board.activeModules.includes("terminal") }
+    readonly property int columnCount: width < 260 ? 1 : Math.max(1, Math.min(3, preferences.columns, Math.floor((width - surfaceInset * 2 + 10) / 110)))
     readonly property var targets: parseTargets(preferences.targetsText)
-    implicitWidth: 360
-    implicitHeight: 480
+    implicitWidth: 300
+    implicitHeight: 360
 
     function parseTargets(text) {
         return text.split("\n").map(line => {
@@ -37,6 +40,30 @@ Item {
         }).filter(t => t && t.url).slice(0, 8)
     }
     function gib(bytes) { return ((bytes || 0) / 1073741824).toFixed(1) }
+    function recordSamples(data) {
+        if (data.sampled_at && lastSample !== data.sampled_at) {
+            const next = {}
+            for (const key of ["cpu", "ram", "gpu"]) {
+                const value = key === "gpu" ? (data.gpus[selectedGpu % Math.max(1, data.gpus.length)] || {}).percent : (data[key] || {}).percent
+                next[key] = (histories[key] || []).concat([typeof value === "number" && isFinite(value) ? value : null]).slice(-40)
+            }
+            histories = next
+            lastSample = data.sampled_at
+        }
+        const traces = {}, stamps = {}
+        for (const reading of data.pings || []) {
+            if (!targets.some(target => target.url === reading.target)) continue
+            traces[reading.target] = pingHistories[reading.target] || []
+            stamps[reading.target] = pingSamples[reading.target] || 0
+            if (reading.checked_at && reading.checked_at !== stamps[reading.target]) {
+                const value = typeof reading.ms === "number" && isFinite(reading.ms) ? reading.ms : null
+                traces[reading.target] = traces[reading.target].concat([value]).slice(-40)
+                stamps[reading.target] = reading.checked_at
+            }
+        }
+        pingHistories = traces
+        pingSamples = stamps
+    }
     function poll() {
         if (request) return
         const xhr = new XMLHttpRequest()
@@ -57,15 +84,7 @@ Item {
                 const age = Date.now() / 1000 - (data.sampled_at || 0)
                 connected = age < 12
                 message = connected ? "" : "Waiting for a fresh sample…"
-                if (data.sampled_at && lastSample !== data.sampled_at) {
-                    const next = {}
-                    for (const key of ["cpu", "ram", "gpu"]) {
-                        const value = key === "gpu" ? (data.gpus[selectedGpu % Math.max(1, data.gpus.length)] || {}).percent : (data[key] || {}).percent
-                        next[key] = value === null || value === undefined ? [] : (histories[key] || []).concat([value]).slice(-40)
-                    }
-                    histories = next
-                    lastSample = data.sampled_at
-                }
+                recordSamples(data)
             } catch (error) { connected = false; message = "Invalid telemetry response" }
         }
         xhr.open("GET", "http://127.0.0.1:17341/snapshot?targets=" + encodeURIComponent(JSON.stringify(targets.map(t => t.url))))
@@ -138,7 +157,7 @@ Item {
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
         ColumnLayout {
             width: scroll.availableWidth
-            spacing: 12
+            spacing: 6
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
@@ -147,8 +166,8 @@ Item {
                     Layout.maximumWidth: Math.max(50, board.width - 30)
                     elide: Text.ElideRight
                     color: board.ink
-                    font.pixelSize: 11
-                    font.letterSpacing: 3
+                    font.pixelSize: 9
+                    font.letterSpacing: 1.2
                 }
                 Rectangle {
                     implicitWidth: 4; implicitHeight: 4; radius: 2
@@ -172,8 +191,8 @@ Item {
                 objectName: "moduleGrid"
                 Layout.fillWidth: true
                 columns: board.columnCount
-                columnSpacing: 18
-                rowSpacing: 14
+                columnSpacing: 10
+                rowSpacing: 4
                 Repeater {
                     model: board.activeModules
                     delegate: Item {
@@ -181,13 +200,15 @@ Item {
                         objectName: "tile_" + modelData
                         required property string modelData
                         required property int index
-                        readonly property bool wide: modelData === "media" || modelData === "note" || modelData === "resets"
+                        readonly property bool wide: modelData === "media" || modelData === "note" || modelData === "terminal"
+                        readonly property bool metric: ["cpu", "ram", "ping", "gpu"].includes(modelData)
                         Layout.columnSpan: wide ? board.columnCount : 1
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignTop
-                        Layout.preferredHeight: 24 + (loader.item ? loader.item.implicitHeight : 100)
+                        Layout.preferredHeight: tileHeading.height + (loader.item ? loader.item.implicitHeight : 42)
                         Layout.minimumWidth: 100
                         Rectangle {
+                            visible: !["media", "proton"].includes(tile.modelData) && !tile.metric
                             anchors.top: parent.top
                             width: parent.width; height: 1
                             color: board.ink
@@ -196,12 +217,16 @@ Item {
                         RowLayout {
                             id: tileHeading
                             width: parent.width
-                            height: 24
-                            Text { text: tile.modelData === "media" ? "NOW PLAYING" : tile.modelData === "claude" ? "CLAUDE CODE" : tile.modelData === "resets" ? "RESET NEWS" : tile.modelData.toUpperCase(); color: board.ink; opacity: 0.65; font.pixelSize: 10; font.letterSpacing: 1.8 }
+                            height: ["media", "proton"].includes(tile.modelData) ? 0 : tile.metric ? 12 : 18
+                            visible: !["media", "proton"].includes(tile.modelData)
+                            Text { text: tile.modelData.toUpperCase(); color: board.ink; opacity: 0.5; font.pixelSize: 8; font.letterSpacing: 1 }
                             Item { Layout.fillWidth: true }
                             SmallButton {
                                 visible: tile.modelData === "gpu" && board.snapshot.gpus.length > 1
-                                text: "Next GPU →"; ink: board.ink
+                                text: "›"; ink: board.ink
+                                implicitHeight: 12
+                                implicitWidth: 18
+                                Accessible.name: "Next GPU"
                                 onClicked: board.selectedGpu = (board.selectedGpu + 1) % board.snapshot.gpus.length
                             }
                         }
@@ -209,7 +234,7 @@ Item {
                             id: loader
                             anchors.top: tileHeading.bottom
                             width: parent.width
-                            sourceComponent: ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "codex" || tile.modelData === "claude" ? usageComponent : tile.modelData === "resets" ? newsComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
+                            sourceComponent: ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
                         }
                         Component {
                             id: metricComponent
@@ -227,11 +252,10 @@ Item {
                                 }
                             }
                         }
-                        Component { id: pingComponent; PingCard { ink: board.ink; targets: board.targets; readings: board.connected ? board.snapshot.pings : [] } }
-                        Component { id: mediaComponent; MediaCard { objectName: "mediaCard"; ink: board.ink; players: board.connected ? board.snapshot.media.players : []; onToggleRequested: service => board.toggleMedia(service) } }
+                        Component { id: pingComponent; PingCard { objectName: "pingCard"; ink: board.ink; targets: board.targets; readings: board.connected ? board.snapshot.pings : []; histories: board.connected ? board.pingHistories : ({}) } }
+                        Component { id: mediaComponent; MediaCard { objectName: "mediaCard"; ink: board.ink; players: board.connected ? board.snapshot.media.players : []; selectedService: board.preferences.mediaService || ""; cavaEnabled: board.preferences.cavaEnabled !== false; cavaOpacity: (board.preferences.cavaOpacity === undefined ? 40 : board.preferences.cavaOpacity) / 100; onToggleRequested: service => board.toggleMedia(service) } }
                         Component { id: connectivityComponent; ConnectivityCard { objectName: "connectivity_" + tile.modelData; ink: board.ink; kind: tile.modelData; status: (board.snapshot.connectivity || {})[tile.modelData] || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; opening: board.openingSettings === tile.modelData; onOpenRequested: target => board.openSettings(target) } }
-                        Component { id: usageComponent; UsageCard { objectName: "usage_" + tile.modelData; ink: board.ink; provider: (board.snapshot.usage || {})[tile.modelData] || ({windows: [], message: "Waiting for usage data"}) } }
-                        Component { id: newsComponent; ResetNewsCard { ink: board.ink; news: board.snapshot.reset_news || ({events: [], message: "Waiting for news"}) } }
+                        Component { id: terminalComponent; TerminalCard { objectName: "terminalCard"; owner: terminalOwner; ink: board.ink; fontSize: board.preferences.terminalFontSize || 11; terminalHeight: board.preferences.terminalHeight || 230 } }
                         Component { id: noteComponent; NoteCard { ink: board.ink; preferences: board.preferences } }
                     }
                 }

@@ -13,9 +13,20 @@ Item {
         if (kind === "proton") return status.connected === true ? "Connected" : status.connected === false ? "Disconnected" : "Unavailable"
         return status.enabled === true ? "On" : status.enabled === false ? "Off" : "Unavailable"
     }
-    implicitHeight: content.implicitHeight
+    implicitHeight: kind === "proton" ? proton.implicitHeight : content.implicitHeight
+    ProtonButton {
+        id: proton
+        width: Math.min(card.width, implicitWidth)
+        visible: card.kind === "proton"
+        ink: card.ink
+        status: card.status
+        stale: card.stale
+        opening: card.opening
+        onOpenRequested: card.openRequested("proton")
+    }
     ColumnLayout {
         id: content
+        visible: card.kind !== "proton"
         width: card.width
         spacing: 6
         Text { text: card.stateText; color: card.ink; font.pixelSize: 21; font.weight: Font.Light }
@@ -29,7 +40,7 @@ Item {
             color: card.ink; opacity: 0.6; font.pixelSize: 10; wrapMode: Text.Wrap; textFormat: Text.PlainText
         }
         SmallButton {
-            objectName: "settings_" + card.kind
+            objectName: card.kind === "proton" ? "unusedProtonSettings" : "settings_" + card.kind
             text: card.opening ? "Opening…" : card.kind === "proton" ? "Open Proton ↗" : "Settings ↗"
             ink: card.ink
             outlined: true

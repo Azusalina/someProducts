@@ -5,6 +5,8 @@ test_settings_api_rejects_command_injection_and_invalid_shapes (test_backend.Api
 test_settings_api_routes_native_target (test_backend.ApiTests.test_settings_api_routes_native_target) ... ok
 test_settings_missing_application_is_explicit_error (test_backend.ApiTests.test_settings_missing_application_is_explicit_error) ... ok
 test_snapshot_does_not_wait_for_ping (test_backend.ApiTests.test_snapshot_does_not_wait_for_ping) ... ok
+test_terminal_routes_require_native_origin_and_valid_dimensions (test_backend.ApiTests.test_terminal_routes_require_native_origin_and_valid_dimensions) ... ok
+test_unknown_terminal_does_not_expose_other_sessions (test_backend.ApiTests.test_unknown_terminal_does_not_expose_other_sessions) ... ok
 test_valid_pause_calls_playpause (test_backend.ApiTests.test_valid_pause_calls_playpause) ... ok
 test_bus_variant_metadata (test_backend.TelemetryTests.test_bus_variant_metadata) ... ok
 test_cpu_excludes_guest_and_uses_deltas (test_backend.TelemetryTests.test_cpu_excludes_guest_and_uses_deltas) ... ok
@@ -16,20 +18,32 @@ test_escaped_wifi_and_proton_detection (test_connectivity.ConnectivityTests.test
 test_fixed_native_destinations_and_reject_commands (test_connectivity.ConnectivityTests.test_fixed_native_destinations_and_reject_commands) ... ok
 test_kill_switch_is_configured_mode_not_interface_inference (test_connectivity.ConnectivityTests.test_kill_switch_is_configured_mode_not_interface_inference) ... ok
 test_unrelated_vpn_and_ipv6_protection_are_not_proton_connection (test_connectivity.ConnectivityTests.test_unrelated_vpn_and_ipv6_protection_are_not_proton_connection) ... ok
-test_direct_x_uses_current_fields_and_keeps_source (test_usage.NewsTests.test_direct_x_uses_current_fields_and_keeps_source) ... ok
-test_does_not_invent_timezone_for_tomorrow (test_usage.NewsTests.test_does_not_invent_timezone_for_tomorrow) ... ok
-test_public_relay_is_not_confirmed (test_usage.NewsTests.test_public_relay_is_not_confirmed) ... ok
-test_relative_hour_is_explicit_estimate (test_usage.NewsTests.test_relative_hour_is_explicit_estimate) ... ok
-test_unattributed_reset_rumor_is_ignored (test_usage.NewsTests.test_unattributed_reset_rumor_is_ignored) ... ok
-test_claude_absent_fields_not_context_quota (test_usage.UsageTests.test_claude_absent_fields_not_context_quota) ... ok
-test_claude_receiver_redacts_and_writes_private_file (test_usage.UsageTests.test_claude_receiver_redacts_and_writes_private_file) ... ok
-test_codex_multiple_buckets_and_resets_no_sensitive_ids (test_usage.UsageTests.test_codex_multiple_buckets_and_resets_no_sensitive_ids) ... ok
-test_connect_preserves_settings_and_refuses_existing_statusline (test_usage.UsageTests.test_connect_preserves_settings_and_refuses_existing_statusline) ... ok
-test_expired_does_not_invent_full_quota (test_usage.UsageTests.test_expired_does_not_invent_full_quota) ... ok
-test_remaining_and_exact_reset (test_usage.UsageTests.test_remaining_and_exact_reset) ... ok
-test_stale_unknown_and_invalid_numbers (test_usage.UsageTests.test_stale_unknown_and_invalid_numbers) ... ok
+test_microseconds_and_unknown_progress (test_media_terminal.MediaTests.test_microseconds_and_unknown_progress) ... ok
+test_output_monitor_is_explicit_and_config_cannot_inject (test_media_terminal.MediaTests.test_output_monitor_is_explicit_and_config_cannot_inject) ... ok
+test_real_cava_frame_validation (test_media_terminal.MediaTests.test_real_cava_frame_validation) ... ok
+test_only_owned_statusline_is_restored (test_media_terminal.MigrationTests.test_only_owned_statusline_is_restored) ... ok
+test_alternate_screen_and_terminal_colors (test_media_terminal.TerminalTests.test_alternate_screen_and_terminal_colors) ... Exception in thread terminal-pty:
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+ok
+  File "/usr/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ...   File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
+    selector.register(self.master, selectors.EVENT_READ)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/selectors.py", line 345, in register
+    self._selector.register(key.fd, poller_events)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 9] Bad file descriptor
+ok
+test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
+test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
+test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 1.045s
+Ran 29 tests in 1.237s
 
 OK

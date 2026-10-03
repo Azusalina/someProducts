@@ -1,0 +1,22 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::Dashboard::initTestCase()
+PASS   : qmltestrunner::Dashboard::test_01_liveBridge()
+PASS   : qmltestrunner::Dashboard::test_02_targets()
+PASS   : qmltestrunner::Dashboard::test_03_displayOnly()
+PASS   : qmltestrunner::Dashboard::test_041_compactFlows()
+PASS   : qmltestrunner::Dashboard::test_042_pingSampleHistory()
+PASS   : qmltestrunner::Dashboard::test_04_narrow()
+PASS   : qmltestrunner::Dashboard::test_05_notePersistence()
+PASS   : qmltestrunner::Dashboard::test_06_hexSurface()
+PASS   : qmltestrunner::Dashboard::test_075_retiredModules()
+PASS   : qmltestrunner::Dashboard::test_076_mediaProgress()
+PASS   : qmltestrunner::Dashboard::test_077_nativeSettingsSignals()
+PASS   : qmltestrunner::Dashboard::test_078_connectivityPreview()
+PASS   : qmltestrunner::Dashboard::test_07_realMediaControl()
+PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
+PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
+PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
+PASS   : qmltestrunner::Dashboard::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 11240ms
+********* Finished testing of qmltestrunner *********

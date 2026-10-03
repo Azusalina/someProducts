@@ -43,3 +43,11 @@
 - Added #rrggbb text/dashboard, border and background colors, optional 0–4 px border and 0–100% background opacity. Fully transparent defaults and previous dark-text choices are preserved.
 - Added a separate preview settings window sharing the same pages, with staged drafts and real Apply/OK/Cancel wiring.
 - Verified configuration editing and drag reorder, invalid hex protection, optional background RGB/alpha, unchanged note/media behavior and preview transaction handling. Updated docs, local package and distributable. No Git operations were performed.
+
+## Minimal media, playback visualization and terminal — 1.4
+
+- Removed Codex, Claude Code and reset-news cards and background collectors. Disconnected only the owned Claude status-line integration while preserving unrelated settings; historical records remain marked as retired.
+- Replaced desktop media metadata with only progress and Pause/Resume. Added live CAVA bars behind the controls, explicitly capturing the system playback output monitor as requested, with player/visualization settings on a separate Media page.
+- Added an embedded interactive PTY terminal with native keyboard/IME input, resize, scrollback and a per-widget session owner that survives module recomposition. Height/font settings live on the Terminal configuration page. Shell creation requires Start terminal.
+- Added pinned local Python environments, migration and installation/removal support. Preserved widget placement, notes and other preferences. Built and installed 1.4, restarted the service, and verified source/archive/installed contents.
+- Passed 29 backend tests and 23 QML checks, real CAVA playback on a temporary silent output, preview configuration transactions and strict RHI alpha checks. Detailed current results and limits are in description.md. No Git commands were executed.

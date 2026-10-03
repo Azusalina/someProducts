@@ -26,12 +26,20 @@ Incomplete or invalid hex input is flagged and cannot replace the last valid dra
 
 Enter one target per line as `label | URL or hostname | icon`, up to eight targets. Use a Unicode symbol or a KDE theme icon name. An applied target is checked while the widget requests telemetry. Draft edits do not contact a target before Apply.
 
+## Media
+
+Choose Automatic or an available MPRIS player. A saved preferred player is used when present; otherwise the first available source is shown, with playing sources preferred. Enable the CAVA background and set its opacity (default 40% in 1.6; explicit previous choices are preserved). CAVA always captures system playback from the default audio output's monitor, never the microphone. The desktop element contains only progress and Pause/Resume.
+
+## Terminal
+
+Set height (120–800 px) and font size (9–24 px). Enable TERMINAL on the Modules page, Apply, then click Start terminal on the dashboard. Keyboard entry, resizing, Ctrl+C, paste and scrollback act on an independent shell for that widget. Reordering or adding modules preserves its running session. Disabling Terminal or removing the widget ends the shell; settings changes do not run commands automatically.
+
 ## Saving
 
 Use **Apply** to save the current page, or **OK** to save and close. **Cancel** discards unapplied changes; Plasma may ask whether to discard when switching away from an edited page. Notes have their own local autosave and do not enter this configuration transaction.
 
 In the standalone preview, right-click or press **Ctrl+,** to open a separate settings window with the same pages. Its Apply/OK actions save the staged pages; Cancel discards the uncommitted draft.
 
-If an existing widget still shows its old inline Customize button, Plasma is using cached QML. Copy its note before removing and re-adding that instance. The new installed package is available as **someProducts-monitor** in Add Widgets. Installation preserves its package ID `local.monitor.dashboard` and does not rewrite existing instance preferences.
+If an existing widget still shows an older interface, run `python scripts/refresh-desktop.py` from `monitor/core` to back up its settings and reload the Plasma shell. Its desktop and panel briefly reload. `--reveal-media-terminal` additionally moves Media immediately after Terminal while keeping the other modules in order. Alternatively copy your note before removing/re-adding the widget. Installation preserves package ID `local.monitor.dashboard` and existing preferences.
 
 Native configuration follows [KDE's configuration contract](https://develop.kde.org/docs/plasma/widget/configuration/). Evidence: `qml-tests.log`, `preview-configuration-test.log`, `preview-config-modules.png`, `preview-config-appearance.png`, `preview-colored.png`.

@@ -1,0 +1,26 @@
+# Copy with: monitor-cli --init-config
+# Edit this file and press r in the dashboard to reload.
+[dashboard]
+modules = ["cpu", "ram", "gpu", "ping", "media", "proton", "wifi", "bluetooth", "note"]
+columns = 2                   # 1–3; narrow terminals automatically use fewer
+refresh_seconds = 2.0         # system sampling; UI redraws at 5 frames/sec
+history_size = 60
+color = true
+unicode = true                # false for ASCII bars/borders
+
+[ping]
+interval_seconds = 5.0
+# At most eight targets. A URL checks its hostname using ICMP, not HTTP.
+# No targets are contacted until you configure them.
+targets = []
+# targets = [{ label = "Router", host = "192.168.1.1" }, { label = "Example", host = "https://example.com" }]
+
+[media]
+service = ""                 # empty selects a playing player automatically
+cava = true                  # optional playback spectrum; requires cava + pactl
+
+[note]
+# Relative paths are resolved beside the configuration file.
+file = "notes.txt"
+# Empty uses VISUAL, then EDITOR, then vi. Executed without a shell.
+editor = ""

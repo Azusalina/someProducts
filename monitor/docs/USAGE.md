@@ -1,3 +1,7 @@
+# Historical feature — retired in 1.4
+
+The quota and reset-news modules, collectors and product-owned Claude status-line integration have been removed. The instructions below describe versions 1.1–1.3 and are retained as history; they are not current setup instructions.
+
 # Coding subscription usage and reset news
 
 someProducts-monitor 1.1 adds three composable modules: **CODEX**, **CLAUDE CODE**, and **RESET NEWS**. They follow the same transparent layout and can be split into separate widget instances.
@@ -63,4 +67,4 @@ Primary API references: [User lookup](https://docs.x.com/x-api/users/get-user-by
 
 A quota observation older than five minutes shows **Stale**. A passed reset timestamp shows **Awaiting refresh**, never an assumed full allowance. News becomes stale after fifteen minutes without a successful fetch. Network errors preserve the last observation with its timestamp and an unavailable/stale indication.
 
-Test and visual evidence: `backend-tests.log`, `qml-tests.log`, and `preview-usage.png`. No Git commands were executed.
+Test and visual evidence for the retired feature: historical worklog/validation entries and `preview-usage.png`. Current test logs now cover version 1.4. No Git commands were executed.

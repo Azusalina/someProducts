@@ -9,9 +9,9 @@ PlasmoidItem {
     preferredRepresentation: fullRepresentation
     fullRepresentation: Dashboard {
         preferences: Plasmoid.configuration
-        Layout.minimumWidth: 220
-        Layout.minimumHeight: 140
-        Layout.preferredWidth: 360
-        Layout.preferredHeight: 480
+        Layout.minimumWidth: 200
+        Layout.minimumHeight: 120
+        Layout.preferredWidth: 300
+        Layout.preferredHeight: 360
     }
 }

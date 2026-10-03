@@ -2,10 +2,10 @@
   "KPlugin": {
     "Id": "local.monitor.dashboard",
     "Name": "someProducts-monitor",
-    "Description": "A transparent, modular desktop dashboard with system stats, coding allowances, reset news, connectivity settings, media controls and notes",
+    "Description": "A modular desktop dashboard with system stats, connectivity, minimal media progress, CAVA audio background, embedded terminal and notes",
     "Icon": "utilities-system-monitor",
     "Category": "System Information",
-    "Version": "1.3.0",
+    "Version": "1.6.0",
     "License": "MIT",
     "Authors": [
       {

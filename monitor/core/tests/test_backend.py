@@ -66,6 +66,7 @@ class ApiTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
         cls.telemetry.pool.shutdown()
+        cls.telemetry.terminals.shutdown()
 
     def request(self, path, data=None, headers=None):
         return urlopen(Request(self.base + path, data=data,
@@ -75,6 +76,8 @@ class ApiTests(unittest.TestCase):
         with patch.object(m, 'ping_target', return_value={'ms': 12, 'status': 'reachable'}):
             result = json.load(self.request('/snapshot?targets=%5B%22example.com%22%5D'))
         self.assertIn('cpu', result)
+        self.assertNotIn('usage', result)
+        self.assertNotIn('reset_news', result)
         self.assertEqual(result['pings'][0]['target'], 'example.com')
 
     def test_reject_browser_origin_and_rebound_host(self):
@@ -124,6 +127,20 @@ class ApiTests(unittest.TestCase):
                 self.request('/settings/open', b'{"target":"proton"}')
             self.assertEqual(result.exception.code, 503)
             result.exception.close()
+
+    def test_terminal_routes_require_native_origin_and_valid_dimensions(self):
+        for body, headers, code in [(b'{"columns":60,"rows":12}', {'Origin':'https://example.com','X-Monitor-Client':'plasma-widget'}, 403),
+                                     (b'{"columns":1,"rows":1}', {'X-Monitor-Client':'plasma-widget'}, 400)]:
+            with self.assertRaises(HTTPError) as result:
+                self.request('/terminal/start', body, headers)
+            self.assertEqual(result.exception.code, code)
+            result.exception.close()
+
+    def test_unknown_terminal_does_not_expose_other_sessions(self):
+        with self.assertRaises(HTTPError) as result:
+            self.request('/terminal/screen?session=unknown')
+        self.assertEqual(result.exception.code,410)
+        result.exception.close()
 
 
 if __name__ == '__main__':
