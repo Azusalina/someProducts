@@ -30,6 +30,6 @@ test_remaining_and_exact_reset (test_usage.UsageTests.test_remaining_and_exact_r
 test_stale_unknown_and_invalid_numbers (test_usage.UsageTests.test_stale_unknown_and_invalid_numbers) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 0.702s
+Ran 30 tests in 1.045s
 
 OK

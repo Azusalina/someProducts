@@ -58,3 +58,9 @@ Installation is provided as a local script. Monitor is now registered in the use
 ## Connectivity collector and settings
 
 `backend/connectivity.py` reads NetworkManager and BlueZ separately from the system sampler every five seconds. The Proton card combines active named profiles with the GUI's configured Kill Switch mode, without invoking the incompatible official CLI. `/settings/open` launches only fixed Proton, Network Connections or Bluetooth applications; it neither changes networking nor executes user-provided commands. See `CONNECTIVITY.md` for the selected GUI workflow and limits of these indicators.
+
+## Native configuration and appearance — 1.3
+
+`contents/config/config.qml` registers Modules, Appearance and Ping pages. Each exposes staged `cfg_` properties for Plasma's native Apply/OK/Cancel handling, following [KDE configuration documentation](https://develop.kde.org/docs/plasma/widget/configuration/). Layout manipulation lives in a shared JavaScript helper; the display has no module-editing UI or drag destinations. Notes and playback remain interactive.
+
+Appearance is stored per instance as validated six-digit hex strings, integer border width and background opacity. Empty text color falls back to the previous `darkInk` preference for migration. The background defaults to alpha zero and the border to width zero. `NoBackground` prevents Plasma from adding its own surface; a simple dashboard Rectangle draws the optional custom background and border. The standalone preview uses the same pages in a separate staged settings window.

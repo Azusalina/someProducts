@@ -1,8 +1,10 @@
 # Gitpop
 
+## What is it?
+
 A small, playful website for discovering inspiring GitHub repositories and ideas for your next build.
 
-## Run
+## How to use
 
 Requires Node.js 20 or newer. No dependencies to install.
 
@@ -13,27 +15,6 @@ npm run dev
 
 Open **http://127.0.0.1:4173**. To choose another port: `npm run dev -- --port 3000`.
 
-## What it does
+Run the commands from the parent directory. Click Pop or press Space when focus is outside other controls. Choose a topic to filter discoveries, bookmark a repository, and open Saved to browse or remove bookmarks. Follow a card's link to its GitHub repository. Pause animations with the animation control.
 
-- Pop a random repository with the button or Space (when not focused on another control).
-- Filter by 3D & WebGL, animation, creative coding, or UI experiments.
-- Explore a collection of 12 real repositories, each with an original build prompt.
-- Shuffle bags visit every repo in a topic before repeating and prevent consecutive repeats.
-- Bookmark discoveries in browser local storage; browse or remove them in Saved.
-- Original canvas visual studies react to the pointer; animations can be paused and respect reduced motion.
-- Works on narrow mobile screens and supports keyboard navigation and screen reader announcements.
-
-The collection is curated, not a live GitHub search. No credentials or GitHub API requests are required. Each card links to its source repository. Descriptions were checked against those sources on October 2, 2026. The visual studies are original conceptual sketches, not embedded demos or screenshots of the repositories. External Google Fonts are optional; system fonts work offline.
-
-## Build and verify
-
-```sh
-npm test
-npm run build
-```
-
-Deploy `dist/` to any static host. The development server binds to loopback by default.
-
-## Add a discovery
-
-Add an entry in `src/repos.js`: a real `owner/repository` ID, title, description, category, language, tags, inspiration prompt (`spark`), color, caption, and one of the visual types (`brain`, `fluid`, `orbit`, `wave`, `type`, `flow`, or `burst`). Check the repository README first. Counts and filters update automatically.
+See [description.md](description.md) for background and technical details.

@@ -1,12 +1,18 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "LayoutTools.js" as LayoutTools
 
 Item {
     id: board
     required property var preferences
-    property color ink: preferences.darkInk ? "#242424" : "#f5f5f4"
-    property bool customizing: false
+    readonly property color ink: validHex(preferences.textColorHex) ? preferences.textColorHex : preferences.darkInk ? "#242424" : "#f5f5f4"
+    readonly property color backgroundColor: validHex(preferences.backgroundColorHex) ? preferences.backgroundColorHex : "#1b1b1b"
+    readonly property color borderColor: validHex(preferences.borderColorHex) ? preferences.borderColorHex : "#aabbcc"
+    readonly property int backgroundOpacity: Math.max(0, Math.min(100, preferences.backgroundOpacity || 0))
+    readonly property int borderWidth: Math.max(0, Math.min(4, preferences.borderWidth || 0))
+    readonly property int surfaceInset: backgroundOpacity > 0 || borderWidth > 0 ? 12 : 0
+    function validHex(value) { return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) }
     property bool connected: false
     property string message: "Connecting…"
     property var snapshot: ({ cpu: {}, ram: {}, gpus: [], pings: [], media: { players: [] } })
@@ -16,12 +22,7 @@ Item {
     property real lastSample: 0
     property int selectedGpu: 0
     onSelectedGpuChanged: histories = Object.assign({}, histories, {gpu: []})
-    readonly property var allModules: ["cpu", "ram", "ping", "gpu", "media", "note", "codex", "claude", "resets", "proton", "wifi", "bluetooth"]
-    readonly property var activeModules: moduleSequence().filter(k => preferences.enabledModules.split(",").includes(k))
-    function moduleSequence() {
-        const saved = preferences.moduleOrder.split(",").filter(k => allModules.includes(k))
-        return saved.concat(allModules.filter(k => !saved.includes(k)))
-    }
+    readonly property var activeModules: LayoutTools.sequence(preferences.moduleOrder).filter(k => preferences.enabledModules.split(",").includes(k))
     readonly property int columnCount: width < 310 ? 1 : Math.max(1, Math.min(3, preferences.columns))
     readonly property var targets: parseTargets(preferences.targetsText)
     implicitWidth: 360
@@ -36,34 +37,6 @@ Item {
         }).filter(t => t && t.url).slice(0, 8)
     }
     function gib(bytes) { return ((bytes || 0) / 1073741824).toFixed(1) }
-    function moveModule(key, offset) {
-        const order = moduleSequence()
-        const at = order.indexOf(key)
-        const shown = activeModules.indexOf(key)
-        const next = activeModules[shown + offset]
-        if (!next) return
-        const to = order.indexOf(next)
-        order.splice(at, 1)
-        order.splice(to, 0, key)
-        preferences.moduleOrder = order.join(",")
-    }
-    function dropModule(source, target) {
-        if (source === target) return
-        const order = moduleSequence()
-        const from = order.indexOf(source)
-        const to = order.indexOf(target)
-        if (from < 0 || to < 0) return
-        order.splice(from, 1)
-        order.splice(to, 0, source)
-        preferences.moduleOrder = order.join(",")
-    }
-    function toggleModule(key) {
-        const enabled = preferences.enabledModules.split(",").filter(Boolean)
-        const at = enabled.indexOf(key)
-        if (at >= 0) enabled.splice(at, 1)
-        else enabled.push(key)
-        preferences.enabledModules = enabled.join(",")
-    }
     function poll() {
         if (request) return
         const xhr = new XMLHttpRequest()
@@ -148,9 +121,18 @@ Item {
     Component.onCompleted: poll()
     Component.onDestruction: if (request) request.abort()
 
+    Rectangle {
+        objectName: "dashboardSurface"
+        anchors.fill: parent
+        radius: 8
+        color: Qt.rgba(board.backgroundColor.r, board.backgroundColor.g, board.backgroundColor.b, board.backgroundOpacity / 100)
+        border.width: board.borderWidth
+        border.color: board.borderColor
+    }
     ScrollView {
         id: scroll
         anchors.fill: parent
+        anchors.margins: board.surfaceInset
         clip: true
         contentWidth: availableWidth
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -161,7 +143,9 @@ Item {
                 Layout.fillWidth: true
                 spacing: 10
                 Text {
-                    text: "MONITOR"
+                    text: "someProducts-monitor"
+                    Layout.maximumWidth: Math.max(50, board.width - 30)
+                    elide: Text.ElideRight
                     color: board.ink
                     font.pixelSize: 11
                     font.letterSpacing: 3
@@ -172,12 +156,6 @@ Item {
                     opacity: 0.7
                 }
                 Item { Layout.fillWidth: true }
-                SmallButton {
-                    objectName: "customizeButton"
-                    text: board.customizing ? "Done" : "Customize"
-                    ink: board.ink
-                    onClicked: board.customizing = !board.customizing
-                }
             }
             Text {
                 Layout.fillWidth: true
@@ -188,73 +166,6 @@ Item {
                 font.pixelSize: 11
                 wrapMode: Text.Wrap
                 textFormat: Text.PlainText
-            }
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: board.customizing
-                spacing: 10
-                Text {
-                    text: "Choose modules · drag handles or use arrows to reorder"
-                    color: board.ink
-                    opacity: 0.6
-                    font.pixelSize: 11
-                    wrapMode: Text.Wrap
-                    Layout.fillWidth: true
-                }
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: 5
-                    Repeater {
-                        model: board.allModules
-                        SmallButton {
-                            required property string modelData
-                            text: (board.preferences.enabledModules.split(",").includes(modelData) ? "✓  " : "+  ") + modelData.toUpperCase()
-                            ink: board.ink
-                            outlined: true
-                            onClicked: board.toggleModule(modelData)
-                        }
-                    }
-                }
-                RowLayout {
-                    SmallButton {
-                        text: "Columns: " + board.preferences.columns
-                        ink: board.ink; outlined: true
-                        onClicked: board.preferences.columns = board.preferences.columns % 3 + 1
-                    }
-                    SmallButton {
-                        text: board.preferences.darkInk ? "Dark text" : "Light text"
-                        ink: board.ink; outlined: true
-                        onClicked: board.preferences.darkInk = !board.preferences.darkInk
-                    }
-                }
-                Text { text: "PING TARGETS"; color: board.ink; font.pixelSize: 10; font.letterSpacing: 2 }
-                TextArea {
-                    id: targetEditor
-                    objectName: "targetEditor"
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 85
-                    text: board.preferences.targetsText
-                    placeholderText: "Work | https://example.com | ◇\nHome | 192.168.1.1 | ⌂"
-                    placeholderTextColor: Qt.rgba(board.ink.r, board.ink.g, board.ink.b, 0.4)
-                    color: board.ink
-                    font.pixelSize: 12
-                    wrapMode: TextEdit.Wrap
-                    selectByMouse: true
-                    textFormat: TextEdit.PlainText
-                    background: Rectangle { color: "transparent"; border.color: Qt.rgba(board.ink.r, board.ink.g, board.ink.b, 0.2); radius: 4 }
-                }
-                RowLayout {
-                    SmallButton {
-                        text: "Apply targets"; ink: board.ink; outlined: true
-                        onClicked: { board.preferences.targetsText = targetEditor.text; board.poll() }
-                    }
-                    Text { text: "label | URL | icon · up to 8"; color: board.ink; opacity: 0.5; font.pixelSize: 10 }
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: "Split: add another Monitor widget, then choose its modules. Each widget keeps its own note and layout."
-                    color: board.ink; opacity: 0.5; font.pixelSize: 11; wrapMode: Text.Wrap
-                }
             }
             GridLayout {
                 id: grid
@@ -276,21 +187,11 @@ Item {
                         Layout.alignment: Qt.AlignTop
                         Layout.preferredHeight: 24 + (loader.item ? loader.item.implicitHeight : 100)
                         Layout.minimumWidth: 100
-                        DropArea {
-                            anchors.fill: parent
-                            keys: ["monitor-module"]
-                            onDropped: drop => {
-                                const source = drop.source.moduleKey
-                                const target = tile.modelData
-                                drop.acceptProposedAction()
-                                Qt.callLater(() => board.dropModule(source, target))
-                            }
-                            Rectangle {
-                                anchors.top: parent.top
-                                width: parent.width; height: 1
-                                color: board.ink
-                                opacity: parent.containsDrag ? 0.9 : 0.18
-                            }
+                        Rectangle {
+                            anchors.top: parent.top
+                            width: parent.width; height: 1
+                            color: board.ink
+                            opacity: 0.18
                         }
                         RowLayout {
                             id: tileHeading
@@ -299,37 +200,9 @@ Item {
                             Text { text: tile.modelData === "media" ? "NOW PLAYING" : tile.modelData === "claude" ? "CLAUDE CODE" : tile.modelData === "resets" ? "RESET NEWS" : tile.modelData.toUpperCase(); color: board.ink; opacity: 0.65; font.pixelSize: 10; font.letterSpacing: 1.8 }
                             Item { Layout.fillWidth: true }
                             SmallButton {
-                                visible: tile.modelData === "gpu" && board.snapshot.gpus.length > 1 && !board.customizing
+                                visible: tile.modelData === "gpu" && board.snapshot.gpus.length > 1
                                 text: "Next GPU →"; ink: board.ink
                                 onClicked: board.selectedGpu = (board.selectedGpu + 1) % board.snapshot.gpus.length
-                            }
-                            SmallButton { visible: board.customizing; text: "←"; ink: board.ink; onClicked: board.moveModule(tile.modelData, -1) }
-                            SmallButton { visible: board.customizing; text: "→"; ink: board.ink; onClicked: board.moveModule(tile.modelData, 1) }
-                            Item {
-                                visible: board.customizing
-                                Layout.preferredWidth: 22; Layout.preferredHeight: 25
-                                Text {
-                                    id: handle
-                                    objectName: "drag_" + tile.modelData
-                                    property string moduleKey: tile.modelData
-                                    text: "⠿"
-                                    color: board.ink
-                                    font.pixelSize: 20
-                                    z: 100
-                                    Drag.active: dragMouse.drag.active
-                                    Drag.source: handle
-                                    Drag.keys: ["monitor-module"]
-                                    Drag.hotSpot.x: 10
-                                    Drag.hotSpot.y: 12
-                                    MouseArea {
-                                        id: dragMouse
-                                        anchors.fill: parent
-                                        drag.target: handle
-                                        cursorShape: Qt.OpenHandCursor
-                                        onReleased: { handle.Drag.drop(); handle.x = 0; handle.y = 0 }
-                                        onCanceled: { handle.x = 0; handle.y = 0 }
-                                    }
-                                }
                             }
                         }
                         Loader {
@@ -365,7 +238,7 @@ Item {
             }
             Text {
                 visible: board.activeModules.length === 0
-                text: "Choose a module in Customize."
+                text: "Choose a module in the widget settings."
                 color: board.ink; opacity: 0.5; font.pixelSize: 12
             }
             Item { Layout.fillWidth: true; implicitHeight: 6 }

@@ -37,3 +37,12 @@ Evidence: `backend-tests.log`, `qml-tests.log`, `qmllint.log`, `native-plasma.lo
 - Actual read-only state: Proton connected; configured Kill Switch Off; Wi-Fi enabled and connected; one powered Bluetooth adapter. Native KDE settings modules and the graphical user-service environment are available.
 - Installed 1.2 service and package were checked. VPN connection, Kill Switch, wireless radio and Bluetooth settings were not changed. Native launch commands were mocked in tests; resulting native window presentation was not visually exercised.
 - `preview-connectivity.png` is a 360 × 330 composition of just the three new modules, using local state. Existing instance choices remain preserved; new modules can be selected in Customize. No Git operations were performed.
+
+## Version 1.3 addition
+
+- Backend suite remains **30 passing tests**. Final QML suite has **18 behavior tests plus four setup/cleanup checks (22 passes)** across display and configuration pages.
+- Configuration tests cover real checkbox and hex-field typing, drag/arrow ordering, draft module selection, invalid hex rejection, text-default restoration, background opacity controls and Ping editing. Display tests confirm inline customization controls are absent, preferences drive layout, and note/media interactions remain operational.
+- Separate preview integration test loads the actual Preview window with isolated settings. Cancel discards drafts; Apply commits all staged pages and keeps the window open; OK commits and closes. No QML runtime warnings occurred.
+- Qt lint includes all configuration pages and the native config model and reports no diagnostics. Default exports retain alpha-zero empty pixels. A colored-board export preserves the exact `(16, 32, 48, 255)` background pixel for `#102030` at 100% opacity.
+- Configuration and colored dashboard previews were visually inspected. Native package load is checked with the updated Plasma applet. Existing desktop placement and user-selected instance preferences are preserved; the live desktop's native Apply button was not operated automatically.
+- Current evidence: `preview-config-modules.png`, `preview-config-appearance.png`, `preview-colored.png`, `preview-configuration-test.log`, `qml-tests.log`, `qmllint.log`. `preview-customize.png` is historical evidence of the removed 1.2 inline UI.

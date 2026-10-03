@@ -10,7 +10,9 @@ Item {
     implicitHeight: Math.max(70, targets.length * 32 + 18)
     Text {
         visible: card.targets.length === 0
-        text: "Add a target in Customize\nURL or hostname · ICMP latency"
+        text: "Add targets in Settings → Ping\nURL or hostname · ICMP latency"
+        width: parent.width
+        wrapMode: Text.Wrap
         lineHeight: 1.6
         color: card.ink
         opacity: 0.5

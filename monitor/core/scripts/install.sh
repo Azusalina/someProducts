@@ -23,7 +23,7 @@ PY
 }
 cat > "$monitor_config/systemd/user/monitor-dashboard.service" <<EOF
 [Unit]
-Description=Monitor desktop widget telemetry
+Description=someProducts-monitor desktop widget telemetry
 After=graphical-session.target
 PartOf=graphical-session.target
 
@@ -45,5 +45,5 @@ fi
 systemctl --user daemon-reload
 systemctl --user enable monitor-dashboard.service
 systemctl --user restart monitor-dashboard.service
-printf '\nInstalled. Desktop → Edit Mode → Add Widgets → Monitor.\n'
+printf '\nInstalled. Desktop → Edit Mode → Add Widgets → someProducts-monitor.\n'
 printf 'Service: systemctl --user status monitor-dashboard.service\n'

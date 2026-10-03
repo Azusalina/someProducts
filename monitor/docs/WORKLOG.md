@@ -31,3 +31,15 @@
 - Added backend coverage for native destination validation, malformed requests, escaped connection labels, private-field exclusion and connected-device parsing. QML checks cover module settings signals and transparent compact rendering.
 - Corrected media integration test isolation: reset window height and explicitly select only the test MPRIS player.
 - Updated the local installed widget and user service, and rebuilt its distributable package. No Git operations were performed.
+
+## Catalog registration and naming
+
+- Refreshed KDE service cache and verified the Plasma WidgetExplorer model recognizes the installed widget as supported. Opened Edit Mode and the Add Widgets explorer at the user's request.
+- Renamed the visible widget to `someProducts-monitor` in metadata, dashboard, preview and installation instructions. Preserved package ID `local.monitor.dashboard` and per-instance configuration. Updated the installed package and distributable; no Git commands were used.
+
+## Configure pages and hex appearance — 1.3
+
+- Moved module selection, drag/arrow ordering, columns, text theme and Ping targets out of the dashboard into native Plasma configuration pages. Removed the inline Customize controls.
+- Added #rrggbb text/dashboard, border and background colors, optional 0–4 px border and 0–100% background opacity. Fully transparent defaults and previous dark-text choices are preserved.
+- Added a separate preview settings window sharing the same pages, with staged drafts and real Apply/OK/Cancel wiring.
+- Verified configuration editing and drag reorder, invalid hex protection, optional background RGB/alpha, unchanged note/media behavior and preview transaction handling. Updated docs, local package and distributable. No Git operations were performed.

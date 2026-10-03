@@ -1,0 +1,3 @@
+qml: Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810)
+qml: Using built-in configuration: default.qml
+qml: loading file:///home/a/Documents/someProducts/monitor/core/scripts/check-catalog.qml

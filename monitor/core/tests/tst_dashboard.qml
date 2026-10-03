@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Window
 import QtTest
 import "../plasmoid/contents/ui"
+import "../plasmoid/contents/ui/LayoutTools.js" as LayoutTools
 Item {
     width: 640
     height: 730
@@ -13,6 +14,11 @@ Item {
         property string targetsText: ""
         property string noteText: ""
         property bool darkInk: false
+        property string textColorHex: ""
+        property string borderColorHex: "#aabbcc"
+        property string backgroundColorHex: "#1b1b1b"
+        property int borderWidth: 0
+        property int backgroundOpacity: 0
     }
     Dashboard { id: board; width: 580; height: 680; preferences: prefs }
     ConnectivityCard { id: settingsCard; x: 1000; width: 180; status: ({can_open: true, connected: true, enabled: true}) }
@@ -28,7 +34,9 @@ Item {
             prefs.columns = 2
             board.width = 580
             board.height = 680
-            board.customizing = false
+            prefs.textColorHex = ""
+            prefs.backgroundOpacity = 0
+            prefs.borderWidth = 0
         }
         function test_01_liveBridge() {
             tryCompare(board, "connected", true, 10000)
@@ -44,15 +52,13 @@ Item {
             compare(board.targets[0].icon, "◇")
             compare(board.targets[0].url, "http://127.0.0.1/status")
         }
-        function test_03_recompose() {
-            board.moveModule("ram", -1)
-            compare(board.activeModules[0], "ram")
-            board.dropModule("note", "ram")
+        function toggleModule(key) { prefs.enabledModules = LayoutTools.toggle(prefs.enabledModules, key) }
+        function test_03_displayOnly() {
+            verify(findChild(board, "customizeButton") === null)
+            verify(findChild(board, "drag_cpu") === null)
+            verify(findChild(board, "targetEditor") === null)
+            prefs.moduleOrder = "note,ram,cpu"
             compare(board.activeModules[0], "note")
-            board.toggleModule("cpu")
-            verify(!board.activeModules.includes("cpu"))
-            board.toggleModule("cpu")
-            verify(board.activeModules.includes("cpu"))
             prefs.enabledModules = "note"
             compare(board.activeModules.length, 1)
         }
@@ -70,25 +76,33 @@ Item {
             mouseClick(editor, 10, 10)
             for (const ch of "A note stays on the desktop.") keyClick(ch)
             tryCompare(prefs, "noteText", "A note stays on the desktop.", 1500)
-            board.toggleModule("note")
+            toggleModule("note")
             wait(100)
-            board.toggleModule("note")
+            toggleModule("note")
             wait(100)
             editor = findChild(board, "noteEditor")
             compare(editor.text, prefs.noteText)
         }
-        function test_06_dragReorder() {
-            board.customizing = true
-            wait(100)
-            const handle = findChild(board, "drag_cpu")
-            const target = findChild(board, "tile_ram")
-            verify(handle && target)
-            const point = handle.mapFromItem(target, target.width / 2, 60)
-            mousePress(handle, 8, 10)
-            mouseMove(handle, 25, 12, 100)
-            mouseMove(handle, point.x, point.y, 150)
-            mouseRelease(handle, point.x, point.y)
-            tryCompare(prefs, "moduleOrder", "ram,cpu,ping,gpu,media,note,codex,claude,resets,proton,wifi,bluetooth", 1500)
+        function test_06_hexSurface() {
+            prefs.textColorHex = "#aabbcc"
+            prefs.borderColorHex = "#334455"
+            prefs.backgroundColorHex = "#102030"
+            prefs.borderWidth = 2
+            prefs.backgroundOpacity = 60
+            compare(board.ink, "#aabbcc")
+            compare(board.borderColor, "#334455")
+            compare(board.backgroundColor, "#102030")
+            const surface = findChild(board, "dashboardSurface")
+            verify(surface !== null)
+            fuzzyCompare(surface.color.a, 0.6, 0.01)
+            compare(surface.border.width, 2)
+            compare(board.surfaceInset, 12)
+            prefs.textColorHex = "not a color"
+            compare(board.ink, "#f5f5f4")
+            prefs.backgroundOpacity = 0
+            prefs.borderWidth = 0
+            compare(surface.color.a, 0)
+            compare(board.surfaceInset, 0)
         }
         function test_07_realMediaControl() {
             prefs.enabledModules = "media"
@@ -106,11 +120,11 @@ Item {
             tryVerify(() => board.snapshot.media.players.find(p => p.service === "org.mpris.MediaPlayer2.MonitorTest").status === "Playing", 7000)
         }
         function test_075_usageModules() {
-            board.toggleModule("codex")
-            board.toggleModule("claude")
-            board.toggleModule("resets")
+            toggleModule("codex")
+            toggleModule("claude")
+            toggleModule("resets")
             compare(board.activeModules.slice(-3).join(","), "codex,claude,resets")
-            board.moveModule("claude", -1)
+            prefs.moduleOrder = LayoutTools.move(prefs.moduleOrder, "claude", -1)
             compare(board.activeModules.slice(-3).join(","), "claude,codex,resets")
             wait(100)
             const card = findChild(board, "usage_codex")
@@ -166,7 +180,7 @@ Item {
             board.height = 480
             prefs.noteText = "Make space for what matters.\nOne thought at a time."
             // Remount to read the externally changed test preference.
-            board.toggleModule("note"); wait(20); board.toggleModule("note")
+            toggleModule("note"); wait(20); toggleModule("note")
             prefs.targetsText = "Local | 127.0.0.1 | network-wireless"
             board.poll()
             tryVerify(() => board.snapshot.pings.length === 1 && board.snapshot.pings[0].ms !== null, 10000)
@@ -177,14 +191,18 @@ Item {
                 saved = true
             }))
             tryVerify(() => saved, 3000)
-            mouseClick(findChild(board, "customizeButton"))
-            compare(board.customizing, true)
-            wait(100)
-            saved = false
-            verify(board.grabToImage(result => {
-                verify(result.saveToFile("../docs/preview-customize.png"))
-                saved = true
-            }))
+        }
+        function test_09_coloredPreview() {
+            board.width = 360
+            board.height = 480
+            prefs.backgroundColorHex = "#102030"
+            prefs.backgroundOpacity = 100
+            prefs.borderWidth = 1
+            prefs.borderColorHex = "#aabbcc"
+            prefs.textColorHex = "#aabbcc"
+            wait(200)
+            let saved = false
+            verify(board.grabToImage(result => { verify(result.saveToFile("../docs/preview-colored.png")); saved = true }))
             tryVerify(() => saved, 3000)
         }
     }

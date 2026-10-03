@@ -1,8 +1,12 @@
 # Mediator
 
+## What is it?
+
 Your local service directory. Visit **http://localhost** or **http://127.0.0.1**, without a port number, to see listening TCP and UDP ports, what they are doing, and buttons to open detected web services.
 
-## Install on this Linux machine
+## How to use
+
+**Install on this Linux machine**
 
 Requires Node.js 22+, Python 3, systemd, and `ss` from iproute2. No npm dependencies.
 
@@ -22,23 +26,7 @@ journalctl -u mediator.service -n 30
 
 Use `http://` explicitly if your browser forces HTTPS: this local directory serves HTTP on port 80.
 
-## Development
-
-```sh
-npm run dev
-npm test
-```
-
 Development listens at http://localhost:8787 and http://127.0.0.1:8787. It cannot provide a URL without a port until the socket is installed.
-
-## Discovery and descriptions
-
-- Reads current host listeners with `ss -H -lntup`; it does not sweep all 65,535 ports. TCP and UDP on the same port have separate rows. IPv4 and IPv6 listeners for the same protocol/port share a row.
-- Shows loopback, wildcard, and network-interface listeners. Network-only bindings are labelled and never probed or offered as local links.
-- Reads same-user process/project metadata where permitted, and probes local TCP listeners with bounded HTTP/HTTPS requests. HTML services supply their page title; JSON endpoints are labelled as APIs. Known database/desktop protocols are not probed. Probes never follow redirects, send credentials, or execute scripts.
-- Name sources are shown in Service details. A conventional port name is an inference, not proof of a service's identity. Processes owned by other users may be unavailable. Unknown tasks remain labelled unknown; the app cannot infer arbitrary application intent.
-- Refreshes the list every 10 seconds while visible. Protocol probes are cached for up to 15 seconds. No authentication, token, or full command-line arguments are displayed.
-- HTTPS services with self-signed certificates are detected but their certificate status is shown in details; normal browser certificate checks still apply when opening them.
 
 For exact task names, edit `services.json` (changes apply on a following scan):
 
@@ -59,10 +47,16 @@ For exact task names, edit `services.json` (changes apply on a following scan):
 
 Protocol-specific entries take precedence over bare port entries. Overrides describe a task; only protocol detection enables its Open button.
 
-## Remove automatic startup
+**Remove automatic startup**
 
 ```sh
 python3 scripts/install.py --uninstall
 ```
 
 This removes only the units managed by this installer and preserves the project files.
+
+**Development preview**
+
+Run `npm run dev` from `mediator` to start the preview on port 8787. In the directory, use the Open button for a detected web service and Service details to inspect its name sources and protocol information.
+
+See [description.md](description.md) for background and technical details.

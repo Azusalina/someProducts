@@ -1,12 +1,12 @@
 # Proton VPN, Wi-Fi and Bluetooth
 
-Monitor 1.2 adds **PROTON**, **WIFI** and **BLUETOOTH**. On an existing widget, enable them in **Customize**. All three can be hidden, reordered or split into separate Monitor instances. The background remains fully transparent.
+someProducts-monitor 1.2 adds **PROTON**, **WIFI** and **BLUETOOTH**. On an existing widget, enable them in **Settings → Modules**. All three can be hidden, reordered or split into separate someProducts-monitor instances. The default background remains fully transparent; optional color and opacity are set in Appearance.
 
 ## Keep the Proton GUI
 
 The selected integration retains the official Proton GUI: the widget displays connection/server and configured Kill Switch mode, and **Open Proton ↗** opens or raises the app. Connect/disconnect in Proton; adjust Kill Switch in **Menu → Settings → Features**. The installed app has no supported command or D-Bus action for opening that settings subsection directly.
 
-The installed official CLI refuses operation while the GUI is running. Monitor therefore does not invoke the CLI, terminate the GUI, or offer a direct VPN/Kill Switch toggle in this mode. This follows the user's explicit choice to retain the GUI.
+The installed official CLI refuses operation while the GUI is running. someProducts-monitor therefore does not invoke the CLI, terminate the GUI, or offer a direct VPN/Kill Switch toggle in this mode. This follows the user's explicit choice to retain the GUI.
 
 Connection state is read from active NetworkManager VPN/WireGuard profiles whose name begins with `ProtonVPN`. This is a local profile-based indicator, not a public-IP or tunnel-health test. Manually renamed/imported profiles may not be recognized. Kill Switch is the configured setting read from `~/.config/Proton/VPN/settings.json` (XDG overrides respected), not an audit of live firewall rules. Unknown configuration is shown as **Unknown**. A `pvpn-killswitch-ipv6` dummy interface alone is IPv6 protection and does not establish that the standard Kill Switch is enabled.
 
@@ -24,6 +24,6 @@ Runtime requirements: `networkmanager`/`nmcli`, BlueZ and the respective KDE set
 
 ## Update and desktop placement
 
-The local package and user service have been updated. If Plasma caches old QML and the new choices are missing, copy your note before removing and re-adding that instance. Add through desktop **Enter Edit Mode → Add Widgets → Monitor**, arrange it, then exit Edit Mode. The installer does not change desktop layout.
+The local package and user service have been updated. If Plasma caches old QML and the new choices are missing, copy your note before removing and re-adding that instance. Add through desktop **Enter Edit Mode → Add Widgets → someProducts-monitor**, arrange it, then exit Edit Mode. The installer does not change desktop layout.
 
 Evidence: `preview-connectivity.png`, `backend-tests.log`, `qml-tests.log`. State reads were checked against this machine. Launch destinations and button signals were tested without changing networking or opening extra settings windows; the resulting window presentation was not visually verified.

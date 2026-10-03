@@ -1,8 +1,8 @@
 # Coding subscription usage and reset news
 
-Monitor 1.1 adds three composable modules: **CODEX**, **CLAUDE CODE**, and **RESET NEWS**. They follow the same transparent layout and can be split into separate widget instances.
+someProducts-monitor 1.1 adds three composable modules: **CODEX**, **CLAUDE CODE**, and **RESET NEWS**. They follow the same transparent layout and can be split into separate widget instances.
 
-For an existing desktop widget, click **Customize** and enable **CODEX**, **CLAUDE**, and **RESETS**. Saved module choices remain yours. If the new choices are absent because Plasma has cached the previous QML, remove that widget and add Monitor again through Edit Mode. Save/copy any note before removing its widget instance. The installer updates the registered widget and restarts the telemetry service without restarting Plasma.
+For an existing desktop widget, open **Settings → Modules** and enable **CODEX**, **CLAUDE**, and **RESETS**. Saved module choices remain yours. If the new choices are absent because Plasma has cached the previous QML, remove that widget and add someProducts-monitor again through Edit Mode. Save/copy any note before removing its widget instance. The installer updates the registered widget and restarts the telemetry service without restarting Plasma.
 
 ## Codex
 
@@ -10,7 +10,7 @@ The bridge calls the documented `account/rateLimits/read` method through the ins
 
 The card shows remaining percentage, exact account reset timestamp in your local timezone, a countdown, available banked-reset count and the earliest reported expiry. Multiple quota buckets are preserved when the service returns them. A remaining percentage is a portion of an allowance, not a fixed number of tokens or messages. API-key billing is separate from this subscription module.
 
-The card does not apply any banked reset. If you wish to use one, do so in Codex's own Usage interface; the next successful read updates Monitor. There is no redemption action in this widget.
+The card does not apply any banked reset. If you wish to use one, do so in Codex's own Usage interface; the next successful read updates someProducts-monitor. There is no redemption action in this widget.
 
 Primary documentation: [Codex account rate limits](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt).
 
@@ -55,7 +55,7 @@ Original post timestamps are decoded from X Snowflake IDs, so an old post re-sha
 
 A direct adapter is implemented for Tibo and Claude developer [@bcherny](https://x.com/bcherny). It uses the official user-lookup and authored-post endpoints and requires your own X developer API entitlement and bearer token. It has been schema-checked against current X documentation and tested with fixtures, but no token is configured and live direct X access has not been tested here.
 
-If you already have suitable access, place the bearer token in `~/.config/monitor-dashboard/x-token`, create the directory with mode 0700, and give the token file mode 0600. Do not put it into a widget field or the repository. The next news refresh picks it up. The token is used only with `api.x.com`, stays in the service, and is never returned through telemetry. API failures fall back to community reports and are indicated in the card. X API access and costs depend on your account; Monitor does not provision or purchase access.
+If you already have suitable access, place the bearer token in `~/.config/monitor-dashboard/x-token`, create the directory with mode 0700, and give the token file mode 0600. Do not put it into a widget field or the repository. The next news refresh picks it up. The token is used only with `api.x.com`, stays in the service, and is never returned through telemetry. API failures fall back to community reports and are indicated in the card. X API access and costs depend on your account; someProducts-monitor does not provision or purchase access.
 
 Primary API references: [User lookup](https://docs.x.com/x-api/users/get-user-by-username), [Authored posts](https://docs.x.com/x-api/users/get-posts).
 
