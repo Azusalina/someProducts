@@ -1,0 +1,55 @@
+name: Deploy learning sites to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'ba/**'
+      - 'gitpop/**'
+      - 'ict/**'
+      - 'jupasanalysis/**'
+      - 'la/**'
+      - 'd-ba/**'
+      - 'd-gitpop/**'
+      - 'd-ict/**'
+      - 'd-jupasanalysis/**'
+      - 'd-la/**'
+      - 'scripts/build-pages.mjs'
+      - 'pages/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/configure-pages@v5
+      - name: Verify and assemble the five sites
+        run: node scripts/build-pages.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: .pages-dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
