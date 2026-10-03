@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>JUPAS Analysis · HKU 升学与职业路径</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳至主要内容</a>
+  <header class="topbar">
+    <a class="brand" href="#paths"><span class="brand-mark">J<span>↗</span></span><span>JUPAS<span class="brand-sub">ANALYSIS / HKU</span></span></a>
+    <div class="header-actions"><span class="snapshot">资料核查 · 2026.10.03</span><button id="theme" class="icon-button" aria-label="切换深浅主题">◐</button></div>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div><p class="eyebrow">2027–28 ENTRY · HONG KONG FIRST</p><h1>从专业选择，<br>看到更远的可能。</h1><p class="hero-copy">HKU 计算与数据科学全本科方向，连同 IBGM 与 QFin。<br>把学习内容、硕博门槛与职业薪酬放在一张地图上。</p></div>
+      <div class="hero-diagram" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="diagram-label label-one">COMPUTING</span><span class="diagram-label label-two">STATISTICS</span><span class="diagram-label label-three">BUSINESS</span><div class="diagram-center">下一步<span>YOUR PATH</span></div><span class="dot dot-one"></span><span class="dot dot-two"></span><span class="dot dot-three"></span></div>
+    </section>
+    <nav class="tabs" aria-label="分析视图">
+      <a href="#paths" data-view="paths">01 <span>路径地图</span></a>
+      <a href="#compare" data-view="compare">02 <span>专业比较</span></a>
+      <a href="#salary" data-view="salary">03 <span>薪酬证据</span></a>
+      <a href="#cost" data-view="cost">04 <span>升学成本</span></a>
+      <a href="#sources" data-view="sources">05 <span>来源与方法</span></a>
+    </nav>
+    <section id="workspace" aria-label="分析内容"></section>
+  </main>
+  <footer><span>JUPAS Analysis / Independent research tool</span><span>官方事实 · 路径推断 · 可调情景</span></footer>
+  <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

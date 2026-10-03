@@ -1,0 +1,35 @@
+test_pause_capability_respected (test_backend.ApiTests.test_pause_capability_respected) ... ok
+test_reject_arbitrary_dbus_destination (test_backend.ApiTests.test_reject_arbitrary_dbus_destination) ... ok
+test_reject_browser_origin_and_rebound_host (test_backend.ApiTests.test_reject_browser_origin_and_rebound_host) ... ok
+test_settings_api_rejects_command_injection_and_invalid_shapes (test_backend.ApiTests.test_settings_api_rejects_command_injection_and_invalid_shapes) ... ok
+test_settings_api_routes_native_target (test_backend.ApiTests.test_settings_api_routes_native_target) ... ok
+test_settings_missing_application_is_explicit_error (test_backend.ApiTests.test_settings_missing_application_is_explicit_error) ... ok
+test_snapshot_does_not_wait_for_ping (test_backend.ApiTests.test_snapshot_does_not_wait_for_ping) ... ok
+test_valid_pause_calls_playpause (test_backend.ApiTests.test_valid_pause_calls_playpause) ... ok
+test_bus_variant_metadata (test_backend.TelemetryTests.test_bus_variant_metadata) ... ok
+test_cpu_excludes_guest_and_uses_deltas (test_backend.TelemetryTests.test_cpu_excludes_guest_and_uses_deltas) ... ok
+test_host_url_normalization_and_option_injection (test_backend.TelemetryTests.test_host_url_normalization_and_option_injection) ... ok
+test_ping_missing_reply_is_unknown (test_backend.TelemetryTests.test_ping_missing_reply_is_unknown) ... ok
+test_ping_under_one_ms (test_backend.TelemetryTests.test_ping_under_one_ms) ... ok
+test_bluetooth_only_connected_device_names (test_connectivity.ConnectivityTests.test_bluetooth_only_connected_device_names) ... ok
+test_escaped_wifi_and_proton_detection (test_connectivity.ConnectivityTests.test_escaped_wifi_and_proton_detection) ... ok
+test_fixed_native_destinations_and_reject_commands (test_connectivity.ConnectivityTests.test_fixed_native_destinations_and_reject_commands) ... ok
+test_kill_switch_is_configured_mode_not_interface_inference (test_connectivity.ConnectivityTests.test_kill_switch_is_configured_mode_not_interface_inference) ... ok
+test_unrelated_vpn_and_ipv6_protection_are_not_proton_connection (test_connectivity.ConnectivityTests.test_unrelated_vpn_and_ipv6_protection_are_not_proton_connection) ... ok
+test_direct_x_uses_current_fields_and_keeps_source (test_usage.NewsTests.test_direct_x_uses_current_fields_and_keeps_source) ... ok
+test_does_not_invent_timezone_for_tomorrow (test_usage.NewsTests.test_does_not_invent_timezone_for_tomorrow) ... ok
+test_public_relay_is_not_confirmed (test_usage.NewsTests.test_public_relay_is_not_confirmed) ... ok
+test_relative_hour_is_explicit_estimate (test_usage.NewsTests.test_relative_hour_is_explicit_estimate) ... ok
+test_unattributed_reset_rumor_is_ignored (test_usage.NewsTests.test_unattributed_reset_rumor_is_ignored) ... ok
+test_claude_absent_fields_not_context_quota (test_usage.UsageTests.test_claude_absent_fields_not_context_quota) ... ok
+test_claude_receiver_redacts_and_writes_private_file (test_usage.UsageTests.test_claude_receiver_redacts_and_writes_private_file) ... ok
+test_codex_multiple_buckets_and_resets_no_sensitive_ids (test_usage.UsageTests.test_codex_multiple_buckets_and_resets_no_sensitive_ids) ... ok
+test_connect_preserves_settings_and_refuses_existing_statusline (test_usage.UsageTests.test_connect_preserves_settings_and_refuses_existing_statusline) ... ok
+test_expired_does_not_invent_full_quota (test_usage.UsageTests.test_expired_does_not_invent_full_quota) ... ok
+test_remaining_and_exact_reset (test_usage.UsageTests.test_remaining_and_exact_reset) ... ok
+test_stale_unknown_and_invalid_numbers (test_usage.UsageTests.test_stale_unknown_and_invalid_numbers) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.702s
+
+OK

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ee">
+  <meta name="description" content="An English learning companion for HKDSE ICT 2026 databases: concepts, SQL, database design, worked examples and an offline SQL playground.">
+  <title>Data / Logic — HKDSE ICT 2026</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="vendor/sql-asm.js"></script>
+  <script defer src="lessons.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#start"><span class="brand-icon" aria-hidden="true">▤</span><span>DATA / LOGIC<small>A database learning companion</small></span></a>
+    <div class="course-label">HKDSE ICT · 2026 EDITION</div>
+    <label class="search-label" for="search">Find a topic</label>
+    <input id="search" type="search" placeholder="SQL, keys, normalisation…" autocomplete="off">
+    <nav id="navigation" aria-label="Lessons"></nav>
+    <div class="sidebar-bottom"><div class="progress-line"><span>Your learning progress</span><strong id="progress-label">0 / 16</strong></div><progress id="progress" value="0" max="16">0</progress><p id="storage-note">Saved on this browser.</p><a href="#sources">Syllabus &amp; references ↗</a></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><button id="menu" class="menu" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button><span id="breadcrumb">THE LEARNING PATH</span><div class="toolbar"><button id="theme" aria-label="Switch to dark theme">Dark</button><button id="print">Print all notes ↗</button></div></header>
+    <main id="main" tabindex="-1"></main>
+    <footer id="lesson-footer" class="lesson-footer"><button id="previous">← Previous</button><label><input type="checkbox" id="completed"> Mark as understood</label><button id="next">Next →</button></footer>
+    <div class="page-footer"><span>DATA / LOGIC</span><span>Understand the model. Explain the result.</span></div>
+  </div>
+  <div id="print-content"></div>
+  <noscript><div class="noscript">Enable JavaScript to read the interactive lessons and run SQL. This page uses local files only; no account or internet connection is required.</div></noscript>
+</body>
+</html>

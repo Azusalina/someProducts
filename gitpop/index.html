@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141613">
+  <meta name="description" content="A little serendipity for your next build. Discover inspiring GitHub repositories, explore creative ideas, and save your next spark.">
+  <title>Gitpop — Your next rabbit hole.</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Gitpop home"><span class="brand-mark" aria-hidden="true">✳</span>gitpop<span class="brand-dot">.</span></a>
+    <nav aria-label="Main navigation">
+      <button class="nav-button active" id="explore-nav">Explore</button>
+      <button class="nav-button" id="saved-nav">Saved <span id="saved-count">0</span></button>
+    </nav>
+    <button class="about-button" id="about-nav">A happy little accident <span aria-hidden="true">↗</span></button>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="eyebrow"><span class="status-dot"></span> LESS SEARCHING. MORE STUMBLING.</div>
+      <h1 id="hero-title">Your next idea is<br>one <span class="pop-word">pop<svg viewBox="0 0 230 15" aria-hidden="true"><path d="M3 9 Q95 -2 227 7 M10 14 Q105 2 217 10"/></svg></span> away<span class="title-period">.</span></h1>
+      <p>Interesting repos. Unexpected possibilities.<br>A little internet serendipity for the things you haven’t built yet.</p>
+      <div class="hero-action"><button class="pop-button" id="pop-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 3 4 4-4 4M3 7h3c5 0 5 10 10 10h5m-4-4 4 4-4 4M3 17h3c2 0 3-1 4-3m4-4c1-2 2-3 4-3h3"/></svg>Pop a repo <span aria-hidden="true">↗</span></button><span class="keyboard-hint">or press <kbd>space</kbd></span></div>
+      <div class="hero-doodle" aria-hidden="true"><span>✳</span><svg viewBox="0 0 120 70"><path d="M8 6c-12 32 56 56 82 27 11-17-25-23-26-8-1 10 17 14 37 8m-11-6 12 6-9 10"/></svg><small>follow your curiosity</small></div>
+      <div class="hero-note"><span class="tiny-stars" aria-hidden="true">✧ ✦</span> Handpicked code. Happy accidents.</div>
+    </section>
+    <section class="discovery-section" aria-label="Discover repositories">
+      <div class="filter-row"><div class="filters" id="filters" role="group" aria-label="Filter by topic"></div><span class="pool-count" id="pool-count"></span></div>
+      <article class="feature-card" id="feature-card">
+        <div class="visual-panel">
+          <div class="visual-top"><span class="preview-label"><span></span> GITPOP VISUAL STUDY</span><button class="icon-button" id="pause-preview" aria-label="Pause animation" title="Pause animation">Ⅱ</button></div>
+          <canvas id="feature-canvas" role="img" aria-label="An animated particle brain, an original visual sketch inspired by this repository"></canvas>
+          <div class="visual-bottom"><span id="visual-caption">a thousand points. one possibility.</span><span class="visual-coordinate">FIG. <span id="figure-number">001</span> <span aria-hidden="true">↗</span></span></div>
+          <span class="visual-grain" aria-hidden="true"></span>
+        </div>
+        <div class="feature-info">
+          <div class="discovery-label"><span aria-hidden="true">✦</span> YOUR FRESH FIND <span id="discovery-number">01</span></div>
+          <div class="repo-owner" id="repo-owner"></div>
+          <h2 id="repo-title"></h2>
+          <p class="repo-description" id="repo-description"></p>
+          <div class="tags" id="repo-tags"></div>
+          <div class="repo-meta"><span><i class="language-dot" id="language-dot"></i><span id="repo-language"></span></span><a id="source-link" target="_blank" rel="noopener noreferrer">View source <span aria-hidden="true">↗</span></a></div>
+          <div class="repo-actions"><a class="repo-button" id="repo-link" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m12 4v-3.5c0-1 .1-1.5-.5-2 3-.3 6-1.5 6-6.5 0-1.5-.5-2.5-1.5-3.5.2-1 .2-2-.2-3-1.2-.2-2.7.5-3.8 1.3a14 14 0 0 0-7 0C6 3 4.5 2.3 3.3 2.5c-.4 1-.4 2-.2 3C2 6.5 1.5 7.5 1.5 9c0 5 3 6.2 6 6.5-.6.5-.6 1.5-.5 2V21"/></svg>Open repository <span aria-hidden="true">↗</span></a><button class="save-button" id="save-button" aria-pressed="false" aria-label="Save repository"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></div>
+        </div>
+        <div class="inspiration-strip"><span class="inspiration-icon" aria-hidden="true">✳</span><div><h3>THE SPARK</h3><p id="repo-inspiration"></p></div><span class="inspiration-arrow" aria-hidden="true">↗</span></div>
+      </article>
+      <div class="below-feature"><span><span class="green-dot"></span> Picked for possibility. Discovered by chance.</span><button id="next-button">Not your thing? Pop another <span aria-hidden="true">↻</span></button></div>
+    </section>
+    <section class="more-section" aria-labelledby="more-title">
+      <div class="section-heading"><div><div class="eyebrow">THERE’S ALWAYS ANOTHER RABBIT HOLE</div><h2 id="more-title">While you’re here<span>…</span></h2></div><button id="shuffle-cards">Mix it up <span aria-hidden="true">↻</span></button></div>
+      <div class="more-grid" id="more-grid"></div>
+    </section>
+    <section class="closing-note"><span aria-hidden="true">✳</span><p>The best projects start with<br><strong>“what if I tried this?”</strong></p></section>
+  </main>
+  <footer><a class="brand" href="./">gitpop<span class="brand-dot">.</span></a><span>A corner of the internet for curious builders.</span><button id="footer-about">Made for the rabbit hole <span aria-hidden="true">↗</span></button></footer>
+  <dialog id="saved-dialog" aria-labelledby="saved-title"><div class="dialog-heading"><div><div class="eyebrow">YOUR NEXT “WHAT IF”</div><h2 id="saved-title">Saved sparks<span>.</span></h2></div><button class="dialog-close icon-button" aria-label="Close saved repositories">×</button></div><div id="saved-list"></div></dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">A little about Gitpop<span>.</span></h2><button class="dialog-close icon-button" aria-label="Close about">×</button></div><p>Gitpop is a place to stumble into your next idea. Every discovery pairs a real GitHub repository with a small prompt to get you thinking.</p><p>This first collection is handpicked: creative coding, 3D, animation, and playful interfaces. The visual studies are original Gitpop sketches inspired by each project; open the repository to explore its actual code and examples.</p><p>Your saved sparks stay in this browser. No account, API key, or GitHub sign-in needed.</p><div class="about-signoff">Less searching. More building. <span aria-hidden="true">✳</span></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <span id="discovery-announcement" class="sr-only" role="status" aria-live="polite"></span>
+</body>
+</html>

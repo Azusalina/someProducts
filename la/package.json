@@ -1,0 +1,15 @@
+{
+  "name": "little-algebra",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 3001 --bind 127.0.0.1",
+    "vendor": "node scripts/vendor.mjs",
+    "test": "node --test tests/math.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:examples": "node tests/examples.mjs"
+  },
+  "dependencies": { "katex": "0.16.22", "three": "0.180.0" },
+  "devDependencies": { "playwright": "1.56.1" }
+}
