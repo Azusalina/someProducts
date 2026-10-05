@@ -1,0 +1,61 @@
+import MarkdownIt from 'markdown-it';
+import taskLists from 'markdown-it-task-lists';
+import hljs from 'highlight.js';
+import { localImage } from '../../core/files.js';
+
+const md = new MarkdownIt({
+  html: false, linkify: true, typographer: true,
+  highlight(code, language) {
+    return language && hljs.getLanguage(language)
+      ? hljs.highlight(code, { language, ignoreIllegals: true }).value : '';
+  }
+}).use(taskLists);
+const defaultLink = md.renderer.rules.link_open;
+md.renderer.rules.link_open = (tokens, index, options, env, self) => {
+  const href = tokens[index].attrGet('href');
+  if (href && !href.startsWith('#')) {
+    if (!/^(https?:|mailto:)/i.test(href)) tokens[index].attrSet('href', '#');
+    else {
+      tokens[index].attrSet('target', '_blank');
+      tokens[index].attrSet('rel', 'noopener noreferrer');
+    }
+  }
+  return defaultLink ? defaultLink(tokens, index, options, env, self) : self.renderToken(tokens, index, options);
+};
+const defaultImage = md.renderer.rules.image;
+md.renderer.rules.image = (tokens, index, options, env, self) => {
+  if (!tokens[index].attrGet('src')) return `<span class="missing-image">[Image: ${md.utils.escapeHtml(tokens[index].content)}]</span>`;
+  return defaultImage(tokens, index, options, env, self);
+};
+
+export const markdownModule = {
+  id: 'markdown', name: 'Markdown', extensions: ['.md', '.markdown'], outputs: ['pdf'],
+  async render(source, { filename }) {
+    const tokens = md.parse(source, {});
+    const outline = [], warnings = [], counts = new Map();
+    const imageJobs = [];
+    function visit(items) {
+      for (let i = 0; i < items.length; i++) {
+        const token = items[i];
+        if (token.type === 'heading_open') {
+          const label = items[i + 1]?.content || 'Heading';
+          const slug = label.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'heading';
+          const count = (counts.get(slug) || 0) + 1;
+          counts.set(slug, count);
+          const id = count === 1 ? slug : `${slug}-${count}`;
+          token.attrSet('id', id);
+          outline.push({ id, label, level: Number(token.tag.slice(1)) });
+        }
+        if (token.type === 'image') imageJobs.push((async () => {
+          const src = token.attrGet('src');
+          try { token.attrSet('src', await localImage(src, filename)); }
+          catch (error) { token.attrSet('src', ''); warnings.push(`Image “${src}”: ${error.code === 'ENOENT' ? 'file not found' : error.message}`); }
+        })());
+        if (token.children) visit(token.children);
+      }
+    }
+    visit(tokens);
+    await Promise.all(imageJobs);
+    return { html: md.renderer.render(tokens, md.options, {}), outline, warnings, title: outline[0]?.label || 'Untitled document' };
+  }
+};
