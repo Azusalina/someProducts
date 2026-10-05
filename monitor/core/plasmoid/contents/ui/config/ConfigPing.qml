@@ -8,7 +8,7 @@ ColumnLayout {
     implicitWidth: 480
     spacing: 12
     Label { text: "Ping targets"; font.bold: true }
-    Label { Layout.fillWidth: true; text: "One target per line: label | URL or hostname | icon. Up to eight targets. Use a symbol or a KDE icon name."; wrapMode: Text.Wrap }
+    Label { Layout.fillWidth: true; text: "One target per line: label | URL or hostname | icon | optional #rrggbb. Up to eight targets. Each optional color overrides the default Ping flow color."; wrapMode: Text.Wrap }
     ScrollView {
         Layout.fillWidth: true
         Layout.fillHeight: true

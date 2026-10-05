@@ -3,6 +3,7 @@ import QtQuick.Controls
 Item {
     id: card
     property color ink: "#f5f5f4"
+    property color flowInk: ink
     property var value: null
     property string detail: ""
     property var history: []
@@ -14,7 +15,7 @@ Item {
         objectName: "metricFlow"
         anchors.fill: parent
         anchors.topMargin: 12
-        ink: card.ink
+        ink: card.flowInk
         values: card.history
         sampleCount: Math.max(2, Math.min(40, card.history.length))
     }

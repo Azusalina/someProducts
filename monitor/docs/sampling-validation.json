@@ -1,0 +1,24 @@
+{
+  "stats": {
+    "samples": 13,
+    "median_seconds": 0.498,
+    "maximum_seconds": 0.508
+  },
+  "ping_loopback": {
+    "samples": 12,
+    "median_seconds": 0.503,
+    "maximum_seconds": 0.512
+  },
+  "instances": [
+    {
+      "id": 160,
+      "version": "1.7.0",
+      "geometry": {
+        "x": 1552,
+        "y": 112,
+        "width": 432,
+        "height": 864
+      }
+    }
+  ]
+}

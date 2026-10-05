@@ -4,10 +4,11 @@ PASS   : qmltestrunner::Configuration::initTestCase()
 PASS   : qmltestrunner::Configuration::test_01_selectionAndStaging()
 PASS   : qmltestrunner::Configuration::test_02_dragReorder()
 PASS   : qmltestrunner::Configuration::test_03_hexEditingAndValidation()
+PASS   : qmltestrunner::Configuration::test_045_flowColorDrafts()
 PASS   : qmltestrunner::Configuration::test_04_pingDraft()
 PASS   : qmltestrunner::Configuration::test_05_configurationPreviews()
 PASS   : qmltestrunner::Configuration::cleanupTestCase()
-Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 1423ms
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1567ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -17,6 +18,8 @@ PASS   : qmltestrunner::Dashboard::test_02_targets()
 PASS   : qmltestrunner::Dashboard::test_03_displayOnly()
 PASS   : qmltestrunner::Dashboard::test_041_compactFlows()
 PASS   : qmltestrunner::Dashboard::test_042_pingSampleHistory()
+PASS   : qmltestrunner::Dashboard::test_043_independentFlowColors()
+PASS   : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn()
 PASS   : qmltestrunner::Dashboard::test_04_narrow()
 PASS   : qmltestrunner::Dashboard::test_05_notePersistence()
 PASS   : qmltestrunner::Dashboard::test_06_hexSurface()
@@ -29,5 +32,5 @@ PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
 PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
 PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
 PASS   : qmltestrunner::Dashboard::cleanupTestCase()
-Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 13001ms
+Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 10910ms
 ********* Finished testing of qmltestrunner *********

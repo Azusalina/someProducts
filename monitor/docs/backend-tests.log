@@ -10,8 +10,11 @@ test_unknown_terminal_does_not_expose_other_sessions (test_backend.ApiTests.test
 test_valid_pause_calls_playpause (test_backend.ApiTests.test_valid_pause_calls_playpause) ... ok
 test_bus_variant_metadata (test_backend.TelemetryTests.test_bus_variant_metadata) ... ok
 test_cpu_excludes_guest_and_uses_deltas (test_backend.TelemetryTests.test_cpu_excludes_guest_and_uses_deltas) ... ok
+test_half_second_stats_do_not_wait_for_media_bus (test_backend.TelemetryTests.test_half_second_stats_do_not_wait_for_media_bus) ... ok
 test_host_url_normalization_and_option_injection (test_backend.TelemetryTests.test_host_url_normalization_and_option_injection) ... ok
+test_ping_half_second_deadline_and_no_overlapping_probe (test_backend.TelemetryTests.test_ping_half_second_deadline_and_no_overlapping_probe) ... ok
 test_ping_missing_reply_is_unknown (test_backend.TelemetryTests.test_ping_missing_reply_is_unknown) ... ok
+test_ping_scheduler_samples_between_widget_requests (test_backend.TelemetryTests.test_ping_scheduler_samples_between_widget_requests) ... ok
 test_ping_under_one_ms (test_backend.TelemetryTests.test_ping_under_one_ms) ... ok
 test_bluetooth_only_connected_device_names (test_connectivity.ConnectivityTests.test_bluetooth_only_connected_device_names) ... ok
 test_escaped_wifi_and_proton_detection (test_connectivity.ConnectivityTests.test_escaped_wifi_and_proton_detection) ... ok
@@ -27,11 +30,29 @@ Traceback (most recent call last):
   File "/usr/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
     self._context.run(self.run)
     ~~~~~~~~~~~~~~~~~^^^^^^^^^^
-ok
   File "/usr/lib/python3.14/threading.py", line 1024, in run
     self._target(*self._args, **self._kwargs)
     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ...   File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
+ok
+  File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
+    selector.register(self.master, selectors.EVENT_READ)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ...   File "/usr/lib/python3.14/selectors.py", line 345, in register
+    self._selector.register(key.fd, poller_events)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 9] Bad file descriptor
+ok
+test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
+test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
+test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... Exception in thread terminal-pty:
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
     selector.register(self.master, selectors.EVENT_READ)
     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/usr/lib/python3.14/selectors.py", line 345, in register
@@ -39,11 +60,8 @@ test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_jo
     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
 OSError: [Errno 9] Bad file descriptor
 ok
-test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
-test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
-test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... ok
 
 ----------------------------------------------------------------------
-Ran 29 tests in 1.237s
+Ran 32 tests in 2.955s
 
 OK

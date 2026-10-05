@@ -13,6 +13,7 @@ Item {
     readonly property int borderWidth: Math.max(0, Math.min(4, preferences.borderWidth || 0))
     readonly property int surfaceInset: backgroundOpacity > 0 || borderWidth > 0 ? 12 : 0
     function validHex(value) { return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) }
+    function flowColor(key) { const value = preferences[key + "FlowColor"]; return validHex(value) ? value : ink }
     property bool connected: false
     property string message: "Connecting…"
     property var snapshot: ({ cpu: {}, ram: {}, gpus: [], pings: [], media: { players: [] } })
@@ -25,6 +26,16 @@ Item {
     property int selectedGpu: 0
     onSelectedGpuChanged: histories = Object.assign({}, histories, {gpu: []})
     readonly property var activeModules: LayoutTools.sequence(preferences.moduleOrder).filter(k => preferences.enabledModules.split(",").includes(k))
+    readonly property bool pairedRadios: activeModules.includes("wifi") && activeModules.includes("bluetooth") && width - surfaceInset * 2 >= 230
+    readonly property var layoutModules: {
+        let paired = false
+        return activeModules.map(key => {
+            if (!pairedRadios || !["wifi", "bluetooth"].includes(key)) return key
+            if (paired) return ""
+            paired = true
+            return "radios"
+        }).filter(Boolean)
+    }
     TerminalOwner { id: terminalOwner; active: board.activeModules.includes("terminal") }
     readonly property int columnCount: width < 260 ? 1 : Math.max(1, Math.min(3, preferences.columns, Math.floor((width - surfaceInset * 2 + 10) / 110)))
     readonly property var targets: parseTargets(preferences.targetsText)
@@ -36,7 +47,7 @@ Item {
             const parts = line.split("|").map(p => p.trim())
             if (!parts[0]) return null
             return {label: parts.length > 1 ? parts[0] : parts[0].replace(/^https?:\/\//, "").split("/")[0],
-                    url: parts.length > 1 ? parts[1] : parts[0], icon: parts[2] || "↗"}
+                    url: parts.length > 1 ? parts[1] : parts[0], icon: parts[2] || "↗", color: validHex(parts[3]) ? parts[3] : ""}
         }).filter(t => t && t.url).slice(0, 8)
     }
     function gib(bytes) { return ((bytes || 0) / 1073741824).toFixed(1) }
@@ -126,7 +137,7 @@ Item {
         xhr.setRequestHeader("Content-Type", "application/json")
         xhr.send(JSON.stringify({service: service}))
     }
-    Timer { interval: 2000; running: true; repeat: true; onTriggered: board.poll() }
+    Timer { interval: 500; running: true; repeat: true; onTriggered: board.poll() }
     Timer {
         id: requestTimeout
         interval: 6000
@@ -194,13 +205,13 @@ Item {
                 columnSpacing: 10
                 rowSpacing: 4
                 Repeater {
-                    model: board.activeModules
+                    model: board.layoutModules
                     delegate: Item {
                         id: tile
                         objectName: "tile_" + modelData
                         required property string modelData
                         required property int index
-                        readonly property bool wide: modelData === "media" || modelData === "note" || modelData === "terminal"
+                        readonly property bool wide: ["media", "note", "terminal", "radios"].includes(modelData)
                         readonly property bool metric: ["cpu", "ram", "ping", "gpu"].includes(modelData)
                         Layout.columnSpan: wide ? board.columnCount : 1
                         Layout.fillWidth: true
@@ -208,7 +219,7 @@ Item {
                         Layout.preferredHeight: tileHeading.height + (loader.item ? loader.item.implicitHeight : 42)
                         Layout.minimumWidth: 100
                         Rectangle {
-                            visible: !["media", "proton"].includes(tile.modelData) && !tile.metric
+                            visible: !["media", "proton", "radios"].includes(tile.modelData) && !tile.metric
                             anchors.top: parent.top
                             width: parent.width; height: 1
                             color: board.ink
@@ -217,8 +228,8 @@ Item {
                         RowLayout {
                             id: tileHeading
                             width: parent.width
-                            height: ["media", "proton"].includes(tile.modelData) ? 0 : tile.metric ? 12 : 18
-                            visible: !["media", "proton"].includes(tile.modelData)
+                            height: ["media", "proton", "radios"].includes(tile.modelData) ? 0 : tile.metric ? 12 : 18
+                            visible: !["media", "proton", "radios"].includes(tile.modelData)
                             Text { text: tile.modelData.toUpperCase(); color: board.ink; opacity: 0.5; font.pixelSize: 8; font.letterSpacing: 1 }
                             Item { Layout.fillWidth: true }
                             SmallButton {
@@ -234,7 +245,7 @@ Item {
                             id: loader
                             anchors.top: tileHeading.bottom
                             width: parent.width
-                            sourceComponent: ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
+                            sourceComponent: tile.modelData === "radios" ? radioPairComponent : ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
                         }
                         Component {
                             id: metricComponent
@@ -242,6 +253,7 @@ Item {
                                 readonly property var gpu: board.snapshot.gpus[board.selectedGpu % Math.max(1, board.snapshot.gpus.length)] || {}
                                 readonly property var stats: tile.modelData === "cpu" ? board.snapshot.cpu : tile.modelData === "ram" ? board.snapshot.ram : gpu
                                 ink: board.ink
+                                flowInk: board.flowColor(tile.modelData)
                                 value: board.connected ? stats.percent : null
                                 history: board.connected ? board.histories[tile.modelData] || [] : []
                                 detail: {
@@ -252,8 +264,9 @@ Item {
                                 }
                             }
                         }
-                        Component { id: pingComponent; PingCard { objectName: "pingCard"; ink: board.ink; targets: board.targets; readings: board.connected ? board.snapshot.pings : []; histories: board.connected ? board.pingHistories : ({}) } }
-                        Component { id: mediaComponent; MediaCard { objectName: "mediaCard"; ink: board.ink; players: board.connected ? board.snapshot.media.players : []; selectedService: board.preferences.mediaService || ""; cavaEnabled: board.preferences.cavaEnabled !== false; cavaOpacity: (board.preferences.cavaOpacity === undefined ? 40 : board.preferences.cavaOpacity) / 100; onToggleRequested: service => board.toggleMedia(service) } }
+                        Component { id: pingComponent; PingCard { objectName: "pingCard"; ink: board.ink; flowInk: board.flowColor("ping"); targets: board.targets; readings: board.connected ? board.snapshot.pings : []; histories: board.connected ? board.pingHistories : ({}) } }
+                        Component { id: mediaComponent; MediaCard { objectName: "mediaCard"; ink: board.ink; flowInk: board.flowColor("cava"); players: board.connected ? board.snapshot.media.players : []; selectedService: board.preferences.mediaService || ""; cavaEnabled: board.preferences.cavaEnabled !== false; cavaOpacity: (board.preferences.cavaOpacity === undefined ? 40 : board.preferences.cavaOpacity) / 100; onToggleRequested: service => board.toggleMedia(service) } }
+                        Component { id: radioPairComponent; RadioPair { ink: board.ink; wifiStatus: (board.snapshot.connectivity || {}).wifi || ({}); bluetoothStatus: (board.snapshot.connectivity || {}).bluetooth || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; openingSettings: board.openingSettings; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: connectivityComponent; ConnectivityCard { objectName: "connectivity_" + tile.modelData; ink: board.ink; kind: tile.modelData; status: (board.snapshot.connectivity || {})[tile.modelData] || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; opening: board.openingSettings === tile.modelData; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: terminalComponent; TerminalCard { objectName: "terminalCard"; owner: terminalOwner; ink: board.ink; fontSize: board.preferences.terminalFontSize || 11; terminalHeight: board.preferences.terminalHeight || 230 } }
                         Component { id: noteComponent; NoteCard { ink: board.ink; preferences: board.preferences } }

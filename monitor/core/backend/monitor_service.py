@@ -25,6 +25,7 @@ from terminal_sessions import TerminalManager
 MPRIS = 'org.mpris.MediaPlayer2'
 PLAYER = MPRIS + '.Player'
 OBJECT = '/org/mpris/MediaPlayer2'
+SAMPLE_INTERVAL = 0.5
 
 
 def read(path: Path) -> str:
@@ -266,6 +267,8 @@ class Telemetry:
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='ping')
         self.stop = threading.Event()
         self.thread = threading.Thread(target=self.collect, daemon=True)
+        self.media_thread = threading.Thread(target=self.collect_media, daemon=True)
+        self.ping_thread = threading.Thread(target=self.collect_pings, daemon=True)
 
     def collect(self):
         cpu, gpu = Cpu(), Gpu()
@@ -273,12 +276,22 @@ class Telemetry:
             started = time.monotonic()
             try:
                 snapshot = {'cpu': cpu.sample(), 'ram': memory_snapshot(),
-                            'gpus': gpu.sample(), 'media': media_snapshot(), 'sampled_at': time.time()}
+                            'gpus': gpu.sample(), 'sampled_at': time.time()}
                 with self.lock:
+                    snapshot['media'] = self.snapshot.get('media', {'players': []})
                     self.snapshot = snapshot
             except (OSError, ValueError, IndexError) as error:
                 with self.lock:
                     self.snapshot['error'] = str(error)
+            self.stop.wait(max(0.01, SAMPLE_INTERVAL - (time.monotonic() - started)))
+
+    def collect_media(self):
+        # Session-bus timeouts must not stall the faster system-stat samples.
+        while not self.stop.is_set():
+            started = time.monotonic()
+            value = media_snapshot()
+            with self.lock:
+                self.snapshot['media'] = value
             self.stop.wait(max(0.1, 2 - (time.monotonic() - started)))
 
     def get(self, targets):
@@ -296,18 +309,33 @@ class Telemetry:
                     entry = {'value': {'ms': None, 'status': 'Checking…'}, 'time': 0, 'pending': False}
                     self.pings[target] = entry
                 self.pings.move_to_end(target)
-                if not entry['pending'] and now - entry['time'] > 5:
-                    entry['pending'] = True
-                    self.pool.submit(self.update_ping, target, entry)
+                entry['requested'] = now
+                if not entry['pending'] and now - entry['time'] >= SAMPLE_INTERVAL:
+                    self.start_ping(target, entry, now)
                 values.append({'target': target, **entry['value']})
             snapshot['pings'] = values
             snapshot['connectivity'] = self.connectivity.get()
             return snapshot
 
+    def start_ping(self, target, entry, now):
+        entry['pending'] = True
+        entry['time'] = now
+        self.pool.submit(self.update_ping, target, entry)
+
+    def collect_pings(self):
+        # Probe cadence is independent of the widget poll's timing/phase.
+        while not self.stop.is_set():
+            now = time.monotonic()
+            with self.lock:
+                for target, entry in self.pings.items():
+                    if now - entry.get('requested', 0) <= 2 and not entry['pending'] and now - entry['time'] >= SAMPLE_INTERVAL:
+                        self.start_ping(target, entry, now)
+            self.stop.wait(0.025)
+
     def update_ping(self, target, entry):
         value = ping_target(target)
         with self.lock:
-            entry.update(value=value, time=time.monotonic(), pending=False)
+            entry.update(value=value, pending=False)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -445,6 +473,8 @@ def main():
     server.daemon_threads = True
     server.telemetry = telemetry
     telemetry.thread.start()
+    telemetry.media_thread.start()
+    telemetry.ping_thread.start()
     telemetry.connectivity.thread.start()
     telemetry.audio.thread.start()
     telemetry.terminals.thread.start()
@@ -461,6 +491,7 @@ def main():
         telemetry.connectivity.stop.set()
         telemetry.audio.stop.set()
         telemetry.terminals.shutdown()
+        telemetry.ping_thread.join(timeout=1)
         server.server_close()
         telemetry.pool.shutdown(wait=False, cancel_futures=True)
 

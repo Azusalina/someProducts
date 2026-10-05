@@ -2,9 +2,9 @@
 
 Environment: Arch Linux; KDE Plasma 6.7.5; Qt 6.11.2; Wayland; Python 3.14.7; Intel i915.
 
-## Current version 1.5
+## Current version 1.7
 
-Current results and limits are recorded in [description.md](description.md#compact-flowing-graphs--15): 29 backend tests, 25 QML checks, compact graph layouts and Ping history, live CAVA playback into a temporary silent sink, embedded PTY keyboard/session tests, strict transparency checks and local installation verification. The sections below preserve validation history for earlier versions; quota/news tests and inline customization no longer describe the current product.
+Current results and limits are recorded in [description.md](description.md#faster-sampling-independent-colors-and-radio-pairing--17-2026-10-05): 32 backend tests, 28 QML checks, live half-second sampling, independent curve colors, per-target Ping overrides, Wi-Fi/Bluetooth pairing, configuration transactions, strict transparency checks and installed desktop verification. The sections below preserve validation history for earlier versions; quota/news tests and inline customization no longer describe the current product.
 
 ## Passed
 

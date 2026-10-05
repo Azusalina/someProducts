@@ -24,7 +24,11 @@ Incomplete or invalid hex input is flagged and cannot replace the last valid dra
 
 ## Ping
 
-Enter one target per line as `label | URL or hostname | icon`, up to eight targets. Use a Unicode symbol or a KDE theme icon name. An applied target is checked while the widget requests telemetry. Draft edits do not contact a target before Apply.
+Enter one target per line as `label | URL or hostname | icon | optional #rrggbb`, up to eight targets. Use a Unicode symbol or a KDE theme icon name. The fourth field overrides that target's curve color; omit it to follow the default Ping flow color. Invalid optional colors fall back to that default. An applied target is checked about every 0.5 seconds while the widget requests telemetry, subject to response/timeout duration. Draft edits do not contact a target before Apply.
+
+## Flow colors
+
+Independently set CPU, RAM, GPU, Ping default and CAVA curve colors with `#rrggbb`. Clear a field to follow the dashboard text color. Labels, numeric values and board/background colors remain controlled by Appearance. Invalid color drafts are flagged and do not become curve colors. Apply/OK commits valid page values; Cancel discards uncommitted changes. This page is available in both native Plasma Configure and the standalone preview.
 
 ## Media
 

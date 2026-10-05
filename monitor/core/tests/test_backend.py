@@ -3,9 +3,10 @@ import json
 from pathlib import Path
 import subprocess
 import threading
+import time
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from http.server import ThreadingHTTPServer
@@ -18,6 +19,72 @@ spec.loader.exec_module(m)
 
 
 class TelemetryTests(unittest.TestCase):
+    def test_ping_scheduler_samples_between_widget_requests(self):
+        telemetry = m.Telemetry()
+        observed = []
+        def probe(_target):
+            observed.append(time.monotonic())
+            if len(observed) >= 3:
+                telemetry.stop.set()
+            return {'ms': 12, 'checked_at': time.time()}
+        try:
+            with patch.object(m, 'ping_target', side_effect=probe):
+                telemetry.ping_thread.start()
+                telemetry.get(['example.com'])
+                self.assertTrue(telemetry.stop.wait(2))
+                telemetry.ping_thread.join(timeout=1)
+            self.assertEqual(len(observed), 3)
+            for before, after in zip(observed, observed[1:]):
+                self.assertGreaterEqual(after - before, 0.45)
+                self.assertLess(after - before, 0.9)
+        finally:
+            telemetry.stop.set()
+            telemetry.pool.shutdown()
+            telemetry.terminals.shutdown()
+
+    def test_half_second_stats_do_not_wait_for_media_bus(self):
+        telemetry = m.Telemetry()
+        observed = []
+        def sample():
+            observed.append(time.monotonic())
+            if len(observed) == 3:
+                telemetry.stop.set()
+            return {'percent': 20}
+        try:
+            with patch.object(m.Cpu, 'sample', side_effect=sample), patch.object(m.Gpu, 'sample', return_value=[]), patch.object(m, 'memory_snapshot', return_value={}), patch.object(m, 'media_snapshot') as media:
+                telemetry.collect()
+                media.assert_not_called()
+            self.assertEqual(len(observed), 3)
+            for before, after in zip(observed, observed[1:]):
+                self.assertGreaterEqual(after - before, 0.45)
+                self.assertLess(after - before, 0.9)
+        finally:
+            telemetry.stop.set()
+            telemetry.pool.shutdown()
+            telemetry.terminals.shutdown()
+
+    def test_ping_half_second_deadline_and_no_overlapping_probe(self):
+        telemetry = m.Telemetry()
+        telemetry.pool.shutdown()
+        telemetry.pool = MagicMock()
+        try:
+            with patch.object(m.time, 'monotonic', return_value=10):
+                telemetry.get(['example.com'])
+            with patch.object(m.time, 'monotonic', return_value=10.1):
+                telemetry.get(['example.com'])
+            self.assertEqual(telemetry.pool.submit.call_count, 1, 'Pending probe must not overlap')
+            entry = telemetry.pings['example.com']
+            with patch.object(m, 'ping_target', return_value={'ms': 12, 'checked_at': 100}):
+                telemetry.update_ping('example.com', entry)
+            with patch.object(m.time, 'monotonic', return_value=10.49):
+                telemetry.get(['example.com'])
+            self.assertEqual(telemetry.pool.submit.call_count, 1)
+            with patch.object(m.time, 'monotonic', return_value=10.5):
+                telemetry.get(['example.com'])
+            self.assertEqual(telemetry.pool.submit.call_count, 2)
+        finally:
+            telemetry.terminals.shutdown()
+
     def test_cpu_excludes_guest_and_uses_deltas(self):
         cpu = m.Cpu()
         with patch.object(m, 'read', side_effect=['cpu 100 0 50 850 0 0 0 0 10 0', 'cpu 120 0 60 920 0 0 0 0 10 0']), patch.object(m.Path, 'glob', return_value=[]):

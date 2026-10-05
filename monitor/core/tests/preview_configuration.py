@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     preferences = root.findChild(QObject, 'previewPreferences')
     modules = root.findChild(QObject, 'previewModulesPage')
     appearance = root.findChild(QObject, 'previewAppearancePage')
+    flows = root.findChild(QObject, 'previewFlowsPage')
     buttons = root.findChild(QObject, 'previewConfigurationButtons')
     config_window = root.findChild(QObject, 'previewConfiguration')
     original = preferences.property('enabledModules')
@@ -34,23 +35,28 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     appearance.setProperty('cfg_textColorHex', '#aabbcc')
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
+    flows.setProperty('cfg_cpuFlowColor', '#ff6633')
     assert preferences.property('enabledModules') == original
     assert preferences.property('backgroundOpacity') == 0
+    assert preferences.property('cpuFlowColor') == ''
     assert QMetaObject.invokeMethod(buttons, 'rejected')
     assert not config_window.property('visible')
     assert QMetaObject.invokeMethod(root, 'configure')
     QTest.qWait(100)
     assert modules.property('cfg_enabledModules') == original
     assert appearance.property('cfg_backgroundOpacity') == 0
+    assert flows.property('cfg_cpuFlowColor') == ''
 
     modules.setProperty('cfg_enabledModules', 'note')
     appearance.setProperty('cfg_textColorHex', '#aabbcc')
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
+    flows.setProperty('cfg_cpuFlowColor', '#ff6633')
     assert QMetaObject.invokeMethod(buttons, 'applied')
     assert preferences.property('enabledModules') == 'note'
     assert preferences.property('textColorHex') == '#aabbcc'
     assert preferences.property('backgroundOpacity') == 70
+    assert preferences.property('cpuFlowColor') == '#ff6633'
     assert config_window.property('visible'), 'Apply should leave settings open'
     assert QMetaObject.invokeMethod(buttons, 'accepted')
     assert not config_window.property('visible')

@@ -5,6 +5,7 @@ import org.kde.kirigami as Kirigami
 Item {
     id: card
     property color ink: "#f5f5f4"
+    property color flowInk: ink
     property var targets: []
     property var readings: []
     property var histories: ({})
@@ -27,7 +28,7 @@ Item {
                 required property int index
                 width: card.width
                 height: 42
-                readonly property var reading: card.readings[index] || {}
+                readonly property var reading: card.readings.find(value => value.target === modelData.url) || {}
                 readonly property var samples: card.histories[modelData.url] || []
                 readonly property real historyMaximum: Math.max(10, ...samples.filter(v => typeof v === "number" && isFinite(v)))
                 Accessible.name: "Ping " + modelData.label
@@ -36,7 +37,7 @@ Item {
                     objectName: "pingFlow"
                     anchors.fill: parent
                     anchors.topMargin: 12
-                    ink: card.ink
+                    ink: row.modelData.color || card.flowInk
                     values: row.samples
                     sampleCount: Math.max(2, Math.min(40, row.samples.length))
                     maximum: row.historyMaximum

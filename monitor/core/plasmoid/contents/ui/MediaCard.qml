@@ -5,6 +5,7 @@ import QtQuick.Layouts
 Item {
     id: card
     property color ink: "#f5f5f4"
+    property color flowInk: ink
     property var players: []
     property string selectedService: ""
     readonly property var player: players.find(p => p.service === selectedService) || players[0] || null
@@ -61,7 +62,7 @@ Item {
         Sparkline {
             objectName: "cavaFlow"
             anchors.fill: parent
-            ink: card.ink
+            ink: card.flowInk
             values: card.audioBars
             sampleCount: 0
             maximum: 1

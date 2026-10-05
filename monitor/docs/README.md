@@ -36,7 +36,9 @@ Runtime dependencies on Arch: `plasma-workspace`, `qt6-declarative`, `kirigami`,
 
 Version 1.5 uses smooth graphs for CPU/RAM/GPU/Ping, with 9 px values in the upper-right corner. Hover for hardware details or Ping status. CAVA is a flowing background curve. The default widget is **300 × 360**; a stats-and-media composition fits about **300 × 220**. In Edit Mode, resize existing instances with Plasma's handles; saved desktop sizes are preserved during updates. Curves build from actual samples after opening.
 
-Right-click the widget → **someProducts-monitor Settings…** (Configure). **Modules** selects visible modules, one to three columns, and their order. **Appearance** sets hex colors, border width and background opacity. **Ping** edits targets. **Media** selects a player and CAVA visibility/opacity; **Terminal** sets terminal height and font size. Use **Apply** or **OK** to save; **Cancel** discards unapplied changes. Narrow widgets automatically use one column.
+Right-click the widget → **someProducts-monitor Settings…** (Configure). **Modules** selects visible modules, one to three columns, and their order. **Appearance** sets hex colors, border width and background opacity. **Flow colors** independently sets CPU, RAM, GPU, Ping and CAVA curve colors using `#rrggbb`; empty fields follow the dashboard color. **Ping** edits targets. **Media** selects a player and CAVA visibility/opacity; **Terminal** sets terminal height and font size. Use **Apply** or **OK** to save; **Cancel** discards unapplied changes. Narrow widgets automatically use one column.
+
+CPU/RAM/GPU/Ping sample about every **0.5 seconds**; slower Ping replies take longer. Wi-Fi and Bluetooth share a row whenever both are enabled and at least 230 px of content width is available, including in a single-column dashboard. Hide either module to display the other independently.
 
 To split the dashboard into separate desktop pieces, add more someProducts-monitor widget instances. For example, leave CPU/RAM/GPU in one instance, media in another, and a note in a third. Each instance stores its own modules, order, text color, Ping targets and note. These settings are saved by Plasma and survive login/reboot. Recombine them by enabling the desired modules in one instance. Notes remain associated with their original widget; they are not automatically merged.
 
@@ -60,11 +62,12 @@ In **Settings → Ping**, enter one target per line and click **Apply**:
 
 ```text
 Work | https://example.com | ◇
+Colored | https://example.org | ◇ | #66aaff
 Router | 192.168.1.1 | network-wireless
 Loopback | 127.0.0.1 | ⌂
 ```
 
-The format is `label | URL or hostname | icon`. The icon may be a Unicode symbol/emoji or a KDE theme icon name such as `network-wireless`. A hostname alone is also accepted. Up to eight targets are shown. Labels sit beside the latency value. No target is preconfigured or contacted on your behalf. Valid configured targets are checked about every five seconds while a widget requests them.
+The format is `label | URL or hostname | icon | optional #rrggbb`. The optional fourth field gives that target's curve its own color; otherwise it follows the Ping color from Flow colors. The icon may be a Unicode symbol/emoji or a KDE theme icon name such as `network-wireless`. A hostname alone is also accepted. Up to eight targets are shown. Labels sit beside the latency value. No target is preconfigured or contacted on your behalf. Valid configured targets are checked about every 0.5 seconds while a widget requests them; a pending probe is never duplicated.
 
 **Check or remove**
 

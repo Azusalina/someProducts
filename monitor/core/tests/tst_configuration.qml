@@ -10,6 +10,7 @@ Item {
     ConfigModules { id: modules; x: 20; y: 20; width: 560; height: 680 }
     ConfigAppearance { id: appearance; x: 20; y: 20; width: 560; height: 580; visible: false }
     ConfigPing { id: ping; x: 20; y: 20; width: 560; height: 500; visible: false }
+    ConfigFlows { id: flows; x: 20; y: 20; width: 560; height: 580; visible: false }
     TestCase {
         name: "Configuration"
         when: windowShown
@@ -17,6 +18,7 @@ Item {
             modules.visible = true
             appearance.visible = false
             ping.visible = false
+            flows.visible = false
             modules.cfg_moduleOrder = "cpu,ram,ping,gpu,media,note"
             modules.cfg_enabledModules = "cpu,ram,ping,gpu,media,note"
             modules.cfg_columns = 2
@@ -89,6 +91,28 @@ Item {
             const field = findChild(ping, "pingTargetsSetting")
             enter(field, "Router | 127.0.0.1 | network-wireless")
             compare(ping.cfg_targetsText, "Router | 127.0.0.1 | network-wireless")
+        }
+        function test_045_flowColorDrafts() {
+            modules.visible = false; flows.visible = true
+            wait(100)
+            for (const key of ["cpu", "ram", "gpu", "ping", "cava"]) {
+                const field = findChild(flows, key + "FlowSetting")
+                enter(field, "#aabbcc")
+                compare(flows["cfg_" + key + "FlowColor"], "#aabbcc")
+                mouseClick(field)
+                keyClick(Qt.Key_A, Qt.ControlModifier)
+                for (const character of "#zzzzzz") keyClick(character)
+                compare(flows["cfg_" + key + "FlowColor"], "#aabbcc")
+                compare(field.valid, false)
+                enter(field, "")
+                compare(flows["cfg_" + key + "FlowColor"], "")
+            }
+            flows.cfg_cpuFlowColor = "#ff6633"; flows.cfg_ramFlowColor = "#66cc88"; flows.cfg_gpuFlowColor = "#6688ff"
+            flows.cfg_pingFlowColor = "#ffcc66"; flows.cfg_cavaFlowColor = "#cc66ff"
+            wait(100)
+            let saved = false
+            verify(configurationRoot.grabToImage(result => { verify(result.saveToFile("../docs/preview-config-flows.png")); saved = true }))
+            tryVerify(() => saved, 3000)
         }
         function test_05_configurationPreviews() {
             let saved = false

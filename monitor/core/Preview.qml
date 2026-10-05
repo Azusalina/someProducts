@@ -22,6 +22,11 @@ ApplicationWindow {
         property string noteText: ""
         property bool darkInk: false
         property string textColorHex: ""
+        property string cpuFlowColor: ""
+        property string ramFlowColor: ""
+        property string gpuFlowColor: ""
+        property string pingFlowColor: ""
+        property string cavaFlowColor: ""
         property string borderColorHex: "#aabbcc"
         property string backgroundColorHex: "#1b1b1b"
         property int borderWidth: 0
@@ -41,6 +46,7 @@ ApplicationWindow {
     function syncConfiguration(save) {
         transfer(modulesPage, ["moduleOrder", "enabledModules", "columns"], save)
         transfer(appearancePage, ["textColorHex", "borderColorHex", "backgroundColorHex", "borderWidth", "backgroundOpacity", "darkInk"], save)
+        transfer(flowsPage, ["cpuFlowColor", "ramFlowColor", "gpuFlowColor", "pingFlowColor", "cavaFlowColor"], save)
         transfer(pingPage, ["targetsText"], save)
         transfer(mediaPage, ["mediaService", "cavaEnabled", "cavaOpacity"], save)
         transfer(terminalPage, ["terminalHeight", "terminalFontSize"], save)
@@ -73,6 +79,7 @@ ApplicationWindow {
             id: tabs
             TabButton { text: "Modules" }
             TabButton { text: "Appearance" }
+            TabButton { text: "Flow colors" }
             TabButton { text: "Ping" }
             TabButton { text: "Media" }
             TabButton { text: "Terminal" }
@@ -83,6 +90,7 @@ ApplicationWindow {
             currentIndex: tabs.currentIndex
             ConfigModules { id: modulesPage; objectName: "previewModulesPage" }
             ConfigAppearance { id: appearancePage; objectName: "previewAppearancePage" }
+            ConfigFlows { id: flowsPage; objectName: "previewFlowsPage" }
             ConfigPing { id: pingPage; objectName: "previewPingPage" }
             ConfigMedia { id: mediaPage }
             ConfigTerminal { id: terminalPage }

@@ -15,6 +15,11 @@ Item {
         property string noteText: ""
         property bool darkInk: false
         property string textColorHex: ""
+        property string cpuFlowColor: ""
+        property string ramFlowColor: ""
+        property string gpuFlowColor: ""
+        property string pingFlowColor: ""
+        property string cavaFlowColor: ""
         property string borderColorHex: "#aabbcc"
         property string backgroundColorHex: "#1b1b1b"
         property int borderWidth: 0
@@ -40,6 +45,7 @@ Item {
             board.width = 580
             board.height = 680
             prefs.textColorHex = ""
+            prefs.cpuFlowColor = ""; prefs.ramFlowColor = ""; prefs.gpuFlowColor = ""; prefs.pingFlowColor = ""; prefs.cavaFlowColor = ""
             prefs.backgroundOpacity = 0
             prefs.borderWidth = 0
             prefs.mediaService = ""
@@ -121,6 +127,42 @@ Item {
             prefs.targetsText = "Other | other.local"
             board.recordSamples({pings: [{target: "other.local", checked_at: 13, ms: 30}]})
             verify(board.pingHistories["127.0.0.1"] === undefined)
+        }
+        function test_043_independentFlowColors() {
+            prefs.enabledModules = "cpu,ram,gpu,ping,media"
+            prefs.cpuFlowColor = "#ff6633"; prefs.ramFlowColor = "#88cc66"; prefs.gpuFlowColor = "#6688ff"
+            prefs.pingFlowColor = "#ffcc44"; prefs.cavaFlowColor = "#cc66ff"
+            prefs.targetsText = "A | 127.0.0.1 | ◇ | #22aabb\nB | localhost | ◇"
+            wait(150)
+            for (const key of ["cpu", "ram", "gpu"]) {
+                const tile = findChild(board, "tile_" + key)
+                compare(findChild(tile, "metricFlow").ink, prefs[key + "FlowColor"])
+                compare(findChild(tile, "metricValue").color, board.ink)
+            }
+            const ping = findChild(board, "pingCard")
+            compare(findChild(ping, "pingFlow").ink, "#22aabb")
+            compare(findChild(board, "cavaFlow").ink, "#cc66ff")
+            compare(board.targets[1].color, "")
+            prefs.cpuFlowColor = "invalid"
+            compare(findChild(findChild(board, "tile_cpu"), "metricFlow").ink, board.ink)
+        }
+        function test_044_radioPairInSingleColumn() {
+            prefs.columns = 1
+            prefs.enabledModules = "wifi,bluetooth"
+            board.width = 300
+            wait(150)
+            const wifi = findChild(board, "radio_wifi")
+            const bluetooth = findChild(board, "radio_bluetooth")
+            verify(wifi && bluetooth)
+            verify(wifi.mapToItem(board, 0, 0).x < bluetooth.mapToItem(board, 0, 0).x)
+            compare(wifi.mapToItem(board, 0, 0).y, bluetooth.mapToItem(board, 0, 0).y)
+            board.width = 200
+            wait(150)
+            verify(findChild(board, "radio_wifi") === null)
+            verify(findChild(board, "tile_wifi") !== null)
+            verify(findChild(board, "tile_bluetooth") !== null)
+            prefs.enabledModules = "wifi"
+            compare(board.layoutModules.join(","), "wifi")
         }
         function test_05_notePersistence() {
             wait(100)
