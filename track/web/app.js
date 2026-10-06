@@ -85,7 +85,7 @@ function startReplay(){
 async function copy(value){try{await navigator.clipboard.writeText(value);toast('copied');}catch{toast('copyFailed');}}
 function qr(element,value){const code=window.qrcode(0,'M');code.addData(value);code.make();element.src=code.createDataURL(4,16);}
 async function connect(){
- try{setup=await api('/api/setup');$('profile-url').textContent=setup.profile;$('receiver-url').textContent=setup.receiver;$('fingerprint').textContent=setup.fingerprint;$('data-dir').textContent=setup.data_dir;$('access-token').value=setup.token;$('access-token').type='password';$('show-token').textContent=t('show');qr($('cert-qr'),setup.profile);qr($('overland-qr'),setup.overland_url);status();$('setup-dialog').showModal();}catch{toast('error');}
+ try{setup=await api('/api/setup');$('certificate-step').hidden=setup.relay_active;$('relay-notice').hidden=!setup.relay_active;document.querySelector('#setup-dialog [data-i18n=setupIntro]').hidden=setup.relay_active;$('profile-url').textContent=setup.profile;$('receiver-url').textContent=setup.receiver;$('fingerprint').textContent=setup.fingerprint;$('data-dir').textContent=setup.data_dir;$('access-token').value=setup.token;$('access-token').type='password';$('show-token').textContent=t('show');qr($('cert-qr'),setup.profile);qr($('overland-qr'),setup.overland_url);status();$('setup-dialog').showModal();}catch{toast('error');}
 }
 function download(blob,name){const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function exportTrace(format){const note=state.day&&!state.sample?state.overview.notes[state.day]||'':'';

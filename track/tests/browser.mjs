@@ -53,6 +53,21 @@ try{
  assert.ok((await readFile(profilePath,'utf8')).includes('Track Local Sync'));
  await certificatePage.close();
  checks.push('default certificate port permits browser navigation and profile download');
+ const csrf=await page.locator('meta[name="track-csrf"]').getAttribute('content');
+ const setRelay=relay=>fetch(url+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json','X-Track-CSRF':csrf},body:JSON.stringify({url:relay})});
+ assert.equal((await setRelay('https://test-relay.trycloudflare.com')).status,200);
+ await page.locator('#connect').click();await page.locator('#relay-notice').waitFor();
+ assert.equal(await page.locator('#certificate-step').isVisible(),false);
+ assert.equal(await page.locator('#relay-notice').isVisible(),true);
+ assert.equal(await page.locator('#receiver-url').textContent(),'https://test-relay.trycloudflare.com/api/overland');
+ for(const language of ['zh-Hans','zh-Hant','en']) {await page.locator('[data-close="setup-dialog"]').click();await page.locator('#language').selectOption(language);await page.locator('#connect').click();await page.locator('#relay-notice').waitFor();assert.ok((await page.locator('#relay-notice').textContent()).includes('Cloudflare'));}
+ await page.locator('[data-close="setup-dialog"]').click();
+ await setRelay(null);await page.locator('#connect').click();await page.locator('#certificate-step').waitFor();
+ assert.equal(await page.locator('#certificate-step').isVisible(),true);
+ assert.equal(await page.locator('#relay-notice').isVisible(),false);
+ await page.locator('[data-close="setup-dialog"]').click();
+ checks.push('temporary relay setup, certificate bypass, three languages and return to LAN');
+
 
 
  const sample=await (await fetch(url+'/api/sample')).json();

@@ -174,6 +174,23 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(self.request(self.app.url+"/api/note", body)[0], 403)
         self.assertEqual(self.request(self.app.url+"/api/note", body, {"X-Track-CSRF":self.app.csrf})[0], 200)
 
+    def test_relay_is_local_csrf_protected_validated_and_expires(self):
+        url = self.app.url + "/api/relay"
+        body = json.dumps({"url": "https://test-relay.trycloudflare.com"}).encode()
+        self.assertEqual(self.request(url, body)[0], 403)
+        headers = {"X-Track-CSRF": self.app.csrf}
+        self.assertEqual(self.request(url, body, headers)[0], 200)
+        self.assertTrue(self.app.setup()["relay_active"])
+        self.assertEqual(self.app.setup()["receiver"], "https://test-relay.trycloudflare.com/api/overland")
+        self.assertEqual(self.request(url, b'{"url":"https://evil.example"}', headers)[0], 400)
+        self.assertEqual(self.request(url, b'{"url":"https://test.trycloudflare.com@evil.example"}', headers)[0], 400)
+        self.assertEqual(self.request(f"https://127.0.0.1:{self.app.ingest_port}/api/relay", body, headers)[0], 403)
+        self.app.relay = ("https://test-relay.trycloudflare.com", 0)
+        self.assertFalse(self.app.setup()["relay_active"])
+        self.assertIn("127.0.0.1", self.app.setup()["receiver"])
+        self.assertEqual(self.request(url, b'{"url":null}', headers)[0], 200)
+        self.assertIsNone(self.app.relay)
+
     def test_no_cache_traversal_and_sample_is_never_saved(self):
         before=self.app.store.overview()["count"]
         code, body, headers=self.request(self.app.url+"/api/sample")

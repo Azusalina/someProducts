@@ -1,4 +1,5 @@
 const en = {
+ relayNotice:'Temporary HTTPS relay active. Skip certificate installation and scan the Overland code below. Traffic passes through Cloudflare; the archive stays on this PC. Keep Track and the relay running. The address changes when the relay restarts.',
  archive:'FOOTPRINT ARCHIVE',sidebarIntro:'A little further, every day.',all:'All footprints',days:'YOUR DAYS',
  connect:'Connect iPhone',localCaption:'Your phone. Your PC. Your map.',place:'HONG KONG ISLAND',backup:'Back up',
  atlas:'YOUR PERSONAL ATLAS',title:'Everyday, drawn.',intro:"Only the places you've been. Nothing else.",export:'Export trace ↗',
@@ -9,7 +10,7 @@ const en = {
  distance:'RECORDED DISTANCE',moving:'MOVING TIME',points:'LOCATION POINTS',sessions:'TRACE SEGMENTS',min:'min',hours:'h',
  accuracy:'Accuracy',device:'Device',allAccuracy:'Include all',allDevices:'All devices',
  note:'A note for this day',notePlaceholder:'Something worth remembering…',saveNote:'Save note',noteSaved:'Note saved',
- offline:'No basemap. No cloud. Just your footprints.',timezone:'Dates in Hong Kong time · UTC+8',
+ offline:'No basemap. Your archive stays on this PC.',timezone:'Dates in Hong Kong time · UTC+8',
  localSync:'LOCAL SYNC',setupTitle:'Bring your day home.',setupIntro:'Connect your iPhone to the same Wi-Fi network as this PC. Complete these steps once.',close:'Close',
  certTitle:'Trust this PC',certText:'Scan with your iPhone camera, open in Safari and tap Allow to download the certificate profile. Install within 8 minutes, or iOS deletes the pending download.',
  certQr:'Certificate profile QR code',copyLink:'Copy link',certInstall:'Immediately open Settings → Profile Downloaded → Track Local Sync → Install. If Profile Downloaded is missing, download the profile again.',
@@ -36,13 +37,14 @@ const en = {
  confirmBackup:'Back up',pointDetail:'{time} · ±{accuracy} m · {device}',unknown:'unknown',
 };
 const hans = {
+ relayNotice:'临时 HTTPS 中转已开启。跳过证书安装，扫描下方 Overland 二维码。上传流量经过 Cloudflare，档案保存在本机。保持 Track 和中转运行；中转重启后地址会变化。',
  archive:'行动轨迹档案',sidebarIntro:'每天，再走远一点。',all:'全部足迹',days:'记录日期',connect:'连接 iPhone',localCaption:'你的手机。你的电脑。你的地图。',
  place:'香港岛',backup:'备份',atlas:'你的个人地图',title:'日常，绘成足迹。',intro:'只留下你到过的地方。',export:'导出轨迹 ↗',
  sampleNotice:'示例预览 · 虚构路线，不会保存到你的档案',sampleExit:'返回我的地图',island:'港岛视角',fit:'适配足迹',zoomIn:'放大',zoomOut:'缩小',
  mapAria:'足迹地图。拖动平移，滚轮缩放；方向键平移，加减键缩放。',emptyTitle:'一张白纸，新的开始。',emptyText:'第一次同步，留下第一条线。',sample:'浏览示例',loading:'正在读取足迹…',
  replay:'轨迹回放',play:'播放回放',pause:'暂停回放',progress:'回放进度',speed:'回放时长',distance:'记录距离',moving:'移动时长',points:'定位点',sessions:'轨迹分段',min:'分钟',hours:'小时',
  accuracy:'定位精度',device:'设备',allAccuracy:'包含全部',allDevices:'全部设备',note:'记下这一天',notePlaceholder:'有什么值得记住…',saveNote:'保存备注',noteSaved:'备注已保存',
- offline:'没有底图，没有云端，只有你的足迹。',timezone:'日期采用香港时间 · UTC+8',localSync:'本地同步',setupTitle:'把这一天带回家。',setupIntro:'让 iPhone 与电脑连接同一个 Wi-Fi 网络。以下设置只需完成一次。',close:'关闭',
+ offline:'没有底图，足迹档案保存在本机。',timezone:'日期采用香港时间 · UTC+8',localSync:'本地同步',setupTitle:'把这一天带回家。',setupIntro:'让 iPhone 与电脑连接同一个 Wi-Fi 网络。以下设置只需完成一次。',close:'关闭',
  certTitle:'信任这台电脑',certText:'使用 iPhone 相机扫码，在 Safari 点击“允许”下载证书描述文件。请在 8 分钟内安装，否则 iOS 会删除待安装文件。',certQr:'证书描述文件二维码',copyLink:'复制链接',
  certInstall:'立即打开设置首页 → 已下载描述文件 → Track Local Sync → 安装。若没有“已下载描述文件”，请重新下载。',certTrust:'然后：设置 → 通用 → 关于本机 → 证书信任设置 → 为 Track Local CA 开启完全信任。',fingerprint:'证书指纹（SHA-256）',certOnly:'该描述文件只包含证书，不安装 VPN 或设备管理。',
  overlandTitle:'配置 Overland',overlandText:'扫描第二个二维码，打开 Overland 并设置接收地址、访问令牌和设备 ID。',overlandQr:'Overland 设置二维码',receiver:'Server URL（接收地址）',manual:'手动配置',token:'Access token（访问令牌）',show:'显示',hide:'隐藏',copy:'复制',deviceId:'Device ID：iPhone。添加更多手机时，请使用不同的 ID。',
@@ -53,13 +55,14 @@ const hans = {
  received:'已存档',pointsWord:'个定位点',daysWord:'天',copied:'已复制',copyFailed:'请手动选择并复制文字。',error:'操作未完成，请重试。',quality:'显示 {kept} 点 · 筛除 {excluded} 点 · {gaps} 处断点。距离为估算值。',noDays:'记录日期将在这里显示。',daySubtitle:'日常的一小部分。',dayLabel:'一天，一段足迹',filteredEmpty:'没有符合筛选的定位点。',filteredText:'试试其他日期、设备或精度。',noPoints:'还没有可适配的足迹。',noteSample:'示例备注不会保存。',statusReceived:'已存档 {count} 点 · 最近同步 {time}',backupDone:'数据库备份已下载',downloaded:'轨迹已导出',pointDetail:'{time} · 精度 ±{accuracy} 米 · {device}',unknown:'未知',
 };
 const hant = {
+ relayNotice:'臨時 HTTPS 中轉已開啟。略過憑證安裝，掃描下方 Overland 二維碼。上傳流量經過 Cloudflare，檔案儲存在本機。保持 Track 和中轉運行；中轉重啟後地址會變更。',
  archive:'行動軌跡檔案',sidebarIntro:'每天，再走遠一點。',all:'全部足跡',days:'記錄日期',connect:'連接 iPhone',localCaption:'你的手機。你的電腦。你的地圖。',
  place:'香港島',backup:'備份',atlas:'你的個人地圖',title:'日常，繪成足跡。',intro:'只留下你到過的地方。',export:'匯出軌跡 ↗',
  sampleNotice:'示例預覽 · 虛構路線，不會儲存至你的檔案',sampleExit:'返回我的地圖',island:'港島視角',fit:'適配足跡',zoomIn:'放大',zoomOut:'縮小',
  mapAria:'足跡地圖。拖動平移，滾輪縮放；方向鍵平移，加減鍵縮放。',emptyTitle:'一張白紙，新的開始。',emptyText:'第一次同步，留下第一條線。',sample:'瀏覽示例',loading:'正在讀取足跡…',
  replay:'軌跡回放',play:'播放回放',pause:'暫停回放',progress:'回放進度',speed:'回放時長',distance:'記錄距離',moving:'移動時長',points:'定位點',sessions:'軌跡分段',min:'分鐘',hours:'小時',
  accuracy:'定位精度',device:'裝置',allAccuracy:'包含全部',allDevices:'全部裝置',note:'記下這一天',notePlaceholder:'有甚麼值得記住…',saveNote:'儲存備註',noteSaved:'備註已儲存',
- offline:'沒有底圖，沒有雲端，只有你的足跡。',timezone:'日期採用香港時間 · UTC+8',localSync:'本地同步',setupTitle:'把這一天帶回家。',setupIntro:'讓 iPhone 與電腦連接同一個 Wi-Fi 網絡。以下設定只需完成一次。',close:'關閉',
+ offline:'沒有底圖，足跡檔案儲存在本機。',timezone:'日期採用香港時間 · UTC+8',localSync:'本地同步',setupTitle:'把這一天帶回家。',setupIntro:'讓 iPhone 與電腦連接同一個 Wi-Fi 網絡。以下設定只需完成一次。',close:'關閉',
  certTitle:'信任這台電腦',certText:'使用 iPhone 相機掃碼，在 Safari 點選「允許」下載憑證描述檔。請在 8 分鐘內安裝，否則 iOS 會刪除待安裝檔案。',certQr:'憑證描述檔二維碼',copyLink:'複製連結',
  certInstall:'立即開啟設定首頁 → 已下載描述檔 → Track Local Sync → 安裝。若沒有「已下載描述檔」，請重新下載。',certTrust:'然後：設定 → 一般 → 關於本機 → 憑證信任設定 → 為 Track Local CA 開啟完全信任。',fingerprint:'憑證指紋（SHA-256）',certOnly:'此描述檔只包含憑證，不安裝 VPN 或裝置管理。',
  overlandTitle:'設定 Overland',overlandText:'掃描第二個二維碼，開啟 Overland 並設定接收地址、存取權杖和裝置 ID。',overlandQr:'Overland 設定二維碼',receiver:'Server URL（接收地址）',manual:'手動設定',token:'Access token（存取權杖）',show:'顯示',hide:'隱藏',copy:'複製',deviceId:'Device ID：iPhone。加入更多手機時，請使用不同的 ID。',

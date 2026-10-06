@@ -8,6 +8,7 @@ import socket
 import ssl
 import tempfile
 import threading
+import time
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -37,6 +38,7 @@ class App:
         self.lan_ip = str(ipaddress.IPv4Address(lan_ip))
         self.tls = prepare(self.data_dir, self.lan_ip)
         self.store = Store(self.data_dir / "track.sqlite3")
+        self.relay = None
         self.csrf = secrets.token_urlsafe(32)
         self.servers = []
         try:
@@ -77,8 +79,12 @@ class App:
 
     def setup(self):
         receiver = f"https://{self.lan_ip}:{self.ingest_port}/api/overland"
+        relay = self.relay
+        relay_active = bool(relay and relay[1] > time.monotonic())
+        if relay_active:
+            receiver = relay[0] + "/api/overland"
         profile = f"http://{self.lan_ip}:{self.trust_port}/track.mobileconfig"
-        return {"receiver": receiver, "profile": profile, "token": self.tls["config"]["token"],
+        return {"receiver": receiver, "relay_active": relay_active, "profile": profile, "token": self.tls["config"]["token"],
                 "fingerprint": self.tls["fingerprint"], "data_dir": str(self.data_dir), "version": __version__,
                 "overland_url": "overland://setup?" + urlencode({"url": receiver,
                     "token": self.tls["config"]["token"], "device_id": "iPhone", "unique_id": "yes"})}
@@ -217,6 +223,16 @@ class App:
                         app.store.ingest(self.body())
                         # This is intentionally issued only after the FULL-synchronous transaction commits.
                         self.send(200, {"result": "ok"})
+                    elif mode == "ui" and self.local_request(mutation=True) and path == "/api/relay":
+                        data = json.loads(self.body())
+                        url = data.get("url")
+                        if url is None:
+                            app.relay = None
+                        elif isinstance(url, str) and re.fullmatch(r"https://[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com", url):
+                            app.relay = (url, time.monotonic() + 45)
+                        else:
+                            raise ValueError("Expected a temporary trycloudflare HTTPS origin")
+                        self.send(200, {"saved": True})
                     elif mode == "ui" and self.local_request(mutation=True) and path == "/api/note":
                         data = json.loads(self.body())
                         day, text = data.get("day"), data.get("text")

@@ -1,6 +1,6 @@
 ## What is it?
 
-track 是本地行动轨迹档案工具：Overland 在 iPhone 上自动采集位置，回到同一局域网后同步至 PC；通过离线白底地图查看、缩放和回放足迹。初始视角聚焦香港岛，界面支持 English、简体中文和繁體中文，默认英文。
+track 是本地行动轨迹档案工具：Overland 在 iPhone 上自动采集位置，默认回到同一局域网后同步至 PC，也支持可选临时 HTTPS 中转；通过离线白底地图查看、缩放和回放足迹。初始视角聚焦香港岛，界面支持 English、简体中文和繁體中文，默认英文。
 
 PC 端 v0.1.0 已实现。架构、轨迹计算规则、测试结果及限制见 [description.md](description.md)。
 
@@ -25,6 +25,8 @@ Linux 也可运行 `./start.sh`；Windows 双击 `start.bat`，或在终端运�
 5. 在 Overland 点击 **Send Now**。PC 显示最近同步时间和定位点后，即可浏览足迹。外出时暂存于手机，回家后补传；自动补传时机受 iOS 调度影响，必要时再次点击 Send Now。
 
 默认端口：PC 本机界面 `4188`；局域网 HTTPS 上传 `4189`；仅下载公开证书的局域网 HTTP 服务 `8080`。手机需要访问后两个端口；防火墙、访客网络隔离或 VPN 的局域网策略可能影响连接。网络更换后重新启动 Track，并用连接面板更新 Overland 地址；保留原数据目录时无需重新生成根证书。长期使用可为 PC 保留固定 DHCP 地址。
+
+当 VPN 或热点隔离阻止手机访问 PC IP 时，可选择 **临时 HTTPS 中转**：上传流量经过 Cloudflare，数据库仍保存在 PC；无需在 iPhone 安装 Track 证书。先启动 Track，再安装 [cloudflared](https://developers.cloudflare.com/tunnel/downloads/) 并在另一个终端运行 `python3 scripts/relay.py`（Windows：`py -3 scripts/relay.py`）。也可用 `--cloudflared <可执行文件路径>` 指定程序。显示 **Relay ready** 后，刷新网页并打开 **Connect iPhone**，扫描 Overland 二维码；必要时在 Overland 手动填写新 Server URL 和原 Access token，点击 Send Now。保持两个服务运行；在中转终端按 `Ctrl+C` 关闭公网入口。中转每次重启会更换域名，须重新配置手机。此方式为临时测试，不提供长期在线保证；不需要关闭现有 VPN。
 
 界面操作：选择日期或 **All footprints**；拖动地图、滚轮或加减按钮缩放；**Island view** 回到港岛视角，**Fit footprints** 适配所选记录。点击播放、拖动进度条回放；按设备和定位精度筛选。单日可保存备注；**Export trace** 导出当前筛选后的 GPX／GeoJSON；**Back up** 下载含原始上传和备注的 SQLite 备份。**Explore a sample** 只预览虚构路线，不写入档案。
 

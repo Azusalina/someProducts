@@ -7,3 +7,5 @@ data/
 *.sqlite3*
 *.key
 config.json
+
+.tools/
