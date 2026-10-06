@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+import {mkdtemp,readFile,mkdir,rm,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import https from 'node:https';
+import {chromium} from 'playwright-core';
+
+const temporary=await mkdtemp(path.join(os.tmpdir(),'track-browser-'));
+const evidence=path.join(process.cwd(),'.test-results');await mkdir(evidence,{recursive:true});
+const server=spawn('python3',['track.py','--lan-ip','127.0.0.1','--port','0','--ingest-port','0','--trust-port','0','--data-dir',temporary],{cwd:process.cwd()});
+let stdout='',stderr='';server.stdout.on('data',data=>stdout+=data);server.stderr.on('data',data=>stderr+=data);
+const ready=await new Promise((resolve,reject)=>{
+ const timeout=setTimeout(()=>reject(new Error('Track did not start: '+stderr)),30000);
+ const check=()=>{if(stdout.includes('Open the local browser')){clearTimeout(timeout);resolve(stdout);}};
+ server.stdout.on('data',check);server.on('exit',code=>{clearTimeout(timeout);reject(new Error(`Server exited ${code}: ${stderr}`));});check();
+});
+const url=ready.match(/Track ready · (http:\/\/[^\s]+)/)[1];
+const receiver=ready.match(/Overland receiver · (https:\/\/[^\s]+)/)[1];
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true});
+const checks=[];
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1040},acceptDownloads:true});
+ const errors=[],external=[];page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(url+'/')&&!request.url().startsWith('data:'))external.push(request.url());});
+ await page.goto(url);await page.getByRole('heading',{name:'Everyday, drawn.'}).waitFor();
+ await page.getByRole('heading',{name:'A blank page. A new beginning.'}).waitFor();
+ assert.equal(await page.locator('#export-open').isDisabled(),true);checks.push('empty archive is honest, export disabled');
+ await page.screenshot({path:path.join(evidence,'empty-desktop.png'),fullPage:true});
+ await page.locator('#sample-open').click();await page.locator('#sample-banner').waitFor();
+ await page.waitForFunction(()=>Number(document.querySelector('#point-stat').textContent)>0);
+ assert.equal((await (await fetch(url+'/api/overview')).json()).count,0);
+ await page.screenshot({path:path.join(evidence,'sample-desktop.png'),fullPage:true});
+ await page.locator('#sample-exit').click();await page.getByRole('heading',{name:'A blank page. A new beginning.'}).waitFor();checks.push('sample is isolated from real data');
+ await page.locator('#language').selectOption('zh-Hans');assert.equal(await page.locator('h1').textContent(),'日常，绘成足迹。');
+ await page.locator('#language').selectOption('zh-Hant');assert.equal(await page.locator('h1').textContent(),'日常，繪成足跡。');
+ await page.reload();assert.equal(await page.locator('#language').inputValue(),'zh-Hant');
+ await page.locator('#language').selectOption('en');checks.push('English, Simplified and Traditional Chinese; language persists');
+ await page.locator('#connect').click();await page.locator('#setup-dialog').waitFor();
+ assert.equal(await page.locator('#access-token').getAttribute('type'),'password');
+ await page.waitForFunction(()=>document.querySelector('#cert-qr').naturalWidth>100&&document.querySelector('#overland-qr').naturalWidth>100);
+ await page.locator('[data-close="setup-dialog"]').click();checks.push('setup drawer, two local QR codes, masked token');
+
+ const sample=await (await fetch(url+'/api/sample')).json();
+ const payload={locations:sample.points.map(p=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lon,p.lat]},properties:{timestamp:new Date(p.ms).toISOString(),device_id:'Test iPhone',unique_id:'test-phone',horizontal_accuracy:p.accuracy,altitude:p.altitude,motion:p.motion}}))};
+ const ca=await readFile(path.join(temporary,'ca.pem'));
+ const config=JSON.parse(await readFile(path.join(temporary,'config.json'),'utf8'));
+ const upload=()=>new Promise((resolve,reject)=>{const request=https.request(receiver,{method:'POST',ca,headers:{'Content-Type':'application/json','Authorization':'Bearer '+config.token}},response=>{let body='';response.on('data',chunk=>body+=chunk);response.on('end',()=>resolve({status:response.statusCode,body:JSON.parse(body)}));});request.on('error',reject);request.end(JSON.stringify(payload));});
+ assert.deepEqual(await upload(),{status:200,body:{result:'ok'}});assert.deepEqual(await upload(),{status:200,body:{result:'ok'}});
+ await page.waitForFunction(count=>Number(document.querySelector('#point-stat').textContent.replaceAll(',',''))===count,sample.points.length,{timeout:15000});
+ assert.equal((await (await fetch(url+'/api/overview')).json()).count,sample.points.length);checks.push('trusted HTTPS, actual protocol, retry dedup, automatic UI refresh');
+ await page.locator('#fit-view').click();await page.screenshot({path:path.join(evidence,'archive-desktop.png'),fullPage:true});
+ const before=await page.locator('#map').evaluate(c=>c.toDataURL());await page.locator('#zoom-in').click();
+ assert.notEqual(await page.locator('#map').evaluate(c=>c.toDataURL()),before);await page.locator('#island-view').click();await page.locator('#fit-view').click();
+ const box=await page.locator('#map').boundingBox();const dragBefore=await page.locator('#map').evaluate(c=>c.toDataURL());
+ await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+70,box.y+box.height/2+35,{steps:5});await page.mouse.up();
+ assert.notEqual(await page.locator('#map').evaluate(c=>c.toDataURL()),dragBefore);checks.push('canvas zoom, pan and island reset');
+ await page.locator('.day-button').first().click();await page.locator('#note-section').waitFor();
+ await page.getByRole('button',{name:'Play replay',exact:true}).click();await page.waitForTimeout(600);
+ assert.ok(Number(await page.locator('#replay-slider').inputValue())>0&&Number(await page.locator('#replay-slider').inputValue())<1000);
+ await page.getByRole('button',{name:'Pause replay',exact:true}).click();
+ await page.locator('#replay-slider').focus();await page.keyboard.press('End');checks.push('day selection, animated replay, pause and scrub');
+ const note='<img src=x onerror=alert(1)> A Hong Kong day & a note';await page.locator('#day-note').fill(note);await page.locator('#save-note').click();
+ await page.getByRole('status').filter({hasText:'Note saved'}).waitFor();await page.reload();await page.locator('.day-button').first().click();
+ assert.equal(await page.locator('#day-note').inputValue(),note);checks.push('notes persist and remain inert text');
+ await page.locator('#export-open').click();const gpxDownload=page.waitForEvent('download');await page.locator('#export-gpx').click();const gpxFile=await gpxDownload;await gpxFile.saveAs(path.join(evidence,'trace.gpx'));
+ const xml=await readFile(path.join(evidence,'trace.gpx'),'utf8');
+ assert.equal(await page.evaluate(xml=>Boolean(new DOMParser().parseFromString(xml,'application/xml').querySelector('parsererror')),xml),false);assert.ok(xml.includes('&lt;img'));
+ await page.locator('#export-open').click();const jsonDownload=page.waitForEvent('download');await page.locator('#export-geojson').click();await (await jsonDownload).saveAs(path.join(evidence,'trace.geojson'));
+ assert.equal(JSON.parse(await readFile(path.join(evidence,'trace.geojson'),'utf8')).type,'FeatureCollection');
+ const backupDownload=page.waitForEvent('download');await page.locator('#backup').click();await (await backupDownload).saveAs(path.join(evidence,'backup.sqlite3'));
+ assert.equal((await readFile(path.join(evidence,'backup.sqlite3'))).subarray(0,15).toString(),'SQLite format 3');checks.push('GPX, GeoJSON and consistent SQLite downloads');
+ await page.locator('#toast').waitFor({state:'hidden'});
+ for(const width of [390,320]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(evidence,`mobile-${width}.png`),fullPage:true});}
+ checks.push('390px and 320px responsive layouts');
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks.push('no browser errors or external requests');
+ await writeFile(path.join(evidence,'browser-results.json'),JSON.stringify({result:'PASS',checks},null,2));console.log(JSON.stringify({result:'PASS',checks,evidence},null,2));
+}finally{
+ await browser.close();server.kill('SIGTERM');await Promise.race([once(server,'exit'),new Promise(resolve=>setTimeout(resolve,5000))]);if(server.exitCode===null)server.kill('SIGKILL');else assert.equal(server.exitCode,0,'SIGTERM closes all listeners cleanly');await rm(temporary,{recursive:true,force:true});
+}

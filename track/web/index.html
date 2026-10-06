@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="track-csrf" content="__CSRF__">
+  <title>Track · Your everyday footprint</title>
+  <link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/style.css">
+  <script defer src="/vendor/qrcode.js"></script><script type="module" src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Track"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 23c5 0 2-14 9-14s-2 15 5 15 2-11 8-15"/></svg>track<span>LOCAL</span></a>
+    <div class="sidebar-intro"><span class="eyebrow" data-i18n="archive">FOOTPRINT ARCHIVE</span><p data-i18n="sidebarIntro">A little further, every day.</p></div>
+    <button id="all-days" class="all-days active"><span data-i18n="all">All footprints</span><span id="day-count">0</span></button>
+    <div class="list-heading"><span data-i18n="days">YOUR DAYS</span><span id="points-count">0</span></div>
+    <nav id="day-list" aria-label="Recorded days" data-aria="days"></nav>
+    <div class="sidebar-bottom">
+      <button class="connect-button" id="connect"><span aria-hidden="true">↗</span><span data-i18n="connect">Connect iPhone</span></button>
+      <div class="sync-status"><span id="sync-dot" class="status-dot"></span><span id="sync-text">Waiting for your first sync</span></div>
+      <span class="local-caption" data-i18n="localCaption">Your phone. Your PC. Your map.</span>
+    </div>
+  </aside>
+  <main>
+    <header class="topbar"><span class="place"><span class="place-dot"></span><span data-i18n="place">HONG KONG ISLAND</span></span>
+      <div class="top-actions"><select id="language" aria-label="Language"><option value="en">English</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option></select><button class="text-button" id="backup" data-i18n="backup">Back up</button></div>
+    </header>
+    <section class="page-heading"><div><p class="eyebrow" id="view-label">YOUR PERSONAL ATLAS</p><h1 id="view-title">Everyday, drawn.</h1><p id="view-subtitle" data-i18n="intro">Only the places you've been. Nothing else.</p></div><button class="outline-button" id="export-open" data-i18n="export">Export trace ↗</button></section>
+    <div id="sample-banner" class="sample-banner" hidden><span data-i18n="sampleNotice">Sample preview · fictional routes, never saved to your archive</span><button id="sample-exit" data-i18n="sampleExit">Return to my map</button></div>
+    <div class="map-shell">
+      <canvas id="map" tabindex="0" aria-label="Footprint map. Drag to pan, scroll to zoom." data-aria="mapAria"></canvas>
+      <div class="map-toolbar"><button id="island-view" class="map-pill" data-i18n="island">Island view</button><button id="fit-view" class="map-pill" data-i18n="fit">Fit footprints</button></div>
+      <div class="zoom-controls"><button id="zoom-in" aria-label="Zoom in" data-aria="zoomIn">+</button><button id="zoom-out" aria-label="Zoom out" data-aria="zoomOut">−</button></div>
+      <div id="empty-state" class="empty-state"><div class="empty-line" aria-hidden="true">⌁</div><h2 data-i18n="emptyTitle">A blank page. A new beginning.</h2><p data-i18n="emptyText">Your first sync will leave the first line.</p><button id="empty-connect" class="solid-button" data-i18n="connect">Connect iPhone</button><button id="sample-open" class="text-button" data-i18n="sample">Explore a sample</button></div>
+      <div class="map-compass" aria-hidden="true">↑<span>N</span></div><div class="map-scale"><span id="scale-label">1 km</span><div></div></div>
+      <div id="map-tooltip" class="map-tooltip" hidden></div>
+      <div id="loading" class="loading" hidden data-i18n="loading">Loading footprints…</div>
+    </div>
+    <section class="replay-bar" aria-label="Route replay" data-aria="replay"><button id="replay-button" class="play-button" aria-label="Play replay" data-aria="play" disabled>▶</button><div class="replay-time"><span class="eyebrow" data-i18n="replay">REPLAY</span><span id="replay-time">—</span></div><input type="range" id="replay-slider" min="0" max="1000" value="1000" aria-label="Replay progress" data-aria="progress" disabled><select id="replay-speed" aria-label="Replay duration" data-aria="speed"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select></section>
+    <section class="stats"><div><span class="eyebrow" data-i18n="distance">RECORDED DISTANCE</span><p><strong id="distance">0.00</strong><span>km</span></p></div><div><span class="eyebrow" data-i18n="moving">MOVING TIME</span><p><strong id="moving">0</strong><span id="moving-unit">min</span></p></div><div><span class="eyebrow" data-i18n="points">LOCATION POINTS</span><p><strong id="point-stat">0</strong></p></div><div><span class="eyebrow" data-i18n="sessions">TRACE SEGMENTS</span><p><strong id="segment-stat">0</strong></p></div></section>
+    <div class="filter-row"><label><span data-i18n="accuracy">Accuracy</span><select id="accuracy"><option value="30">≤ 30 m</option><option value="100" selected>≤ 100 m</option><option value="all" data-i18n="allAccuracy">Include all</option></select></label><label><span data-i18n="device">Device</span><select id="device"><option value="" data-i18n="allDevices">All devices</option></select></label><span id="quality-note" class="quality-note"></span></div>
+    <section class="note-section" id="note-section" hidden><label for="day-note" data-i18n="note">A note for this day</label><textarea id="day-note" maxlength="5000" rows="2" data-placeholder="notePlaceholder" placeholder="Something worth remembering…"></textarea><button id="save-note" class="text-button" data-i18n="saveNote">Save note</button></section>
+    <footer class="main-footer"><span data-i18n="offline">No basemap. No cloud. Just your footprints.</span><span data-i18n="timezone">Dates in Hong Kong time · UTC+8</span></footer>
+  </main>
+  <dialog id="setup-dialog"><div class="dialog-heading"><div><p class="eyebrow" data-i18n="localSync">LOCAL SYNC</p><h2 data-i18n="setupTitle">Bring your day home.</h2></div><button class="dialog-close" data-close="setup-dialog" aria-label="Close" data-aria="close">×</button></div>
+    <p class="dialog-intro" data-i18n="setupIntro">Connect your iPhone to the same Wi-Fi network as this PC. Complete these steps once.</p>
+    <div class="setup-step"><span class="step-number">01</span><div><h3 data-i18n="certTitle">Trust this PC</h3><p data-i18n="certText">Scan with your iPhone camera and open in Safari to download the local certificate profile.</p><div class="qr-row"><img id="cert-qr" alt="Certificate profile QR code" data-alt="certQr"><div><code id="profile-url"></code><button class="text-button" id="copy-profile" data-i18n="copyLink">Copy link</button></div></div><p class="setup-instruction" data-i18n="certInstall">Settings → General → VPN & Device Management → Track Local Sync → Install.</p><p class="setup-instruction" data-i18n="certTrust">Then: Settings → General → About → Certificate Trust Settings → enable full trust for Track Local CA.</p><details><summary data-i18n="fingerprint">Certificate fingerprint (SHA-256)</summary><code id="fingerprint"></code><p data-i18n="certOnly">This profile contains only a certificate. It does not install a VPN or device management.</p></details></div></div>
+    <div class="setup-step"><span class="step-number">02</span><div><h3 data-i18n="overlandTitle">Configure Overland</h3><p data-i18n="overlandText">Scan this second code to open Overland and set the receiver, access token and device ID.</p><div class="qr-row"><img id="overland-qr" alt="Overland setup QR code" data-alt="overlandQr"><div><label class="small-label" data-i18n="receiver">Server URL</label><code id="receiver-url"></code><button class="text-button" id="copy-receiver" data-i18n="copyLink">Copy link</button></div></div><details><summary data-i18n="manual">Manual configuration</summary><label class="small-label" data-i18n="token">Access token</label><div class="token-row"><input id="access-token" type="password" readonly aria-label="Access token" data-aria="token"><button id="show-token" class="text-button" data-i18n="show">Show</button><button id="copy-token" class="text-button" data-i18n="copy">Copy</button></div><p data-i18n="deviceId">Device ID: iPhone. Give each phone a different ID if you add more.</p></details></div></div>
+    <div class="setup-step"><span class="step-number">03</span><div><h3 data-i18n="recordTitle">Keep the whole trace</h3><ul><li data-i18n="settingAll">Logging Mode → All Data; Locations per Batch → 200.</li><li data-i18n="settingTracking">Tracking Enabled → On; Location Authorization → Always; Precise Location → On.</li><li data-i18n="settingMode">For detailed traces: Continuous Tracking → Standard; Desired Accuracy → 10 m. Start here and check daily battery use.</li><li data-i18n="settingPause">For the initial continuity test: Pause Updates Automatically → Off. This uses more battery; tune it after a real walk.</li><li data-i18n="settingSend">Send Interval → 5 minutes; leave “Consider HTTP 2XX Successful” off.</li></ul><p data-i18n="sendNow">Tap Send Now in Overland. When this PC confirms the batch, it is safely archived here and removed from the phone's pending queue.</p><div class="setup-result" id="setup-result"></div></div></div>
+    <details class="troubleshoot"><summary data-i18n="troubleshoot">If the first sync does not arrive</summary><p data-i18n="troubleshootText">Check the Wi-Fi network, certificate trust, receiver address and access token. Allow the HTTPS upload port through your PC firewall. Guest Wi-Fi or VPN LAN blocking can prevent access; do not turn off a VPN automatically. DHCP reservations keep the PC address stable.</p></details>
+    <p class="storage-caption"><span data-i18n="storage">Archive directory</span>: <code id="data-dir"></code></p>
+  </dialog>
+  <dialog id="export-dialog"><div class="dialog-heading"><h2 data-i18n="exportTitle">Take your trace with you.</h2><button class="dialog-close" data-close="export-dialog" aria-label="Close" data-aria="close">×</button></div><p data-i18n="exportText">Exports use the selected day, device and accuracy filter. Gaps stay separate. Original uploads remain in the database backup.</p><div class="export-options"><button id="export-geojson" class="outline-button">GeoJSON ↗</button><button id="export-gpx" class="outline-button">GPX ↗</button></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

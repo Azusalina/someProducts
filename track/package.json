@@ -1,0 +1,12 @@
+{
+  "name": "local-track",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Development checks for the Python local Overland archive",
+  "scripts": {
+    "test": "python3 -m unittest discover -s tests -p 'test_*.py' && node --test tests/geometry.test.mjs",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "devDependencies": { "playwright-core": "^1.56.0" }
+}
