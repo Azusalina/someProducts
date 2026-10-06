@@ -17,10 +17,26 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, acceptDownloads: true });
   const errors = [], external = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('request', request => { if (!request.url().startsWith(app.url.split('/#')[0]) && !request.url().startsWith('data:') && request.url() !== 'about:blank') external.push(request.url()); });
+  page.on('request', request => { if (!request.url().startsWith(new URL(app.url).origin) && !request.url().startsWith('data:') && request.url() !== 'about:blank') external.push(request.url()); });
   await page.goto(app.url);
+  assert.equal(new URL(page.url()).hash, '');
   const preview = page.frameLocator('#preview');
   await preview.locator('h1').filter({ hasText: 'Live document' }).waitFor();
+  assert.equal(await page.evaluate(() => document.cookie), ''); // Session cookie is HttpOnly.
+  await page.reload();
+  await preview.locator('h1').filter({ hasText: 'Live document' }).waitFor();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+  assert.equal(await preview.locator('body').evaluate(body => getComputedStyle(body).backgroundColor), 'rgb(22, 22, 22)');
+  const expandedLeft = await page.locator('main').evaluate(main => main.getBoundingClientRect().left);
+  assert.ok(expandedLeft > 0);
+  await page.getByRole('button', { name: 'Hide sidebar', exact: true }).click();
+  assert.equal(await page.locator('#sidebar').isVisible(), false);
+  assert.equal(await page.locator('main').evaluate(main => main.getBoundingClientRect().left), 0);
+  assert.equal(await page.locator('#sidebar-toggle').getAttribute('aria-expanded'), 'false');
+  assert.match(await preview.locator('h1').textContent(), /Live document/);
+  await page.screenshot({ path: `${evidence}/sidebar-collapsed.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Show sidebar', exact: true }).click();
+  assert.equal(await page.locator('#sidebar').isVisible(), true);
   await page.getByRole('button', { name: 'Source', exact: true }).click();
   assert.match(await page.locator('#source').textContent(), /Original paragraph/);
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
@@ -46,7 +62,11 @@ try {
   await page.screenshot({ path: `${evidence}/desktop.png`, fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.getByRole('button', { name: 'Hide sidebar', exact: true }).click();
+  assert.equal(await page.locator('#sidebar').isVisible(), false);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await page.screenshot({ path: `${evidence}/mobile.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Show sidebar', exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1100 });
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export PDF' }).click();
@@ -67,9 +87,17 @@ try {
   const sampleDownloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export PDF' }).click();
   await (await sampleDownloadPromise).saveAs(`${evidence}/sample-letter.pdf`);
+  for (const background of ['yellow', 'black']) {
+    await page.getByLabel('PDF background', { exact: true }).selectOption(background);
+    const requestPromise = page.waitForRequest(request => request.url().endsWith('/api/export/pdf'));
+    const coloredDownloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export PDF' }).click();
+    assert.equal((await requestPromise).postDataJSON().background, background);
+    await (await coloredDownloadPromise).saveAs(`${evidence}/sample-${background}.pdf`);
+  }
   assert.deepEqual(errors, []);
   assert.deepEqual(external, []);
-  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'table/code/task/CJK document', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
+  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['bare URL and reload with automatic HttpOnly session', 'dark interface and document', 'sidebar fully collapses and reopens on desktop/mobile', 'atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'white/yellow/black PDF controls', 'table/code/task/CJK document', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
 } finally {
   await browser.close(); await app.close(); await rm(folder, { recursive: true, force: true });
 }

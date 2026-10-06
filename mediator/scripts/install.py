@@ -74,6 +74,8 @@ def main():
         parser.error('Node.js 22 or later is required.')
     if not Path('/usr/bin/ss').exists():
         parser.error('Install iproute2 (ss) first.')
+    if not args.uninstall and not Path('/usr/bin/fuser').exists():
+        parser.error('Install psmisc (fuser) first.')
     units = build_units(user, node)
     if args.print_units:
         for unit in units:

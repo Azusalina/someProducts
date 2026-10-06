@@ -8,7 +8,7 @@ Your local service directory. Visit **http://localhost** or **http://127.0.0.1**
 
 **Install on this Linux machine**
 
-Requires Node.js 22+, Python 3, systemd, and `ss` from iproute2. No npm dependencies.
+Requires Node.js 22+, Python 3, systemd, `ss` from iproute2, and `fuser` from psmisc. No npm dependencies.
 
 ```sh
 cd /home/a/Documents/someProducts/mediator
@@ -57,6 +57,8 @@ This removes only the units managed by this installer and preserves the project 
 
 **Development preview**
 
-Run `npm run dev` from `mediator` to start the preview on port 8787. In the directory, use the Open button for a detected web service and Service details to inspect its name sources and protocol information.
+Run `npm run dev` from `mediator` to start the preview on port 8787. Use search and All/Web/Other filters to find a service, Open to visit a web service, Copy port to copy its number, and Details to inspect its process and connection information. The list updates every 10 seconds; Refresh performs a new scan immediately.
+
+Use Terminate to review the owning processes and any other ports they share, then confirm to run `fuser -k -TERM -n tcp PORT` (or `udp`). This stops the whole process, including its other listeners. Only processes owned by the account running Mediator can be terminated; Mediator itself is protected. A supervised service may restart automatically, and the page reports when the port remains in use. Cancel closes the confirmation without sending a signal.
 
 See [description.md](description.md) for background and technical details.

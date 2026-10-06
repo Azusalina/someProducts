@@ -1,6 +1,5 @@
 const $ = id => document.getElementById(id);
-const token = location.hash.slice(1);
-const headers = { 'X-Toolkit-Token': token, 'Content-Type': 'application/json' };
+const headers = { 'Content-Type': 'application/json' };
 let state = null, sourceView = false, opening = false, exporting = false, style = '';
 let streamError = '', actionError = '', info;
 let previousFilename;
@@ -39,14 +38,13 @@ function draw(next) {
   $('filename').title = state.filename;
   $('updated').textContent = state.error ? 'Waiting for a saved file' : `Saved · ${new Date(state.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
   $('source').textContent = state.source || '';
-  $('word-count').textContent = `${(state.source?.trim().match(/\S+/g) || []).length.toLocaleString()} WORDS · MARKDOWN`;
   // Keep reading position when a new save arrives.
   const frame = $('preview');
   const sameFile = frame.dataset.filename === state.filename;
   const scroll = sameFile ? (frame.contentWindow?.scrollY || 0) : 0;
   frame.dataset.filename = state.filename;
   frame.onload = () => frame.contentWindow?.scrollTo(0, scroll);
-  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body><article class="document">${state.html || ''}</article></body></html>`;
+  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="document-theme-black"><article class="document">${state.html || ''}</article></body></html>`;
   const outline = $('outline');
   outline.replaceChildren();
   for (const heading of state.outline || []) {
@@ -77,27 +75,35 @@ $('open-form').addEventListener('submit', event => { event.preventDefault(); ope
 $('example-button').addEventListener('click', () => openFile(info.examplePath));
 $('preview-tab').addEventListener('click', () => { sourceView = false; updateViews(); });
 $('source-tab').addEventListener('click', () => { sourceView = true; updateViews(); });
-$('brand').addEventListener('click', event => { event.preventDefault(); });
+$('sidebar-toggle').addEventListener('click', () => {
+  const collapsed = !$('sidebar').hidden;
+  $('sidebar').hidden = collapsed;
+  document.body.classList.toggle('sidebar-collapsed', collapsed);
+  $('sidebar-toggle').setAttribute('aria-expanded', String(!collapsed));
+  const label = collapsed ? 'Show sidebar' : 'Hide sidebar';
+  $('sidebar-toggle').setAttribute('aria-label', label);
+  $('sidebar-toggle').textContent = label;
+});
 $('export-button').addEventListener('click', async () => {
   if (!state || exporting) return;
   const filename = state.filename.split(/[\\/]/).pop().replace(/\.(md|markdown)$/i, '.pdf');
   exporting = true; actionError = ''; message(); updateViews();
   $('export-button').textContent = 'Exporting…';
   try {
-    const response = await api('/api/export/pdf', { method: 'POST', body: JSON.stringify({ paper: $('paper').value }) });
+    const response = await api('/api/export/pdf', { method: 'POST', body: JSON.stringify({ paper: $('paper').value, background: $('pdf-background').value }) });
     const url = URL.createObjectURL(await response.blob());
     const link = document.createElement('a');
     link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   } catch (error) { actionError = error.message; message(); }
-  finally { exporting = false; $('export-button').textContent = '↓ Export PDF'; updateViews(); }
+  finally { exporting = false; $('export-button').textContent = 'Export PDF'; updateViews(); }
 });
 
 async function connect() {
   while (true) {
     try {
       const response = await api('/api/events');
-      $('connection').textContent = 'Live · local'; streamError = ''; message();
+      $('connection').textContent = 'Watching'; streamError = ''; message();
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -119,10 +125,9 @@ async function connect() {
   }
 }
 try {
-  if (!token) throw new Error('Open the full session URL printed in your terminal, including the part after #.');
   const [css, details] = await Promise.all([fetch('/document.css').then(response => response.text()), api('/api/info').then(response => response.json())]);
   style = css; info = details;
-  $('path-help').textContent = `Edit and save in your editor · Checks every ${info.interval} ms · Relative paths start at ${info.baseDir}`;
+  $('path-help').textContent = `Save changes to update the preview. Relative paths start at ${info.baseDir}.`;
   draw(info.state);
   connect();
 } catch (error) {

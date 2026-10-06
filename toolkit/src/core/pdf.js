@@ -10,10 +10,12 @@ export async function findChromium() {
   throw new Error('PDF export needs Chrome or Chromium. Install it or set TOOLKIT_CHROMIUM to its executable path.');
 }
 
-export function documentHtml(html, style, { paper = 'A4', title = 'Document' } = {}) {
+export function documentHtml(html, style, { paper = 'A4', title = 'Document', background = 'white' } = {}) {
   if (!['A4', 'Letter'].includes(paper)) throw new Error('Choose A4 or Letter paper.');
+  const colors = { white: '#ffffff', yellow: '#fff4cc', black: '#161616' };
+  if (!Object.hasOwn(colors, background)) throw new Error('Choose white, yellow, or black PDF background.');
   const escapedTitle = title.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; base-uri 'none'; form-action 'none'"><title>${escapedTitle}</title><style>${style}\n@page { size: ${paper}; margin: 18mm; }</style></head><body><article class="document">${html}</article></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; base-uri 'none'; form-action 'none'"><title>${escapedTitle}</title><style>${style}\n@page { size: ${paper}; margin: 18mm; background: ${colors[background]}; }</style></head><body class="document-theme-${background}"><article class="document">${html}</article></body></html>`;
 }
 
 export async function exportPdf(html, style, options) {

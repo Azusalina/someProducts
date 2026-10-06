@@ -4,6 +4,9 @@ import { readFile, readlink } from 'node:fs/promises';
 import { basename, dirname, resolve } from 'node:path';
 import http from 'node:http';
 import https from 'node:https';
+import { processIdentity } from './processes.mjs';
+import { access } from 'node:fs/promises';
+import { constants } from 'node:fs';
 
 const exec = promisify(execFile);
 const known = new Map([
@@ -168,15 +171,21 @@ async function mapConcurrent(items, limit, worker) {
 }
 
 export function createDiscovery({ configPath, mediatorPorts = [] } = {}) {
+  const userId = process.geteuid();
   const probeCache = new Map();
   let snapshot;
   let inFlight;
-  return async function discover() {
-    if (inFlight) return inFlight;
-    if (snapshot && Date.now() - snapshot.timestamp < 2500) return snapshot.data;
+  return async function discover({ force = false } = {}) {
+    if (inFlight) {
+      const result = await inFlight;
+      if (!force) return result;
+    }
+    if (!force && snapshot && Date.now() - snapshot.timestamp < 2500) return snapshot.data;
     inFlight = (async () => {
       const { stdout } = await exec('/usr/bin/ss', ['-H', '-lntup'], { timeout: 4000, maxBuffer: 2 * 1024 * 1024 });
       const listeners = parseListeners(stdout);
+      const fuserAvailable = await access('/usr/bin/fuser', constants.X_OK).then(() => true, () => false);
+      const protectedPids = new Set([process.pid, ...listeners.filter(service => service.protocol === 'tcp' && mediatorPorts.includes(service.port)).flatMap(service => service.processes.map(process => process.pid))]);
       let overrides = {};
       let configWarning;
       if (configPath) {
@@ -191,6 +200,10 @@ export function createDiscovery({ configPath, mediatorPorts = [] } = {}) {
         }));
         const local = listener.addresses.some(isLocal);
         const self = listener.protocol === 'tcp' && mediatorPorts.includes(listener.port);
+        const ownership = await Promise.all(processes.map(process => processIdentity(process.pid).catch(() => null)));
+        const terminationReason = self || processes.some(process => protectedPids.has(process.pid)) ? 'Mediator is protected.' :
+          !fuserAvailable ? 'Install psmisc to enable fuser.' :
+          !processes.length || ownership.some(identity => !identity || identity.uid !== userId || identity.euid !== userId) ? 'Process ownership is unavailable or belongs to another user.' : null;
         const standard = known.get(listener.port);
         const override = overrides[listener.id] || overrides[String(listener.port)] || {};
         let web = null;
@@ -211,13 +224,14 @@ export function createDiscovery({ configPath, mediatorPorts = [] } = {}) {
         const process = processes.find(p => p.project) || processes[0];
         const inferredName = web?.title || process?.project || standard?.[0] || process?.name || 'Unidentified service';
         const title = self ? 'Mediator' : typeof override.name === 'string' ? override.name.slice(0, 160) : inferredName;
-        const description = self ? 'Your local port directory — you are here.' :
+        const description = self ? 'Local TCP and UDP service directory.' :
           typeof override.description === 'string' ? override.description.slice(0, 300) :
           process?.description || standard?.[1] ||
           (web ? (web.contentType.includes('json') ? 'Local HTTP API' : 'Local web service') :
             listener.protocol === 'udp' ? 'UDP listener; browsers cannot open this service.' : 'Listening TCP service; HTTP was not detected.');
         return {
           ...listener, processes, local, self, name: title, description,
+          termination: { allowed: !terminationReason, reason: terminationReason },
           source: self ? 'Mediator' : override.name ? 'Your description' : web?.title ? 'Page title' : process?.project ? 'Project' : standard ? 'Port convention' : process?.name ? 'Process' : 'Unknown',
           web: web ? { ...web, url: `${web.scheme}://${host.includes(':') ? `[${host}]` : host}:${listener.port}/` } : null,
         };

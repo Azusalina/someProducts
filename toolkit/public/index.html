@@ -8,30 +8,26 @@
   <script type="module" src="/app.js"></script>
 </head>
 <body>
-  <aside class="sidebar">
-    <a class="brand" href="/" id="brand"><span class="brand-icon">t.</span> toolkit <span class="local-tag">LOCAL</span></a>
-    <div class="eyebrow">YOUR TOOLS</div>
-    <div class="module active"><span class="module-icon">M↓</span><div><strong>Markdown</strong><small>Live preview & PDF</small></div><span class="active-dot"></span></div>
-    <section class="outline-section"><div class="eyebrow">DOCUMENT OUTLINE</div><nav id="outline" aria-label="Document outline"><p class="muted">Headings appear here when you open a file.</p></nav></section>
-    <div class="sidebar-footer"><span class="local-dot"></span> Runs on your computer<small>No uploads. No preview files.</small></div>
+  <aside class="sidebar" id="sidebar">
+    <h2>Outline</h2>
+    <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
   </aside>
   <main>
-    <header class="topbar"><div><span class="breadcrumb">Toolkit / Markdown</span><h1>A little space for your words.</h1></div><span class="live-badge" id="connection">Connecting…</span></header>
+    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1>Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
     <section class="file-panel" aria-label="Open local file">
-      <label for="filepath">Watch a local file</label>
-      <form id="open-form"><div class="path-wrap"><span aria-hidden="true">↳</span><input id="filepath" name="path" placeholder="/home/you/Documents/notes.md" autocomplete="off" spellcheck="false" required></div><button class="open-button" id="open-button" type="submit">Open file <span aria-hidden="true">→</span></button></form>
-      <p id="path-help">Enter a file path, then edit and save it in your usual editor.</p>
+      <label for="filepath">Markdown file</label>
+      <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
+      <p id="path-help">Save changes in your editor to update the preview.</p>
     </section>
     <div id="message" role="status" aria-live="polite" hidden></div>
     <section class="workspace">
-      <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><button id="export-button" class="export-button" disabled><span aria-hidden="true">↓</span> Export PDF</button></div></div>
+      <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
       <div class="document-meta"><span id="filename">No file open</span><span id="updated">Waiting for your document</span></div>
       <div class="preview-area" id="preview-area">
-        <div class="empty-state" id="empty"><div class="paper-icon" aria-hidden="true">M↓</div><h2>From plain text to a finished page.</h2><p>Open a Markdown file above.<br>Every save brings your preview up to date.</p><button id="example-button">Try the example document <span aria-hidden="true">→</span></button><span class="empty-note">Your original file stays untouched.</span></div>
+        <div class="empty-state" id="empty"><p>Open a Markdown file to preview it.</p><button id="example-button">Open example</button></div>
         <iframe id="preview" title="Formatted Markdown preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" hidden></iframe>
         <pre id="source" tabindex="0" aria-label="Saved Markdown source" hidden></pre>
       </div>
-      <footer class="workspace-footer"><span id="word-count">MARKDOWN → PDF</span><span>Preview in memory · Export only when you're ready</span></footer>
     </section>
   </main>
 </body>

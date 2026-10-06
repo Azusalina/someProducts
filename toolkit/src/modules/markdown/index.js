@@ -28,6 +28,25 @@ md.renderer.rules.image = (tokens, index, options, env, self) => {
   return defaultImage(tokens, index, options, env, self);
 };
 
+function renderSections(tokens) {
+  const parts = [];
+  let start = 0, inSection = false;
+  function append(end) {
+    const html = md.renderer.render(tokens.slice(start, end), md.options, {});
+    parts.push(inSection ? `<section class="document-section">\n${html}</section>\n` : html);
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    // Keep lists and blockquotes intact; their internal headings are not
+    // boundaries between document sections. Every top-level heading level is.
+    if (tokens[i].type !== 'heading_open' || tokens[i].level !== 0) continue;
+    append(i);
+    start = i;
+    inSection = true;
+  }
+  append(tokens.length);
+  return parts.join('');
+}
+
 export const markdownModule = {
   id: 'markdown', name: 'Markdown', extensions: ['.md', '.markdown'], outputs: ['pdf'],
   async render(source, { filename }) {
@@ -56,6 +75,6 @@ export const markdownModule = {
     }
     visit(tokens);
     await Promise.all(imageJobs);
-    return { html: md.renderer.render(tokens, md.options, {}), outline, warnings, title: outline[0]?.label || 'Untitled document' };
+    return { html: renderSections(tokens), outline, warnings, title: outline[0]?.label || 'Untitled document' };
   }
 };

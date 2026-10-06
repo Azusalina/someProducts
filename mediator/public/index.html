@@ -3,43 +3,52 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>Mediator · Your localhost</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080808">
+  <title>Mediator</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="Mediator home"><img src="/favicon.svg" alt="" width="32" height="32">mediator<span class="brand-dot">.</span></a>
-    <span class="local-badge"><span class="dot"></span>LOCAL MACHINE</span>
-  </header>
-  <main>
-    <section class="intro" aria-labelledby="headline">
-      <div><p class="eyebrow">ONE ADDRESS. EVERY LOCAL SERVICE.</p><h1 id="headline">Your localhost,<br><span>organized.</span></h1><p class="subtitle">A home for everything running on your machine.<br>Find a port, see its purpose, and jump right in.</p></div>
-      <div class="address-card"><span class="address-label">YOU ARE HERE</span><strong id="current-address">localhost</strong><div class="address-line"><span class="dot"></span> Your local service directory</div><div class="address-foot">localhost &amp; 127.0.0.1 <span>→ :80</span></div></div>
-    </section>
-    <section class="summary" aria-label="Port summary">
-      <div><span class="stat" id="total-count">—</span><span>listening ports</span></div>
-      <div><span class="stat" id="web-count">—</span><span>web services</span></div>
-      <div><span class="stat" id="other-count">—</span><span>other services</span></div>
-      <div class="refresh-summary"><span class="dot"></span><span id="scan-status" role="status">Discovering services…</span><button id="refresh" class="refresh-button" type="button" aria-label="Refresh ports">↻</button></div>
-    </section>
-    <section class="directory" aria-labelledby="directory-title">
-      <div class="directory-heading"><div><h2 id="directory-title">Port directory</h2><p>Live listeners, with a little context.</p></div><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a port or service…" aria-label="Search ports and services"><kbd>/</kbd></label></div>
-      <div class="filter-line"><div class="filters" role="group" aria-label="Filter services"><button type="button" class="filter active" data-filter="all" aria-pressed="true">All ports <span id="all-badge">0</span></button><button type="button" class="filter" data-filter="web" aria-pressed="false">Web services <span id="web-badge">0</span></button><button type="button" class="filter" data-filter="other" aria-pressed="false">Other services <span id="other-badge">0</span></button></div><span class="auto-refresh">Updates every 10s</span></div>
+  <main aria-label="Port directory">
+    <section class="directory" aria-label="Listening services">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search ports or services" aria-label="Search ports and services">
+        <div class="refresh-controls"><span id="scan-status" role="status">Scanning…</span><button id="refresh" type="button">Refresh</button></div>
+      </div>
+      <div class="filter-line">
+        <div class="filters" role="group" aria-label="Filter services">
+          <button type="button" class="filter active" data-filter="all" aria-pressed="true">All <span id="all-badge">0</span></button>
+          <button type="button" class="filter" data-filter="web" aria-pressed="false">Web <span id="web-badge">0</span></button>
+          <button type="button" class="filter" data-filter="other" aria-pressed="false">Other <span id="other-badge">0</span></button>
+        </div>
+        <span class="auto-refresh">Auto refresh: 10s</span>
+      </div>
       <div id="notice" class="notice" role="alert" hidden></div>
-      <div class="column-head" aria-hidden="true"><span>PORT</span><span>SERVICE / TASK</span><span>CONNECTION</span><span></span></div>
-      <div id="services" aria-live="polite" aria-busy="true"><div class="empty"><span class="loading-dot"></span>Looking for local services…</div></div>
-      <div class="directory-footer"><span id="visible-count">Scanning your machine</span><span><span class="dot"></span>Detected on this device</span></div>
+      <p id="action-status" class="action-status" role="status" hidden></p>
+      <div class="column-head" aria-hidden="true"><span>Port</span><span>Service / task</span><span>Connection</span><span>Actions</span></div>
+      <div id="services" aria-live="polite" aria-busy="true"><div class="empty">Loading services…</div></div>
+      <div class="directory-footer"><span id="visible-count">Scanning ports…</span></div>
     </section>
-    <footer class="page-footer"><p>Every port has a purpose. This is where you find it.</p><p>TCP &amp; UDP · Loopback &amp; network listeners</p></footer>
   </main>
   <template id="service-template">
     <article class="service">
-      <div class="service-main"><div class="port-cell"><strong class="port-number"></strong><span class="protocol"></span></div><div class="task-cell"><div class="task-heading"><h3></h3><span class="you-badge" hidden>YOU ARE HERE</span></div><p class="description"></p><button class="details-toggle" type="button" aria-expanded="false">Service details <span aria-hidden="true">⌄</span></button></div><div class="connection-cell"><span class="connection-badge"></span><span class="connection-description"></span></div><div class="action-cell"><a class="open-button" target="_blank" rel="noopener noreferrer">Open <span aria-hidden="true">↗</span></a><button class="copy-button" type="button">Copy port</button></div></div>
+      <div class="service-main">
+        <div class="port-cell"><strong class="port-number"></strong><span class="protocol"></span></div>
+        <div class="task-cell"><h3></h3><p class="description"></p><button class="details-toggle" type="button" aria-expanded="false">Details</button></div>
+        <div class="connection-cell"><span class="connection-badge"></span><span class="connection-description"></span></div>
+        <div class="action-cell"><a class="open-button" target="_blank" rel="noopener noreferrer">Open</a><button class="copy-button" type="button">Copy port</button><button class="terminate-button" type="button">Terminate</button></div>
+      </div>
       <div class="service-details" hidden><dl></dl></div>
     </article>
   </template>
+  <dialog id="terminate-dialog" aria-labelledby="terminate-title" aria-describedby="terminate-explanation">
+    <h2 id="terminate-title">Terminate service?</h2>
+    <p id="terminate-explanation">This sends SIGTERM to the processes using this port.</p>
+    <ul id="terminate-processes"></ul>
+    <p id="terminate-related"></p>
+    <p id="terminate-error" role="alert" hidden></p>
+    <div class="dialog-actions"><button id="terminate-cancel" type="button">Cancel</button><button id="terminate-confirm" class="terminate-button" type="button">Terminate</button></div>
+  </dialog>
 </body>
 </html>

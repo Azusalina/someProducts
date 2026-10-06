@@ -66,16 +66,19 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self' about:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
     const host = req.headers.host;
     const origin = `http://127.0.0.1:${server.address().port}`;
-    if (host !== new URL(origin).host || (req.headers.origin && req.headers.origin !== origin)) return json(res, { error: 'Invalid local origin.' }, 403);
+    if (host !== new URL(origin).host || (req.headers.origin && req.headers.origin !== origin) || req.headers['sec-fetch-site'] === 'cross-site') return json(res, { error: 'Invalid local origin.' }, 403);
     const url = new URL(req.url, origin);
+    // Port-specific names let separate toolkit processes coexist in one browser.
+    const sessionCookie = `toolkit_session_${server.address().port}=${token}`;
     try {
       if (publicFiles.has(url.pathname) && req.method === 'GET') {
         const [file, type] = publicFiles.get(url.pathname);
+        if (url.pathname === '/') res.setHeader('Set-Cookie', `${sessionCookie}; Path=/; HttpOnly; SameSite=Strict`);
         res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` });
         return res.end(await readFile(new URL(`../public/${file}`, import.meta.url)));
       }
       if (!url.pathname.startsWith('/api/')) return json(res, { error: 'Not found.' }, 404);
-      if (req.headers['x-toolkit-token'] !== token) return json(res, { error: 'Open the session URL printed in the terminal.' }, 403);
+      if (!(req.headers.cookie || '').split(';').some(cookie => cookie.trim() === sessionCookie)) return json(res, { error: 'Refresh the toolkit at its local address to start a session. Allow cookies for this local address.' }, 403);
       if (req.method === 'GET' && url.pathname === '/api/info') return json(res, { modules: registry.list(), baseDir, interval, state, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
       if (req.method === 'GET' && url.pathname === '/api/events') {
         res.writeHead(200, { 'Content-Type': 'text/event-stream', Connection: 'keep-alive' });
@@ -89,6 +92,8 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
       if (req.method === 'POST' && url.pathname === '/api/export/pdf') {
         const options = await body(req);
         if (!['A4', 'Letter'].includes(options.paper)) throw new Error('Choose A4 or Letter paper.');
+        const background = options.background ?? 'white';
+        if (!['white', 'yellow', 'black'].includes(background)) throw new Error('Choose white, yellow, or black PDF background.');
         if (exporting) return json(res, { error: 'An export is already running. Please wait.' }, 409);
         // Refresh from disk at click time; export never uses a stale browser preview.
         if (!state?.filename) throw new Error('Open a Markdown file first.');
@@ -96,7 +101,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         exporting = true;
         try {
           const snapshot = await registry.forFile(target).render(await readSource(target), { filename: target });
-          const buffer = await exportPdf(snapshot.html, style, { paper: options.paper, title: snapshot.title });
+          const buffer = await exportPdf(snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
           const download = `${path.basename(target, path.extname(target))}.pdf`;
           res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="document.pdf"; filename*=UTF-8''${encodeURIComponent(download)}` });
           return res.end(buffer);
@@ -110,7 +115,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   });
   server.on('clientError', (_error, socket) => socket.end('HTTP/1.1 400 Bad Request\r\n\r\n'));
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
-  const url = `http://127.0.0.1:${server.address().port}/#${token}`;
+  const url = `http://127.0.0.1:${server.address().port}/`;
   const close = async () => {
     generation++; watcher?.stop();
     for (const client of clients) client.end();
@@ -118,5 +123,5 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
     await new Promise(resolve => server.close(resolve));
   };
   if (filename) { try { await openFile(filename); } catch (error) { await close(); throw error; } }
-  return { server, url, token, openFile, close };
+  return { server, url, openFile, close };
 }

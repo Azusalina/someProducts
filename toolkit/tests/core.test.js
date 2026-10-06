@@ -64,6 +64,26 @@ test('local images are embedded, including encoded filenames; symlink traversal 
   assert.doesNotMatch(result.html, /cHJpdmF0ZQ==/);
 });
 
+test('heading sections end at the next heading of any level and preserve nested Markdown blocks', async t => {
+  const { filename } = await fixture(t);
+  const source = 'Introduction.\n\n# First\n\nFirst body.\n\n## Second\n\n> ### Quoted heading\n>\n> Quoted body.\n\n- List item\n  #### Listed heading\n\n```md\n# Code heading\n```\n\n###### Final\n\nLast body.';
+  const { html, outline } = await markdownModule.render(source, { filename });
+  const sections = [...html.matchAll(/<section class="document-section">\n([\s\S]*?)<\/section>/g)].map(match => match[1]);
+  assert.equal(sections.length, 3);
+  assert.ok(html.startsWith('<p>Introduction.</p>\n<section'));
+  assert.match(sections[0], /<h1 id="first">First<\/h1>[\s\S]*First body/);
+  assert.doesNotMatch(sections[0], /Second/);
+  assert.match(sections[1], /<blockquote>\n<h3 id="quoted-heading">/);
+  assert.match(sections[1], /<li>[\s\S]*<h4 id="listed-heading">[\s\S]*<\/li>/);
+  assert.match(sections[1], /<pre><code[\s\S]*# Code heading/);
+  assert.match(sections[2], /<h6 id="final">Final<\/h6>[\s\S]*Last body/);
+  assert.deepEqual(outline.map(item => item.id), ['first', 'second', 'quoted-heading', 'listed-heading', 'final']);
+  const plain = await markdownModule.render('No headings.\n\n- Still a list', { filename });
+  assert.doesNotMatch(plain.html, /document-section/);
+  const consecutive = await markdownModule.render('# One\n## Two\n### Three', { filename });
+  assert.equal((consecutive.html.match(/<section /g) || []).length, 3);
+});
+
 test('registry permits adding a format without changing the watcher or server', () => {
   const custom = { id: 'text', name: 'Text', extensions: ['.txt'], outputs: [], render() {} };
   const registry = new ModuleRegistry([markdownModule, custom]);
@@ -72,18 +92,43 @@ test('registry permits adding a format without changing the watcher or server', 
   assert.throws(() => registry.forFile('a.exe'), /Unsupported/);
 });
 
-test('local API requires session token, rejects foreign origins, preserves current file after invalid open', async t => {
+test('bare local URL establishes a cookie session; API rejects unauthenticated and foreign requests', async t => {
   const { filename, folder } = await fixture(t);
   const app = await createToolkit({ port: 0, filename, baseDir: folder });
   t.after(() => app.close());
-  const origin = app.url.split('/#')[0];
-  const headers = { 'X-Toolkit-Token': app.token, 'Content-Type': 'application/json' };
+  const origin = new URL(app.url).origin;
+  assert.equal(new URL(app.url).hash, '');
+  const home = await fetch(app.url);
+  assert.equal(home.status, 200);
+  const cookie = home.headers.get('set-cookie');
+  assert.match(cookie, /; HttpOnly; SameSite=Strict$/);
+  assert.doesNotMatch(cookie, /Max-Age|Expires/i);
+  const headers = { Cookie: cookie.split(';')[0], 'Content-Type': 'application/json' };
   assert.equal((await fetch(`${origin}/api/info`)).status, 403);
+  assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, Cookie: `${headers.Cookie}wrong` } })).status, 403);
   assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, Origin: 'https://example.com' } })).status, 403);
+  assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' } })).status, 403);
   const response = await fetch(`${origin}/api/info`, { headers });
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal((await response.json()).state.filename, filename);
   assert.equal((await fetch(`${origin}/api/open`, { method: 'POST', headers, body: JSON.stringify({ path: 'missing.md' }) })).status, 400);
+  assert.equal((await fetch(`${origin}/api/export/pdf`, { method: 'POST', headers, body: JSON.stringify({ paper: 'A4', background: 'red' }) })).status, 400);
   assert.equal((await (await fetch(`${origin}/api/info`, { headers })).json()).state.filename, filename);
   assert.deepEqual(await readdir(folder), ['notes.md']);
+});
+
+test('separate toolkit ports have independent cookies and page reload renews the session', async t => {
+  const { folder } = await fixture(t);
+  const first = await createToolkit({ port: 0, baseDir: folder });
+  t.after(() => first.close());
+  const second = await createToolkit({ port: 0, baseDir: folder });
+  t.after(() => second.close());
+  const cookieFor = async url => (await fetch(url)).headers.get('set-cookie').split(';')[0];
+  const firstCookie = await cookieFor(first.url), secondCookie = await cookieFor(second.url);
+  assert.notEqual(firstCookie.split('=')[0], secondCookie.split('=')[0]);
+  assert.equal(await cookieFor(first.url), firstCookie);
+  const headers = { Cookie: `${firstCookie}; ${secondCookie}` };
+  for (const app of [first, second]) {
+    assert.equal((await fetch(new URL('/api/info', app.url), { headers })).status, 200);
+  }
 });
