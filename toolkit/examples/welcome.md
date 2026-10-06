@@ -30,6 +30,15 @@ def hello(name):
 print(hello("world"))
 ```
 
+### A Mermaid diagram
+
+```mermaid
+flowchart LR
+    A[Open Markdown] --> B[Edit and save]
+    B --> C[Preview updates]
+    C --> D[Export PDF]
+```
+
 ### Your checklist
 
 - [x] Open a local file

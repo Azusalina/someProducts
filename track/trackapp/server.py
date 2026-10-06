@@ -32,7 +32,7 @@ class HTTPServer(ThreadingHTTPServer):
 
 
 class App:
-    def __init__(self, data_dir, lan_ip, ui_port=4188, ingest_port=4189, trust_port=4190):
+    def __init__(self, data_dir, lan_ip, ui_port=4188, ingest_port=4189, trust_port=8080):
         self.data_dir = Path(data_dir)
         self.lan_ip = str(ipaddress.IPv4Address(lan_ip))
         self.tls = prepare(self.data_dir, self.lan_ip)

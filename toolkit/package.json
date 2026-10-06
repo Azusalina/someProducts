@@ -4,7 +4,20 @@
   "private": true,
   "type": "module",
   "description": "Local modular live file preview and manual PDF export",
-  "engines": { "node": ">=22" },
-  "scripts": { "start": "node src/cli.js", "test": "node --test tests/*.test.js", "test:browser": "node tests/browser.js", "test:pdf": "node tests/pdf.js" },
-  "dependencies": { "markdown-it": "^14.1.0", "markdown-it-task-lists": "^2.1.1", "highlight.js": "^11.11.1", "playwright-core": "^1.56.0" }
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tests/browser.js",
+    "test:pdf": "node tests/pdf.js"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "mermaid": "^12.1.0",
+    "playwright-core": "^1.56.0"
+  }
 }

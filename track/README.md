@@ -1,15 +1,35 @@
 ## What is it?
 
-track 是计划中的本地行动轨迹档案工具：iPhone 全天自动采集位置，Linux／Windows PC 保存轨迹，并通过本地网页查看每日路线和累计足迹。设计参考 PlainWalk 的白底轨迹地图。
+track 是本地行动轨迹档案工具：Overland 在 iPhone 上自动采集位置，回到同一局域网后同步至 PC；通过离线白底地图查看、缩放和回放足迹。初始视角聚焦香港岛，界面支持 English、简体中文和繁體中文，默认英文。
 
-当前仅有需求与可行性文档，尚无可运行的 PC 服务或自建 iOS App。推荐先接入现成的 iOS 原生采集器；方案、限制和后续实施步骤见 [description.md](description.md)。
+PC 端 v0.1.0 已实现。架构、轨迹计算规则、测试结果及限制见 [description.md](description.md)。
 
 ## How to use
 
-目前可直接阅读 [description.md](description.md)，确认采集与同步方案。
+前提：Python 3.11+、OpenSSL，以及已安装 Overland GPS Tracker 的 iPhone。运行不需要 Node.js 或 pip 依赖。Windows 可使用 Git for Windows 提供的 OpenSSL；程序会检查常见安装位置。
 
-推荐方案的前提是 iPhone、可安装的 Overland GPS Tracker，以及 Linux／Windows PC。采集端需要“始终”定位权限；回家同步需要手机能够访问 PC 的局域网服务。采集器从 App Store 安装，无需自行编译 iOS App。
+在本目录运行：
 
-PC 服务实现后，预期流程为：在 Overland 中配置 PC 同步地址和访问令牌，开启持续记录；外出时数据暂存在手机；回到同一局域网后批量补传，必要时使用 Send Now；在 PC 浏览器中查看、回放和导出轨迹。数据上传成功后可能从手机待发送队列移除，因此 PC 需要保留备份。
+```bash
+python3 track.py --open
+```
 
-目前没有安装、启动或卸载 PC 服务的命令。停止采集可在采集器内关闭记录；卸载手机采集器前应先同步仍在队列中的数据。
+Linux 也可运行 `./start.sh`；Windows 双击 `start.bat`，或在终端运行 `py -3 track.py --open`。PC 浏览器入口为 **http://127.0.0.1:4188**。无法自动选择局域网地址时，在启动命令后加 `--lan-ip <电脑的局域网IPv4地址>`。
+
+首次连接：
+
+1. 让 iPhone 与 PC 处于同一局域网，在 PC 网页点击 **Connect iPhone**。
+2. 用 iPhone 扫描第一个二维码，在 Safari 点击“允许”下载证书描述文件；立即打开设置首页的 **Profile Downloaded／已下载描述文件**，安装 **Track Local Sync**。下载后超过 8 分钟仍未安装，iOS 会删除待安装文件，需重新下载。安装后到“通用 → 关于本机 → 证书信任设置”开启 **Track Local CA** 的完全信任。可对照 PC 面板里的证书指纹。
+3. 扫描第二个二维码，配置 Overland 的 Server URL、Access token 和 Device ID；也可展开 **Manual configuration** 手动填写。添加更多手机时使用不同的 Device ID。
+4. Overland 设置 **Logging Mode = All Data**、**Tracking Enabled = On**、“始终”定位和精确位置。采样选项见连接面板；初次连续性测试可采用 Standard、10 m 精度及关闭自动暂停，之后根据实际轨迹和耗电调整。
+5. 在 Overland 点击 **Send Now**。PC 显示最近同步时间和定位点后，即可浏览足迹。外出时暂存于手机，回家后补传；自动补传时机受 iOS 调度影响，必要时再次点击 Send Now。
+
+默认端口：PC 本机界面 `4188`；局域网 HTTPS 上传 `4189`；仅下载公开证书的局域网 HTTP 服务 `8080`。手机需要访问后两个端口；防火墙、访客网络隔离或 VPN 的局域网策略可能影响连接。网络更换后重新启动 Track，并用连接面板更新 Overland 地址；保留原数据目录时无需重新生成根证书。长期使用可为 PC 保留固定 DHCP 地址。
+
+界面操作：选择日期或 **All footprints**；拖动地图、滚轮或加减按钮缩放；**Island view** 回到港岛视角，**Fit footprints** 适配所选记录。点击播放、拖动进度条回放；按设备和定位精度筛选。单日可保存备注；**Export trace** 导出当前筛选后的 GPX／GeoJSON；**Back up** 下载含原始上传和备注的 SQLite 备份。**Explore a sample** 只预览虚构路线，不写入档案。
+
+档案默认存放于 Linux 的 `~/.local/share/track`（遵循 `XDG_DATA_HOME`），或 Windows 的 `%LOCALAPPDATA%\Track`；可用 `--data-dir <目录>` 指定。上传确认后，手机会清理已发送队列，因此应定期备份 PC 档案。
+
+手动启动时，按 `Ctrl+C` 停止服务。若希望 Linux 登录后自动启动，可运行 `python3 scripts/service.py`；使用前先停止手动运行的实例。停止已安装服务用 `systemctl --user stop track.service`，恢复用 `systemctl --user start track.service`。卸载自启动用 `python3 scripts/service.py --uninstall`，数据与证书会保留。Windows 目前使用手动启动，不配置自启动。
+
+停止手机采集可在 Overland 关闭 Tracking Enabled。卸载采集器前先同步手机队列；不再使用本地同步时，可在 iPhone 的“VPN 与设备管理”中移除 **Track Local Sync** 描述文件。

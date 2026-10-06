@@ -4,7 +4,7 @@ A local, modular file-rendering toolkit. Its first module previews Markdown in y
 
 # How to use
 
-Requires Node.js 22 or newer and npm. Chrome or Chromium is needed for PDF export; preview works without it.
+Requires Node.js 22 or newer and npm. Chrome or Chromium is needed for PDF export and Mermaid diagrams; ordinary Markdown preview works without it.
 
 ```bash
 cd /home/a/Documents/someProducts/toolkit
@@ -15,6 +15,17 @@ npm start
 Open **http://127.0.0.1:4177** (or the local address printed in the terminal if you chose another port). No token or URL fragment is needed; allow cookies for this local address. Enter an absolute Markdown path, a `~/` path, or a path relative to the directory where you started the app. Click **Open file**, or **Open example**. Edit the original file in your usual editor and **save** it: the preview updates automatically. Use **Source** to inspect the saved Markdown, or the outline to jump to a heading. The interface and preview use a dark black-and-white theme. Use **Hide sidebar** or **Show sidebar** to completely hide or reopen the outline.
 
 Select **A4** or **Letter** and **White paper**, **Yellow paper**, or **Black paper**, then click **Export PDF** to download the current saved version. PDF background defaults to white and is independent of the dark preview. A heading and its content up to the next heading move together to the next page when they do not fit; sections longer than a full page can span pages. No PDF is generated automatically. Your browser controls the download location.
+
+Use a fenced `mermaid` block for diagrams in both preview and PDF:
+
+````markdown
+```mermaid
+flowchart LR
+    A[Open file] --> B[Save changes] --> C[Export PDF]
+```
+````
+
+Save the file to update the diagram. Invalid diagrams show their source and an error message; other content remains readable. **Open example** includes a working diagram.
 
 You can also start with a target file:
 

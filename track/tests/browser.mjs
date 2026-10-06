@@ -9,7 +9,7 @@ import {chromium} from 'playwright-core';
 
 const temporary=await mkdtemp(path.join(os.tmpdir(),'track-browser-'));
 const evidence=path.join(process.cwd(),'.test-results');await mkdir(evidence,{recursive:true});
-const server=spawn('python3',['track.py','--lan-ip','127.0.0.1','--port','0','--ingest-port','0','--trust-port','0','--data-dir',temporary],{cwd:process.cwd()});
+const server=spawn('python3',['track.py','--lan-ip','127.0.0.1','--port','0','--ingest-port','0','--data-dir',temporary],{cwd:process.cwd()});
 let stdout='',stderr='';server.stdout.on('data',data=>stdout+=data);server.stderr.on('data',data=>stderr+=data);
 const ready=await new Promise((resolve,reject)=>{
  const timeout=setTimeout(()=>reject(new Error('Track did not start: '+stderr)),30000);
@@ -40,6 +40,20 @@ try{
  assert.equal(await page.locator('#access-token').getAttribute('type'),'password');
  await page.waitForFunction(()=>document.querySelector('#cert-qr').naturalWidth>100&&document.querySelector('#overland-qr').naturalWidth>100);
  await page.locator('[data-close="setup-dialog"]').click();checks.push('setup drawer, two local QR codes, masked token');
+ const setup=await (await fetch(url+'/api/setup')).json();
+ const certificateUrl=setup.profile;
+ assert.equal(new URL(certificateUrl).port,'8080');
+ const certificatePage=await browser.newPage({acceptDownloads:true});
+ assert.equal((await certificatePage.goto(new URL('/',certificateUrl).href)).status(),200);
+ const certificateDownload=certificatePage.waitForEvent('download');
+ await certificatePage.getByRole('link',{name:'Download certificate profile'}).click();
+ const downloadedProfile=await certificateDownload;
+ assert.equal(await downloadedProfile.failure(),null);
+ const profilePath=await downloadedProfile.path();
+ assert.ok((await readFile(profilePath,'utf8')).includes('Track Local Sync'));
+ await certificatePage.close();
+ checks.push('default certificate port permits browser navigation and profile download');
+
 
  const sample=await (await fetch(url+'/api/sample')).json();
  const payload={locations:sample.points.map(p=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lon,p.lat]},properties:{timestamp:new Date(p.ms).toISOString(),device_id:'Test iPhone',unique_id:'test-phone',horizontal_accuracy:p.accuracy,altitude:p.altitude,motion:p.motion}}))};

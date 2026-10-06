@@ -82,6 +82,11 @@ try {
   await page.locator('#filepath').fill(samplePath);
   await page.getByRole('button', { name: 'Open file' }).click();
   await preview.locator('h1').filter({ hasText: 'A page in the making' }).waitFor();
+  const diagram = preview.locator('.mermaid-diagram img');
+  await diagram.waitFor();
+  await diagram.evaluate(image => image.decode());
+  assert.ok(await diagram.evaluate(image => image.naturalWidth > 0 && image.naturalHeight > 0));
+  await diagram.screenshot({ path: `${evidence}/mermaid-preview.png` });
   await page.screenshot({ path: `${evidence}/sample-desktop.png`, fullPage: true });
   await page.locator('#paper').selectOption('Letter');
   const sampleDownloadPromise = page.waitForEvent('download');
@@ -95,9 +100,26 @@ try {
     assert.equal((await requestPromise).postDataJSON().background, background);
     await (await coloredDownloadPromise).saveAs(`${evidence}/sample-${background}.pdf`);
   }
+  const diagramPath = path.join(folder, 'diagram.md');
+  const diagramSource = label => `# Live diagram\n\n~~~mermaid\nflowchart LR\n  A[${label}] --> B[保存後更新]\n~~~\n`;
+  await writeFile(diagramPath, diagramSource('BeforeSave'));
+  await page.locator('#filepath').fill(diagramPath);
+  await page.getByRole('button', { name: 'Open file' }).click();
+  const liveDiagram = preview.locator('.mermaid-diagram img');
+  await liveDiagram.waitFor();
+  const oldDiagram = await liveDiagram.getAttribute('src');
+  await writeFile(diagramPath, diagramSource('AfterSave'));
+  await page.waitForFunction(old => {
+    const image = document.querySelector('#preview').contentDocument?.querySelector('.mermaid-diagram img');
+    return image && image.getAttribute('src') !== old;
+  }, oldDiagram);
+  const updatedDiagram = await liveDiagram.getAttribute('src');
+  assert.match(Buffer.from(updatedDiagram.split(',')[1], 'base64').toString(), /AfterSave/);
+  await liveDiagram.evaluate(image => image.decode());
+  await liveDiagram.screenshot({ path: `${evidence}/mermaid-live-preview.png` });
   assert.deepEqual(errors, []);
   assert.deepEqual(external, []);
-  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['bare URL and reload with automatic HttpOnly session', 'dark interface and document', 'sidebar fully collapses and reopens on desktop/mobile', 'atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'white/yellow/black PDF controls', 'table/code/task/CJK document', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
+  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['bare URL and reload with automatic HttpOnly session', 'dark interface and document', 'sidebar fully collapses and reopens on desktop/mobile', 'atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'white/yellow/black PDF controls', 'table/code/task/CJK document', 'Mermaid rendering, saved-file update and colored PDF exports', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
 } finally {
   await browser.close(); await app.close(); await rm(folder, { recursive: true, force: true });
 }

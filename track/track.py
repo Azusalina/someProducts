@@ -42,7 +42,7 @@ def main():
     parser.add_argument("--lan-ip", help="PC LAN IPv4 address, e.g. 192.168.1.20")
     parser.add_argument("--port", type=int, default=4188, help="Local browser port (4188)")
     parser.add_argument("--ingest-port", type=int, default=4189, help="LAN HTTPS upload port (4189)")
-    parser.add_argument("--trust-port", type=int, default=4190, help="Public certificate download port (4190)")
+    parser.add_argument("--trust-port", type=int, default=8080, help="Public certificate download port (8080)")
     parser.add_argument("--data-dir", default=str(data_directory()), help="Private archive directory")
     parser.add_argument("--open", action="store_true", help="Open local browser")
     args = parser.parse_args()

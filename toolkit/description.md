@@ -10,11 +10,19 @@ Only one target file is active per running toolkit process. Tabs sharing that pr
 
 ## Markdown module
 
-Supports headings with unique anchors and an outline, paragraphs, emphasis, links, ordered and unordered lists, task checkboxes, tables, blockquotes, rules, fenced code with syntax highlighting, and local raster images. English and Chinese content use installed system fonts. A4 and US Letter PDF output share the preview's document stylesheet and use print-specific margins and typography.
+Supports headings with unique anchors and an outline, paragraphs, emphasis, links, ordered and unordered lists, task checkboxes, tables, blockquotes, rules, fenced code with syntax highlighting, Mermaid diagrams, and local raster images. English and Chinese content use installed system fonts. A4 and US Letter PDF output share the preview's document stylesheet and use print-specific margins and typography.
 
-Raw HTML is displayed as text. Scripts, embedded websites, remote image fetches, SVG, LaTeX/math rendering, Mermaid diagrams, custom Markdown extensions, and YAML front matter are not interpreted in this version. External HTTP(S) and email links can be opened explicitly. Relative document links are inert; in-document anchors work. Heading slugs are derived from the heading's Markdown source, so complex formatted-heading anchors can differ from GitHub's.
+Raw HTML is displayed as text. Scripts, embedded websites, remote image fetches, user-supplied SVG images, LaTeX/math rendering, custom Markdown extensions, and YAML front matter are not interpreted in this version. External HTTP(S) and email links can be opened explicitly. Relative document links are inert; in-document anchors work. Heading slugs are derived from the heading's Markdown source, so complex formatted-heading anchors can differ from GitHub's.
 
 Image paths must be relative to the Markdown file and remain inside its folder after symlink resolution. Supported formats: PNG, JPEG, GIF, WebP, AVIF; base64 data images of those types also work. Images are embedded in memory for both preview and PDF. Unsupported, missing, remote, or out-of-folder images become labeled placeholders and warnings. Source files and each local image are limited to 5 MB. Image-only edits are reflected on the next Markdown change or reopening the document, and always reread during export. Preview follows saved disk content, not unsaved keystrokes in another editor.
+
+## Mermaid diagrams
+
+Fenced `mermaid` blocks render through the locally installed Mermaid library in a separate headless Chromium context. Flowcharts, sequence diagrams, class diagrams, state diagrams, and other built-in Mermaid syntax are available without a CDN or internet connection after installation. Diagrams use neutral grayscale styling and invert for the dark preview or black PDF paper. Their generated SVG is embedded as inert image data; the Markdown preview and PDF document still run no scripts. User-supplied SVG files remain unsupported.
+
+Diagram source is passed as data to Mermaid's strict rendering API. Click callbacks are disabled, protected security settings cannot be overridden by diagram directives, and all renderer network requests are blocked. Each diagram is limited to 50,000 characters and 500 edges, with a 10-second rendering deadline. Invalid syntax, missing Chromium, or rendering failures produce a warning and preserve the original fenced source in place. Valid diagrams in the same document still render after syntax errors. Source view always shows the original Markdown. Documents with no Mermaid fences do not launch a diagram browser.
+
+Diagram output and source remain in memory. A browser is opened per document rendering batch and closed afterward. Saved-file updates may take longer when diagrams are present; PDF export rereads and rerenders the latest saved source. Diagram images scale to the available page width and existing image-height limits; very large diagrams may have small labels. Explicit custom colors are displayed in grayscale to match the black-and-white interface.
 
 ## Pagination and appearance
 
@@ -33,12 +41,13 @@ The interface, source view, and Markdown preview use a dark black-and-white them
 | `src/core/files.js` | Bounded source reading and local image containment |
 | `src/core/watcher.js` | Serialized pathname polling and recovery |
 | `src/core/registry.js` | Format discovery and module metadata |
+| `src/core/mermaid.js` | Offline Mermaid rendering, bounded work, inert SVG image output |
 | `src/core/pdf.js` | Chrome discovery, memory-only HTML rendering and PDF bytes |
 | `src/modules/markdown/index.js` | Markdown parsing, image embedding, outline, highlighting |
 | `public/index.html`, `style.css`, `app.js` | Responsive browser interface and reconnecting event client |
 | `public/document.css` | Shared preview/print typography |
 | `examples/welcome.md` | Editable sample document |
-| `tests/core.test.js`, `tests/browser.js`, `tests/pdf.js` | Functional, browser, and rendered PDF validation |
+| `tests/core.test.js`, `tests/mermaid.test.js`, `tests/browser.js`, `tests/pdf.js` | Functional, browser, and rendered PDF validation |
 
 Modules expose `{ id, name, extensions, outputs, async render(source, { filename }) }`. Rendering returns `{ html, outline, warnings, title }`; outline entries contain `{ id, label, level }`. Add a format under `src/modules/`, import it into `ModuleRegistry`'s default module array, and keep file watching and PDF export shared. New modules must produce safe HTML compatible with the restricted preview and local-only export. The first UI exposes the Markdown module; a module picker can accompany future formats.
 
@@ -46,7 +55,7 @@ Modules expose `{ id, name, extensions, outputs, async render(source, { filename
 
 The server binds only to IPv4 loopback `127.0.0.1`. Opening the bare local URL establishes a random per-process session through an `HttpOnly; SameSite=Strict` cookie; no token is shown in the URL or exposed to page JavaScript. The cookie has no expiry or Max-Age and follows the browser's session-cookie lifecycle (including any browser session restoration). Cookie names include the port so separate toolkit processes can coexist. Refreshing the main page after a server restart renews the cookie. Cookies must be enabled for the local address. Host, Origin, and cross-site Fetch Metadata checks reject access from unrelated sites. The preview iframe prohibits scripts; document CSP permits styles and embedded images only. PDF rendering blocks network requests, disables page JavaScript and Chromium's network cache, and never navigates to the source file. File access follows the current OS user's read permissions and requires explicitly opening a target path.
 
-Runtime dependencies are installed by npm with a committed lockfile. Once installed, the app works offline. `playwright-core` uses an existing Chrome/Chromium executable and does not download a browser. It launches a temporary headless browser using Playwright's default launch settings. PDF layout and available glyphs depend on installed browser and fonts. Install suitable CJK fonts if Chinese characters are missing. Very wide tables or unusually large blocks may require editing the source or document stylesheet for publication layout.
+Runtime dependencies are installed by npm with a committed lockfile. Once installed, the app works offline. `playwright-core` uses an existing Chrome/Chromium executable and does not download a browser. Chromium is required for Mermaid preview as well as PDF export. It launches a temporary headless browser using Playwright's default launch settings. PDF layout and available glyphs depend on installed browser and fonts. Install suitable CJK fonts if Chinese characters are missing. Very wide tables or unusually large blocks may require editing the source or document stylesheet for publication layout.
 
 API routes: `GET /api/info`, `GET /api/events`, `POST /api/open` with `{ "path": "…" }`, and `POST /api/export/pdf` with `{ "paper": "A4", "background": "white" }` (paper: `A4` or `Letter`; background: `white`, `yellow`, or `black`, default `white`). Every API route requires the automatically established session cookie. PDF exports run one at a time. No global settings, telemetry, cloud account, file writes, or Git operations are part of the application workflow.
 
@@ -54,7 +63,7 @@ API routes: `GET /api/info`, `GET /api/events`, `POST /api/open` with `{ "path":
 
 Run `npm test` for core checks, `npm run test:browser` for the real Chromium workflow, and `npm run test:pdf` for exported page-break and background-pixel checks. The PDF checks additionally require Poppler's `pdftotext` and `pdftoppm` commands; these are test-only dependencies. Browser and PDF checks write temporary validation screenshots and explicitly requested test PDFs under `/tmp/toolkit-validation`; this is test evidence, not application caching. Test fixtures are temporary and removed after each run. Use `TOOLKIT_CHROMIUM` when Chrome lives elsewhere. Keep UI, preview, and PDF behavior in sync when changing `document.css`.
 
-References: [markdown-it options](https://markdown-it.github.io/markdown-it/interfaces/MarkdownItOptions.html), [markdown-it architecture](https://markdown-it.github.io/markdown-it/documents/Architecture.html), [Playwright PDF API](https://playwright.dev/docs/api/class-page#page-pdf), [Playwright launch options](https://playwright.dev/docs/api/class-browsertype#browser-type-launch), [CSS fragmentation and break-inside](https://www.w3.org/TR/css-break-3/#break-within). Libraries retain their licenses in their npm distributions.
+References: [markdown-it options](https://markdown-it.github.io/markdown-it/interfaces/MarkdownItOptions.html), [markdown-it architecture](https://markdown-it.github.io/markdown-it/documents/Architecture.html), [Playwright PDF API](https://playwright.dev/docs/api/class-page#page-pdf), [Playwright launch options](https://playwright.dev/docs/api/class-browsertype#browser-type-launch), [CSS fragmentation and break-inside](https://www.w3.org/TR/css-break-3/#break-within), [Mermaid rendering API](https://mermaid.js.org/config/usage), [Mermaid strict security level](https://mermaid.js.org/config/schema-docs/config-properties-securitylevel.html). Libraries retain their licenses in their npm distributions.
 
 ## Validation and history
 
@@ -82,3 +91,5 @@ Validation on Node.js 24.20.0 and system Chromium 153:
 2026-10-06: simplified the interface to its file controls, outline, saved-file status, preview/source tabs, and PDF export controls. Removed branding decorations, slogans, badges, ornamental icons, shadows, and the redundant footer/word count. Added subtle translucent grayscale surfaces with backdrop blur; document and PDF typography remain unchanged. The local service must use the current server code for automatic sessions at the bare address.
 
 Validation: Chromium browser regression checks passed for the simplified glass interface, sidebar collapse, saved-file updates, and PDF controls. Desktop and 390 px screenshots were inspected. Restarted the outdated toolkit process on port 4177 and verified the bare URL returns the new interface, establishes its session automatically, and permits API access without a URL token.
+
+2026-10-06: added Mermaid 12 rendering for fenced diagram blocks, local-only Chromium rendering, inert SVG images, grayscale light/dark display, and invalid-source fallback. The sample document now includes a working flowchart. All 11 core/diagram tests passed, including flowchart, sequence, class, state, CJK, invalid syntax, bounded input, and inert callback output. Chromium workflow verified save-triggered diagram updates and Mermaid diagrams in white/yellow/black PDFs; existing pagination/background tests passed. Inspected actual diagram previews and exported pages under `/tmp/toolkit-validation`.
