@@ -8,6 +8,7 @@ import { FileWatcher } from '../src/core/watcher.js';
 import { markdownModule } from '../src/modules/markdown/index.js';
 import { ModuleRegistry } from '../src/core/registry.js';
 import { createToolkit } from '../src/server.js';
+import { DocumentSession } from '../src/core/document-session.js';
 
 async function fixture(t) {
   const folder = await mkdtemp(path.join(os.tmpdir(), 'toolkit-test-'));
@@ -108,6 +109,9 @@ test('bare local URL establishes a cookie session; API rejects unauthenticated a
   assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, Cookie: `${headers.Cookie}wrong` } })).status, 403);
   assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, Origin: 'https://example.com' } })).status, 403);
   assert.equal((await fetch(`${origin}/api/info`, { headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' } })).status, 403);
+  const created = await fetch(`${origin}/api/views`, { method: 'POST', headers, body: '{}' });
+  assert.equal(created.status, 200);
+  headers['X-Toolkit-View'] = (await created.json()).viewId;
   const response = await fetch(`${origin}/api/info`, { headers });
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal((await response.json()).state.filename, filename);
@@ -115,6 +119,47 @@ test('bare local URL establishes a cookie session; API rejects unauthenticated a
   assert.equal((await fetch(`${origin}/api/export/pdf`, { method: 'POST', headers, body: JSON.stringify({ paper: 'A4', background: 'red' }) })).status, 400);
   assert.equal((await (await fetch(`${origin}/api/info`, { headers })).json()).state.filename, filename);
   assert.deepEqual(await readdir(folder), ['notes.md']);
+});
+
+test('page sessions isolate file selection, edits, missing files and invalid opens', async t => {
+  const { filename, folder } = await fixture(t);
+  const secondFile = path.join(folder, 'second.md');
+  await writeFile(secondFile, '# Second\n');
+  const app = await createToolkit({ port: 0, interval: 30, baseDir: folder });
+  t.after(() => app.close());
+  const cookie = (await fetch(app.url)).headers.get('set-cookie').split(';')[0];
+  const headers = { Cookie: cookie, 'Content-Type': 'application/json' };
+  const api = (route, requestHeaders, options = {}) => fetch(new URL(route, app.url), { ...options, headers: requestHeaders });
+  const newView = async options => (await (await api('/api/views', headers, { method: 'POST', body: JSON.stringify(options) })).json()).viewId;
+  const firstId = await newView({ path: filename });
+  const secondId = await newView({ path: secondFile });
+  const firstHeaders = { ...headers, 'X-Toolkit-View': firstId };
+  const secondHeaders = { ...headers, 'X-Toolkit-View': secondId };
+  const state = async h => (await (await api('/api/info', h)).json()).state;
+  assert.equal((await state(firstHeaders)).filename, filename);
+  assert.equal((await state(secondHeaders)).filename, secondFile);
+  assert.equal((await api('/api/open', headers, { method: 'POST', body: JSON.stringify({ path: secondFile }) })).status, 410);
+  await writeFile(filename, '# First edited\n');
+  for (let i = 0; i < 50 && (await state(firstHeaders)).title !== 'First edited'; i++) await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal((await state(firstHeaders)).title, 'First edited');
+  assert.equal((await state(secondHeaders)).title, 'Second');
+  const duplicate = await newView({ previousView: firstId });
+  const duplicateHeaders = { ...headers, 'X-Toolkit-View': duplicate };
+  assert.notEqual(duplicate, firstId);
+  assert.equal((await state(duplicateHeaders)).filename, filename);
+  await api('/api/open', duplicateHeaders, { method: 'POST', body: JSON.stringify({ path: secondFile }) });
+  assert.equal((await state(firstHeaders)).filename, filename);
+  assert.equal((await state(duplicateHeaders)).filename, secondFile);
+  await unlink(filename);
+  for (let i = 0; i < 50 && !(await state(firstHeaders)).error; i++) await new Promise(resolve => setTimeout(resolve, 20));
+  assert.match((await state(firstHeaders)).error, /File is missing/);
+  assert.equal((await state(secondHeaders)).error, null);
+  const missingClone = await newView({ previousView: firstId });
+  const missingHeaders = { ...headers, 'X-Toolkit-View': missingClone };
+  assert.match((await state(missingHeaders)).error, /File is missing/);
+  assert.equal((await state(missingHeaders)).title, 'First edited');
+  assert.equal((await api('/api/open', secondHeaders, { method: 'POST', body: JSON.stringify({ path: 'absent.md' }) })).status, 400);
+  assert.equal((await state(secondHeaders)).filename, secondFile);
 });
 
 test('separate toolkit ports have independent cookies and page reload renews the session', async t => {
@@ -131,4 +176,33 @@ test('separate toolkit ports have independent cookies and page reload renews the
   for (const app of [first, second]) {
     assert.equal((await fetch(new URL('/api/info', app.url), { headers })).status, 200);
   }
+});
+
+test('a slow renderer stays local to its page and cannot overwrite a newer missing-file state', async t => {
+  const { filename, folder } = await fixture(t);
+  const fastFile = path.join(folder, 'fast.md');
+  await writeFile(fastFile, 'Fast');
+  let release;
+  const slow = new Promise(resolve => { release = resolve; });
+  let started;
+  const renderingStarted = new Promise(resolve => { started = resolve; });
+  const registry = { forFile() { return { id: 'test', async render(source) {
+    if (source.startsWith('# First')) { started(); await slow; }
+    return { html: source, title: source, outline: [], warnings: [] };
+  } }; } };
+  const first = new DocumentSession({ registry, baseDir: folder, interval: 20 });
+  const second = new DocumentSession({ registry, baseDir: folder, interval: 20 });
+  t.after(() => { release(); first.close(); second.close(); });
+  const opening = first.openFile(filename);
+  await renderingStarted;
+  const result = await second.openFile(fastFile);
+  assert.equal(result.title, 'Fast');
+  const missing = once(first.watcher, 'unavailable');
+  await unlink(filename);
+  await missing;
+  release();
+  await opening;
+  assert.match(first.state.error, /File is missing/);
+  assert.equal(first.state.title, undefined);
+  assert.equal(second.state.title, 'Fast');
 });

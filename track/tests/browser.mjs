@@ -9,7 +9,10 @@ import {chromium} from 'playwright-core';
 
 const temporary=await mkdtemp(path.join(os.tmpdir(),'track-browser-'));
 const evidence=path.join(process.cwd(),'.test-results');await mkdir(evidence,{recursive:true});
-const server=spawn('python3',['track.py','--lan-ip','127.0.0.1','--port','0','--ingest-port','0','--data-dir',temporary],{cwd:process.cwd()});
+const fakeConnector=path.join(temporary,'cloudflared');
+await writeFile(fakeConnector,`#!/usr/bin/env node
+console.log('https://browser-sync-'+process.pid+'.trycloudflare.com');console.log('Registered tunnel connection');setInterval(()=>{},1000);`,{mode:0o700});
+const server=spawn('python3',['track.py','--lan-ip','127.0.0.2','--port','0','--ingest-port','0','--data-dir',temporary],{cwd:process.cwd(),env:{...process.env,PATH:temporary+path.delimiter+process.env.PATH}});
 let stdout='',stderr='';server.stdout.on('data',data=>stdout+=data);server.stderr.on('data',data=>stderr+=data);
 const ready=await new Promise((resolve,reject)=>{
  const timeout=setTimeout(()=>reject(new Error('Track did not start: '+stderr)),30000);
@@ -25,7 +28,22 @@ try{
  const errors=[],external=[];page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(url+'/')&&!request.url().startsWith('data:'))external.push(request.url());});
  await page.goto(url);await page.getByRole('heading',{name:'Everyday, drawn.'}).waitFor();
  await page.getByRole('heading',{name:'A blank page. A new beginning.'}).waitFor();
- assert.equal(await page.locator('#export-open').isDisabled(),true);checks.push('empty archive is honest, export disabled');
+ assert.equal(await page.locator('#export-open').isDisabled(),true);
+ await page.emulateMedia({colorScheme:'dark'});
+ await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+ const darkPixel=await page.locator('#map').evaluate(c=>Array.from(c.getContext('2d').getImageData(0,0,1,1).data));
+ assert.ok(darkPixel[0]<40&&darkPixel[1]<40&&darkPixel[2]<40);
+ await page.locator('#theme').selectOption('light');
+ await page.emulateMedia({colorScheme:'dark'});await page.reload();
+ assert.equal(await page.locator('#theme').inputValue(),'light');
+ assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'light');
+ await page.locator('#theme').selectOption('dark');await page.reload();
+ assert.equal(await page.locator('#theme').inputValue(),'dark');
+ await page.screenshot({path:path.join(evidence,'empty-dark.png'),fullPage:true});
+ await page.locator('#theme').selectOption('system');await page.emulateMedia({colorScheme:'light'});
+ await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+ checks.push('dark canvas, system appearance changes, explicit override and saved theme');
+checks.push('empty archive is honest, export disabled');
  await page.screenshot({path:path.join(evidence,'empty-desktop.png'),fullPage:true});
  await page.locator('#sample-open').click();await page.locator('#sample-banner').waitFor();
  await page.waitForFunction(()=>Number(document.querySelector('#point-stat').textContent)>0);
@@ -54,13 +72,21 @@ try{
  await certificatePage.close();
  checks.push('default certificate port permits browser navigation and profile download');
  const csrf=await page.locator('meta[name="track-csrf"]').getAttribute('content');
- const setRelay=relay=>fetch(url+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json','X-Track-CSRF':csrf},body:JSON.stringify({url:relay})});
+ const setRelay=relay=>fetch(url+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json','X-Track-CSRF':csrf},body:JSON.stringify(relay===null?{disable:true}:{url:relay})});
  assert.equal((await setRelay('https://test-relay.trycloudflare.com')).status,200);
  await page.locator('#connect').click();await page.locator('#relay-notice').waitFor();
  assert.equal(await page.locator('#certificate-step').isVisible(),false);
  assert.equal(await page.locator('#relay-notice').isVisible(),true);
  assert.equal(await page.locator('#receiver-url').textContent(),'https://test-relay.trycloudflare.com/api/overland');
  for(const language of ['zh-Hans','zh-Hant','en']) {await page.locator('[data-close="setup-dialog"]').click();await page.locator('#language').selectOption(language);await page.locator('#connect').click();await page.locator('#relay-notice').waitFor();assert.ok((await page.locator('#relay-notice').textContent()).includes('Cloudflare'));}
+ await page.locator('[data-close="setup-dialog"]').click();
+ const pendingRelay=await fetch(url+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json','X-Track-CSRF':csrf},body:JSON.stringify({url:null})});
+ assert.equal(pendingRelay.status,200);
+ await page.locator('#connect').click();await page.locator('#relay-notice').waitFor();
+ assert.equal(await page.locator('#certificate-step').isVisible(),false);
+ assert.equal(await page.locator('#overland-qr').isVisible(),false);
+ assert.equal(await page.locator('#copy-receiver').isDisabled(),true);
+ assert.ok((await page.locator('#relay-notice').textContent()).includes('reconnecting'));
  await page.locator('[data-close="setup-dialog"]').click();
  await setRelay(null);await page.locator('#connect').click();await page.locator('#certificate-step').waitFor();
  assert.equal(await page.locator('#certificate-step').isVisible(),true);
@@ -101,7 +127,22 @@ try{
  assert.equal((await readFile(path.join(evidence,'backup.sqlite3'))).subarray(0,15).toString(),'SQLite format 3');checks.push('GPX, GeoJSON and consistent SQLite downloads');
  await page.locator('#toast').waitFor({state:'hidden'});
  for(const width of [390,320]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(evidence,`mobile-${width}.png`),fullPage:true});}
+
+ await page.locator('#theme').selectOption('dark');
+ for(const width of [1440,390,320]){await page.setViewportSize({width,height:width===1440?1040:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(evidence,`archive-dark-${width}.png`),fullPage:true});}
+ await page.locator('#theme').selectOption('light');
  checks.push('390px and 320px responsive layouts');
+ await page.locator('#connect').click();await page.locator('#setup-dialog').waitFor();
+ await page.locator('#generate-relay').click();
+ await page.waitForFunction(()=>document.querySelector('#receiver-url').textContent.includes('browser-sync-')&&!document.querySelector('#overland-qr').hidden,{},{timeout:20000});
+ assert.equal(await page.locator('#certificate-step').isVisible(),false);
+ assert.ok((await page.locator('#relay-generate-status').textContent()).includes('Ready'));
+ const generated=await page.locator('#receiver-url').textContent();
+ await page.locator('#generate-relay').click();
+ await page.waitForFunction(old=>document.querySelector('#receiver-url').textContent!==old&&document.querySelector('#receiver-url').textContent.includes('browser-sync-')&&!document.querySelector('#overland-qr').hidden,generated,{timeout:20000});
+ assert.equal((await (await fetch(url+'/api/overview')).json()).count,sample.points.length);
+ await page.locator('[data-close="setup-dialog"]').click();
+ checks.push('button generates and replaces HTTPS address and QR without importing positions');
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks.push('no browser errors or external requests');
  await writeFile(path.join(evidence,'browser-results.json'),JSON.stringify({result:'PASS',checks},null,2));console.log(JSON.stringify({result:'PASS',checks,evidence},null,2));
 }finally{

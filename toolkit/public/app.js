@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
 const headers = { 'Content-Type': 'application/json' };
+let viewId;
 let state = null, sourceView = false, opening = false, exporting = false, style = '';
 let streamError = '', actionError = '', info;
 let previousFilename;
@@ -8,9 +9,20 @@ async function api(url, options = {}) {
   const response = await fetch(url, { ...options, headers });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'The local server did not respond.' }));
-    throw new Error(error.error);
+    const failure = new Error(error.error);
+    failure.status = response.status;
+    throw failure;
   }
   return response;
+}
+async function createView(options = {}) {
+  const details = await (await api('/api/views', { method: 'POST', body: JSON.stringify(options) })).json();
+  viewId = details.viewId;
+  headers['X-Toolkit-View'] = viewId;
+  // Only an opaque ID enters history; Markdown, paths and renders stay in memory.
+  // Every load forks a fresh view, so duplicated tabs cannot share a watcher.
+  history.replaceState({ ...history.state, toolkitView: viewId }, '');
+  return details;
 }
 function message() {
   const items = [actionError, streamError, state?.error, ...(state?.warnings || [])].filter(Boolean);
@@ -117,7 +129,10 @@ async function connect() {
           if (event.startsWith('data: ')) draw(JSON.parse(event.slice(6)));
         }
       }
-    } catch {
+    } catch (error) {
+      if (error.status === 410) {
+        try { info = await createView({ path: state?.filename }); draw(info.state); continue; } catch {}
+      }
       $('connection').textContent = 'Reconnecting…';
       streamError = 'Connection lost. Keep the toolkit running in your terminal. Reconnecting…'; message();
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -125,7 +140,7 @@ async function connect() {
   }
 }
 try {
-  const [css, details] = await Promise.all([fetch('/document.css').then(response => response.text()), api('/api/info').then(response => response.json())]);
+  const [css, details] = await Promise.all([fetch('/document.css').then(response => response.text()), createView({ previousView: history.state?.toolkitView })]);
   style = css; info = details;
   $('path-help').textContent = `Save changes to update the preview. Relative paths start at ${info.baseDir}.`;
   draw(info.state);

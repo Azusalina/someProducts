@@ -26,7 +26,9 @@ Linux 也可运行 `./start.sh`；Windows 双击 `start.bat`，或在终端运�
 
 默认端口：PC 本机界面 `4188`；局域网 HTTPS 上传 `4189`；仅下载公开证书的局域网 HTTP 服务 `8080`。手机需要访问后两个端口；防火墙、访客网络隔离或 VPN 的局域网策略可能影响连接。网络更换后重新启动 Track，并用连接面板更新 Overland 地址；保留原数据目录时无需重新生成根证书。长期使用可为 PC 保留固定 DHCP 地址。
 
-当 VPN 或热点隔离阻止手机访问 PC IP 时，可选择 **临时 HTTPS 中转**：上传流量经过 Cloudflare，数据库仍保存在 PC；无需在 iPhone 安装 Track 证书。先启动 Track，再安装 [cloudflared](https://developers.cloudflare.com/tunnel/downloads/) 并在另一个终端运行 `python3 scripts/relay.py`（Windows：`py -3 scripts/relay.py`）。也可用 `--cloudflared <可执行文件路径>` 指定程序。显示 **Relay ready** 后，刷新网页并打开 **Connect iPhone**，扫描 Overland 二维码；必要时在 Overland 手动填写新 Server URL 和原 Access token，点击 Send Now。保持两个服务运行；在中转终端按 `Ctrl+C` 关闭公网入口。中转每次重启会更换域名，须重新配置手机。此方式为临时测试，不提供长期在线保证；不需要关闭现有 VPN。
+当 VPN 或热点隔离阻止手机访问 PC IP 时，可选择 **HTTPS 中转**：上传流量经过 Cloudflare，数据库仍保存在 PC；无需在 iPhone 安装 Track 证书。安装 [cloudflared](https://developers.cloudflare.com/tunnel/downloads/) 后，运行 `python3 track.py --relay --open`（Windows：`py -3 track.py --relay --open`）。中转模式会保存，之后普通启动也会自动恢复；Track 管理中转进程并在失败后重试，无需另开终端。也可直接在 **Connect iPhone** 面板点击 **Generate temporary sync address／生成临时同步地址**，等待成功后扫描下方 Overland 二维码。已有地址时，按钮会显示 **Generate a new sync address／生成新的同步地址**；生成新地址会结束旧中转，需要重新配置手机。显示 **Relay ready** 后，刷新网页并打开 **Connect iPhone**，扫描新的 Overland 二维码；必要时在 Overland 手动填写新 Server URL 和原 Access token，点击 Send Now。中转重启会更换域名，须更新手机配置；连接面板每 5 秒更新，重连时隐藏临时二维码，不会回退为手机无法访问的本地地址。此方式不保证长期在线或固定域名，无需关闭现有 VPN。使用 `--no-relay` 可清除保存的中转选择并恢复局域网模式。固定域名方案和配置限制见 [description.md](description.md)。
+
+界面右上角的 **System／Light／Dark** 选择跟随系统、浅色或深色；偏好保存在浏览器中，地图与回放同步切换。
 
 界面操作：选择日期或 **All footprints**；拖动地图、滚轮或加减按钮缩放；**Island view** 回到港岛视角，**Fit footprints** 适配所选记录。点击播放、拖动进度条回放；按设备和定位精度筛选。单日可保存备注；**Export trace** 导出当前筛选后的 GPX／GeoJSON；**Back up** 下载含原始上传和备注的 SQLite 备份。**Explore a sample** 只预览虚构路线，不写入档案。
 
@@ -35,3 +37,5 @@ Linux 也可运行 `./start.sh`；Windows 双击 `start.bat`，或在终端运�
 手动启动时，按 `Ctrl+C` 停止服务。若希望 Linux 登录后自动启动，可运行 `python3 scripts/service.py`；使用前先停止手动运行的实例。停止已安装服务用 `systemctl --user stop track.service`，恢复用 `systemctl --user start track.service`。卸载自启动用 `python3 scripts/service.py --uninstall`，数据与证书会保留。Windows 目前使用手动启动，不配置自启动。
 
 停止手机采集可在 Overland 关闭 Tracking Enabled。卸载采集器前先同步手机队列；不再使用本地同步时，可在 iPhone 的“VPN 与设备管理”中移除 **Track Local Sync** 描述文件。
+
+当前 Linux 机器已启用 `track.service` 用户登录自启动；登录后打开本机网页即可。服务自动恢复中转，但临时域名更换后仍需更新 Overland。关机或注销期间不提供同步服务，系统重启后的实际恢复仍需设备验证。

@@ -252,3 +252,23 @@ PC 服务实现后，预期流程为：在 Overland 中配置 PC 同步地址和
 本机按需下载的 `.tools/cloudflared` 不纳入版本管理，也不安装系统服务；Linux amd64 版本 2026.10.0 的 SHA-256 与官方 GitHub Release asset digest 核对一致。其他机器须安装相应平台的官方程序，或通过 `--cloudflared` 指定路径。验证覆盖 CSRF、域名校验、上传端拒绝中转管理、登记过期和清除、浏览器三语模式切换以及恢复局域网配置；16 项 Python、7 项轨迹语义与 13 组浏览器检查通过。
 
 实际公网链路检查：无认证上传 HTTP 401；携带正确令牌但无效数据的上传 HTTP 400，未写入测试位置；公网访问管理 API HTTP 404。正常中断中转后登记清除、局域网配置恢复，重新启动后新域名和本机连接面板二维码验证通过。真实档案仍为 0 个定位点，iPhone 首次真实上传待用户测试。
+
+### 自动恢复中转与深色模式（2026-10-07）
+
+检查发现原 Quick Tunnel 进程已结束，旧版连接面板因 45 秒心跳过期而回退到局域网接收地址。新增 `relay-settings.json` 保存用户选择、模式与最后公网域名；健康心跳仍只在内存中。失去心跳后保留中转模式和域名并显示重连状态，不把局域网地址用于手机配置。临时模式在未连接时隐藏配置二维码、禁用接收地址复制，避免配置失效域名；面板打开时每 5 秒刷新。启动 `track.py --relay` 保存选择，后续普通启动自动恢复；`--no-relay` 清除中转选择。Track 监管中转子进程，失败后重试间隔至少 15 秒；服务退出时依次结束中转和 connector。原站监听默认使用回环地址，避免依赖热点 DHCP 地址；显式 `--lan-ip` 仍可选择局域网监听。
+
+当前机器安装并启用了 Linux 用户 `track.service` 登录自启动，服务配置静态验证通过。系统重启或注销后未做实际登录测试；Windows 启动与进程清理未做真机验证。公网仅转发认证上传监听器，管理界面、备份和令牌获取仍为本机访问。维护前在私有数据目录保存 SQLite 快照，真实档案检查有 2,859 个定位点，说明此前手机上传已到达；不能据此宣称全天后台连续性与耗电验证完成。
+
+主题支持跟随系统／浅色／深色，三语选择器，localStorage 保存偏好。外部本地脚本 `/theme.js` 在样式加载前应用主题，保持既有 CSP，不使用内联脚本。CSS 控件、弹窗和 Canvas 足迹／回放颜色同步切换；二维码保持白底。桌面与 390／320 px 深色截图及主题持久化、系统主题变化、显式主题覆盖均已验证。
+
+没有部署 GitHub Pages，也没有重命名文件夹：Pages 不能运行 Python 接收 API 或 SQLite 服务，部署静态前端不能解决手机上传。来源：[GitHub Pages 限制](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)。用户选择无域名时先恢复 Quick Tunnel。临时域名仍会变化，固定地址需要可管理的域名及 Named Tunnel；来源：[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)。
+
+保留可选 locally-managed Named Tunnel 配置入口：准备 cloudflared 配置文件后，运行 `python3 scripts/relay.py --public-url https://track.example.com --tunnel-config /绝对路径/config.yml`。配置须仅把该 hostname 路由至 `https://127.0.0.1:4189`，`originRequest.caPool` 指向档案中的 `ca.pem`，`originRequest.originServerName` 设为 `localhost`，最后的 catch-all 为 `http_status:404`；凭证路径放在本机配置文件，不写入聊天或仓库。配置入口由本机 Host／Origin 与 CSRF 校验保护，心跳仅接受配置中的确切域名。这里的 example.com 是占位符；尚未配置或验证真实 Named Tunnel、DNS 或公网固定域名。该入口不提供自动创建 Cloudflare 账户或域名的功能。
+
+本轮最终验证：18 项 Python（含实际 Track 启停与离线模拟 connector 的配置恢复）、7 项轨迹语义和 14 组浏览器检查通过。实际服务停止其 cloudflared 子进程后，Track 自动重启连接并登记新域名；全程未将手机接收配置回退为 127.0.0.1。公网无令牌上传 401、正确令牌但无效数据 400、管理 API 404；真实档案仍为 2,859 点，未向真实档案添加测试数据。当前用户服务 enabled／active，本机服务的主题保存、HTTPS 配置和二维码检查通过。桌面和手机宽度截图使用临时测试数据库中的虚构路线。
+
+### 按钮生成临时同步地址（2026-10-07）
+
+Connect iPhone 面板新增三语按钮、生成进度与成功／超时／缺少 cloudflared 提示。点击后通过本机 Host／Origin／CSRF 保护的请求，保存临时中转模式并递增生成请求；Track 监管循环结束旧中转子进程后启动新进程，返回新 HTTPS 域名及 Overland 二维码。生成期间按钮禁用并隐藏旧二维码；重复请求在 15 秒内返回 409。Named Tunnel 模式禁止该按钮，避免替换固定配置。生成新地址会结束旧地址，需要更新手机配置。数据仍仅写入 PC，上传验证和公网访问范围未改变。
+
+本轮验证：19 项 Python、7 项轨迹语义及 15 组浏览器检查通过；浏览器用离线模拟 connector 验证按钮生成和再次替换域名。实际运行服务的按钮生成 HTTPS 域名、三语控制和二维码流程也通过，生成前后的真实档案均为 9,136 个定位点，未导入测试位置。并发生成及心跳配置更新使用同一锁，避免多个标签页重复点击造成并发配置写入。

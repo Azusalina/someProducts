@@ -11,6 +11,9 @@ import threading
 import webbrowser
 from trackapp.server import App
 from trackapp.tls import data_directory
+from trackapp import relay as relay_config
+from pathlib import Path
+import time
 
 
 def detect_lan_ip():
@@ -45,13 +48,23 @@ def main():
     parser.add_argument("--trust-port", type=int, default=8080, help="Public certificate download port (8080)")
     parser.add_argument("--data-dir", default=str(data_directory()), help="Private archive directory")
     parser.add_argument("--open", action="store_true", help="Open local browser")
+    parser.add_argument("--relay", action="store_true", help="Enable and remember automatic Quick Tunnel startup")
+    parser.add_argument("--no-relay", action="store_true", help="Disable saved relay and use LAN only")
     args = parser.parse_args()
     try:
-        lan_ip = args.lan_ip or detect_lan_ip()
+        saved = relay_config.load(Path(args.data_dir))
+        use_relay = not args.no_relay and (args.relay or saved.get("enabled"))
+        lan_ip = args.lan_ip or ("127.0.0.1" if use_relay else detect_lan_ip())
         app = App(args.data_dir, lan_ip, args.port, args.ingest_port, args.trust_port).start()
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
         print(f"Track could not start: {exc}", file=sys.stderr)
         return 1
+    if args.no_relay:
+        app.relay_settings = {"enabled": False, "mode": "quick"}
+        relay_config.save(app.data_dir, app.relay_settings)
+    elif args.relay:
+        app.relay_settings["enabled"] = True
+        relay_config.save(app.data_dir, app.relay_settings)
     stopped = threading.Event()
     signal.signal(signal.SIGINT, lambda *_: stopped.set())
     if hasattr(signal, "SIGTERM"):
@@ -60,9 +73,36 @@ def main():
           f"Open the local browser's Connect iPhone panel to complete setup.", flush=True)
     if args.open:
         webbrowser.open(app.url)
+    child = None
+    retry_at = 0
+    generation = app.relay_generation
     try:
-        stopped.wait()
+        while not stopped.wait(1):
+            if app.relay_generation != generation:
+                if child and child.poll() is None:
+                    child.terminate()
+                    try:
+                        child.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        child.kill()
+                        child.wait()
+                child = None
+                app.relay = None
+                generation = app.relay_generation
+                retry_at = 0
+            if app.relay_settings.get("enabled") and (child is None or child.poll() is not None) and time.monotonic() >= retry_at:
+                child = subprocess.Popen([sys.executable, str(Path(__file__).parent / "scripts/relay.py"), "--port", str(app.ui_port)])
+                retry_at = time.monotonic() + 15
+            elif not app.relay_settings.get("enabled") and child and child.poll() is None:
+                child.terminate()
     finally:
+        if child and child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
         app.close()
     return 0
 

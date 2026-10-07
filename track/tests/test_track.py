@@ -125,6 +125,14 @@ class HTTPTests(unittest.TestCase):
         cls.app.close()
         cls.tmp.cleanup()
 
+    def setUp(self):
+        from trackapp import relay
+        self.app.relay = None
+        self.app.relay_requested_at = 0
+        self.app.relay_generation = 0
+        self.app.relay_settings = {"enabled": False, "mode": "quick"}
+        relay.save(self.app.data_dir, self.app.relay_settings)
+
     def request(self, url, data=None, headers=None):
         request = urllib.request.Request(url, data=data, headers=headers or {})
         try:
@@ -187,9 +195,49 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(self.request(f"https://127.0.0.1:{self.app.ingest_port}/api/relay", body, headers)[0], 403)
         self.app.relay = ("https://test-relay.trycloudflare.com", 0)
         self.assertFalse(self.app.setup()["relay_active"])
-        self.assertIn("127.0.0.1", self.app.setup()["receiver"])
+        self.assertEqual(self.app.setup()["receiver"], "https://test-relay.trycloudflare.com/api/overland")
+        self.assertTrue(self.app.setup()["relay_enabled"])
         self.assertEqual(self.request(url, b'{"url":null}', headers)[0], 200)
         self.assertIsNone(self.app.relay)
+        self.assertTrue(self.app.setup()["relay_enabled"])
+        self.assertEqual(self.request(url, b'{"disable":true}', headers)[0], 200)
+        self.assertFalse(self.app.setup()["relay_enabled"])
+
+    def test_generate_is_authenticated_local_and_coalesces_duplicate_clicks(self):
+        url = self.app.url + "/api/relay"
+        body = b'{"generate":true}'
+        headers = {"X-Track-CSRF": self.app.csrf}
+        self.assertEqual(self.request(url, body)[0], 403)
+        self.assertEqual(self.request(f"https://127.0.0.1:{self.app.ingest_port}/api/relay", body, headers)[0], 403)
+        with patch("trackapp.server.shutil.which", return_value="fake-cloudflared"):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                statuses = list(pool.map(lambda _: self.request(url, body, headers)[0], range(4)))
+            self.assertEqual(sorted(statuses), [200, 409, 409, 409])
+            self.assertEqual(self.app.relay_generation, 1)
+            self.assertTrue(self.app.setup()["relay_generating"])
+            self.assertIsNone(self.app.setup()["receiver"])
+            self.assertEqual(self.request(url, body, headers)[0], 409)
+            self.assertEqual(self.app.relay_generation, 1)
+        self.assertEqual(self.request(url, b'{"url":"https://ready-test.trycloudflare.com"}', headers)[0], 200)
+        self.assertFalse(self.app.setup()["relay_generating"])
+
+    def test_named_relay_requires_local_configuration_and_remembers_origin(self):
+        from trackapp import relay
+        url = self.app.url + "/api/relay"
+        headers = {"X-Track-CSRF": self.app.csrf}
+        config = Path(self.tmp.name) / "tunnel.json"
+        config.write_text('{}')
+        settings = {"mode": "named", "public_url": "https://track.example.com", "tunnel_config": str(config)}
+        self.assertEqual(self.request(url, json.dumps({"configure": settings}).encode(), headers)[0], 200)
+        self.assertEqual(relay.load(self.app.data_dir)["public_url"], settings["public_url"])
+        self.assertTrue(self.app.setup()["relay_enabled"])
+        self.assertFalse(self.app.setup()["relay_active"])
+        self.assertEqual(self.app.setup()["receiver"], "https://track.example.com/api/overland")
+        self.assertEqual(self.request(url, b'{"url":"https://other.trycloudflare.com"}', headers)[0], 400)
+        self.assertEqual(self.request(url, json.dumps({"url": settings["public_url"]}).encode(), headers)[0], 200)
+        self.assertTrue(self.app.setup()["relay_active"])
+        self.app.relay = (settings["public_url"], 0)
+        self.assertEqual(self.app.setup()["receiver"], "https://track.example.com/api/overland")
 
     def test_no_cache_traversal_and_sample_is_never_saved(self):
         before=self.app.store.overview()["count"]

@@ -4,7 +4,7 @@ import {FootprintMap} from './map.js';
 const $ = id=>document.getElementById(id), map=new FootprintMap($('map'));
 const state={overview:{days:[],devices:[],count:0,notes:{},max_id:0,last_sync:null},day:null,raw:[],sample:false,sampleAll:[],track:buildTrack([]),online:true};
 const csrf=document.querySelector('meta[name=track-csrf]').content;
-let controller=null,requestNumber=0,frame=0,playing=false,toastTimer=null,setup=null;
+let controller=null,requestNumber=0,frame=0,playing=false,toastTimer=null,setup=null,generating=false,generationDeadline=0,generationStatus=null;
 async function api(url,options={}) {
  const response=await fetch(url,{cache:'no-store',...options});
  if(!response.ok)throw new Error(`Request failed: ${response.status}`);
@@ -84,18 +84,52 @@ function startReplay(){
 }
 async function copy(value){try{await navigator.clipboard.writeText(value);toast('copied');}catch{toast('copyFailed');}}
 function qr(element,value){const code=window.qrcode(0,'M');code.addData(value);code.make();element.src=code.createDataURL(4,16);}
-async function connect(){
- try{setup=await api('/api/setup');$('certificate-step').hidden=setup.relay_active;$('relay-notice').hidden=!setup.relay_active;document.querySelector('#setup-dialog [data-i18n=setupIntro]').hidden=setup.relay_active;$('profile-url').textContent=setup.profile;$('receiver-url').textContent=setup.receiver;$('fingerprint').textContent=setup.fingerprint;$('data-dir').textContent=setup.data_dir;$('access-token').value=setup.token;$('access-token').type='password';$('show-token').textContent=t('show');qr($('cert-qr'),setup.profile);qr($('overland-qr'),setup.overland_url);status();$('setup-dialog').showModal();}catch{toast('error');}
+function setupView(){
+ const relay=setup.relay_enabled, ready=!relay||setup.relay_active||setup.relay_mode==='named';
+ if((generating||generationStatus==='relayTimeout'||generationStatus==='relayBusy')&&setup.relay_active){generating=false;generationStatus='relayGenerated';}
+ else if(generating&&Date.now()>generationDeadline){generating=false;generationStatus='relayTimeout';}
+ const busy=generating||setup.relay_generating;
+ $('generate-relay').disabled=busy||setup.relay_mode==='named';
+ $('generate-relay').dataset.i18n=busy?'relayGenerating':setup.relay_active?'relayRegenerate':'relayGenerate';
+ $('generate-relay').textContent=t($('generate-relay').dataset.i18n);
+ $('relay-generate-status').textContent=busy?t('relayGenerating'):generationStatus?t(generationStatus):'';
+ $('certificate-step').hidden=relay;$('relay-notice').hidden=!relay;
+ $('relay-notice').dataset.i18n=setup.relay_active?(setup.relay_mode==='named'?'relayFixed':'relayNotice'):'relayPending';
+ $('relay-notice').textContent=t($('relay-notice').dataset.i18n);
+ document.querySelector('#setup-dialog [data-i18n=setupIntro]').hidden=relay;
+ $('profile-url').textContent=setup.profile;$('receiver-url').textContent=setup.receiver||t('relayPending');
+ $('fingerprint').textContent=setup.fingerprint;$('data-dir').textContent=setup.data_dir;
+ $('access-token').value=setup.token;
+ $('overland-qr').hidden=!ready;$('copy-receiver').disabled=!ready;
+ if(ready&&setup.overland_url)qr($('overland-qr'),setup.overland_url);
+ qr($('cert-qr'),setup.profile);status();
 }
+async function connect(){
+ try{setup=await api('/api/setup');$('access-token').type='password';$('show-token').textContent=t('show');setupView();$('setup-dialog').showModal();}catch{toast('error');}
+}
+setInterval(async()=>{if($('setup-dialog').open&&document.visibilityState==='visible'){try{setup=await api('/api/setup');setupView();}catch{}}},5000);
 function download(blob,name){const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function exportTrace(format){const note=state.day&&!state.sample?state.overview.notes[state.day]||'':'';
  const text=format==='gpx'?gpx(state.track,note):JSON.stringify(geojson(state.track,note),null,2);
  download(new Blob([text],{type:format==='gpx'?'application/gpx+xml':'application/geo+json'}),`${state.sample?'sample-':''}track-${state.day||'all'}.${format}`);$('export-dialog').close();toast('downloaded');
 }
-$('language').addEventListener('change',()=>{translate($('language').value);navigation();render();map.draw();$('show-token').textContent=t($('access-token').type==='password'?'show':'hide');});
+$('theme').value=window.TrackTheme.get();
+$('theme').addEventListener('change',()=>window.TrackTheme.set($('theme').value));
+window.addEventListener('track-theme-change',()=>map.draw());
+$('language').addEventListener('change',()=>{translate($('language').value);if(setup)setupView();navigation();render();map.draw();$('show-token').textContent=t($('access-token').type==='password'?'show':'hide');});
 $('all-days').addEventListener('click',()=>selectDay(null));$('device').addEventListener('change',()=>loadPoints({fit:true}));$('accuracy').addEventListener('change',refreshTrack);
 $('zoom-in').addEventListener('click',()=>map.zoom(1.5));$('zoom-out').addEventListener('click',()=>map.zoom(1/1.5));$('island-view').addEventListener('click',()=>map.island());$('fit-view').addEventListener('click',()=>{if(!map.fit())toast('noPoints');});
 $('replay-button').addEventListener('click',startReplay);$('replay-slider').addEventListener('input',()=>{stopReplay();map.progress=Number($('replay-slider').value)/1000;map.draw();replayTime();});$('replay-speed').addEventListener('change',stopReplay);
+$('generate-relay').addEventListener('click',async()=>{
+ if(generating)return;
+ generating=true;generationStatus=null;generationDeadline=Date.now()+120000;
+ $('generate-relay').disabled=true;$('relay-generate-status').textContent=t('relayGenerating');
+ try{
+  const response=await fetch('/api/relay',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','X-Track-CSRF':csrf},body:JSON.stringify({generate:true})});
+  if(!response.ok){const error=await response.json();generationStatus=['relayMissing','relayBusy'].includes(error.code)?error.code:'error';generating=false;}
+  setup=await api('/api/setup');setupView();
+ }catch{generating=false;generationStatus='error';setupView();}
+});
 $('connect').addEventListener('click',connect);$('empty-connect').addEventListener('click',connect);
 document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>$ (button.dataset.close).close()));
 $('copy-profile').addEventListener('click',()=>copy(setup.profile));$('copy-receiver').addEventListener('click',()=>copy(setup.receiver));$('copy-token').addEventListener('click',()=>copy(setup.token));

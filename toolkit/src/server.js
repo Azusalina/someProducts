@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { ModuleRegistry } from './core/registry.js';
-import { FileWatcher } from './core/watcher.js';
+import { DocumentSession } from './core/document-session.js';
 import { readSource, documentStyle } from './core/files.js';
 import { exportPdf } from './core/pdf.js';
 
@@ -11,44 +11,20 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const registry = new ModuleRegistry();
   const token = randomBytes(24).toString('hex');
   const style = await documentStyle();
-  const clients = new Set();
-  let watcher, state = null, generation = 0, rendering = Promise.resolve(), exporting = false;
+  const views = new Map();
+  const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
+  if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
   const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']]]);
-  const sendState = () => { for (const client of clients) client.write(`data: ${JSON.stringify(state)}\n\n`); };
-  async function openFile(input) {
-    if (typeof input !== 'string' || !input.trim()) throw new Error('Enter a local Markdown file path.');
-    const target = path.resolve(baseDir, input.startsWith('~/') ? path.join(process.env.HOME, input.slice(2)) : input.trim());
-    const module = registry.forFile(target);
-    await readSource(target); // Keep the current document when a new path is invalid.
-    const current = ++generation;
-    let revision = 0;
-    watcher?.stop();
-    watcher = new FileWatcher(target, interval);
-    const update = source => {
-      const version = ++revision;
-      rendering = rendering.catch(() => {}).then(async () => {
-        if (current !== generation || version !== revision) return;
-        try {
-          const result = await module.render(source, { filename: target });
-          if (current !== generation || version !== revision) return;
-          state = { ...result, source, filename: target, module: module.id, updatedAt: new Date().toISOString(), error: null };
-        } catch (error) {
-          if (current !== generation || version !== revision) return;
-          state = { ...state, filename: target, error: `Rendering failed: ${error.message}` };
-        }
-        sendState();
-      });
-    };
-    watcher.on('change', update);
-    watcher.on('unavailable', error => {
-      if (current !== generation) return;
-      revision++;
-      state = { ...state, filename: target, error: error.code === 'ENOENT' ? 'File is missing. Waiting for it to return…' : error.message };
-      sendState();
-    });
-    await watcher.start();
-    await rendering;
-    return state;
+  const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
+  // Retain disconnected views briefly for reload/duplicate, then release memory
+  // and watchers. No page IDs, paths or document data are written to disk.
+  function scheduleExpiry(viewId, view) {
+    clearTimeout(view.expiry);
+    view.expiry = setTimeout(() => {
+      if (view.clients.size || view.exporting) return scheduleExpiry(viewId, view);
+      view.close(); views.delete(viewId);
+    }, 30 * 60 * 1000);
+    view.expiry.unref();
   }
   async function body(req) {
     let input = '';
@@ -79,33 +55,55 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
       }
       if (!url.pathname.startsWith('/api/')) return json(res, { error: 'Not found.' }, 404);
       if (!(req.headers.cookie || '').split(';').some(cookie => cookie.trim() === sessionCookie)) return json(res, { error: 'Refresh the toolkit at its local address to start a session. Allow cookies for this local address.' }, 403);
-      if (req.method === 'GET' && url.pathname === '/api/info') return json(res, { modules: registry.list(), baseDir, interval, state, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
+      if (req.method === 'POST' && url.pathname === '/api/views') {
+        const options = await body(req);
+        const previous = typeof options.previousView === 'string' ? views.get(options.previousView) : null;
+        const view = new DocumentSession({ registry, baseDir, interval, state: previous?.state ?? null });
+        const viewId = randomBytes(24).toString('hex');
+        try {
+          if (options.path) await view.openFile(options.path);
+          else if (previous?.state?.filename) await view.openFile(previous.state.filename, { recover: true });
+          else if (initialPath) await view.openFile(initialPath, { recover: true });
+          views.set(viewId, view); scheduleExpiry(viewId, view);
+          return json(res, details(view, viewId));
+        } catch (error) { view.close(); throw error; }
+      }
+      const viewId = req.headers['x-toolkit-view'];
+      const view = views.get(viewId);
+      if (req.method === 'GET' && url.pathname === '/api/info' && !viewId) return json(res, details());
+      if (!view) return json(res, { error: 'This page session has expired. Refresh the page to reopen it.' }, 410);
+      if (!view.clients.size) scheduleExpiry(viewId, view);
+      if (req.method === 'GET' && url.pathname === '/api/info') return json(res, details(view, viewId));
       if (req.method === 'GET' && url.pathname === '/api/events') {
         res.writeHead(200, { 'Content-Type': 'text/event-stream', Connection: 'keep-alive' });
-        clients.add(res);
-        res.write(`data: ${JSON.stringify(state)}\n\n`);
+        clearTimeout(view.expiry);
+        view.clients.add(res);
+        res.write(`data: ${JSON.stringify(view.state)}\n\n`);
         const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 15000);
-        res.on('close', () => { clients.delete(res); clearInterval(heartbeat); });
+        res.on('close', () => {
+          view.clients.delete(res); clearInterval(heartbeat);
+          if (!view.clients.size && views.has(viewId)) scheduleExpiry(viewId, view);
+        });
         return;
       }
-      if (req.method === 'POST' && url.pathname === '/api/open') return json(res, await openFile((await body(req)).path));
+      if (req.method === 'POST' && url.pathname === '/api/open') return json(res, await view.openFile((await body(req)).path));
       if (req.method === 'POST' && url.pathname === '/api/export/pdf') {
         const options = await body(req);
         if (!['A4', 'Letter'].includes(options.paper)) throw new Error('Choose A4 or Letter paper.');
         const background = options.background ?? 'white';
         if (!['white', 'yellow', 'black'].includes(background)) throw new Error('Choose white, yellow, or black PDF background.');
-        if (exporting) return json(res, { error: 'An export is already running. Please wait.' }, 409);
+        if (view.exporting) return json(res, { error: 'An export is already running. Please wait.' }, 409);
         // Refresh from disk at click time; export never uses a stale browser preview.
-        if (!state?.filename) throw new Error('Open a Markdown file first.');
-        const target = state.filename;
-        exporting = true;
+        if (!view.state?.filename) throw new Error('Open a Markdown file first.');
+        const target = view.state.filename;
+        view.exporting = true;
         try {
           const snapshot = await registry.forFile(target).render(await readSource(target), { filename: target });
           const buffer = await exportPdf(snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
           const download = `${path.basename(target, path.extname(target))}.pdf`;
           res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="document.pdf"; filename*=UTF-8''${encodeURIComponent(download)}` });
           return res.end(buffer);
-        } finally { exporting = false; }
+        } finally { view.exporting = false; }
       }
       return json(res, { error: 'Not found.' }, 404);
     } catch (error) {
@@ -117,11 +115,10 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   const url = `http://127.0.0.1:${server.address().port}/`;
   const close = async () => {
-    generation++; watcher?.stop();
-    for (const client of clients) client.end();
+    for (const view of views.values()) view.close();
+    views.clear();
     server.closeIdleConnections();
     await new Promise(resolve => server.close(resolve));
   };
-  if (filename) { try { await openFile(filename); } catch (error) { await close(); throw error; } }
-  return { server, url, openFile, close };
+  return { server, url, close };
 }

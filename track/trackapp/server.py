@@ -4,6 +4,8 @@ import ipaddress
 import json
 import re
 import secrets
+import shutil
+import sys
 import socket
 import ssl
 import tempfile
@@ -17,6 +19,7 @@ from . import __version__
 from .protocol import InvalidBatch, MAX_BODY
 from .sample import sample_points
 from .store import Store
+from . import relay as relay_config
 from .tls import prepare
 
 WEB = Path(__file__).resolve().parents[1] / "web"
@@ -39,6 +42,10 @@ class App:
         self.tls = prepare(self.data_dir, self.lan_ip)
         self.store = Store(self.data_dir / "track.sqlite3")
         self.relay = None
+        self.relay_lock = threading.Lock()
+        self.relay_generation = 0
+        self.relay_requested_at = 0
+        self.relay_settings = relay_config.load(self.data_dir)
         self.csrf = secrets.token_urlsafe(32)
         self.servers = []
         try:
@@ -81,13 +88,17 @@ class App:
         receiver = f"https://{self.lan_ip}:{self.ingest_port}/api/overland"
         relay = self.relay
         relay_active = bool(relay and relay[1] > time.monotonic())
-        if relay_active:
-            receiver = relay[0] + "/api/overland"
+        relay_enabled = bool(self.relay_settings.get("enabled"))
+        public_url = relay[0] if relay_active else self.relay_settings.get("public_url")
+        if relay_enabled:
+            receiver = public_url + "/api/overland" if public_url else None
         profile = f"http://{self.lan_ip}:{self.trust_port}/track.mobileconfig"
-        return {"receiver": receiver, "relay_active": relay_active, "profile": profile, "token": self.tls["config"]["token"],
+        return {"receiver": receiver, "relay_active": relay_active, "relay_enabled": relay_enabled,
+                "relay_generating": bool(self.relay_requested_at and time.monotonic() - self.relay_requested_at < 120),
+                "relay_mode": self.relay_settings["mode"], "lan_receiver": f"https://{self.lan_ip}:{self.ingest_port}/api/overland", "profile": profile, "token": self.tls["config"]["token"],
                 "fingerprint": self.tls["fingerprint"], "data_dir": str(self.data_dir), "version": __version__,
                 "overland_url": "overland://setup?" + urlencode({"url": receiver,
-                    "token": self.tls["config"]["token"], "device_id": "iPhone", "unique_id": "yes"})}
+                    "token": self.tls["config"]["token"], "device_id": "iPhone", "unique_id": "yes"}) if receiver else None}
 
     def handler(self, mode):
         app = self
@@ -201,7 +212,7 @@ class App:
                 else:
                     allowed = {"/app.js": "text/javascript", "/map.js": "text/javascript",
                                "/geometry.js": "text/javascript", "/i18n.js": "text/javascript",
-                               "/style.css": "text/css", "/vendor/qrcode.js": "text/javascript",
+                               "/style.css": "text/css", "/theme.js": "text/javascript", "/vendor/qrcode.js": "text/javascript",
                                "/icon.svg": "image/svg+xml"}
                     if path in allowed:
                         self.send(200, (WEB / path[1:]).read_bytes(), allowed[path])
@@ -225,14 +236,53 @@ class App:
                         self.send(200, {"result": "ok"})
                     elif mode == "ui" and self.local_request(mutation=True) and path == "/api/relay":
                         data = json.loads(self.body())
-                        url = data.get("url")
-                        if url is None:
-                            app.relay = None
-                        elif isinstance(url, str) and re.fullmatch(r"https://[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com", url):
-                            app.relay = (url, time.monotonic() + 45)
-                        else:
-                            raise ValueError("Expected a temporary trycloudflare HTTPS origin")
-                        self.send(200, {"saved": True})
+                        with app.relay_lock:
+                            url = data.get("url")
+                            if data.get("generate"):
+                                if app.relay_settings["mode"] == "named":
+                                    raise ValueError("A fixed tunnel is configured; temporary generation is unavailable")
+                                bundled = Path(__file__).resolve().parents[1] / ".tools" / ("cloudflared.exe" if sys.platform == "win32" else "cloudflared")
+                                if not shutil.which("cloudflared") and not bundled.is_file():
+                                    self.send(400, {"error": "Install cloudflared first", "code": "relayMissing"})
+                                    return
+                                if app.relay_requested_at and time.monotonic() - app.relay_requested_at < 15:
+                                    self.send(409, {"error": "Generation already requested", "code": "relayBusy"})
+                                    return
+                                settings = {"enabled": True, "mode": "quick"}
+                                relay_config.save(app.data_dir, settings)
+                                app.relay_settings = settings
+                                app.relay = None
+                                app.relay_requested_at = time.monotonic()
+                                app.relay_generation += 1
+                            elif data.get("disable"):
+                                app.relay_settings = {"enabled": False, "mode": "quick"}
+                                relay_config.save(app.data_dir, app.relay_settings)
+                                app.relay = None
+                            elif data.get("configure"):
+                                settings = data["configure"]
+                                if settings.get("mode") != "named":
+                                    raise ValueError("Expected named tunnel configuration")
+                                origin = relay_config.public_origin(settings.get("public_url"))
+                                config = settings.get("tunnel_config")
+                                if not isinstance(config, str) or not Path(config).is_file():
+                                    raise ValueError("Tunnel configuration file does not exist")
+                                app.relay_settings = {"enabled": True, "mode": "named", "public_url": origin,
+                                    "tunnel_config": str(Path(config).resolve())}
+                                relay_config.save(app.data_dir, app.relay_settings)
+                                app.relay = None
+                            elif url is None:
+                                app.relay = None
+                            elif (app.relay_settings["mode"] == "quick" and relay_config.quick_origin(url)) or (app.relay_settings["mode"] == "named"
+                                    and url == app.relay_settings.get("public_url")):
+                                settings = {**app.relay_settings, "enabled": True, "public_url": url}
+                                if settings != app.relay_settings:
+                                    relay_config.save(app.data_dir, settings)
+                                    app.relay_settings = settings
+                                app.relay = (url, time.monotonic() + 45)
+                                app.relay_requested_at = 0
+                            else:
+                                raise ValueError("Expected configured Named Tunnel or temporary HTTPS origin")
+                            self.send(200, {"saved": True})
                     elif mode == "ui" and self.local_request(mutation=True) and path == "/api/note":
                         data = json.loads(self.body())
                         day, text = data.get("day"), data.get("text")

@@ -1,4 +1,6 @@
 const en = {
+ relayGenerate:'Generate temporary sync address',relayRegenerate:'Generate a new sync address',relayGenerateHint:'Traffic passes through Cloudflare; data stays on this PC. Generating a new address replaces the current one: update Overland afterwards.',relayGenerating:'Generating HTTPS address…',relayGenerated:'Ready. Scan the Overland code below, then tap Send Now.',relayTimeout:'Not connected yet. Check the PC network and try again.',relayMissing:'Install cloudflared on this PC first.',relayBusy:'An address is already being generated. Please wait.',
+ theme:'Theme',themeSystem:'System',themeLight:'Light',themeDark:'Dark',relayPending:'HTTPS relay is reconnecting. Keep Track running. A Quick Tunnel gets a new address after restart; wait for a new code before configuring Overland.',relayFixed:'Fixed HTTPS relay. Skip the certificate step and configure Overland below. Traffic passes through Cloudflare; the archive stays on this PC.',
  relayNotice:'Temporary HTTPS relay active. Skip certificate installation and scan the Overland code below. Traffic passes through Cloudflare; the archive stays on this PC. Keep Track and the relay running. The address changes when the relay restarts.',
  archive:'FOOTPRINT ARCHIVE',sidebarIntro:'A little further, every day.',all:'All footprints',days:'YOUR DAYS',
  connect:'Connect iPhone',localCaption:'Your phone. Your PC. Your map.',place:'HONG KONG ISLAND',backup:'Back up',
@@ -37,6 +39,8 @@ const en = {
  confirmBackup:'Back up',pointDetail:'{time} · ±{accuracy} m · {device}',unknown:'unknown',
 };
 const hans = {
+ relayGenerate:'生成临时同步地址',relayRegenerate:'生成新的同步地址',relayGenerateHint:'流量经过 Cloudflare，数据保存在本机。生成新地址将替换当前地址；完成后请更新 Overland。',relayGenerating:'正在生成 HTTPS 地址…',relayGenerated:'已生成。扫描下方 Overland 二维码，再点击 Send Now。',relayTimeout:'尚未连接。请检查 PC 网络后重试。',relayMissing:'请先在 PC 安装 cloudflared。',relayBusy:'地址正在生成，请稍候。',
+ theme:'主题',themeSystem:'跟随系统',themeLight:'浅色',themeDark:'深色',relayPending:'HTTPS 中转正在重连。请保持 Track 运行。临时中转重启会更换地址；等待新二维码后再配置 Overland。',relayFixed:'固定 HTTPS 中转。跳过证书安装，按下方配置 Overland。流量经过 Cloudflare，档案保存在本机。',
  relayNotice:'临时 HTTPS 中转已开启。跳过证书安装，扫描下方 Overland 二维码。上传流量经过 Cloudflare，档案保存在本机。保持 Track 和中转运行；中转重启后地址会变化。',
  archive:'行动轨迹档案',sidebarIntro:'每天，再走远一点。',all:'全部足迹',days:'记录日期',connect:'连接 iPhone',localCaption:'你的手机。你的电脑。你的地图。',
  place:'香港岛',backup:'备份',atlas:'你的个人地图',title:'日常，绘成足迹。',intro:'只留下你到过的地方。',export:'导出轨迹 ↗',
@@ -55,6 +59,8 @@ const hans = {
  received:'已存档',pointsWord:'个定位点',daysWord:'天',copied:'已复制',copyFailed:'请手动选择并复制文字。',error:'操作未完成，请重试。',quality:'显示 {kept} 点 · 筛除 {excluded} 点 · {gaps} 处断点。距离为估算值。',noDays:'记录日期将在这里显示。',daySubtitle:'日常的一小部分。',dayLabel:'一天，一段足迹',filteredEmpty:'没有符合筛选的定位点。',filteredText:'试试其他日期、设备或精度。',noPoints:'还没有可适配的足迹。',noteSample:'示例备注不会保存。',statusReceived:'已存档 {count} 点 · 最近同步 {time}',backupDone:'数据库备份已下载',downloaded:'轨迹已导出',pointDetail:'{time} · 精度 ±{accuracy} 米 · {device}',unknown:'未知',
 };
 const hant = {
+ relayGenerate:'產生臨時同步地址',relayRegenerate:'產生新的同步地址',relayGenerateHint:'流量經過 Cloudflare，資料儲存在本機。新地址將替換目前地址；完成後請更新 Overland。',relayGenerating:'正在產生 HTTPS 地址…',relayGenerated:'已產生。掃描下方 Overland 二維碼，再點選 Send Now。',relayTimeout:'尚未連線。請檢查 PC 網絡後重試。',relayMissing:'請先在 PC 安裝 cloudflared。',relayBusy:'地址正在產生，請稍候。',
+ theme:'主題',themeSystem:'跟隨系統',themeLight:'淺色',themeDark:'深色',relayPending:'HTTPS 中轉正在重連。請保持 Track 運行。臨時中轉重啟會更換地址；等待新二維碼後再設定 Overland。',relayFixed:'固定 HTTPS 中轉。略過憑證安裝，按下方設定 Overland。流量經過 Cloudflare，檔案儲存在本機。',
  relayNotice:'臨時 HTTPS 中轉已開啟。略過憑證安裝，掃描下方 Overland 二維碼。上傳流量經過 Cloudflare，檔案儲存在本機。保持 Track 和中轉運行；中轉重啟後地址會變更。',
  archive:'行動軌跡檔案',sidebarIntro:'每天，再走遠一點。',all:'全部足跡',days:'記錄日期',connect:'連接 iPhone',localCaption:'你的手機。你的電腦。你的地圖。',
  place:'香港島',backup:'備份',atlas:'你的個人地圖',title:'日常，繪成足跡。',intro:'只留下你到過的地方。',export:'匯出軌跡 ↗',
