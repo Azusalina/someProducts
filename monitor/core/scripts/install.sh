@@ -16,7 +16,7 @@ python "$monitor_core/scripts/migrate.py"
 python -m venv "$monitor_service_dir/.venv"
 "$monitor_service_dir/.venv/bin/python" -m pip install --disable-pip-version-check -r "$monitor_core/requirements.txt"
 monitor_python="$monitor_service_dir/.venv/bin/python"
-for monitor_backend in monitor_service.py connectivity.py cava_audio.py terminal_sessions.py terminal_child.py; do
+for monitor_backend in monitor_service.py connectivity.py cava_audio.py terminal_sessions.py terminal_child.py power.py awake_helper.py timers.py; do
     install -m 644 "$monitor_core/backend/$monitor_backend" "$monitor_service_dir/$monitor_backend"
 done
 for monitor_retired in usage.py reset_news.py claude_statusline.py; do

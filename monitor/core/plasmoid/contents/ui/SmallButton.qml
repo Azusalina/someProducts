@@ -7,6 +7,7 @@ AbstractButton {
     property bool outlined: false
     implicitWidth: label.implicitWidth + 16
     implicitHeight: 28
+    font.pixelSize: 12
     hoverEnabled: true
     opacity: enabled ? 1 : 0.35
     background: Rectangle {
@@ -19,7 +20,7 @@ AbstractButton {
         id: label
         text: button.text
         color: button.ink
-        font.pixelSize: 12
+        font: button.font
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

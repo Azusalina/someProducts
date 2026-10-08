@@ -15,8 +15,8 @@ ApplicationWindow {
         id: preferences
         objectName: "previewPreferences"
         category: "MonitorPreview"
-        property string moduleOrder: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal"
-        property string enabledModules: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal"
+        property string moduleOrder: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers"
+        property string enabledModules: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers"
         property int columns: 2
         property string targetsText: ""
         property string noteText: ""
@@ -36,6 +36,12 @@ ApplicationWindow {
         property int cavaOpacity: 40
         property int terminalHeight: 230
         property int terminalFontSize: 11
+        property int countdownSeconds: 300
+        property int stopwatchSeconds: 0
+        property string countdownColor: ""
+        property string stopwatchColor: ""
+        property string countdownStyle: "minimal"
+        property string stopwatchStyle: "minimal"
     }
     function transfer(page, keys, save) {
         for (const key of keys) {
@@ -49,6 +55,7 @@ ApplicationWindow {
         transfer(flowsPage, ["cpuFlowColor", "ramFlowColor", "gpuFlowColor", "pingFlowColor", "cavaFlowColor"], save)
         transfer(pingPage, ["targetsText"], save)
         transfer(mediaPage, ["mediaService", "cavaEnabled", "cavaOpacity"], save)
+        transfer(timersPage, ["countdownSeconds", "stopwatchSeconds", "countdownColor", "stopwatchColor", "countdownStyle", "stopwatchStyle"], save)
         transfer(terminalPage, ["terminalHeight", "terminalFontSize"], save)
     }
     function configure() { syncConfiguration(false); configWindow.show(); configWindow.requestActivate() }
@@ -68,7 +75,7 @@ ApplicationWindow {
     ApplicationWindow {
         id: configWindow
         objectName: "previewConfiguration"
-        width: 600
+        width: 760
         height: 680
         visible: false
         title: "someProducts-monitor Settings"
@@ -83,6 +90,7 @@ ApplicationWindow {
             TabButton { text: "Ping" }
             TabButton { text: "Media" }
             TabButton { text: "Terminal" }
+            TabButton { text: "Timers" }
         }
         StackLayout {
             anchors.fill: parent
@@ -94,6 +102,7 @@ ApplicationWindow {
             ConfigPing { id: pingPage; objectName: "previewPingPage" }
             ConfigMedia { id: mediaPage }
             ConfigTerminal { id: terminalPage }
+            ConfigTimers { id: timersPage; objectName: "previewTimersPage" }
         }
         footer: DialogButtonBox {
             objectName: "previewConfigurationButtons"

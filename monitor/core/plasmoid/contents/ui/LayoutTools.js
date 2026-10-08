@@ -1,6 +1,6 @@
 .pragma library
 
-var modules = ["cpu", "ram", "ping", "gpu", "media", "note", "proton", "wifi", "bluetooth", "terminal"]
+var modules = ["cpu", "ram", "ping", "gpu", "media", "note", "proton", "wifi", "bluetooth", "terminal", "battery", "timers"]
 
 function sequence(saved) {
     const order = (saved || "").split(",").filter((key, index, values) => modules.includes(key) && values.indexOf(key) === index)
@@ -8,7 +8,7 @@ function sequence(saved) {
 }
 function label(key) {
     return ({cpu: "CPU", ram: "RAM", ping: "Ping", gpu: "GPU", media: "Now playing", note: "Note",
-             proton: "Proton VPN", wifi: "Wi-Fi", bluetooth: "Bluetooth", terminal: "Terminal"})[key] || key
+             proton: "Proton VPN", wifi: "Wi-Fi", bluetooth: "Bluetooth", terminal: "Terminal", battery: "Battery", timers: "Timers"})[key] || key
 }
 function move(saved, key, offset) {
     const order = sequence(saved)

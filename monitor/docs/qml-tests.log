@@ -8,7 +8,7 @@ PASS   : qmltestrunner::Configuration::test_045_flowColorDrafts()
 PASS   : qmltestrunner::Configuration::test_04_pingDraft()
 PASS   : qmltestrunner::Configuration::test_05_configurationPreviews()
 PASS   : qmltestrunner::Configuration::cleanupTestCase()
-Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1567ms
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1585ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -32,5 +32,16 @@ PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
 PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
 PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
 PASS   : qmltestrunner::Dashboard::cleanupTestCase()
-Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 10910ms
+Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 10710ms
+********* Finished testing of qmltestrunner *********
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::PowerTimers::initTestCase()
+PASS   : qmltestrunner::PowerTimers::test_01_batteryAndKeepAwake()
+PASS   : qmltestrunner::PowerTimers::test_02_timerButtonsAndReorder()
+PASS   : qmltestrunner::PowerTimers::test_03_styleColorAndNarrowLayout()
+PASS   : qmltestrunner::PowerTimers::test_04_moduleHideReleasesOwnedResources()
+PASS   : qmltestrunner::PowerTimers::test_05_configureDraftsAndValidation()
+PASS   : qmltestrunner::PowerTimers::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 14392ms
 ********* Finished testing of qmltestrunner *********

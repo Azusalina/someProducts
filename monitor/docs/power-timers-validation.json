@@ -1,0 +1,45 @@
+{
+  "verified_at": "2026-10-08T21:16:57.107712+08:00",
+  "version": "1.8.0",
+  "widgets": [
+    {
+      "id": 160,
+      "version": "1.8.0",
+      "enabled": "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers",
+      "order": "media,terminal,wifi,bluetooth,cpu,ram,ping,gpu,note,proton",
+      "geometry": {
+        "x": 1552,
+        "y": 112,
+        "width": 432,
+        "height": 864
+      }
+    }
+  ],
+  "power": {
+    "battery": {
+      "present": true,
+      "percent": 50.0,
+      "watts": 27.527,
+      "state": "Charging",
+      "remaining_seconds": 2377
+    },
+    "profiles": [
+      "power-saver",
+      "balanced",
+      "performance"
+    ],
+    "profile": "performance",
+    "stale": false,
+    "checked_at": 1791465416.8521957,
+    "degraded": ""
+  },
+  "services": {
+    "monitor-dashboard.service": "active",
+    "plasma-plasmashell.service": "active"
+  },
+  "backend_tests": 40,
+  "qml_checks": 35,
+  "qml_lint_diagnostics": 0,
+  "keep_awake_lifecycle": "Passed: actual sleep+idle policy, two owners, expiry, abrupt parent disconnect",
+  "transparency": "Strict RGBA alpha assertions passed"
+}

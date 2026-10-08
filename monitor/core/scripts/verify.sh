@@ -32,11 +32,13 @@ monitor_fixture_pid="$!"
 # after a Canvas terminal is rendered. Keep the alpha assertions below strict.
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_configuration.qml > ../docs/qml-tests.log 2>&1
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_dashboard.qml >> ../docs/qml-tests.log 2>&1
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_power_timers.qml >> ../docs/qml-tests.log 2>&1
 "$monitor_python" tests/preview_configuration.py > ../docs/preview-configuration-test.log 2>&1
+"$monitor_python" tests/keep_awake_fixture.py > ../docs/keep-awake-test.log 2>&1
 "$monitor_python" tests/cava_playback_fixture.py > ../docs/cava-playback-test.log 2>&1
 "$monitor_python" - <<'PY'
 from PIL import Image
-for name in ('preview-transparent', 'preview-connectivity', 'preview-media-terminal'):
+for name in ('preview-transparent', 'preview-connectivity', 'preview-media-terminal', 'preview-power-timers'):
     image = Image.open('../docs/' + name + '.png')
     assert image.mode == 'RGBA', 'Expected alpha-channel image'
     assert image.getpixel((image.width - 1, image.height - 1))[3] == 0, 'Background must be fully transparent'

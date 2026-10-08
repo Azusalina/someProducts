@@ -2,8 +2,8 @@
 <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name=""/>
   <group name="General">
-    <entry name="moduleOrder" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal</default></entry>
-    <entry name="enabledModules" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal</default></entry>
+    <entry name="moduleOrder" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers</default></entry>
+    <entry name="enabledModules" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers</default></entry>
     <entry name="columns" type="Int"><default>2</default><min>1</min><max>3</max></entry>
     <entry name="targetsText" type="String"><default></default></entry>
     <entry name="noteText" type="String"><default></default></entry>
@@ -23,5 +23,11 @@
     <entry name="cavaOpacity" type="Int"><default>40</default><min>0</min><max>100</max></entry>
     <entry name="terminalHeight" type="Int"><default>230</default><min>120</min><max>800</max></entry>
     <entry name="terminalFontSize" type="Int"><default>11</default><min>9</min><max>24</max></entry>
+    <entry name="countdownSeconds" type="Int"><default>300</default><min>1</min><max>86400</max></entry>
+    <entry name="stopwatchSeconds" type="Int"><default>0</default><min>0</min><max>86400</max></entry>
+    <entry name="countdownColor" type="String"><default></default></entry>
+    <entry name="stopwatchColor" type="String"><default></default></entry>
+    <entry name="countdownStyle" type="String"><default>minimal</default></entry>
+    <entry name="stopwatchStyle" type="String"><default>minimal</default></entry>
   </group>
 </kcfg>

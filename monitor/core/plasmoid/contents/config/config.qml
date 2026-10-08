@@ -7,4 +7,5 @@ ConfigModel {
     ConfigCategory { name: "Ping"; icon: "network-wireless"; source: "config/ConfigPing.qml" }
     ConfigCategory { name: "Media"; icon: "media-playback-start"; source: "config/ConfigMedia.qml" }
     ConfigCategory { name: "Terminal"; icon: "utilities-terminal"; source: "config/ConfigTerminal.qml" }
+    ConfigCategory { name: "Timers"; icon: "chronometer"; source: "config/ConfigTimers.qml" }
 }

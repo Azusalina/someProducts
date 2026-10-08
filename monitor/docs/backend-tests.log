@@ -25,43 +25,21 @@ test_microseconds_and_unknown_progress (test_media_terminal.MediaTests.test_micr
 test_output_monitor_is_explicit_and_config_cannot_inject (test_media_terminal.MediaTests.test_output_monitor_is_explicit_and_config_cannot_inject) ... ok
 test_real_cava_frame_validation (test_media_terminal.MediaTests.test_real_cava_frame_validation) ... ok
 test_only_owned_statusline_is_restored (test_media_terminal.MigrationTests.test_only_owned_statusline_is_restored) ... ok
-test_alternate_screen_and_terminal_colors (test_media_terminal.TerminalTests.test_alternate_screen_and_terminal_colors) ... Exception in thread terminal-pty:
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
-    self._context.run(self.run)
-    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "/usr/lib/python3.14/threading.py", line 1024, in run
-    self._target(*self._args, **self._kwargs)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-ok
-  File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
-    selector.register(self.master, selectors.EVENT_READ)
-    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ...   File "/usr/lib/python3.14/selectors.py", line 345, in register
-    self._selector.register(key.fd, poller_events)
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-OSError: [Errno 9] Bad file descriptor
-ok
+test_alternate_screen_and_terminal_colors (test_media_terminal.TerminalTests.test_alternate_screen_and_terminal_colors) ... ok
+test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ... ok
 test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
 test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
-test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... Exception in thread terminal-pty:
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
-    self._context.run(self.run)
-    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "/usr/lib/python3.14/threading.py", line 1024, in run
-    self._target(*self._args, **self._kwargs)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/a/Documents/someProducts/monitor/core/backend/terminal_sessions.py", line 122, in read
-    selector.register(self.master, selectors.EVENT_READ)
-    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.14/selectors.py", line 345, in register
-    self._selector.register(key.fd, poller_events)
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-OSError: [Errno 9] Bad file descriptor
-ok
+test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... ok
+test_awake_helper_death_invalidates_lease (test_power_timers.PowerTests.test_awake_helper_death_invalidates_lease) ... ok
+test_awake_two_owners_expiry_and_cleanup (test_power_timers.PowerTests.test_awake_two_owners_expiry_and_cleanup) ... ok
+test_battery_charge_and_discharge_time (test_power_timers.PowerTests.test_battery_charge_and_discharge_time) ... ok
+test_profile_whitelist_and_confirmation (test_power_timers.PowerTests.test_profile_whitelist_and_confirmation) ... ok
+test_unknown_and_invalid_battery_values (test_power_timers.PowerTests.test_unknown_and_invalid_battery_values) ... ok
+test_independent_pause_resume_and_finish (test_power_timers.TimerTests.test_independent_pause_resume_and_finish) ... ok
+test_instances_and_configure_do_not_affect_other_timer (test_power_timers.TimerTests.test_instances_and_configure_do_not_affect_other_timer) ... ok
+test_validation_expiry_and_idempotent_start (test_power_timers.TimerTests.test_validation_expiry_and_idempotent_start) ... ok
 
 ----------------------------------------------------------------------
-Ran 32 tests in 2.955s
+Ran 40 tests in 2.948s
 
 OK

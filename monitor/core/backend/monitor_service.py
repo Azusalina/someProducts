@@ -21,6 +21,8 @@ from urllib.parse import parse_qs, urlsplit
 from connectivity import ConnectivityCollector, open_settings
 from cava_audio import AudioCollector
 from terminal_sessions import TerminalManager
+from power import PowerCollector
+from timers import TimerManager
 
 MPRIS = 'org.mpris.MediaPlayer2'
 PLAYER = MPRIS + '.Player'
@@ -262,6 +264,8 @@ class Telemetry:
         self.connectivity = ConnectivityCollector()
         self.audio = AudioCollector()
         self.terminals = TerminalManager()
+        self.power = PowerCollector()
+        self.timers = TimerManager()
         self.snapshot = {'cpu': {}, 'ram': {}, 'gpus': [], 'media': {'players': []}}
         self.pings = OrderedDict()
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='ping')
@@ -315,6 +319,7 @@ class Telemetry:
                 values.append({'target': target, **entry['value']})
             snapshot['pings'] = values
             snapshot['connectivity'] = self.connectivity.get()
+            snapshot['power'] = self.power.get()
             return snapshot
 
     def start_ping(self, target, entry, now):
@@ -364,6 +369,12 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(403, {'error': 'Native local client required'})
             return
         parsed = urlsplit(self.path)
+        if parsed.path == '/timers/state':
+            try:
+                self.reply(200, self.server.telemetry.timers.state(parse_qs(parsed.query).get('session', [''])[0]))
+            except KeyError:
+                self.reply(410, {'error': 'Timer session ended'})
+            return
         if parsed.path == '/audio':
             self.reply(200, self.server.telemetry.audio.get())
             return
@@ -392,6 +403,37 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             self.reply(403, {'error': 'Native local client required'})
+            return
+        if self.path.startswith(('/power/', '/timers/')):
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= 2048:
+                    raise ValueError('Invalid payload size')
+                payload = json.loads(self.rfile.read(length))
+                if not isinstance(payload, dict):
+                    raise ValueError('Invalid payload')
+                telemetry = self.server.telemetry
+                if self.path == '/power/profile':
+                    value = telemetry.power.set_profile(payload.get('profile'))
+                elif self.path == '/power/awake':
+                    value = telemetry.power.awake.control(payload.get('action'), payload.get('token'))
+                elif self.path == '/timers/create':
+                    value = telemetry.timers.create(payload.get('duration'), payload.get('offset'))
+                elif self.path == '/timers/control':
+                    value = telemetry.timers.control(payload.get('session'), payload.get('kind'), payload.get('action'), payload.get('seconds'))
+                elif self.path == '/timers/close':
+                    telemetry.timers.close(payload.get('session'))
+                    value = {'ok': True}
+                else:
+                    self.reply(404, {'error': 'Not found'})
+                    return
+                self.reply(200, value)
+            except (ValueError, TypeError):
+                self.reply(400, {'error': 'Invalid power or timer request'})
+            except KeyError:
+                self.reply(410, {'error': 'Session expired'})
+            except (OSError, RuntimeError, subprocess.SubprocessError):
+                self.reply(503, {'error': 'Power control unavailable or permission denied'})
             return
         if self.path.startswith('/terminal/'):
             try:
@@ -477,6 +519,7 @@ def main():
     telemetry.ping_thread.start()
     telemetry.connectivity.thread.start()
     telemetry.audio.thread.start()
+    telemetry.power.thread.start()
     telemetry.terminals.thread.start()
     def stop_requested(*_):
         raise KeyboardInterrupt()
@@ -491,6 +534,9 @@ def main():
         telemetry.connectivity.stop.set()
         telemetry.audio.stop.set()
         telemetry.terminals.shutdown()
+        telemetry.power.stop.set()
+        telemetry.power.thread.join(timeout=3)
+        telemetry.power.awake.shutdown()
         telemetry.ping_thread.join(timeout=1)
         server.server_close()
         telemetry.pool.shutdown(wait=False, cancel_futures=True)

@@ -25,6 +25,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     modules = root.findChild(QObject, 'previewModulesPage')
     appearance = root.findChild(QObject, 'previewAppearancePage')
     flows = root.findChild(QObject, 'previewFlowsPage')
+    timers = root.findChild(QObject, 'previewTimersPage')
     buttons = root.findChild(QObject, 'previewConfigurationButtons')
     config_window = root.findChild(QObject, 'previewConfiguration')
     original = preferences.property('enabledModules')
@@ -36,6 +37,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
     flows.setProperty('cfg_cpuFlowColor', '#ff6633')
+    timers.setProperty('cfg_countdownSeconds', 42)
+    timers.setProperty('cfg_stopwatchColor', '#55cc88')
+    timers.setProperty('cfg_countdownStyle', 'ring')
     assert preferences.property('enabledModules') == original
     assert preferences.property('backgroundOpacity') == 0
     assert preferences.property('cpuFlowColor') == ''
@@ -46,17 +50,26 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert modules.property('cfg_enabledModules') == original
     assert appearance.property('cfg_backgroundOpacity') == 0
     assert flows.property('cfg_cpuFlowColor') == ''
+    assert timers.property('cfg_countdownSeconds') == 300
+    assert timers.property('cfg_stopwatchColor') == ''
+    assert timers.property('cfg_countdownStyle') == 'minimal'
 
     modules.setProperty('cfg_enabledModules', 'note')
     appearance.setProperty('cfg_textColorHex', '#aabbcc')
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
     flows.setProperty('cfg_cpuFlowColor', '#ff6633')
+    timers.setProperty('cfg_countdownSeconds', 42)
+    timers.setProperty('cfg_stopwatchColor', '#55cc88')
+    timers.setProperty('cfg_countdownStyle', 'ring')
     assert QMetaObject.invokeMethod(buttons, 'applied')
     assert preferences.property('enabledModules') == 'note'
     assert preferences.property('textColorHex') == '#aabbcc'
     assert preferences.property('backgroundOpacity') == 70
     assert preferences.property('cpuFlowColor') == '#ff6633'
+    assert preferences.property('countdownSeconds') == 42
+    assert preferences.property('stopwatchColor') == '#55cc88'
+    assert preferences.property('countdownStyle') == 'ring'
     assert config_window.property('visible'), 'Apply should leave settings open'
     assert QMetaObject.invokeMethod(buttons, 'accepted')
     assert not config_window.property('visible')

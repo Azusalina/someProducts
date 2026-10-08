@@ -15,4 +15,6 @@ A transparent modular KDE Plasma 6 desktop widget.
 
 Run these commands from `monitor/core`. Start the bridge and preview in separate terminals. Stop the foreground bridge with Ctrl+C before installing the background service. After installation, add **someProducts-monitor** through the desktop's **Add Widgets** menu. See [../docs/README.md](../docs/README.md) for dependencies, configuration, service checks and removal.
 
+Configure → Modules enables Battery and Timers. Battery controls the system power profile and automatic sleep/screen-off inhibition. Configure → Timers sets the left countdown and right stopwatch times, colors and styles.
+
 See [description.md](description.md) for background and technical details.

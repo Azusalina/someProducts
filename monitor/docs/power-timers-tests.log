@@ -1,0 +1,11 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::PowerTimers::initTestCase()
+PASS   : qmltestrunner::PowerTimers::test_01_batteryAndKeepAwake()
+PASS   : qmltestrunner::PowerTimers::test_02_timerButtonsAndReorder()
+PASS   : qmltestrunner::PowerTimers::test_03_styleColorAndNarrowLayout()
+PASS   : qmltestrunner::PowerTimers::test_04_moduleHideReleasesOwnedResources()
+PASS   : qmltestrunner::PowerTimers::test_05_configureDraftsAndValidation()
+PASS   : qmltestrunner::PowerTimers::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 3972ms
+********* Finished testing of qmltestrunner *********

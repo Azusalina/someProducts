@@ -119,8 +119,8 @@ class Session:
 
     def read(self):
         selector = selectors.DefaultSelector()
-        selector.register(self.master, selectors.EVENT_READ)
         try:
+            selector.register(self.master, selectors.EVENT_READ)
             while not self.closed.is_set():
                 with self.lock:
                     if self.pending_input:

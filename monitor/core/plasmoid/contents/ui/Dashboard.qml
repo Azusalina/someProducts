@@ -37,6 +37,8 @@ Item {
         }).filter(Boolean)
     }
     TerminalOwner { id: terminalOwner; active: board.activeModules.includes("terminal") }
+    PowerOwner { id: powerOwner; active: board.activeModules.includes("battery") }
+    TimerOwner { id: timerOwner; active: board.activeModules.includes("timers"); preferences: board.preferences }
     readonly property int columnCount: width < 260 ? 1 : Math.max(1, Math.min(3, preferences.columns, Math.floor((width - surfaceInset * 2 + 10) / 110)))
     readonly property var targets: parseTargets(preferences.targetsText)
     implicitWidth: 300
@@ -211,7 +213,7 @@ Item {
                         objectName: "tile_" + modelData
                         required property string modelData
                         required property int index
-                        readonly property bool wide: ["media", "note", "terminal", "radios"].includes(modelData)
+                        readonly property bool wide: ["media", "note", "terminal", "radios", "battery", "timers"].includes(modelData)
                         readonly property bool metric: ["cpu", "ram", "ping", "gpu"].includes(modelData)
                         Layout.columnSpan: wide ? board.columnCount : 1
                         Layout.fillWidth: true
@@ -245,7 +247,7 @@ Item {
                             id: loader
                             anchors.top: tileHeading.bottom
                             width: parent.width
-                            sourceComponent: tile.modelData === "radios" ? radioPairComponent : ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
+                            sourceComponent: tile.modelData === "battery" ? batteryComponent : tile.modelData === "timers" ? timersComponent : tile.modelData === "radios" ? radioPairComponent : ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
                         }
                         Component {
                             id: metricComponent
@@ -269,6 +271,8 @@ Item {
                         Component { id: radioPairComponent; RadioPair { ink: board.ink; wifiStatus: (board.snapshot.connectivity || {}).wifi || ({}); bluetoothStatus: (board.snapshot.connectivity || {}).bluetooth || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; openingSettings: board.openingSettings; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: connectivityComponent; ConnectivityCard { objectName: "connectivity_" + tile.modelData; ink: board.ink; kind: tile.modelData; status: (board.snapshot.connectivity || {})[tile.modelData] || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; opening: board.openingSettings === tile.modelData; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: terminalComponent; TerminalCard { objectName: "terminalCard"; owner: terminalOwner; ink: board.ink; fontSize: board.preferences.terminalFontSize || 11; terminalHeight: board.preferences.terminalHeight || 230 } }
+                        Component { id: batteryComponent; BatteryCard { objectName: "batteryCard"; owner: powerOwner; ink: board.ink; status: board.snapshot.power || ({}); stale: !board.connected || !!(board.snapshot.power || {}).stale } }
+                        Component { id: timersComponent; TimersCard { objectName: "timersCard"; owner: timerOwner; preferences: board.preferences; ink: board.ink } }
                         Component { id: noteComponent; NoteCard { ink: board.ink; preferences: board.preferences } }
                     }
                 }
