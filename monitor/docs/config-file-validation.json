@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-10-11T14:34:04",
+  "installed_version": "1.10.0",
+  "widgets": [
+    {
+      "id": 163,
+      "geometry": {
+        "x": 1504,
+        "y": 80,
+        "width": 480,
+        "height": 576
+      }
+    }
+  ],
+  "initial_settings_and_placement_preserved": true,
+  "profile_path": "/home/a/.config/someProducts-monitor/config.json",
+  "profile_permissions": "0o600",
+  "installed_source_matches": true,
+  "backend_config_tests": 9,
+  "profile_qml_checks": 7,
+  "configuration_qml_checks": 9,
+  "qml_lint_diagnostics": 0,
+  "native_widget_to_file_verified": true,
+  "external_file_to_native_widget_verified": true,
+  "live_test_color_restored": true,
+  "live_sync_verified_at": "2026-10-11T14:39:36",
+  "final_refresh_settings_preserved": true,
+  "final_installed_source_matches": true,
+  "full_backend_tests": 50,
+  "full_qml_checks": 45,
+  "preview_apply_cancel_verified": true,
+  "live_keep_awake_verified": true,
+  "live_cava_playback_verified": true,
+  "transparent_alpha_verified": true,
+  "live_profile_matches_after_desktop_restart": true,
+  "final_verified_at": "2026-10-11T14:42:44"
+}

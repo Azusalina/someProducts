@@ -232,7 +232,7 @@ Item {
             verify(findChild(card, "cavaBackground") !== null)
         }
         function test_077_nativeSettingsSignals() {
-            for (const kind of ["proton", "wifi", "bluetooth"]) {
+            for (const kind of ["proton"]) {
                 settingsCard.kind = kind
                 settingsSpy.clear()
                 const button = findChild(settingsCard, "settings_" + kind)
@@ -243,6 +243,10 @@ Item {
                 settingsCard.opening = true
                 compare(button.enabled, false)
                 settingsCard.opening = false
+            }
+            for (const kind of ["wifi", "bluetooth"]) {
+                settingsCard.kind = kind
+                verify(findChild(settingsCard, "settings_" + kind) === null)
             }
             settingsCard.stale = true
             compare(settingsCard.stateText, "Waiting for status")

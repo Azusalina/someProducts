@@ -1,0 +1,14 @@
+test_config_rejects_browser_requests_and_invalid_manual_draft (test_widget_config.ConfigApiTests.test_config_rejects_browser_requests_and_invalid_manual_draft) ... ok
+test_config_routes_save_restore_and_conflict (test_widget_config.ConfigApiTests.test_config_routes_save_restore_and_conflict) ... ok
+test_failed_atomic_save_keeps_previous_file (test_widget_config.ConfigTests.test_failed_atomic_save_keeps_previous_file) ... ok
+test_invalid_edits_are_rejected_without_overwriting (test_widget_config.ConfigTests.test_invalid_edits_are_rejected_without_overwriting) ... ok
+test_manual_change_causes_conflict_then_disjoint_merge_preserves_it (test_widget_config.ConfigTests.test_manual_change_causes_conflict_then_disjoint_merge_preserves_it) ... ok
+test_manual_partial_profile_uses_defaults_and_can_be_updated (test_widget_config.ConfigTests.test_manual_partial_profile_uses_defaults_and_can_be_updated) ... ok
+test_named_profiles_remain_independent_and_reject_traversal (test_widget_config.ConfigTests.test_named_profiles_remain_independent_and_reject_traversal) ... ok
+test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_config.ConfigTests.test_saved_profile_survives_new_store_and_has_private_permissions) ... ok
+test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.047s
+
+OK

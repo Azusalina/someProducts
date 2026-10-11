@@ -8,7 +8,7 @@ systemctl --user disable --now monitor-dashboard.service || true
 if test -f "$monitor_config/systemd/user/monitor-dashboard.service"; then
     rm -- "$monitor_config/systemd/user/monitor-dashboard.service"
 fi
-for monitor_backend in monitor_service.py usage.py reset_news.py claude_statusline.py connectivity.py cava_audio.py terminal_sessions.py terminal_child.py; do
+for monitor_backend in monitor_service.py usage.py reset_news.py claude_statusline.py connectivity.py cava_audio.py terminal_sessions.py terminal_child.py power.py awake_helper.py timers.py widget_config.py widget-config.xml; do
     if test -f "$monitor_data/monitor-dashboard/$monitor_backend"; then
         rm -- "$monitor_data/monitor-dashboard/$monitor_backend"
     fi
@@ -17,4 +17,4 @@ if test -d "$monitor_data/monitor-dashboard/.venv"; then rm -rf -- "$monitor_dat
 rmdir -- "$monitor_data/monitor-dashboard" 2>/dev/null || true
 systemctl --user daemon-reload
 kpackagetool6 --type Plasma/Applet --remove local.monitor.dashboard
-printf 'Monitor removed. Existing Plasma widget configurations were not edited.\n'
+printf 'Monitor removed. Existing Plasma widget configurations and someProducts-monitor/config.json were preserved.\n'

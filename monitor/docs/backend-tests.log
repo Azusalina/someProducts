@@ -26,6 +26,7 @@ test_output_monitor_is_explicit_and_config_cannot_inject (test_media_terminal.Me
 test_real_cava_frame_validation (test_media_terminal.MediaTests.test_real_cava_frame_validation) ... ok
 test_only_owned_statusline_is_restored (test_media_terminal.MigrationTests.test_only_owned_statusline_is_restored) ... ok
 test_alternate_screen_and_terminal_colors (test_media_terminal.TerminalTests.test_alternate_screen_and_terminal_colors) ... ok
+test_arch_style_prompt_tracks_user_host_and_directory (test_media_terminal.TerminalTests.test_arch_style_prompt_tracks_user_host_and_directory) ... ok
 test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_job_control_interrupt_and_resize) ... ok
 test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
 test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
@@ -38,8 +39,17 @@ test_unknown_and_invalid_battery_values (test_power_timers.PowerTests.test_unkno
 test_independent_pause_resume_and_finish (test_power_timers.TimerTests.test_independent_pause_resume_and_finish) ... ok
 test_instances_and_configure_do_not_affect_other_timer (test_power_timers.TimerTests.test_instances_and_configure_do_not_affect_other_timer) ... ok
 test_validation_expiry_and_idempotent_start (test_power_timers.TimerTests.test_validation_expiry_and_idempotent_start) ... ok
+test_config_rejects_browser_requests_and_invalid_manual_draft (test_widget_config.ConfigApiTests.test_config_rejects_browser_requests_and_invalid_manual_draft) ... ok
+test_config_routes_save_restore_and_conflict (test_widget_config.ConfigApiTests.test_config_routes_save_restore_and_conflict) ... ok
+test_failed_atomic_save_keeps_previous_file (test_widget_config.ConfigTests.test_failed_atomic_save_keeps_previous_file) ... ok
+test_invalid_edits_are_rejected_without_overwriting (test_widget_config.ConfigTests.test_invalid_edits_are_rejected_without_overwriting) ... ok
+test_manual_change_causes_conflict_then_disjoint_merge_preserves_it (test_widget_config.ConfigTests.test_manual_change_causes_conflict_then_disjoint_merge_preserves_it) ... ok
+test_manual_partial_profile_uses_defaults_and_can_be_updated (test_widget_config.ConfigTests.test_manual_partial_profile_uses_defaults_and_can_be_updated) ... ok
+test_named_profiles_remain_independent_and_reject_traversal (test_widget_config.ConfigTests.test_named_profiles_remain_independent_and_reject_traversal) ... ok
+test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_config.ConfigTests.test_saved_profile_survives_new_store_and_has_private_permissions) ... ok
+test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 40 tests in 2.948s
+Ran 50 tests in 4.032s
 
 OK

@@ -1,4 +1,6 @@
 import json
+import getpass
+import socket
 from pathlib import Path
 import subprocess
 import sys
@@ -64,6 +66,19 @@ class TerminalTests(unittest.TestCase):
         screen=wait_for(self.session,'TTY_READY')
         self.assertIn('RUN_READY','\n'.join(screen['plain']))
         self.assertIn('中文_正常','\n'.join(screen['plain']))
+
+    def test_arch_style_prompt_tracks_user_host_and_directory(self):
+        prompt = f"[{getpass.getuser()}@{socket.gethostname().split('.')[0]} {Path(self.temp.name).name}]$"
+        deadline = time.monotonic() + 4
+        while time.monotonic() < deadline:
+            if any(prompt in line for line in self.session.get()['plain']): break
+            time.sleep(.03)
+        else: self.fail('Arch-style prompt missing')
+        self.session.input("cd /tmp; printf 'PROMPT_%s\\n' READY\r")
+        wait_for(self.session, 'PROMPT_READY')
+        time.sleep(.05)
+        expected = f"[{getpass.getuser()}@{socket.gethostname().split('.')[0]} tmp]$"
+        self.assertTrue(any(expected in line for line in self.session.get()['plain']))
 
     def test_job_control_interrupt_and_resize(self):
         self.session.input('sleep 10\r');time.sleep(.15)

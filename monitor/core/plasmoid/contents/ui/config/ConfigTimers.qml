@@ -17,7 +17,7 @@ ScrollView {
     ColumnLayout {
         width: page.availableWidth
         spacing: 12
-        Label { Layout.fillWidth: true; text: "Left: countdown · Right: stopwatch"; wrapMode: Text.Wrap }
+        Label { Layout.fillWidth: true; text: "Countdown and stopwatch · Click dashboard time to edit HH:MM:SS"; wrapMode: Text.Wrap }
         Repeater {
             model: ["countdown", "stopwatch"]
             delegate: ColumnLayout {

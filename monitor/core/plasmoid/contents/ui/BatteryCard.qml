@@ -8,11 +8,13 @@ ColumnLayout {
     required property var owner
     property var status: ({})
     property color ink: "#f5f5f4"
+    property bool vertical: false
     property bool stale: true
     readonly property var battery: status.battery || ({})
     spacing: 3
-    RowLayout {
+    GridLayout {
         Layout.fillWidth: true
+        columns: card.vertical ? 1 : 2
         Text { objectName: "batteryPercent"; text: !card.stale && card.battery.percent != null ? Math.round(card.battery.percent) + "%" : "—"; color: card.ink; font.pixelSize: 18 }
         Text {
             Layout.fillWidth: true
@@ -20,9 +22,10 @@ ColumnLayout {
             color: card.ink; opacity: 0.65; font.pixelSize: 9; wrapMode: Text.Wrap
         }
     }
-    RowLayout {
+    GridLayout {
         Layout.fillWidth: true
-        spacing: 2
+        columns: card.vertical ? 1 : 3
+        columnSpacing: 2; rowSpacing: 3
         Repeater {
             model: [{key: "power-saver", label: "Powersave"}, {key: "balanced", label: "Regular"}, {key: "performance", label: "Performance"}]
             delegate: SmallButton {
@@ -44,11 +47,11 @@ ColumnLayout {
     SmallButton {
         objectName: "keepAwakeButton"
         Layout.fillWidth: true
-        implicitHeight: 24
-        font.pixelSize: 10
+        implicitHeight: card.vertical ? 36 : 24
+        font.pixelSize: card.vertical ? 9 : 10
         ink: card.ink
         outlined: card.owner.awake
-        text: card.owner.busy && ["enable", "disable"].includes(card.owner.operation) ? "Keep awake · Applying…" : card.owner.awake ? "Keep awake · On" : "Keep awake · Off"
+        text: "Keep awake" + (card.vertical ? "\n" : " · ") + (card.owner.busy && ["enable", "disable"].includes(card.owner.operation) ? "Applying…" : card.owner.awake ? "On" : "Off")
         enabled: !card.owner.busy
         Accessible.name: "Prevent automatic sleep and screen off"
         ToolTip.visible: hovered

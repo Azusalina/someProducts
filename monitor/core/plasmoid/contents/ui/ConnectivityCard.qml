@@ -39,14 +39,6 @@ Item {
             }
             color: card.ink; opacity: 0.6; font.pixelSize: 10; wrapMode: Text.Wrap; textFormat: Text.PlainText
         }
-        SmallButton {
-            objectName: card.kind === "proton" ? "unusedProtonSettings" : "settings_" + card.kind
-            text: card.opening ? "Opening…" : card.kind === "proton" ? "Open Proton ↗" : "Settings ↗"
-            ink: card.ink
-            outlined: true
-            enabled: !!card.status.can_open && !card.opening
-            onClicked: card.openRequested(card.kind)
-        }
         Text {
             Layout.fillWidth: true
             visible: card.kind === "proton"

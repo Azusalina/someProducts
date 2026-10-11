@@ -11,6 +11,7 @@ Item {
     ConfigAppearance { id: appearance; x: 20; y: 20; width: 560; height: 580; visible: false }
     ConfigPing { id: ping; x: 20; y: 20; width: 560; height: 500; visible: false }
     ConfigFlows { id: flows; x: 20; y: 20; width: 560; height: 580; visible: false }
+    ConfigFile { id: filePage; x: 20; y: 20; width: 560; height: 580; visible: false }
     TestCase {
         name: "Configuration"
         when: windowShown
@@ -19,6 +20,7 @@ Item {
             appearance.visible = false
             ping.visible = false
             flows.visible = false
+            filePage.visible = false
             modules.cfg_moduleOrder = "cpu,ram,ping,gpu,media,note"
             modules.cfg_enabledModules = "cpu,ram,ping,gpu,media,note"
             modules.cfg_columns = 2
@@ -113,6 +115,19 @@ Item {
             let saved = false
             verify(configurationRoot.grabToImage(result => { verify(result.saveToFile("../docs/preview-config-flows.png")); saved = true }))
             tryVerify(() => saved, 3000)
+        }
+        function test_046_profileSelectionIsStagedAndValidated() {
+            modules.visible = false
+            filePage.visible = true
+            filePage.cfg_settingsProfile = "default"
+            const field = findChild(filePage, "settingsProfileName")
+            enter(field, "media")
+            compare(filePage.cfg_settingsProfile, "media")
+            enter(field, "../escape")
+            compare(filePage.cfg_settingsProfile, "media")
+            compare(field.valid, false)
+            filePage.cfg_settingsProfile = "default" // Host Cancel restores the saved selection.
+            compare(field.text, "default")
         }
         function test_05_configurationPreviews() {
             let saved = false

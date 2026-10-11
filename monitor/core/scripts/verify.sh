@@ -6,7 +6,9 @@ monitor_qt_bin="${MONITOR_QT_BIN:-/usr/lib/qt6/bin}"
 monitor_python="$monitor_core/.venv/bin/python"
 monitor_bridge_pid=""
 monitor_fixture_pid=""
+monitor_config_fixture_pid=""
 monitor_cleanup() {
+    if test -n "$monitor_config_fixture_pid"; then kill "$monitor_config_fixture_pid" 2>/dev/null || true; wait "$monitor_config_fixture_pid" 2>/dev/null || true; fi
     if test -n "$monitor_fixture_pid"; then kill "$monitor_fixture_pid" 2>/dev/null || true; wait "$monitor_fixture_pid" 2>/dev/null || true; fi
     if test -n "$monitor_bridge_pid"; then kill "$monitor_bridge_pid" 2>/dev/null || true; wait "$monitor_bridge_pid" 2>/dev/null || true; fi
 }
@@ -33,6 +35,24 @@ monitor_fixture_pid="$!"
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_configuration.qml > ../docs/qml-tests.log 2>&1
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_dashboard.qml >> ../docs/qml-tests.log 2>&1
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_power_timers.qml >> ../docs/qml-tests.log 2>&1
+"$monitor_python" tests/settings_file_fixture.py > ../docs/config-file-fixture.log 2>&1 &
+monitor_config_fixture_pid="$!"
+"$monitor_python" - <<'READY'
+import json
+import time
+from urllib.request import Request, urlopen
+for _ in range(50):
+    try:
+        request = Request('http://127.0.0.1:17342/config', headers={'X-Monitor-Client': 'plasma-widget'})
+        with urlopen(request, timeout=0.2) as response:
+            json.load(response)
+        break
+    except (OSError, ValueError):
+        time.sleep(0.1)
+else:
+    raise SystemExit('Config fixture did not become ready')
+READY
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_settings_file.qml >> ../docs/qml-tests.log 2>&1
 "$monitor_python" tests/preview_configuration.py > ../docs/preview-configuration-test.log 2>&1
 "$monitor_python" tests/keep_awake_fixture.py > ../docs/keep-awake-test.log 2>&1
 "$monitor_python" tests/cava_playback_fixture.py > ../docs/cava-playback-test.log 2>&1

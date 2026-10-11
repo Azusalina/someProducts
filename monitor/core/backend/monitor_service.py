@@ -23,6 +23,7 @@ from cava_audio import AudioCollector
 from terminal_sessions import TerminalManager
 from power import PowerCollector
 from timers import TimerManager
+from widget_config import WidgetConfig, Conflict, MAX_BYTES
 
 MPRIS = 'org.mpris.MediaPlayer2'
 PLAYER = MPRIS + '.Player'
@@ -369,6 +370,17 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(403, {'error': 'Native local client required'})
             return
         parsed = urlsplit(self.path)
+        if parsed.path == '/config':
+            store = None
+            try:
+                name = parse_qs(parsed.query, keep_blank_values=True).get('profile', ['default'])[0]
+                store = self.server.widget_config.for_profile(name)
+                self.reply(200, store.read())
+            except ValueError as error:
+                self.reply(422, {'error': str(error), 'path': str(store.path) if store else ''})
+            except OSError:
+                self.reply(503, {'error': 'Config file could not be read', 'path': str(store.path) if store else ''})
+            return
         if parsed.path == '/timers/state':
             try:
                 self.reply(200, self.server.telemetry.timers.state(parse_qs(parsed.query).get('session', [''])[0]))
@@ -403,6 +415,26 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             self.reply(403, {'error': 'Native local client required'})
+            return
+        config_url = urlsplit(self.path)
+        if config_url.path == '/config':
+            store = None
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= MAX_BYTES:
+                    raise ValueError('Invalid config payload size')
+                payload = json.loads(self.rfile.read(length))
+                if not isinstance(payload, dict) or set(payload) != {'changes', 'revision'}:
+                    raise ValueError('Use changes and revision')
+                name = parse_qs(config_url.query, keep_blank_values=True).get('profile', ['default'])[0]
+                store = self.server.widget_config.for_profile(name)
+                self.reply(200, store.update(payload['changes'], payload['revision']))
+            except Conflict as error:
+                self.reply(409, error.state)
+            except ValueError as error:
+                self.reply(422, {'error': str(error), 'path': str(store.path) if store else ''})
+            except OSError:
+                self.reply(503, {'error': 'Config file could not be saved'})
             return
         if self.path.startswith(('/power/', '/timers/')):
             try:
@@ -514,6 +546,7 @@ def main():
     server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
     server.daemon_threads = True
     server.telemetry = telemetry
+    server.widget_config = WidgetConfig()
     telemetry.thread.start()
     telemetry.media_thread.start()
     telemetry.ping_thread.start()

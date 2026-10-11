@@ -12,7 +12,7 @@ ApplicationWindow {
     color: "transparent"
     title: "someProducts-monitor · desktop widget preview"
     Settings {
-        id: preferences
+        id: savedPreferences
         objectName: "previewPreferences"
         category: "MonitorPreview"
         property string moduleOrder: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers"
@@ -45,8 +45,8 @@ ApplicationWindow {
     }
     function transfer(page, keys, save) {
         for (const key of keys) {
-            if (save) preferences[key] = page["cfg_" + key]
-            else page["cfg_" + key] = preferences[key]
+            if (save) savedPreferences[key] = page["cfg_" + key]
+            else page["cfg_" + key] = savedPreferences[key]
         }
     }
     function syncConfiguration(save) {
@@ -64,7 +64,7 @@ ApplicationWindow {
         id: dashboard
         anchors.fill: parent
         anchors.margins: 10
-        preferences: preferences
+        preferences: savedPreferences
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton
