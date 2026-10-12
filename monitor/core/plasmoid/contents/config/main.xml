@@ -7,6 +7,8 @@
     <entry name="enabledModules" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers</default></entry>
     <entry name="columns" type="Int"><default>2</default><min>1</min><max>3</max></entry>
     <entry name="targetsText" type="String"><default></default></entry>
+    <entry name="noteHeight" type="Int"><default>85</default><min>48</min><max>800</max></entry>
+    <entry name="noteExportUrl" type="String"><default></default></entry>
     <entry name="noteText" type="String"><default></default></entry>
     <entry name="darkInk" type="Bool"><default>false</default></entry>
     <entry name="textColorHex" type="String"><default></default></entry>

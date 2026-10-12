@@ -9,7 +9,7 @@ PASS   : qmltestrunner::Configuration::test_046_profileSelectionIsStagedAndValid
 PASS   : qmltestrunner::Configuration::test_04_pingDraft()
 PASS   : qmltestrunner::Configuration::test_05_configurationPreviews()
 PASS   : qmltestrunner::Configuration::cleanupTestCase()
-Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 1666ms
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 1785ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -22,6 +22,7 @@ PASS   : qmltestrunner::Dashboard::test_042_pingSampleHistory()
 PASS   : qmltestrunner::Dashboard::test_043_independentFlowColors()
 PASS   : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn()
 PASS   : qmltestrunner::Dashboard::test_04_narrow()
+PASS   : qmltestrunner::Dashboard::test_055_noteHeaderSaveAndLayoutHeight()
 PASS   : qmltestrunner::Dashboard::test_05_notePersistence()
 PASS   : qmltestrunner::Dashboard::test_06_hexSurface()
 PASS   : qmltestrunner::Dashboard::test_075_retiredModules()
@@ -33,7 +34,7 @@ PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
 PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
 PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
 PASS   : qmltestrunner::Dashboard::cleanupTestCase()
-Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 10537ms
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 11337ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -46,7 +47,7 @@ PASS   : qmltestrunner::PowerTimers::test_03_styleColorAndNarrowLayout()
 PASS   : qmltestrunner::PowerTimers::test_04_moduleHideReleasesOwnedResources()
 PASS   : qmltestrunner::PowerTimers::test_05_configureDraftsAndValidation()
 PASS   : qmltestrunner::PowerTimers::cleanupTestCase()
-Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 19122ms
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 20031ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -57,5 +58,15 @@ PASS   : qmltestrunner::SettingsFile::test_03_fileDeletionRecreatesCurrentSettin
 PASS   : qmltestrunner::SettingsFile::test_04_namedProfilesKeepSplitWidgetsIndependent()
 PASS   : qmltestrunner::SettingsFile::test_05_conflictMergeAndSameKeyFilePriority()
 PASS   : qmltestrunner::SettingsFile::cleanupTestCase()
-Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7835ms
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 8164ms
+********* Finished testing of qmltestrunner *********
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::NoteControls::initTestCase()
+PASS   : qmltestrunner::NoteControls::test_01_dragResizeAndRestore()
+PASS   : qmltestrunner::NoteControls::test_02_longTextScrollAndExternalNoteEdit()
+PASS   : qmltestrunner::NoteControls::test_03_saveDialogAcceptanceExportsPendingInput()
+PASS   : qmltestrunner::NoteControls::test_04_cancelAndSaveErrorRetainText()
+PASS   : qmltestrunner::NoteControls::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1501ms
 ********* Finished testing of qmltestrunner *********

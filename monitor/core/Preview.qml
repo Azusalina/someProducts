@@ -20,6 +20,8 @@ ApplicationWindow {
         property int columns: 2
         property string targetsText: ""
         property string noteText: ""
+        property int noteHeight: 85
+        property string noteExportUrl: ""
         property bool darkInk: false
         property string textColorHex: ""
         property string cpuFlowColor: ""

@@ -31,6 +31,12 @@ test_job_control_interrupt_and_resize (test_media_terminal.TerminalTests.test_jo
 test_real_shell_unicode_and_controlling_pty (test_media_terminal.TerminalTests.test_real_shell_unicode_and_controlling_pty) ... ok
 test_separate_sessions_and_cleanup (test_media_terminal.TerminalTests.test_separate_sessions_and_cleanup) ... ok
 test_sizes_and_input_are_bounded (test_media_terminal.TerminalTests.test_sizes_and_input_are_bounded) ... ok
+test_browser_and_rebound_requests_cannot_write (test_note_export.NoteApiTests.test_browser_and_rebound_requests_cannot_write) ... ok
+test_save_route_and_invalid_payload (test_note_export.NoteApiTests.test_save_route_and_invalid_payload) ... ok
+test_failed_atomic_write_retains_existing_file (test_note_export.NoteExportTests.test_failed_atomic_write_retains_existing_file) ... ok
+test_invalid_targets_and_oversized_text (test_note_export.NoteExportTests.test_invalid_targets_and_oversized_text) ... ok
+test_symlinks_directories_and_missing_folders_are_not_replaced (test_note_export.NoteExportTests.test_symlinks_directories_and_missing_folders_are_not_replaced) ... ok
+test_utf8_export_and_confirmed_overwrite (test_note_export.NoteExportTests.test_utf8_export_and_confirmed_overwrite) ... ok
 test_awake_helper_death_invalidates_lease (test_power_timers.PowerTests.test_awake_helper_death_invalidates_lease) ... ok
 test_awake_two_owners_expiry_and_cleanup (test_power_timers.PowerTests.test_awake_two_owners_expiry_and_cleanup) ... ok
 test_battery_charge_and_discharge_time (test_power_timers.PowerTests.test_battery_charge_and_discharge_time) ... ok
@@ -50,6 +56,6 @@ test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_c
 test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 50 tests in 4.032s
+Ran 56 tests in 5.218s
 
 OK

@@ -5,6 +5,8 @@
     "enabledModules": "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers",
     "columns": 2,
     "targetsText": "",
+    "noteHeight": 85,
+    "noteExportUrl": "",
     "noteText": "",
     "darkInk": false,
     "textColorHex": "",

@@ -13,6 +13,8 @@ Item {
         property int columns: 2
         property string targetsText: ""
         property string noteText: ""
+        property int noteHeight: 85
+        property string noteExportUrl: ""
         property bool darkInk: false
         property string textColorHex: ""
         property string cpuFlowColor: ""
@@ -42,6 +44,7 @@ Item {
             prefs.enabledModules = prefs.moduleOrder
             prefs.targetsText = ""
             prefs.columns = 2
+            prefs.noteHeight = 85
             board.width = 580
             board.height = 680
             prefs.textColorHex = ""
@@ -177,6 +180,22 @@ Item {
             wait(100)
             editor = findChild(board, "noteEditor")
             compare(editor.text, prefs.noteText)
+        }
+        function test_055_noteHeaderSaveAndLayoutHeight() {
+            prefs.enabledModules = "note"
+            wait(100)
+            const card = findChild(board, "noteCard")
+            const button = findChild(board, "noteSaveButton")
+            verify(card && button)
+            verify(button.visible)
+            verify(button.enabled)
+            const corner = button.mapToItem(board, button.width, 0)
+            verify(corner.x > board.width - 60)
+            const tile = findChild(board, "tile_note")
+            const oldHeight = tile.height
+            prefs.noteHeight = 146
+            tryCompare(card, "height", 146)
+            tryVerify(() => tile.height > oldHeight + 50)
         }
         function test_06_hexSurface() {
             prefs.textColorHex = "#aabbcc"

@@ -13,10 +13,12 @@ from pathlib import Path
 import re
 import shutil
 import signal
+import stat
+import tempfile
 import subprocess
 import threading
 import time
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlsplit, unquote
 
 from connectivity import ConnectivityCollector, open_settings
 from cava_audio import AudioCollector
@@ -344,6 +346,38 @@ class Telemetry:
             entry.update(value=value, pending=False)
 
 
+def save_note(file_url, text):
+    """Export plain text to a local file explicitly chosen in the Save dialog."""
+    if not isinstance(file_url, str) or not isinstance(text, str):
+        raise ValueError('Choose a local file and plain text')
+    parsed = urlsplit(file_url)
+    if parsed.scheme != 'file' or parsed.netloc not in ('', 'localhost') or parsed.query or parsed.fragment:
+        raise ValueError('Choose a local file')
+    path = Path(unquote(parsed.path, errors='strict'))
+    if not path.is_absolute() or not path.name or '\x00' in str(path):
+        raise ValueError('Choose an absolute local file path')
+    raw = text.encode('utf-8')
+    if len(raw) > 65536:
+        raise ValueError('Note exceeds 64 KiB')
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise ValueError('Choose a regular file')
+    mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
+    descriptor, temporary = tempfile.mkstemp(dir=path.parent, prefix='.monitor-note-')
+    try:
+        with os.fdopen(descriptor, 'wb') as output:
+            output.write(raw)
+            output.flush()
+            os.fsync(output.fileno())
+            os.fchmod(output.fileno(), mode)
+        if path.is_symlink() or (path.exists() and not path.is_file()):
+            raise ValueError('Choose a regular file')
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return {'ok': True, 'url': path.as_uri()}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'Monitor/1.0'
 
@@ -415,6 +449,20 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             self.reply(403, {'error': 'Native local client required'})
+            return
+        if self.path == '/notes/save':
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= MAX_BYTES:
+                    raise ValueError('Invalid note payload size')
+                payload = json.loads(self.rfile.read(length))
+                if not isinstance(payload, dict) or set(payload) != {'url', 'text'}:
+                    raise ValueError('Choose a local file and plain text')
+                self.reply(200, save_note(payload['url'], payload['text']))
+            except ValueError as error:
+                self.reply(400, {'error': str(error)})
+            except OSError:
+                self.reply(503, {'error': 'Note could not be saved to the selected file'})
             return
         config_url = urlsplit(self.path)
         if config_url.path == '/config':

@@ -245,6 +245,21 @@ Item {
                             Text { text: tile.modelData.toUpperCase(); color: board.ink; opacity: 0.5; font.pixelSize: 8; font.letterSpacing: 1 }
                             Item { Layout.fillWidth: true }
                             SmallButton {
+                                objectName: tile.modelData === "note" ? "noteSaveButton" : ""
+                                visible: tile.modelData === "note"
+                                enabled: visible && loader.item && !loader.item.exporting
+                                text: loader.item && tile.modelData === "note" && loader.item.exporting ? "…" : "Save"
+                                ink: board.ink
+                                implicitHeight: 18
+                                implicitWidth: 38
+                                font.pixelSize: 9
+                                Accessible.name: "Save note to file"
+                                onClicked: loader.item.chooseSaveFile()
+                                ToolTip.visible: hovered || (tile.modelData === "note" && loader.item && loader.item.exportFailed)
+                                ToolTip.text: tile.modelData === "note" && loader.item && loader.item.exportStatus ? loader.item.exportStatus : "Save note to file…"
+                                ToolTip.timeout: 5000
+                            }
+                            SmallButton {
                                 visible: tile.modelData === "gpu" && board.snapshot.gpus.length > 1
                                 text: "›"; ink: board.ink
                                 implicitHeight: 12

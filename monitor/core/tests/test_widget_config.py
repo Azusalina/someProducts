@@ -26,10 +26,11 @@ class ConfigTests(unittest.TestCase):
     def test_saved_profile_survives_new_store_and_has_private_permissions(self):
         state = self.store.read()
         self.assertFalse(state['configured'])
-        saved = self.store.update({'noteText': '私有笔记', 'cpuFlowColor': '#aabbcc', 'countdownSeconds': 1775, 'columns': 1}, '')
+        saved = self.store.update({'noteText': '私有笔记', 'cpuFlowColor': '#aabbcc', 'countdownSeconds': 1775, 'columns': 1, 'noteHeight': 146}, '')
         restored = WidgetConfig(self.path).read()
         self.assertEqual(saved, restored)
         self.assertEqual(restored['settings']['noteText'], '私有笔记')
+        self.assertEqual(restored['settings']['noteHeight'], 146)
         self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
         self.assertEqual(stat.S_IMODE(self.path.parent.stat().st_mode), 0o700)
         self.assertEqual(list(self.path.parent.glob('.config-*')), [])
@@ -45,7 +46,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_invalid_edits_are_rejected_without_overwriting(self):
         self.store.update({}, '')
-        for setting in [{'columns': True}, {'columns': 4}, {'cpuFlowColor': '#gg0000'}, {'countdownSeconds': 0}, {'stopwatchStyle': 'unknown'}, {'enabledModules': 'cpu,cpu'}, {'moduleOrder': 'remote'}, {'noteText': 'a'*65537}, {'notASetting': 2}]:
+        for setting in [{'noteHeight': 47}, {'noteHeight': 801}, {'columns': True}, {'columns': 4}, {'cpuFlowColor': '#gg0000'}, {'countdownSeconds': 0}, {'stopwatchStyle': 'unknown'}, {'enabledModules': 'cpu,cpu'}, {'moduleOrder': 'remote'}, {'noteText': 'a'*65537}, {'notASetting': 2}]:
             original = self.path.read_bytes()
             with self.assertRaises(ValueError):
                 self.store.update(setting, self.store.read()['revision'])

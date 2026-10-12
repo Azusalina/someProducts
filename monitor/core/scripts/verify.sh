@@ -53,6 +53,7 @@ else:
     raise SystemExit('Config fixture did not become ready')
 READY
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_settings_file.qml >> ../docs/qml-tests.log 2>&1
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_note.qml >> ../docs/qml-tests.log 2>&1
 "$monitor_python" tests/preview_configuration.py > ../docs/preview-configuration-test.log 2>&1
 "$monitor_python" tests/keep_awake_fixture.py > ../docs/keep-awake-test.log 2>&1
 "$monitor_python" tests/cava_playback_fixture.py > ../docs/cava-playback-test.log 2>&1

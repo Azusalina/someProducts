@@ -53,6 +53,7 @@ Item {
             preferences.cpuFlowColor = "#aabbcc"
             preferences.noteText = "Saved note"
             preferences.countdownSeconds = 1775
+            preferences.noteHeight = 146
             attach()
             saved()
             compare(api("/config").settings.noteText, "Saved note")
@@ -65,12 +66,14 @@ Item {
             preferences.cpuFlowColor = ""
             preferences.noteText = ""
             preferences.countdownSeconds = 300
+            preferences.noteHeight = 85
             attach()
             saved()
             compare(preferences.columns, 3)
             compare(preferences.cpuFlowColor, "#aabbcc")
             compare(preferences.noteText, "Saved note")
             compare(preferences.countdownSeconds, 1775)
+            compare(preferences.noteHeight, 146)
         }
         function test_02_manualEditAndInvalidDraftProtection() {
             attach(); saved()
