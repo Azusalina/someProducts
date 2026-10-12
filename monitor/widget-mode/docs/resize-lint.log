@@ -1,0 +1,7 @@
+Warning: plasmoid/contents/ui/main.qml:18:78: Unqualified access [unqualified]
+        onOuterResizeRequested: (edge,delta) => { if(!ResizeTools.resizeHost(root,edge,delta)) resizeError="Native resize unavailable" }
+                                                                             ^^^^
+Info: Set "pragma ComponentBehavior: Bound" in order to use IDs from outer components in nested components.
+Suggested change:
+pragma ComponentBehavior: Bound
+import QtQuick

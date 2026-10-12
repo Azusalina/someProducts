@@ -45,6 +45,10 @@ test_unknown_and_invalid_battery_values (test_power_timers.PowerTests.test_unkno
 test_independent_pause_resume_and_finish (test_power_timers.TimerTests.test_independent_pause_resume_and_finish) ... ok
 test_instances_and_configure_do_not_affect_other_timer (test_power_timers.TimerTests.test_instances_and_configure_do_not_affect_other_timer) ... ok
 test_validation_expiry_and_idempotent_start (test_power_timers.TimerTests.test_validation_expiry_and_idempotent_start) ... ok
+test_layout_validation (test_resize.ResizeTests.test_layout_validation) ... ok
+test_completion_customization_and_profiles_survive_reload (test_todos.TodoSettingsTests.test_completion_customization_and_profiles_survive_reload) ... ok
+test_customization_bounds_and_defaults (test_todos.TodoSettingsTests.test_customization_bounds_and_defaults) ... ok
+test_reject_malformed_task_data_without_overwriting_profile (test_todos.TodoSettingsTests.test_reject_malformed_task_data_without_overwriting_profile) ... ok
 test_config_rejects_browser_requests_and_invalid_manual_draft (test_widget_config.ConfigApiTests.test_config_rejects_browser_requests_and_invalid_manual_draft) ... ok
 test_config_routes_save_restore_and_conflict (test_widget_config.ConfigApiTests.test_config_routes_save_restore_and_conflict) ... ok
 test_failed_atomic_save_keeps_previous_file (test_widget_config.ConfigTests.test_failed_atomic_save_keeps_previous_file) ... ok
@@ -56,6 +60,6 @@ test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_c
 test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 56 tests in 5.218s
+Ran 60 tests in 5.239s
 
 OK

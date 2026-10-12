@@ -2,11 +2,22 @@
 <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name=""/>
   <group name="General">
+    <entry name="layoutSplits" type="String"><default>{}</default></entry>
+    <entry name="layoutHeights" type="String"><default>{}</default></entry>
+    <entry name="layoutColumnWeights" type="String"><default>[1,1,1]</default></entry>
     <entry name="settingsProfile" type="String"><default>default</default></entry>
     <entry name="moduleOrder" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers</default></entry>
     <entry name="enabledModules" type="String"><default>cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers</default></entry>
     <entry name="columns" type="Int"><default>2</default><min>1</min><max>3</max></entry>
     <entry name="targetsText" type="String"><default></default></entry>
+    <entry name="todoEnabled" type="Bool"><default>true</default></entry>
+    <entry name="todoPendingTitle" type="String"><default>pending</default></entry>
+    <entry name="todoUrgentTitle" type="String"><default>urgent</default></entry>
+    <entry name="todoPendingColor" type="String"><default></default></entry>
+    <entry name="todoUrgentColor" type="String"><default></default></entry>
+    <entry name="todoFontSize" type="Int"><default>11</default><min>9</min><max>18</max></entry>
+    <entry name="todoHeight" type="Int"><default>130</default><min>80</min><max>600</max></entry>
+    <entry name="todoItems" type="String"><default>{"pending":[],"urgent":[]}</default></entry>
     <entry name="noteHeight" type="Int"><default>85</default><min>48</min><max>800</max></entry>
     <entry name="noteExportUrl" type="String"><default></default></entry>
     <entry name="noteText" type="String"><default></default></entry>

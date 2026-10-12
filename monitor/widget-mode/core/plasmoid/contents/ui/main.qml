@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
+import "ResizeTools.js" as ResizeTools
 
 PlasmoidItem {
     id: root
@@ -14,6 +15,8 @@ PlasmoidItem {
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     preferredRepresentation: fullRepresentation
     fullRepresentation: Dashboard {
+        onOuterResizeRequested: (edge,delta) => { if(!ResizeTools.resizeHost(root,edge,delta)) resizeError="Native resize unavailable" }
+        widgetId: Plasmoid.id
         preferences: Plasmoid.configuration
         Layout.minimumWidth: 200
         Layout.minimumHeight: 120

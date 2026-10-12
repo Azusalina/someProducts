@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Shapes
 
-ColumnLayout {
+Item {
     id: face
     required property var owner
     required property string kind
@@ -29,7 +29,6 @@ ColumnLayout {
         NumberAnimation { target: face; property: "opacity"; from: 0.18; to: 1; duration: 350 }
         onStopped: face.opacity = 1
     }
-    spacing: 2
     function beginEdit() {
         if (!owner.session) return
         editError = ""
@@ -59,6 +58,13 @@ ColumnLayout {
         const hours = Math.floor(seconds / 3600)
         return (String(hours).padStart(2, "0") + ":") + String(Math.floor(seconds / 60) % 60).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0")
     }
+    implicitHeight: contents.implicitHeight
+    signal borderResizeRequested(string edge, real delta)
+    BorderGrip { anchors.fill: parent; z: 20; edges: ["top","bottom"]; ink: face.ink; onFinished: (edge,delta) => face.borderResizeRequested(edge,delta) }
+    ColumnLayout {
+        id: contents
+        anchors.fill: parent
+        spacing: 2
     Text { Layout.fillWidth: true; text: face.kind === "countdown" ? "COUNTDOWN" : "STOPWATCH"; color: face.ink; opacity: 0.5; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter; font.letterSpacing: 0.7 }
     Item {
         Layout.fillWidth: true
@@ -150,4 +156,5 @@ ColumnLayout {
         }
     }
     Text { Layout.fillWidth: true; text: face.reading.finished ? "Done" : face.reading.running ? "Running" : "Paused"; color: face.ink; opacity: 0.55; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter }
+    }
 }

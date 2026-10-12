@@ -12,6 +12,9 @@ Item {
         property string enabledModules: "cpu,ram,ping,gpu,media,note"
         property int columns: 2
         property string targetsText: ""
+        property string layoutHeights: "{}"
+        property string layoutColumnWeights: "[1,1,1]"
+        property string layoutSplits: "{}"
         property string noteText: ""
         property int noteHeight: 85
         property string noteExportUrl: ""

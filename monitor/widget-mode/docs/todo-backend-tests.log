@@ -1,0 +1,8 @@
+test_completion_customization_and_profiles_survive_reload (test_todos.TodoSettingsTests.test_completion_customization_and_profiles_survive_reload) ... ok
+test_customization_bounds_and_defaults (test_todos.TodoSettingsTests.test_customization_bounds_and_defaults) ... ok
+test_reject_malformed_task_data_without_overwriting_profile (test_todos.TodoSettingsTests.test_reject_malformed_task_data_without_overwriting_profile) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.003s
+
+OK

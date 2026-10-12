@@ -57,8 +57,42 @@ def validate(settings):
             raise ValueError(f'{key} must be {kind.lower()}')
         if kind == 'Int' and not int(low) <= value <= int(high):
             raise ValueError(f'{key} must be between {low} and {high}')
-        if kind == 'String' and len(value.encode('utf-8')) > (65536 if key == 'noteText' else 16384):
+        if kind == 'String' and len(value.encode('utf-8')) > (65536 if key in ('noteText', 'todoItems') else 16384):
             raise ValueError(f'{key} is too long')
+        if key in ('layoutHeights','layoutColumnWeights','layoutSplits'):
+            try: data=json.loads(value)
+            except ValueError as error: raise ValueError('Invalid layout JSON') from error
+            if key == 'layoutHeights':
+                if not isinstance(data,dict) or any(k not in MODULES | {'radios','powertimers','countdownBody','stopwatchBody','batteryBody'} or type(v) is not int or not 24 <= v <= 1800 for k,v in data.items()):
+                    raise ValueError('Use known module heights between 24 and 1800')
+            elif key == 'layoutColumnWeights':
+                if not isinstance(data,list) or len(data)!=3 or any(type(v) not in (int,float) or not 0 < v <= 10000 for v in data):
+                    raise ValueError('Use three positive column weights')
+            elif not isinstance(data,dict) or any(k not in ('todos','power','radios','timers') or type(v) not in (int,float) or not 0.15 <= v <= 0.85 for k,v in data.items()):
+                raise ValueError('Use bounded rectangular split ratios')
+        if key in ('todoPendingTitle', 'todoUrgentTitle') and len(value) > 64:
+            raise ValueError(f'{key} must contain at most 64 characters')
+        if key == 'todoItems':
+            try:
+                tasks = json.loads(value)
+            except ValueError as error:
+                raise ValueError('todoItems must contain valid JSON') from error
+            if not isinstance(tasks, dict) or set(tasks) != {'pending', 'urgent'}:
+                raise ValueError('todoItems requires pending and urgent lists')
+            identifiers = set()
+            for rows in tasks.values():
+                if not isinstance(rows, list) or len(rows) > 100:
+                    raise ValueError('Use at most 100 tasks per list')
+                for row in rows:
+                    if not isinstance(row, dict) or set(row) != {'id', 'text', 'done'}:
+                        raise ValueError('Each task requires id, text and done')
+                    identifier = row['id']
+                    if not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', identifier) or identifier in identifiers:
+                        raise ValueError('Task IDs must be unique letters, digits, underscores or hyphens')
+                    identifiers.add(identifier)
+                    text = row['text']
+                    if not isinstance(text, str) or not text.strip() or len(text) > 300 or '\n' in text or '\r' in text or type(row['done']) is not bool:
+                        raise ValueError('Tasks need 1-300 characters on one line and a boolean done state')
         if key.endswith(('Color', 'ColorHex')) and value and not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
             raise ValueError(f'{key} must be empty or #rrggbb')
         if key.endswith('Style') and value not in ('minimal', 'digital', 'ring'):

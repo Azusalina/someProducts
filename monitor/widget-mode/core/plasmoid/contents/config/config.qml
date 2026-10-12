@@ -8,5 +8,6 @@ ConfigModel {
     ConfigCategory { name: "Media"; icon: "media-playback-start"; source: "config/ConfigMedia.qml" }
     ConfigCategory { name: "Terminal"; icon: "utilities-terminal"; source: "config/ConfigTerminal.qml" }
     ConfigCategory { name: "Timers"; icon: "chronometer"; source: "config/ConfigTimers.qml" }
+    ConfigCategory { name: "To-do lists"; icon: "view-list-details"; source: "config/ConfigTodos.qml" }
     ConfigCategory { name: "Config file"; icon: "document-save"; source: "config/ConfigFile.qml" }
 }

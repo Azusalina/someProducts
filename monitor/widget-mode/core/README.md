@@ -21,4 +21,6 @@ Drag the note's bottom border to resize its height; the current profile remember
 
 Configure → Config file opens `~/.config/someProducts-monitor/config.json`. Settings save automatically after Apply/OK and reload when you add the widget again; valid manual JSON edits reload automatically. Use distinct profile names for split widgets; named files live under `~/.config/someProducts-monitor/profiles/`. The preview retains its separate preview settings.
 
+Below Note, the left **pending** and right **urgent** lists have completion buttons; clicking toggles strikethrough and saves the state. **Configure → To-do lists** edits tasks (one per line), titles, colors, font size, height and visibility. Click Apply/OK to save to the current Profile.
+
 See [description.md](description.md) for background and technical details.

@@ -133,6 +133,14 @@ Item {
             }
         }
     }
+    BorderGrip {
+        anchors.fill: parent
+        edges: ["top"]
+        ink: card.ink
+        onMoved: (edge,delta) => card.resizedHeight=Math.max(48,Math.min(800,(card.preferences.noteHeight || 85)-delta))
+        onFinished: (edge,delta) => { card.preferences.noteHeight=Math.round(card.resizedHeight < 0 ? card.height : card.resizedHeight);card.resizedHeight=-1 }
+        onCanceled: card.resizedHeight=-1
+    }
     MouseArea {
         id: resizeHandle
         objectName: "noteResizeHandle"

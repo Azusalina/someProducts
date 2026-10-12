@@ -17,6 +17,9 @@ Item {
         property string enabledModules: "battery,timers"
         property int columns: 2
         property string targetsText: ""
+        property string layoutHeights: "{}"
+        property string layoutColumnWeights: "[1,1,1]"
+        property string layoutSplits: "{}"
         property string noteText: ""
         property bool darkInk: false
         property string textColorHex: ""

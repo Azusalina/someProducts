@@ -1,0 +1,107 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::Dashboard::initTestCase()
+PASS   : qmltestrunner::Dashboard::test_01_liveBridge()
+PASS   : qmltestrunner::Dashboard::test_02_targets()
+QWARN  : qmltestrunner::Dashboard::test_03_displayOnly() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_03_displayOnly() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+PASS   : qmltestrunner::Dashboard::test_03_displayOnly()
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_041_compactFlows() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+FAIL!  : qmltestrunner::Dashboard::test_041_compactFlows() Compared values are not the same
+   Actual   (): 60
+   Expected (): 54
+   Loc: [/home/a/Documents/someProducts/monitor/widget-mode/core/tests/tst_dashboard.qml(106)]
+QWARN  : qmltestrunner::Dashboard::test_042_pingSampleHistory() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_042_pingSampleHistory()
+PASS   : qmltestrunner::Dashboard::test_043_independentFlowColors()
+QWARN  : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_044_radioPairInSingleColumn()
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_04_narrow() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+PASS   : qmltestrunner::Dashboard::test_04_narrow()
+FAIL!  : qmltestrunner::Dashboard::test_055_noteHeaderSaveAndLayoutHeight() 'verify()' returned FALSE. ()
+   Loc: [/home/a/Documents/someProducts/monitor/widget-mode/core/tests/tst_dashboard.qml(196)]
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_05_notePersistence() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_05_notePersistence()
+PASS   : qmltestrunner::Dashboard::test_06_hexSurface()
+QWARN  : qmltestrunner::Dashboard::test_075_retiredModules() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_075_retiredModules() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+PASS   : qmltestrunner::Dashboard::test_075_retiredModules()
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_076_mediaProgress() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+FAIL!  : qmltestrunner::Dashboard::test_076_mediaProgress() 'function returned false' returned FALSE. ()
+   Loc: [/home/a/Documents/someProducts/monitor/widget-mode/core/tests/tst_dashboard.qml(248)]
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_077_nativeSettingsSignals() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_077_nativeSettingsSignals()
+PASS   : qmltestrunner::Dashboard::test_078_connectivityPreview()
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_07_realMediaControl() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+FAIL!  : qmltestrunner::Dashboard::test_07_realMediaControl() 'function returned false' returned FALSE. ()
+   Loc: [/home/a/Documents/someProducts/monitor/widget-mode/core/tests/tst_dashboard.qml(226)]
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_085_embeddedTerminal() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:254:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:253:25: Unable to assign [undefined] to double
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+QWARN  : qmltestrunner::Dashboard::test_08_previewAndTransparency() file:///home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/ui/Dashboard.qml:250:25: Unable to assign [undefined] to int
+PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
+PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
+PASS   : qmltestrunner::Dashboard::cleanupTestCase()
+Totals: 17 passed, 4 failed, 0 skipped, 0 blacklisted, 22018ms
+********* Finished testing of qmltestrunner *********

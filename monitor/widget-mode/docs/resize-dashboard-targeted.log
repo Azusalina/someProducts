@@ -1,0 +1,8 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::Dashboard::initTestCase()
+PASS   : qmltestrunner::Dashboard::test_041_compactFlows()
+PASS   : qmltestrunner::Dashboard::test_055_noteHeaderSaveAndLayoutHeight()
+PASS   : qmltestrunner::Dashboard::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 355ms
+********* Finished testing of qmltestrunner *********

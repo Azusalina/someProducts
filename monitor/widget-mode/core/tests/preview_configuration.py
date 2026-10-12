@@ -26,6 +26,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     appearance = root.findChild(QObject, 'previewAppearancePage')
     flows = root.findChild(QObject, 'previewFlowsPage')
     timers = root.findChild(QObject, 'previewTimersPage')
+    todos = root.findChild(QObject, 'previewTodosPage')
     buttons = root.findChild(QObject, 'previewConfigurationButtons')
     config_window = root.findChild(QObject, 'previewConfiguration')
     original = preferences.property('enabledModules')
@@ -40,6 +41,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     timers.setProperty('cfg_countdownSeconds', 42)
     timers.setProperty('cfg_stopwatchColor', '#55cc88')
     timers.setProperty('cfg_countdownStyle', 'ring')
+    todos.setProperty('cfg_todoPendingTitle', 'Later')
+    todos.setProperty('cfg_todoItems', '{"pending":[{"id":"p1","text":"Test task","done":true}],"urgent":[]}')
     assert preferences.property('enabledModules') == original
     assert preferences.property('backgroundOpacity') == 0
     assert preferences.property('cpuFlowColor') == ''
@@ -53,6 +56,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert timers.property('cfg_countdownSeconds') == 300
     assert timers.property('cfg_stopwatchColor') == ''
     assert timers.property('cfg_countdownStyle') == 'minimal'
+    assert todos.property('cfg_todoPendingTitle') == 'pending'
+    assert todos.property('cfg_todoItems') == '{"pending":[],"urgent":[]}'
 
     modules.setProperty('cfg_enabledModules', 'note')
     appearance.setProperty('cfg_textColorHex', '#aabbcc')
@@ -62,6 +67,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     timers.setProperty('cfg_countdownSeconds', 42)
     timers.setProperty('cfg_stopwatchColor', '#55cc88')
     timers.setProperty('cfg_countdownStyle', 'ring')
+    todos.setProperty('cfg_todoPendingTitle', 'Later')
+    todos.setProperty('cfg_todoItems', '{"pending":[{"id":"p1","text":"Test task","done":true}],"urgent":[]}')
     assert QMetaObject.invokeMethod(buttons, 'applied')
     assert preferences.property('enabledModules') == 'note'
     assert preferences.property('textColorHex') == '#aabbcc'
@@ -70,6 +77,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert preferences.property('countdownSeconds') == 42
     assert preferences.property('stopwatchColor') == '#55cc88'
     assert preferences.property('countdownStyle') == 'ring'
+    assert preferences.property('todoPendingTitle') == 'Later'
+    assert 'Test task' in preferences.property('todoItems')
     assert config_window.property('visible'), 'Apply should leave settings open'
     assert QMetaObject.invokeMethod(buttons, 'accepted')
     assert not config_window.property('visible')

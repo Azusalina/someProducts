@@ -12,7 +12,7 @@ AbstractButton {
     opacity: enabled ? 1 : 0.35
     background: Rectangle {
         color: "transparent"
-        radius: 5
+        radius: 0
         border.width: button.outlined || button.hovered || button.activeFocus ? 1 : 0
         border.color: Qt.rgba(button.ink.r, button.ink.g, button.ink.b, button.hovered ? 0.55 : 0.22)
     }

@@ -19,6 +19,17 @@ ApplicationWindow {
         property string enabledModules: "cpu,ram,ping,gpu,media,note,proton,wifi,bluetooth,terminal,battery,timers"
         property int columns: 2
         property string targetsText: ""
+        property bool todoEnabled: true
+        property string todoPendingTitle: "pending"
+        property string todoUrgentTitle: "urgent"
+        property string todoPendingColor: ""
+        property string todoUrgentColor: ""
+        property int todoFontSize: 11
+        property int todoHeight: 130
+        property string todoItems: '{"pending":[],"urgent":[]}'
+        property string layoutSplits: "{}"
+        property string layoutHeights: "{}"
+        property string layoutColumnWeights: "[1,1,1]"
         property string noteText: ""
         property int noteHeight: 85
         property string noteExportUrl: ""
@@ -58,6 +69,7 @@ ApplicationWindow {
         transfer(pingPage, ["targetsText"], save)
         transfer(mediaPage, ["mediaService", "cavaEnabled", "cavaOpacity"], save)
         transfer(timersPage, ["countdownSeconds", "stopwatchSeconds", "countdownColor", "stopwatchColor", "countdownStyle", "stopwatchStyle"], save)
+        transfer(todosPage, ["todoEnabled", "todoPendingTitle", "todoUrgentTitle", "todoPendingColor", "todoUrgentColor", "todoFontSize", "todoHeight", "todoItems"], save)
         transfer(terminalPage, ["terminalHeight", "terminalFontSize"], save)
     }
     function configure() { syncConfiguration(false); configWindow.show(); configWindow.requestActivate() }
@@ -66,6 +78,10 @@ ApplicationWindow {
         id: dashboard
         anchors.fill: parent
         anchors.margins: 10
+        onOuterResizeRequested: (edge,delta) => {
+            if (edge === "left" || edge === "right") window.width=Math.max(200,window.width+(edge === "left" ? -delta : delta))
+            else window.height=Math.max(120,window.height+(edge === "top" ? -delta : delta))
+        }
         preferences: savedPreferences
         MouseArea {
             anchors.fill: parent
@@ -93,6 +109,7 @@ ApplicationWindow {
             TabButton { text: "Media" }
             TabButton { text: "Terminal" }
             TabButton { text: "Timers" }
+            TabButton { text: "To-do lists" }
         }
         StackLayout {
             anchors.fill: parent
@@ -105,6 +122,7 @@ ApplicationWindow {
             ConfigMedia { id: mediaPage }
             ConfigTerminal { id: terminalPage }
             ConfigTimers { id: timersPage; objectName: "previewTimersPage" }
+            ConfigTodos { id: todosPage; objectName: "previewTodosPage" }
         }
         footer: DialogButtonBox {
             objectName: "previewConfigurationButtons"

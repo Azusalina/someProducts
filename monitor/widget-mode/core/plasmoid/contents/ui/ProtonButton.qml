@@ -20,7 +20,7 @@ AbstractButton {
     scale: down ? 0.97 : 1
     Behavior on scale { NumberAnimation { duration: 120 } }
     background: Rectangle {
-        radius: 16
+        radius: 0
         color: "transparent"
         border.width: 1
         border.color: Qt.rgba(button.ink.r, button.ink.g, button.ink.b, button.hovered || button.activeFocus ? 0.65 : 0.25)
@@ -43,7 +43,7 @@ AbstractButton {
             font.pixelSize: 11
         }
         Rectangle {
-            implicitWidth: 4; implicitHeight: 4; radius: 2
+            implicitWidth: 4; implicitHeight: 4; radius: 0
             color: button.ink
             opacity: 0.4
             SequentialAnimation on opacity {

@@ -36,7 +36,7 @@ Runtime dependencies on Arch: `plasma-workspace`, `qt6-declarative`, `kirigami`,
 
 Version 1.5 uses smooth graphs for CPU/RAM/GPU/Ping, with 9 px values in the upper-right corner. Hover for hardware details or Ping status. CAVA is a flowing background curve. The default widget is **300 × 360**; a stats-and-media composition fits about **300 × 220**. In Edit Mode, resize existing instances with Plasma's handles; saved desktop sizes are preserved during updates. Curves build from actual samples after opening.
 
-Right-click the widget → **someProducts-monitor Settings…** (Configure). **Modules** selects visible modules, one to three columns, and their order. **Appearance** sets hex colors, border width and background opacity. **Flow colors** independently sets CPU, RAM, GPU, Ping and CAVA curve colors using `#rrggbb`; empty fields follow the dashboard color. **Ping** edits targets. **Media** selects a player and CAVA visibility/opacity; **Terminal** sets terminal height and font size. **Timers** sets countdown duration, stopwatch starting time, independent hex colors and Minimal/Digital/Ring styles. **Config file** opens the saved JSON file and selects a named profile. Use **Apply** or **OK** to save; **Cancel** discards unapplied changes. Narrow widgets automatically use one column.
+Right-click the widget → **someProducts-monitor Settings…** (Configure). **Modules** selects visible modules, one to three columns, and their order. **Appearance** sets hex colors, border width and background opacity. **Flow colors** independently sets CPU, RAM, GPU, Ping and CAVA curve colors using `#rrggbb`; empty fields follow the dashboard color. **Ping** edits targets. **Media** selects a player and CAVA visibility/opacity; **Terminal** sets terminal height and font size. **Timers** sets countdown duration, stopwatch starting time, independent hex colors and Minimal/Digital/Ring styles. **To-do lists** customizes the lists below Note. **Config file** opens the saved JSON file and selects a named profile. Use **Apply** or **OK** to save; **Cancel** discards unapplied changes. Narrow widgets automatically use one column.
 
 CPU/RAM/GPU/Ping sample about every **0.5 seconds**; slower Ping replies take longer. Wi-Fi and Bluetooth share a row whenever both are enabled and at least 230 px of content width is available, including in a single-column dashboard. Hide either module to display the other independently.
 
@@ -88,6 +88,12 @@ systemctl --user status monitor-dashboard.service
 journalctl --user -u monitor-dashboard.service -n 30
 ./scripts/uninstall.sh
 ```
+
+**To-do lists**
+
+The Note module now places two equal-width lists directly below the note, separated by a vertical line. Their default titles are **pending** (left) and **urgent** (right). Click the button before a task to mark it done: the text gains a strikethrough and dims. Click again to reopen it. Completion state saves automatically to the current Profile and survives removing/re-adding the widget.
+
+Open **Configure → To-do lists** to edit each side's tasks (one per line), titles, independent `#rrggbb` colors (empty follows dashboard text), font size, list height and visibility. Use **Apply/OK** to save; **Cancel** discards drafts. Unchanged task text retains completion, including duplicated task text; renamed or newly added tasks start unfinished. Each side supports up to 100 tasks, 300 characters per task. Both sides remain adjacent at narrow widget widths and scroll independently. Hiding Note hides this attached section; disable only the lists on their Configure page if desired. Notes retain their existing Save-to-file and drag-height controls.
 
 **Connection controls and notes**
 

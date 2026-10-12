@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "LayoutTools.js" as LayoutTools
+import "ResizeTools.js" as ResizeTools
 
 Item {
     id: board
@@ -9,6 +10,10 @@ Item {
     Keys.onPressed: event => {
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && board.acknowledgeCountdown()) event.accepted = true
     }
+    property string resizeError: ""
+    property int widgetId: 0
+    signal outerResizeRequested(string edge, real delta)
+    function outerResize(edge, delta) { outerResizeRequested(edge,delta) }
     required property var preferences
     readonly property color ink: validHex(preferences.textColorHex) ? preferences.textColorHex : preferences.darkInk ? "#242424" : "#f5f5f4"
     readonly property color backgroundColor: validHex(preferences.backgroundColorHex) ? preferences.backgroundColorHex : "#1b1b1b"
@@ -46,10 +51,14 @@ Item {
             return "radios"
         }).filter(Boolean)
     }
+    BorderGrip { anchors.fill: parent; z: 50; ink: board.ink; onFinished: (edge,delta) => board.outerResize(edge,delta) }
     TerminalOwner { id: terminalOwner; active: board.activeModules.includes("terminal") }
     PowerOwner { id: powerOwner; active: board.activeModules.includes("battery") }
     TimerOwner { id: timerOwner; active: board.activeModules.includes("timers"); preferences: board.preferences }
     readonly property int columnCount: width < 260 ? 1 : Math.max(1, Math.min(3, preferences.columns, Math.floor((width - surfaceInset * 2 + 10) / 110)))
+    readonly property var columnPositions: ResizeTools.columns(layoutModules,columnCount)
+    readonly property var columnSizes: ResizeTools.widths(grid.width,columnCount,preferences.layoutColumnWeights)
+    readonly property var savedHeights: ResizeTools.heights(preferences.layoutHeights)
     readonly property var targets: parseTargets(preferences.targetsText)
     implicitWidth: 300
     implicitHeight: 360
@@ -166,7 +175,7 @@ Item {
     Rectangle {
         objectName: "dashboardSurface"
         anchors.fill: parent
-        radius: 8
+        radius: 0
         color: Qt.rgba(board.backgroundColor.r, board.backgroundColor.g, board.backgroundColor.b, board.backgroundOpacity / 100)
         border.width: board.borderWidth
         border.color: board.borderColor
@@ -193,7 +202,7 @@ Item {
                     font.letterSpacing: 1.2
                 }
                 Rectangle {
-                    implicitWidth: 4; implicitHeight: 4; radius: 2
+                    implicitWidth: 4; implicitHeight: 4; radius: 0
                     color: board.connected ? board.ink : "#c29968"
                     opacity: 0.7
                 }
@@ -213,6 +222,8 @@ Item {
                 id: grid
                 objectName: "moduleGrid"
                 Layout.fillWidth: true
+                Layout.minimumWidth: scroll.availableWidth
+                Layout.maximumWidth: scroll.availableWidth
                 columns: board.columnCount
                 columnSpacing: 10
                 rowSpacing: 4
@@ -227,8 +238,37 @@ Item {
                         readonly property bool metric: ["cpu", "ram", "ping", "gpu"].includes(modelData)
                         Layout.columnSpan: wide ? board.columnCount : 1
                         Layout.fillWidth: true
+                        Layout.fillHeight: true
                         Layout.alignment: Qt.AlignTop
-                        Layout.preferredHeight: tileHeading.height + (loader.item ? loader.item.implicitHeight : 42)
+                        property real draggingHeight: -1
+                        readonly property real naturalHeight: tileHeading.height + (loader.item ? loader.item.implicitHeight : 42) + (metric ? 0 : 6)
+                        readonly property int columnIndex: board.columnPositions[index] === undefined ? 0 : board.columnPositions[index]
+                        Layout.preferredHeight: draggingHeight >= 0 ? draggingHeight : Math.max(naturalHeight, board.savedHeights[modelData] || 0)
+                        Layout.minimumHeight: naturalHeight
+                        Layout.preferredWidth: wide ? grid.width : (board.columnSizes[columnIndex] || grid.width)
+                        Layout.maximumWidth: wide ? Infinity : (board.columnSizes[columnIndex] || grid.width)
+                        clip: true
+                        BorderGrip {
+                            anchors.fill: parent
+                            z: 20
+                            ink: board.ink
+                            onMoved: (edge,delta) => {
+                                if (edge === "top" || edge === "bottom") tile.draggingHeight=Math.max(tile.naturalHeight,Math.min(1800,(board.savedHeights[tile.modelData] || tile.naturalHeight)+(edge === "top" ? -delta : delta)))
+                            }
+                            onCanceled: tile.draggingHeight=-1
+                            onFinished: (edge,delta) => {
+                                if (edge === "top" || edge === "bottom") {
+                                    const values=Object.assign({},board.savedHeights)
+                                    values[tile.modelData]=Math.round(tile.draggingHeight < 0 ? tile.height : tile.draggingHeight)
+                                    board.preferences.layoutHeights=JSON.stringify(values)
+                                    tile.draggingHeight=-1
+                                } else {
+                                    const at=tile.columnIndex+(edge === "left" ? -1 : 0)
+                                    if (tile.wide || at < 0 || at >= board.columnCount-1) board.outerResize(edge,delta)
+                                    else board.preferences.layoutColumnWeights=ResizeTools.split(grid.width,board.columnCount,board.preferences.layoutColumnWeights,at,delta)
+                                }
+                            }
+                        }
                         Layout.minimumWidth: 100
                         Rectangle {
                             visible: !["media", "proton", "radios", "powertimers"].includes(tile.modelData) && !tile.metric
@@ -272,6 +312,7 @@ Item {
                             id: loader
                             anchors.top: tileHeading.bottom
                             width: parent.width
+                            height: tile.height - tileHeading.height - (tile.metric ? 0 : 6)
                             sourceComponent: tile.modelData === "powertimers" ? powerTimersComponent : tile.modelData === "battery" ? batteryComponent : tile.modelData === "timers" ? timersComponent : tile.modelData === "radios" ? radioPairComponent : ["proton", "wifi", "bluetooth"].includes(tile.modelData) ? connectivityComponent : tile.modelData === "terminal" ? terminalComponent : tile.modelData === "media" ? mediaComponent : tile.modelData === "note" ? noteComponent : tile.modelData === "ping" ? pingComponent : metricComponent
                         }
                         Component {
@@ -293,13 +334,13 @@ Item {
                         }
                         Component { id: pingComponent; PingCard { objectName: "pingCard"; ink: board.ink; flowInk: board.flowColor("ping"); targets: board.targets; readings: board.connected ? board.snapshot.pings : []; histories: board.connected ? board.pingHistories : ({}) } }
                         Component { id: mediaComponent; MediaCard { objectName: "mediaCard"; ink: board.ink; flowInk: board.flowColor("cava"); players: board.connected ? board.snapshot.media.players : []; selectedService: board.preferences.mediaService || ""; cavaEnabled: board.preferences.cavaEnabled !== false; cavaOpacity: (board.preferences.cavaOpacity === undefined ? 40 : board.preferences.cavaOpacity) / 100; onToggleRequested: service => board.toggleMedia(service) } }
-                        Component { id: radioPairComponent; RadioPair { ink: board.ink; wifiStatus: (board.snapshot.connectivity || {}).wifi || ({}); bluetoothStatus: (board.snapshot.connectivity || {}).bluetooth || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; openingSettings: board.openingSettings; onOpenRequested: target => board.openSettings(target) } }
+                        Component { id: radioPairComponent; RadioPair { preferences: board.preferences; ink: board.ink; wifiStatus: (board.snapshot.connectivity || {}).wifi || ({}); bluetoothStatus: (board.snapshot.connectivity || {}).bluetooth || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; openingSettings: board.openingSettings; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: connectivityComponent; ConnectivityCard { objectName: "connectivity_" + tile.modelData; ink: board.ink; kind: tile.modelData; status: (board.snapshot.connectivity || {})[tile.modelData] || ({}); stale: !board.connected || !!(board.snapshot.connectivity || {}).stale; opening: board.openingSettings === tile.modelData; onOpenRequested: target => board.openSettings(target) } }
                         Component { id: terminalComponent; TerminalCard { objectName: "terminalCard"; owner: terminalOwner; ink: board.ink; fontSize: board.preferences.terminalFontSize || 11; terminalHeight: board.preferences.terminalHeight || 230 } }
                         Component { id: powerTimersComponent; PowerTimersCard { objectName: "powerTimersCard"; powerControls: powerOwner; timerControls: timerOwner; preferences: board.preferences; ink: board.ink; status: board.snapshot.power || ({}); stale: !board.connected || !!(board.snapshot.power || {}).stale } }
                         Component { id: batteryComponent; BatteryCard { objectName: "batteryCard"; owner: powerOwner; ink: board.ink; status: board.snapshot.power || ({}); stale: !board.connected || !!(board.snapshot.power || {}).stale } }
                         Component { id: timersComponent; TimersCard { objectName: "timersCard"; owner: timerOwner; preferences: board.preferences; ink: board.ink } }
-                        Component { id: noteComponent; NoteCard { ink: board.ink; preferences: board.preferences } }
+                        Component { id: noteComponent; NoteBoard { ink: board.ink; preferences: board.preferences } }
                     }
                 }
             }

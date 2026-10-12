@@ -9,7 +9,7 @@ PASS   : qmltestrunner::Configuration::test_046_profileSelectionIsStagedAndValid
 PASS   : qmltestrunner::Configuration::test_04_pingDraft()
 PASS   : qmltestrunner::Configuration::test_05_configurationPreviews()
 PASS   : qmltestrunner::Configuration::cleanupTestCase()
-Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 1785ms
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 2022ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -34,7 +34,7 @@ PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
 PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
 PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
 PASS   : qmltestrunner::Dashboard::cleanupTestCase()
-Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 11337ms
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 12307ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -47,7 +47,7 @@ PASS   : qmltestrunner::PowerTimers::test_03_styleColorAndNarrowLayout()
 PASS   : qmltestrunner::PowerTimers::test_04_moduleHideReleasesOwnedResources()
 PASS   : qmltestrunner::PowerTimers::test_05_configureDraftsAndValidation()
 PASS   : qmltestrunner::PowerTimers::cleanupTestCase()
-Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 20031ms
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 9067ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -58,7 +58,7 @@ PASS   : qmltestrunner::SettingsFile::test_03_fileDeletionRecreatesCurrentSettin
 PASS   : qmltestrunner::SettingsFile::test_04_namedProfilesKeepSplitWidgetsIndependent()
 PASS   : qmltestrunner::SettingsFile::test_05_conflictMergeAndSameKeyFilePriority()
 PASS   : qmltestrunner::SettingsFile::cleanupTestCase()
-Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 8164ms
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7908ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -68,5 +68,25 @@ PASS   : qmltestrunner::NoteControls::test_02_longTextScrollAndExternalNoteEdit(
 PASS   : qmltestrunner::NoteControls::test_03_saveDialogAcceptanceExportsPendingInput()
 PASS   : qmltestrunner::NoteControls::test_04_cancelAndSaveErrorRetainText()
 PASS   : qmltestrunner::NoteControls::cleanupTestCase()
-Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1501ms
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1641ms
+********* Finished testing of qmltestrunner *********
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::Todos::initTestCase()
+PASS   : qmltestrunner::Todos::test_01_placement_and_toggle()
+PASS   : qmltestrunner::Todos::test_02_narrow_colors_and_visibility()
+PASS   : qmltestrunner::Todos::test_035_inlineAddEditDeleteAndCompletion()
+PASS   : qmltestrunner::Todos::test_03_config_edits_preserve_completion_and_duplicates()
+PASS   : qmltestrunner::Todos::test_04_render()
+PASS   : qmltestrunner::Todos::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 651ms
+********* Finished testing of qmltestrunner *********
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::RectangularResize::initTestCase()
+PASS   : qmltestrunner::RectangularResize::test_01_column_constraints()
+PASS   : qmltestrunner::RectangularResize::test_02_outer_rectangles_and_native_host_contract()
+PASS   : qmltestrunner::RectangularResize::test_03_drag_split_preserves_rectangular_bounds()
+PASS   : qmltestrunner::RectangularResize::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 107ms
 ********* Finished testing of qmltestrunner *********

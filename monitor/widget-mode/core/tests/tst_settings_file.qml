@@ -54,6 +54,8 @@ Item {
             preferences.noteText = "Saved note"
             preferences.countdownSeconds = 1775
             preferences.noteHeight = 146
+            preferences.todoPendingTitle = "Later"
+            preferences.todoItems = JSON.stringify({pending:[{id:"p1",text:"Saved task",done:true}],urgent:[]})
             attach()
             saved()
             compare(api("/config").settings.noteText, "Saved note")
@@ -67,6 +69,8 @@ Item {
             preferences.noteText = ""
             preferences.countdownSeconds = 300
             preferences.noteHeight = 85
+            preferences.todoPendingTitle = "pending"
+            preferences.todoItems = '{"pending":[],"urgent":[]}' 
             attach()
             saved()
             compare(preferences.columns, 3)
@@ -74,6 +78,8 @@ Item {
             compare(preferences.noteText, "Saved note")
             compare(preferences.countdownSeconds, 1775)
             compare(preferences.noteHeight, 146)
+            compare(preferences.todoPendingTitle, "Later")
+            compare(JSON.parse(preferences.todoItems).pending[0].done, true)
         }
         function test_02_manualEditAndInvalidDraftProtection() {
             attach(); saved()
