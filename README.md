@@ -3,8 +3,9 @@
 ## What is it?
 
 A local product workspace with one Git repository for everyday work. Each
-registered product folder is also published to its own public GitHub repository,
-with its product history preserved. GitHub Pages continues to deploy from this
+registered desktop/local product folder is also published to its own public
+GitHub repository, with its product history preserved. Website products remain
+managed by this hub. GitHub Pages continues to deploy from this
 hub. See [description.md](description.md) for architecture and maintenance details.
 
 ## How to use

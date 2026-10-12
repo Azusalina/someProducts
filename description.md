@@ -8,16 +8,12 @@ Git repository. A product's independent repository contains the contents of that
 folder at its repository root. No submodules, nested repositories, or additional
 working copies are introduced.
 
-The initial registry contains these public repositories under `Azusalina`:
+The registry contains only these desktop/local product repositories under
+`Azusalina`. The six deployed `d-*` website products stay managed by the hub
+and are excluded from independent publication:
 
 | Folder / repository | Historical folder names |
 | --- | --- |
-| d-ba | ba |
-| d-gitpop | gitpop |
-| d-ict | ict |
-| d-jupasanalysis | jupasanalysis |
-| d-la | la |
-| d-todos | todos |
 | fileX | — |
 | mediator | — |
 | monitor | — |
@@ -149,9 +145,8 @@ and preservation of existing hook settings. Fixtures create separate temporary
 bare hub and product repositories; they do not change live product branches.
 All 11 integration tests passed on 2026-10-12.
 
-Initial projection of the 2026-10-12 hub revision retained 3 commits each for
-`d-ba`, `d-gitpop`, `d-ict`, `d-jupasanalysis`, and `d-la`; 1 for `d-todos`;
-3 for `fileX` and `mediator`; 7 for `monitor`; 1 for `monitor-cli`; 4 for `toolkit`;
+Initial projection of the 2026-10-12 hub revision retained
+3 commits for `fileX` and `mediator`; 7 for `monitor`; 1 for `monitor-cli`; 4 for `toolkit`;
 and 5 for `track`. Root trees are checked against the corresponding hub subtrees
 before any publication. This reflects the committed source at migration time,
 including files already tracked in that source.
@@ -164,7 +159,9 @@ including files already tracked in that source.
 
 ## History
 
-2026-10-12: Added independent public product repositories while retaining one
+2026-10-12: Added independent public desktop/local product repositories while retaining one
 local Git workspace, the existing total-repository source history, and the
 existing GitHub Pages deployment arrangement. The chosen migration preserves
-each product's relevant history, including previous folder names.
+each product's relevant history. The publication registry is scoped to `mediator`,
+`fileX`, `monitor`, `monitor-cli`, `toolkit`, and `track`; deployed website products
+remain managed by the parent repository.
