@@ -218,7 +218,10 @@ def hook_target(root, config, remote, url, updates):
         # hub already received the same commit during a previous interrupted push.
         current = git(root, "symbolic-ref", "--quiet", "HEAD", check=False)
         if current.stdout.decode().strip() == branch:
-            return value(root, "rev-parse", branch)
+            local = value(root, "rev-parse", branch)
+            published = value(root, "ls-remote", "--heads", hub_url, branch)
+            if published and published.split()[0] == local:
+                return local
     return None
 
 

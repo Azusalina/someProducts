@@ -142,10 +142,12 @@ python3 -B -m unittest discover -s scripts/tests -v
 
 The suite exercises initial publication, rename history and identity preservation,
 product isolation, incremental and hub-only pushes, actual pushed revisions,
-other-branch behavior, dry-runs, divergent remotes, partial rejection and retry,
+other-branch behavior (including an already-current branch with unpublished
+master changes), dry-runs, divergent remotes, partial rejection and retry,
 an already-current hub, cache reconstruction, deletion/recreation, merge parents,
 and preservation of existing hook settings. Fixtures create separate temporary
 bare hub and product repositories; they do not change live product branches.
+All 11 integration tests passed on 2026-10-12.
 
 Initial projection of the 2026-10-12 hub revision retained 3 commits each for
 `d-ba`, `d-gitpop`, `d-ict`, `d-jupasanalysis`, and `d-la`; 1 for `d-todos`;

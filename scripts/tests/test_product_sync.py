@@ -191,6 +191,16 @@ class ProductSyncTests(unittest.TestCase):
         self.assertIsNone(self.oid("a"))
         self.assertIsNone(self.oid("hub"))
 
+    def test_up_to_date_other_branch_cannot_publish_unpushed_master(self):
+        self.push()
+        self.git("branch", "feature")
+        self.git("push", "origin", "feature")
+        a_tip = self.oid("a")
+        self.write("a/data.txt", "unpublished master")
+        self.commit("master ahead of hub")
+        self.git("push", "origin", "feature")
+        self.assertEqual(a_tip, self.oid("a"))
+
     def test_existing_hooks_preserved_and_uninstall_is_scoped(self):
         self.run_sync("uninstall")
         hook = self.root / ".git/hooks/pre-push"
