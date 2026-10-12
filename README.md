@@ -22,12 +22,14 @@ git commit -m "Describe the change"
 git push
 ```
 
-The installed pre-push hook synchronizes changed products to their registered
+The pre-push hook synchronizes changed products to their registered
 repositories before pushing `master` to `origin`. The root `.git` owns all
 objects, commits, and synchronization state; product folders have no nested
 `.git` directories. Only committed changes are published.
 
-After cloning this hub on another Linux machine, install the local hook once:
+All registered destination repositories must exist before enabling automatic
+synchronization. See the current [setup status](description.md#setup-status).
+After the destinations are ready, install the local hook once in each clone:
 
 ```sh
 python3 scripts/product-sync.py install

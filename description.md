@@ -25,6 +25,35 @@ Workspace infrastructure such as `pages`, `scripts`, `.github`, `AGENTS.md`,
 and the root documentation remains in the hub. Ignored folders `crawlers` and
 `yupi-econ`, generated `.pages-dist`, and tool metadata are excluded.
 
+## Setup status
+
+As of 2026-10-12 19:57 Asia/Taipei, `fileX`, `mediator`, `monitor`, and
+`monitor-cli` exist as public GitHub repositories, with their product histories
+published to `master`. The latest committed fileX update is included.
+
+`toolkit` and `track` are registered and their histories have been prepared in
+the root object database, but their GitHub repositories could not be created:
+GitHub returned a secondary content-creation rate limit, including after
+progressively longer retry intervals. No reset time was supplied for that
+secondary limit. Stop retrying immediately until the limit has subsided.
+
+The automatic pre-push hook is deliberately **not installed yet**, so the two
+missing destinations do not block existing hub pushes. Normal hub Git operations
+remain available. After GitHub permits repository creation, finish setup with:
+
+```sh
+gh repo create Azusalina/toolkit --public
+gh repo create Azusalina/track --public
+python3 scripts/product-sync.py sync
+python3 scripts/product-sync.py install
+git push
+```
+
+The six accidentally created website repositories (`d-ba`, `d-gitpop`, `d-ict`,
+`d-jupasanalysis`, `d-la`, and `d-todos`) were deleted after the user confirmed
+their removal. They are excluded from the publication registry and local export
+refs. Their original source folders, parent history, and deployment remain intact.
+
 ## History projection
 
 `scripts/product-sync.py` traverses the selected hub revision's ancestry in
@@ -156,6 +185,7 @@ including files already tracked in that source.
 - [Git hook interface and pre-push exit behavior](https://git-scm.com/docs/githooks)
 - [Git commit-tree plumbing](https://git-scm.com/docs/git-commit-tree)
 - [Git revision traversal](https://git-scm.com/docs/git-rev-list)
+- [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
 ## History
 
