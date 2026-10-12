@@ -44,6 +44,6 @@ Use **Apply** to save the current page, or **OK** to save and close. **Cancel** 
 
 In the standalone preview, right-click or press **Ctrl+,** to open a separate settings window with the same pages. Its Apply/OK actions save the staged pages; Cancel discards the uncommitted draft.
 
-If an existing widget still shows an older interface, run `python scripts/refresh-desktop.py` from `monitor/core` to back up its settings and reload the Plasma shell. Its desktop and panel briefly reload. `--reveal-media-terminal` additionally moves Media immediately after Terminal while keeping the other modules in order. Alternatively copy your note before removing/re-adding the widget. Installation preserves package ID `local.monitor.dashboard` and existing preferences.
+If an existing widget still shows an older interface, run `python scripts/refresh-desktop.py` from `monitor/widget-mode/core` to back up its settings and reload the Plasma shell. Its desktop and panel briefly reload. `--reveal-media-terminal` additionally moves Media immediately after Terminal while keeping the other modules in order. Alternatively copy your note before removing/re-adding the widget. Installation preserves package ID `local.monitor.dashboard` and existing preferences.
 
 Native configuration follows [KDE's configuration contract](https://develop.kde.org/docs/plasma/widget/configuration/). Evidence: `qml-tests.log`, `preview-configuration-test.log`, `preview-config-modules.png`, `preview-config-appearance.png`, `preview-colored.png`.

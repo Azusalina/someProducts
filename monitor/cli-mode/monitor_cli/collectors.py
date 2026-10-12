@@ -1,4 +1,4 @@
-"""Linux telemetry adapted from monitor/core; see ../LICENSE."""
+"""Linux telemetry adapted from monitor/widget-mode/core; see ../LICENSE."""
 from __future__ import annotations
 import json
 import math

@@ -8,7 +8,7 @@ A minimalist desktop dashboard with a fully transparent default background for A
 
 **Start now**
 
-From `monitor/core`, open the preview with `./scripts/preview.sh`. If the installed service is not running, start the telemetry bridge in one terminal and the preview in another:
+From `monitor/widget-mode/core`, open the preview with `./scripts/preview.sh`. If the installed service is not running, start the telemetry bridge in one terminal and the preview in another:
 
 ```bash
 ./scripts/setup.sh     # first source checkout: prepare Python dependencies
@@ -26,7 +26,7 @@ The preview is a transparent Wayland window using the same dashboard as the desk
 
 This installs the widget under `~/.local/share/plasma/plasmoids/local.monitor.dashboard`, copies the telemetry bridge to `~/.local/share/monitor-dashboard`, and enables `monitor-dashboard.service` in the user systemd session. XDG data/config directory overrides are respected. It uses no root privileges and does not edit your desktop placement.
 
-Right-click the desktop → **Enter Edit Mode** → **Add Widgets** → **someProducts-monitor**. Drag it into place and resize it with Plasma's native controls. Re-run the installer to update the widget and bridge. If an existing instance still shows the old interface, run `python scripts/refresh-desktop.py` from `monitor/core`. It privately backs up this widget's settings and restarts the Plasma desktop shell, preserving instance settings and placement. The desktop and panel briefly reload. `--reveal-media-terminal` also places Media immediately after Terminal in existing module orders. `--reveal-power-timers` enables Battery and Timers while retaining other module selections.
+Right-click the desktop → **Enter Edit Mode** → **Add Widgets** → **someProducts-monitor**. Drag it into place and resize it with Plasma's native controls. Re-run the installer to update the widget and bridge. If an existing instance still shows the old interface, run `python scripts/refresh-desktop.py` from `monitor/widget-mode/core`. It privately backs up this widget's settings and restarts the Plasma desktop shell, preserving instance settings and placement. The desktop and panel briefly reload. `--reveal-media-terminal` also places Media immediately after Terminal in existing module orders. `--reveal-power-timers` enables Battery and Timers while retaining other module selections.
 
 The generated `core/monitor.plasmoid` also works with Plasma's **Install Widget From Local File**. The telemetry bridge still needs to be started; the installer sets up both parts together.
 
@@ -93,6 +93,6 @@ journalctl --user -u monitor-dashboard.service -n 30
 
 Enable **PROTON**, **WIFI** and **BLUETOOTH** in **Settings → Modules**; Wi-Fi and Bluetooth show status without Settings buttons; manage them through Plasma's native tray/settings. Proton is a compact transparent button with animated hover/press feedback and a pulsing connected indicator. Hover for server and Kill Switch status; click to open its GUI. VPN and Kill Switch changes happen there. See [CONNECTIVITY.md](CONNECTIVITY.md). Click the **NOTE** text area to type a local note. Drag its bottom border up/down to change the note height (48–800 px); releasing it saves the height in the current profile. Longer notes scroll inside this area. Click **Save** in the note heading's top-right corner to choose a destination folder and filename using the Save dialog; the last destination is remembered. Confirm an existing filename in the dialog to overwrite it, or Cancel to leave the file untouched. Export writes the current note as UTF-8 plain text; editing the note still automatically saves its text to the profile separately. Hover Save to see the export result or destination. Use **Next GPU** when multiple GPUs are available.
 
-If the preview displays **Bridge offline**, run `./scripts/start.sh` from `monitor/core`.
+If the preview displays **Bridge offline**, run `./scripts/start.sh` from `monitor/widget-mode/core`.
 
 See [description.md](description.md) for background and technical details.

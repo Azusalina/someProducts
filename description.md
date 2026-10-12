@@ -17,7 +17,6 @@ and are excluded from independent publication:
 | fileX | — |
 | mediator | — |
 | monitor | — |
-| monitor-cli | — |
 | toolkit | — |
 | track | — |
 
@@ -27,9 +26,10 @@ and the root documentation remains in the hub. Ignored folders `crawlers` and
 
 ## Setup status
 
-As of 2026-10-12 19:57 Asia/Taipei, `fileX`, `mediator`, `monitor`, and
-`monitor-cli` exist as public GitHub repositories, with their product histories
-published to `master`. The latest committed fileX update is included.
+`fileX`, `mediator`, and `monitor` exist as public GitHub repositories, with their
+product histories published to `master`. Monitor contains both `widget-mode`
+and `cli-mode`; the previous `monitor-cli` destination is archived after merging
+its history into Monitor. See [Monitor's description](monitor/description.md).
 
 `toolkit` and `track` are registered and their histories have been prepared in
 the root object database, but their GitHub repositories could not be created:
@@ -172,7 +172,8 @@ master changes), dry-runs, divergent remotes, partial rejection and retry,
 an already-current hub, cache reconstruction, deletion/recreation, merge parents,
 and preservation of existing hook settings. Fixtures create separate temporary
 bare hub and product repositories; they do not change live product branches.
-All 11 integration tests passed on 2026-10-12.
+The integration suite also verifies merging two published product histories into
+one destination without rewriting its existing branch.
 
 Initial projection of the 2026-10-12 hub revision retained
 3 commits for `fileX` and `mediator`; 7 for `monitor`; 1 for `monitor-cli`; 4 for `toolkit`;
@@ -193,5 +194,11 @@ including files already tracked in that source.
 local Git workspace, the existing total-repository source history, and the
 existing GitHub Pages deployment arrangement. The chosen migration preserves
 each product's relevant history. The publication registry is scoped to `mediator`,
-`fileX`, `monitor`, `monitor-cli`, `toolkit`, and `track`; deployed website products
+`fileX`, `monitor`, `toolkit`, and `track`; deployed website products
 remain managed by the parent repository.
+
+2026-10-12: Consolidated `monitor-cli` into `monitor/cli-mode` and moved the widget
+into `monitor/widget-mode`. `historyImports` attaches the previous CLI tip when
+the combined subtree introduces `cli-mode`, retaining both original histories.
+The registry now contains five local products. When needed on a fresh clone,
+history imports are fetched from the combined destination before projection.

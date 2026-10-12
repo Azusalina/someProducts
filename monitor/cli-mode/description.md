@@ -22,7 +22,7 @@ Unknown keys, malformed TOML, duplicate modules, invalid types, out-of-range val
 
 ## Architecture and provenance
 
-The CPU/RAM/GPU/MPRIS and ICMP collectors are adapted from the working tree of `monitor/core/backend/monitor_service.py` in the workspace, with separate copies of its connectivity and playback-spectrum collectors. This deliberate separation makes the installed command independent of the source widget, its Python environment and HTTP bridge. Original MIT licensing is preserved in [LICENSE](LICENSE). Changes to upstream collectors must be reviewed and ported explicitly.
+The CPU/RAM/GPU/MPRIS and ICMP collectors are adapted from the working tree of `monitor/widget-mode/core/backend/monitor_service.py` in the workspace, with separate copies of its connectivity and playback-spectrum collectors. This deliberate separation makes the installed command independent of the source widget, its Python environment and HTTP bridge. Original MIT licensing is preserved in [LICENSE](LICENSE). Changes to upstream collectors must be reviewed and ported explicitly.
 
 `monitor_cli/config.py` owns validation. `collectors.py`, `connectivity.py` and `audio.py` own Linux sampling. `engine.py` starts bounded background workers and publishes snapshots under a lock. System, GPU, media, connectivity and each configured ping target run independently, so slow commands do not block input or other collectors. External commands have timeouts. Audio subprocesses are terminated and reaped on shutdown. Probe threads are daemon threads; outstanding bounded probes can finish after a configuration reload.
 

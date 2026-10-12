@@ -1,4 +1,4 @@
-"""Read-only connectivity adapted from monitor/core; see ../LICENSE."""
+"""Read-only connectivity adapted from monitor/widget-mode/core; see ../LICENSE."""
 import json
 import os
 from pathlib import Path

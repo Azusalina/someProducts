@@ -186,6 +186,30 @@ class ProductSyncTests(unittest.TestCase):
         self.assertEqual(self.oid("hub"), pushed)
         self.assertEqual(self.git("show", f"{self.oid('a')}:data.txt").stdout, b"original a")
 
+    def test_combination_preserves_both_histories_without_rewriting_destination(self):
+        self.push()
+        original_a, original_b = self.oid("a"), self.oid("b")
+        self.git("mv", "b", "a/cli-mode")
+        self.config["products"] = [self.config["products"][0]]
+        self.config["products"][0]["historyImports"] = [
+            {"path": "cli-mode", "commit": original_b}]
+        (self.root / "products.json").write_text(json.dumps(self.config))
+        self.commit("combine modes")
+        self.push()
+        combined = self.oid("a")
+        self.git("merge-base", "--is-ancestor", original_a, combined)
+        self.git("merge-base", "--is-ancestor", original_b, combined)
+        self.assertEqual(len(self.git("rev-list", "--parents", "-1", combined).stdout.split()), 3)
+        self.assertEqual(self.git("show", f"{combined}:cli-mode/data.txt").stdout, b"original b")
+        self.write("a/cli-mode/data.txt", "updated cli")
+        self.commit("update cli in combined product")
+        self.push()
+        final = self.oid("a")
+        self.assertEqual(len(self.git("rev-list", "--parents", "-1", final).stdout.split()), 2)
+        for cache in (self.root / ".git/product-sync").glob("*.json"):
+            cache.unlink()
+        self.assertEqual(json.loads(self.run_sync("plan").stdout)["products"][0]["commit"], final)
+
     def test_other_branch_does_not_publish_master_products(self):
         self.git("push", "origin", "HEAD:refs/heads/feature")
         self.assertIsNone(self.oid("a"))

@@ -6,8 +6,9 @@
   "products": [
     {"folder": "fileX"},
     {"folder": "mediator"},
-    {"folder": "monitor"},
-    {"folder": "monitor-cli"},
+    {"folder": "monitor", "historyImports": [
+      {"path": "cli-mode", "commit": "fa81bb9867073818e83e6d5801f200762abe8c6d"}
+    ]},
     {"folder": "toolkit"},
     {"folder": "track"}
   ]

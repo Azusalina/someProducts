@@ -65,5 +65,5 @@ for name in ('preview-transparent', 'preview-connectivity', 'preview-media-termi
     assert image.getpixel((image.width - 1, image.height - 1))[3] == 0, 'Background must be fully transparent'
 colored = Image.open('../docs/preview-colored.png')
 assert colored.getpixel((12, colored.height - 12)) == (16, 32, 48, 255), 'Configured background must preserve RGB and opacity'
-print('QML, backend and alpha-channel checks passed. Logs and previews: monitor/docs/')
+print('QML, backend and alpha-channel checks passed. Logs and previews: monitor/widget-mode/docs/')
 PY

@@ -48,6 +48,11 @@ def load_config(root):
         product.setdefault("url", f"https://github.com/{config['owner']}/{folder}.git")
         product.setdefault("branch", config["hubBranch"])
         git(root, "check-ref-format", f"refs/heads/{product['branch']}")
+        for imported in product.get("historyImports", []):
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", imported["path"]):
+                raise RuntimeError("Imported history path must be a single component")
+            if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", imported["commit"]):
+                raise RuntimeError("Imported history requires a full commit ID")
     return config
 
 
@@ -79,7 +84,14 @@ class Splitter:
 
     def split(self, product, target):
         paths = product["historyPaths"]
-        key = hashlib.sha256(json.dumps(paths).encode()).hexdigest()[:16]
+        imports = product.get("historyImports", [])
+        for imported in imports:
+            if git(self.root, "cat-file", "-e", imported["commit"] + "^{commit}",
+                   check=False).returncode:
+                # Once published, the combined destination contains both histories.
+                git(self.root, "fetch", "--no-tags", product["url"], product["branch"])
+                git(self.root, "cat-file", "-e", imported["commit"] + "^{commit}")
+        key = hashlib.sha256(json.dumps([paths, imports], sort_keys=True).encode()).hexdigest()[:16]
         cache_path = self.state / f"{product['folder']}-{key}.json"
         cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
         # Reconstruct deterministically after an object cleanup or interrupted run.
@@ -102,10 +114,15 @@ class Splitter:
                     fields[name] = content
             parents = list(dict.fromkeys(cache[parent] for parent in original_parents
                                          if cache[parent] is not None))
+            tree = self.tree(commit, paths)
+            for imported in imports:
+                exists = git(self.root, "cat-file", "-e", f"{tree}:{imported['path']}",
+                             check=False).returncode == 0
+                if exists and imported["commit"] not in parents:
+                    parents.append(imported["commit"])
             # Keep only independent product parents; unrelated hub merges disappear.
             parents = [p for p in parents if not any(p != q and self.ancestor(p, q)
                                                     for q in parents)]
-            tree = self.tree(commit, paths)
             if not parents and tree == self.empty:
                 cache[commit] = None
                 continue

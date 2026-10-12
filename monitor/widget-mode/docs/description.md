@@ -23,7 +23,7 @@ The dashboard defaults to no filled background or border, with no card surfaces,
 
 - User-installed widgets: `~/.local/share/plasma/plasmoids/` (this machine: `/home/a/.local/share/plasma/plasmoids/`).
 - System widgets: `/usr/share/plasma/plasmoids/`.
-- someProducts-monitor source: `monitor/core/plasmoid/`.
+- someProducts-monitor source: `monitor/widget-mode/core/plasmoid/`.
 - Installed someProducts-monitor: `~/.local/share/plasma/plasmoids/local.monitor.dashboard/`.
 
 The user is handling cleanup manually. To identify an unfamiliar user widget, read its `metadata.json` and `KPlugin.Name`. Removing a custom widget via Add Widgets → Uninstall is preferable to deleting folders while Plasma has it loaded. System widgets belong to installed packages.
