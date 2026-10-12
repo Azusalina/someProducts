@@ -14,6 +14,8 @@ on:
       - 'd-ict/**'
       - 'd-jupasanalysis/**'
       - 'd-la/**'
+      - 'todos/**'
+      - 'd-todos/**'
       - 'scripts/build-pages.mjs'
       - 'pages/**'
       - '.github/workflows/pages.yml'
@@ -35,7 +37,7 @@ jobs:
         with:
           node-version: '22'
       - uses: actions/configure-pages@v5
-      - name: Verify and assemble the five sites
+      - name: Verify and assemble the sites
         run: node scripts/build-pages.mjs
       - uses: actions/upload-pages-artifact@v4
         with:

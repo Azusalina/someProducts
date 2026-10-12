@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · HKDSE cutoffs</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f8fa;color:#182230;font:14px system-ui,-apple-system,sans-serif}
+main{max-width:1240px;margin:36px auto;padding:0 24px}nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}nav a{color:#475467;text-decoration:none;padding:8px 14px;border:1px solid #e4e7ec;border-radius:24px;background:white}nav a[aria-current]{background:#182230;color:white;border-color:#182230}
+h1{font-size:34px;margin:0 0 8px;letter-spacing:-1px}.subtitle,.note{color:#667085;line-height:1.65}.subtitle{margin:0 0 22px}.card{background:white;border:1px solid #e4e7ec;border-radius:16px;padding:22px;margin-bottom:20px}
+.toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.toolbar label{display:flex;gap:6px;align-items:center;font-size:13px}input{accent-color:#365f9b}button{font:inherit;cursor:pointer}.grade-button{border:1px solid #e4e7ec;border-radius:20px;padding:7px 12px;background:white}.grade-button[aria-pressed=false]{opacity:.35}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}.hint{font-size:12px;color:#667085;margin:16px 0 0;line-height:1.8}
+.alpha-controls{margin-top:14px}.alpha-controls input{font:inherit;width:86px;border:1px solid #d0d5dd;border-radius:6px;padding:6px 8px}.alpha-controls input[aria-invalid=true]{border-color:#a23846}.preset{border:1px solid #e4e7ec;border-radius:6px;background:white;padding:6px 9px;font-size:12px}.alpha-error{color:#a23846;font-size:12px}.interval-summary{font-size:12px;color:#475467;margin:10px 0 0}
+svg{display:block;width:100%;height:auto;overflow:visible}svg text{font-family:system-ui,sans-serif}svg .node:focus{outline:none;stroke:#182230;stroke-width:2}.paper-key{display:flex;flex-wrap:wrap;gap:10px 24px;color:#667085;font-size:12px;margin-top:12px}.paper-key span::before{content:'';display:inline-block;width:26px;border-top:2px dashed #98a2b3;vertical-align:middle;margin-right:8px}
+svg .node{transition:filter 160ms ease}svg .node:is(:hover,:focus,.is-active){filter:brightness(1.14) drop-shadow(0 0 2px currentColor)}
+.table-wrap{overflow:auto}h2{font-size:19px;margin:0 0 10px}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}th{text-align:left;color:#667085;font-size:12px;font-weight:600;border-bottom:1px solid #e4e7ec;padding:13px 14px}td{border-bottom:1px solid #f0f2f5;padding:13px 14px;font-variant-numeric:tabular-nums}td small{display:block;font-size:11px;color:#667085;margin-top:4px}.estimate{font-weight:650}.note{font-size:12px;margin:14px 0 0}.tip{position:fixed;pointer-events:none;background:#182230;color:white;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.8;box-shadow:0 8px 24px #10182825;z-index:5;max-width:330px}.tip strong{font-size:13px}.tip[hidden]{display:none}
+@media(max-width:600px){main{padding:0 12px;margin:22px auto}.card{padding:14px}h1{font-size:28px}.toolbar{gap:7px}.grade-button{padding:5px 9px}.controls{width:100%;margin-top:7px}.hint{font-size:11px}}
+</style>
+</head>
+<body>
+<main>
+<nav aria-label="Subject charts"><a href="BAFS.html">BAFS</a><a href="English.html">English</a><a href="M1.html" aria-current="page">M1</a><a href="Chinese.html">Chinese</a><a href="M0.html">M0</a><a href="Econ.html">Econ</a><a href="ICT.html">ICT</a></nav>
+<h1>M1</h1>
+<p class="subtitle" id="subtitle"></p>
+<section class="card" aria-label="Interactive cutoff chart">
+<div class="toolbar"><div class="toolbar" id="grades" aria-label="Toggle grades"></div><div class="toolbar controls"><label><input type="checkbox" id="confidence" checked> <span id="confidence-label"></span></label><label><input type="checkbox" id="prediction" checked> <span id="prediction-label"></span></label></div></div>
+<div class="toolbar alpha-controls"><label for="alpha">α (%) <input id="alpha" type="number" min="0.001" max="99.999" step="any" aria-describedby="interval-summary alpha-error"></label><span>Quick confidence levels:</span><button type="button" class="preset" data-alpha="10">90%</button><button type="button" class="preset" data-alpha="5">95%</button><button type="button" class="preset" data-alpha="1">99%</button><span class="alpha-error" id="alpha-error" role="status"></span></div>
+<p class="interval-summary" id="interval-summary"></p>
+<p class="hint">Hover, tap, or focus a node to see its year and percentage. Click a grade to hide it.<br>Solid lines: observed overall cutoffs · Lighter dashed lines: papers · Diamonds: forecast · Thick bars: confidence interval · Thin bars: prediction range</p>
+<svg id="chart" viewBox="0 0 1120 550" role="img" aria-label="M1 historical cutoffs and forecast"></svg>
+<div class="paper-key" id="papers"></div>
+</section>
+<section class="card">
+<h2 id="forecast-heading"></h2>
+<div class="table-wrap"><table><thead><tr><th>Grade / series</th><th>Observed range</th><th>Estimate</th><th id="ci-heading"></th><th id="pi-heading"></th><th>t(1 − α/2)</th><th>Years fitted</th></tr></thead><tbody id="forecast-table"></tbody></table></div>
+<p class="note" id="model-note"></p>
+<p class="note">The confidence interval describes the estimated mean cutoff. The prediction interval is the wider range for a future year's cutoff. These are linear extrapolations, rather than published future cutoffs. Intervals assume a stable linear trend and independent, normally distributed residuals with constant variance. Bounds are not clipped to 0–100%.</p>
+</section>
+</main>
+<div class="tip" id="tooltip" role="status" hidden></div>
+<script>
+"use strict";
+// Two-sided Student-t critical values for the OLS residual degrees of freedom.
+// The R fit supplies the standard errors; only alpha-dependent bounds change here.
+function logGamma(z) {
+  const coefficients = [676.5203681218851, -1259.1392167224028,
+    771.3234287776531, -176.6150291621406, 12.507343278686905,
+    -0.13857109526572012, 9.984369578019572e-6, 1.5056327351493116e-7];
+  if (z < 0.5) return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+  z -= 1;
+  let sum = 0.9999999999998099;
+  for (let i = 0; i < coefficients.length; i++) sum += coefficients[i] / (z + i + 1);
+  const t = z + coefficients.length - 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(sum);
+}
+
+function betaContinuedFraction(x, a, b) {
+  const floor = value => Math.abs(value) < 1e-300 ? 1e-300 : value;
+  let c = 1, d = 1 / floor(1 - (a + b) * x / (a + 1)), result = d;
+  for (let m = 1; m <= 300; m++) {
+    const m2 = 2 * m;
+    let term = m * (b - m) * x / ((a - 1 + m2) * (a + m2));
+    d = 1 / floor(1 + term * d); c = floor(1 + term / c); result *= d * c;
+    term = -(a + m) * (a + b + m) * x / ((a + m2) * (a + 1 + m2));
+    d = 1 / floor(1 + term * d); c = floor(1 + term / c);
+    const delta = d * c; result *= delta;
+    if (Math.abs(delta - 1) < 2e-14) return result;
+  }
+  throw new Error('Student-t calculation did not converge.');
+}
+
+function regularizedBeta(x, a, b) {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const factor = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log1p(-x));
+  return x < (a + 1) / (a + b + 2)
+    ? factor * betaContinuedFraction(x, a, b) / a
+    : 1 - factor * betaContinuedFraction(1 - x, b, a) / b;
+}
+
+function studentTCritical(alphaPercent, degreesFreedom) {
+  if (!(alphaPercent > 0 && alphaPercent < 100) || !(degreesFreedom >= 1)) {
+    throw new RangeError('Alpha must be between 0 and 100%, with positive degrees of freedom.');
+  }
+  const targetTail = alphaPercent / 200;
+  const tail = t => 0.5 * regularizedBeta(degreesFreedom / (degreesFreedom + t * t), degreesFreedom / 2, 0.5);
+  let lower = 0, upper = 1;
+  while (tail(upper) > targetTail) upper *= 2;
+  for (let i = 0; i < 75; i++) {
+    const middle = (lower + upper) / 2;
+    if (tail(middle) > targetTail) lower = middle; else upper = middle;
+  }
+  return (lower + upper) / 2;
+}
+
+const DATA = {"subject": "M1", "year": 2027, "level": 0.95, "grades": ["5**", "5*", "5", "4", "3", "2"], "colors": {"5**": "#A23846", "5*": "#A66512", "5": "#55733A", "4": "#167F83", "3": "#365F9B", "2": "#79539B"}, "series": ["Overall"], "labels": {"Overall": "Overall"}, "observations": [{"year": 2026, "grade": "5**", "series": "Overall", "value": 91.0, "weight": null}, {"year": 2026, "grade": "5*", "series": "Overall", "value": 80.0, "weight": null}, {"year": 2026, "grade": "5", "series": "Overall", "value": 69.0, "weight": null}, {"year": 2026, "grade": "4", "series": "Overall", "value": 55.0, "weight": null}, {"year": 2026, "grade": "3", "series": "Overall", "value": 48.0, "weight": null}, {"year": 2026, "grade": "2", "series": "Overall", "value": 39.0, "weight": null}, {"year": 2025, "grade": "5**", "series": "Overall", "value": 86.0, "weight": null}, {"year": 2025, "grade": "5*", "series": "Overall", "value": 74.0, "weight": null}, {"year": 2025, "grade": "5", "series": "Overall", "value": 68.0, "weight": null}, {"year": 2025, "grade": "4", "series": "Overall", "value": 57.0, "weight": null}, {"year": 2025, "grade": "3", "series": "Overall", "value": 50.0, "weight": null}, {"year": 2025, "grade": "2", "series": "Overall", "value": 40.0, "weight": null}, {"year": 2024, "grade": "5**", "series": "Overall", "value": 92.0, "weight": null}, {"year": 2024, "grade": "5*", "series": "Overall", "value": 76.0, "weight": null}, {"year": 2024, "grade": "5", "series": "Overall", "value": 72.0, "weight": null}, {"year": 2024, "grade": "4", "series": "Overall", "value": 61.0, "weight": null}, {"year": 2024, "grade": "3", "series": "Overall", "value": 52.0, "weight": null}, {"year": 2024, "grade": "2", "series": "Overall", "value": 42.0, "weight": null}, {"year": 2023, "grade": "5**", "series": "Overall", "value": 91.0, "weight": null}, {"year": 2023, "grade": "5*", "series": "Overall", "value": 76.0, "weight": null}, {"year": 2023, "grade": "5", "series": "Overall", "value": 65.0, "weight": null}, {"year": 2023, "grade": "4", "series": "Overall", "value": 57.0, "weight": null}, {"year": 2023, "grade": "3", "series": "Overall", "value": 47.0, "weight": null}, {"year": 2023, "grade": "2", "series": "Overall", "value": 42.0, "weight": null}, {"year": 2022, "grade": "5**", "series": "Overall", "value": 85.0, "weight": null}, {"year": 2022, "grade": "5*", "series": "Overall", "value": 80.0, "weight": null}, {"year": 2022, "grade": "5", "series": "Overall", "value": 65.0, "weight": null}, {"year": 2022, "grade": "4", "series": "Overall", "value": 51.0, "weight": null}, {"year": 2022, "grade": "3", "series": "Overall", "value": 42.0, "weight": null}, {"year": 2022, "grade": "2", "series": "Overall", "value": 36.0, "weight": null}, {"year": 2021, "grade": "5**", "series": "Overall", "value": 94.0, "weight": null}, {"year": 2021, "grade": "5*", "series": "Overall", "value": 85.0, "weight": null}, {"year": 2021, "grade": "5", "series": "Overall", "value": 74.0, "weight": null}, {"year": 2021, "grade": "4", "series": "Overall", "value": 62.0, "weight": null}, {"year": 2021, "grade": "3", "series": "Overall", "value": 54.0, "weight": null}, {"year": 2021, "grade": "2", "series": "Overall", "value": 44.0, "weight": null}, {"year": 2020, "grade": "5**", "series": "Overall", "value": 87.0, "weight": null}, {"year": 2020, "grade": "5*", "series": "Overall", "value": 83.0, "weight": null}, {"year": 2020, "grade": "5", "series": "Overall", "value": 79.0, "weight": null}, {"year": 2020, "grade": "4", "series": "Overall", "value": 60.0, "weight": null}, {"year": 2020, "grade": "3", "series": "Overall", "value": 49.0, "weight": null}, {"year": 2020, "grade": "2", "series": "Overall", "value": 29.0, "weight": null}, {"year": 2019, "grade": "5**", "series": "Overall", "value": 93.0, "weight": null}, {"year": 2019, "grade": "5*", "series": "Overall", "value": 91.0, "weight": null}, {"year": 2019, "grade": "5", "series": "Overall", "value": 80.0, "weight": null}, {"year": 2019, "grade": "4", "series": "Overall", "value": 73.0, "weight": null}, {"year": 2019, "grade": "3", "series": "Overall", "value": 58.0, "weight": null}, {"year": 2019, "grade": "2", "series": "Overall", "value": 47.0, "weight": null}, {"year": 2018, "grade": "5**", "series": "Overall", "value": 93.0, "weight": null}, {"year": 2018, "grade": "5*", "series": "Overall", "value": 86.0, "weight": null}, {"year": 2018, "grade": "5", "series": "Overall", "value": 77.0, "weight": null}, {"year": 2018, "grade": "4", "series": "Overall", "value": 68.0, "weight": null}, {"year": 2018, "grade": "3", "series": "Overall", "value": 56.0, "weight": null}, {"year": 2018, "grade": "2", "series": "Overall", "value": 45.0, "weight": null}, {"year": 2017, "grade": "5**", "series": "Overall", "value": 91.0, "weight": null}, {"year": 2017, "grade": "5*", "series": "Overall", "value": 79.0, "weight": null}, {"year": 2017, "grade": "5", "series": "Overall", "value": 74.0, "weight": null}, {"year": 2017, "grade": "4", "series": "Overall", "value": 64.0, "weight": null}, {"year": 2017, "grade": "3", "series": "Overall", "value": 52.0, "weight": null}, {"year": 2017, "grade": "2", "series": "Overall", "value": 42.0, "weight": null}, {"year": 2016, "grade": "5**", "series": "Overall", "value": 88.0, "weight": null}, {"year": 2016, "grade": "5*", "series": "Overall", "value": 84.0, "weight": null}, {"year": 2016, "grade": "5", "series": "Overall", "value": 77.0, "weight": null}, {"year": 2016, "grade": "4", "series": "Overall", "value": 67.0, "weight": null}, {"year": 2016, "grade": "3", "series": "Overall", "value": 46.0, "weight": null}, {"year": 2016, "grade": "2", "series": "Overall", "value": 37.0, "weight": null}, {"year": 2015, "grade": "5**", "series": "Overall", "value": 93.0, "weight": null}, {"year": 2015, "grade": "5*", "series": "Overall", "value": 90.0, "weight": null}, {"year": 2015, "grade": "5", "series": "Overall", "value": 77.0, "weight": null}, {"year": 2015, "grade": "4", "series": "Overall", "value": 67.0, "weight": null}, {"year": 2015, "grade": "3", "series": "Overall", "value": 47.0, "weight": null}, {"year": 2015, "grade": "2", "series": "Overall", "value": 38.0, "weight": null}, {"year": 2014, "grade": "5**", "series": "Overall", "value": 84.0, "weight": null}, {"year": 2014, "grade": "5*", "series": "Overall", "value": 75.0, "weight": null}, {"year": 2014, "grade": "5", "series": "Overall", "value": 60.0, "weight": null}, {"year": 2014, "grade": "4", "series": "Overall", "value": 57.0, "weight": null}, {"year": 2014, "grade": "3", "series": "Overall", "value": 43.0, "weight": null}, {"year": 2014, "grade": "2", "series": "Overall", "value": 35.0, "weight": null}, {"year": 2013, "grade": "5**", "series": "Overall", "value": 92.0, "weight": null}, {"year": 2013, "grade": "5*", "series": "Overall", "value": 79.0, "weight": null}, {"year": 2013, "grade": "5", "series": "Overall", "value": 71.0, "weight": null}, {"year": 2013, "grade": "4", "series": "Overall", "value": 55.0, "weight": null}, {"year": 2013, "grade": "3", "series": "Overall", "value": 38.0, "weight": null}, {"year": 2013, "grade": "2", "series": "Overall", "value": 31.0, "weight": null}, {"year": 2012, "grade": "5**", "series": "Overall", "value": 91.0, "weight": null}, {"year": 2012, "grade": "5*", "series": "Overall", "value": 87.0, "weight": null}, {"year": 2012, "grade": "5", "series": "Overall", "value": 73.0, "weight": null}, {"year": 2012, "grade": "4", "series": "Overall", "value": 57.0, "weight": null}, {"year": 2012, "grade": "3", "series": "Overall", "value": 42.0, "weight": null}, {"year": 2012, "grade": "2", "series": "Overall", "value": 34.0, "weight": null}], "forecasts": [{"Subject": "M1", "Grade": "2", "Series": "Overall", "Year": 2027.0, "Estimate": 42.3047619047624, "ConfidenceLow": 36.5253040696453, "ConfidenceHigh": 48.0842197398794, "PredictionLow": 30.1994577220534, "PredictionHigh": 54.4100660874713, "HistoricalLow": 29.0, "HistoricalHigh": 47.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 39.0, "AnnualChange": 0.446428571428604, "ConfidenceLevel": 0.95, "MeanStandardError": 2.67521833268023, "ResidualSD": 4.92348970911391, "PredictionStandardError": 5.60335114402613, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}, {"Subject": "M1", "Grade": "3", "Series": "Overall", "Year": 2027.0, "Estimate": 52.380952380953, "ConfidenceLow": 46.1620297842285, "ConfidenceHigh": 58.5998749776774, "PredictionLow": 39.3551717852982, "PredictionHigh": 65.4067329766077, "HistoricalLow": 38.0, "HistoricalHigh": 58.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 48.0, "AnnualChange": 0.514285714285754, "ConfidenceLevel": 0.95, "MeanStandardError": 2.87863952206509, "ResidualSD": 5.29786742637062, "PredictionStandardError": 6.02942491166396, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}, {"Subject": "M1", "Grade": "4", "Series": "Overall", "Year": 2027.0, "Estimate": 58.3904761904762, "ConfidenceLow": 51.2064026247925, "ConfidenceHigh": 65.5745497561599, "PredictionLow": 43.3431485233129, "PredictionHigh": 73.4378038576395, "HistoricalLow": 51.0, "HistoricalHigh": 73.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 55.0, "AnnualChange": -0.292857142857134, "ConfidenceLevel": 0.95, "MeanStandardError": 3.32539242512724, "ResidualSD": 6.12007445668038, "PredictionStandardError": 6.96516662660738, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}, {"Subject": "M1", "Grade": "5", "Series": "Overall", "Year": 2027.0, "Estimate": 70.1238095238093, "ConfidenceLow": 63.2296010016497, "ConfidenceHigh": 77.0180180459689, "PredictionLow": 55.6836157131251, "PredictionHigh": 84.5640033344935, "HistoricalLow": 60.0, "HistoricalHigh": 80.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 69.0, "AnnualChange": -0.242857142857145, "ConfidenceLevel": 0.95, "MeanStandardError": 3.19121854574933, "ResidualSD": 5.87313995182926, "PredictionStandardError": 6.68413410252274, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}, {"Subject": "M1", "Grade": "5*", "Series": "Overall", "Year": 2027.0, "Estimate": 77.8666666666661, "ConfidenceLow": 71.809356888965, "ConfidenceHigh": 83.9239764443672, "PredictionLow": 65.1793905449458, "PredictionHigh": 90.5539427883864, "HistoricalLow": 74.0, "HistoricalHigh": 91.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 80.0, "AnnualChange": -0.475000000000029, "ConfidenceLevel": 0.95, "MeanStandardError": 2.80383154031629, "ResidualSD": 5.16019031650616, "PredictionStandardError": 5.87273662009768, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}, {"Subject": "M1", "Grade": "5**", "Series": "Overall", "Year": 2027.0, "Estimate": 89.695238095238, "ConfidenceLow": 85.7839452229584, "ConfidenceHigh": 93.6065309675176, "PredictionLow": 81.5028796911477, "PredictionHigh": 97.8875964993283, "HistoricalLow": 84.0, "HistoricalHigh": 94.0, "Observations": 15.0, "TrainingFrom": 2012.0, "TrainingTo": 2026.0, "LastYear": 2026.0, "LastPercentage": 91.0, "AnnualChange": -0.0464285714285811, "ConfidenceLevel": 0.95, "MeanStandardError": 1.81047473567944, "ResidualSD": 3.33200981050317, "PredictionStandardError": 3.792111304514, "DegreesFreedom": 13.0, "CriticalValue": 2.16036865646279}]};
+const svg=document.getElementById('chart'), tip=document.getElementById('tooltip');
+const hidden=new Set(), confidence=document.getElementById('confidence'), prediction=document.getElementById('prediction');
+const pct=v=>`${Number(v).toFixed(1).replace(/\.0$/, '')}%`, range=(lo,hi)=>`${pct(lo)} – ${pct(hi)}`;
+const observed=DATA.observations, forecasts=DATA.forecasts.map(f=>({...f}));
+const alphaInput=document.getElementById('alpha');
+alphaInput.value=Number(((1-DATA.level)*100).toFixed(10));
+let level=pct(DATA.level*100), activeNode=null;
+const minYear=Math.min(...observed.map(d=>d.year)), maxYear=Math.max(...observed.map(d=>d.year));
+document.getElementById('subtitle').textContent=`HKDSE grade cutoffs · ${minYear}–${maxYear} observations · ${DATA.year} estimates`;
+document.getElementById('forecast-heading').textContent=`${DATA.year} estimates and ranges`;
+document.getElementById('model-note').textContent=`Separate ordinary least-squares fits for each grade and series, using the years shown in the table. Observed ranges refer to those fit years. No paper data or weightings are inferred. R supplies the regression and standard errors; changing α recomputes both intervals here. PNG/SVG and forecast_${DATA.year}.csv retain their initial ${pct(DATA.level*100)} level.`;
+
+function updateIntervals(){
+  const alpha=alphaInput.valueAsNumber;
+  if(!alphaInput.checkValidity()||!Number.isFinite(alpha)){
+    alphaInput.setAttribute('aria-invalid','true');document.getElementById('alpha-error').textContent='Enter α from 0.001 to 99.999%.';return;
+  }
+  alphaInput.removeAttribute('aria-invalid');document.getElementById('alpha-error').textContent='';
+  level=`${Number((100-alpha).toFixed(3))}%`;
+  const criticalValues=new Map();
+  for(const f of forecasts){
+    if(!criticalValues.has(f.DegreesFreedom))criticalValues.set(f.DegreesFreedom,studentTCritical(alpha,f.DegreesFreedom));
+    f.CriticalValue=criticalValues.get(f.DegreesFreedom);
+    const ci=f.CriticalValue*f.MeanStandardError,pi=f.CriticalValue*f.PredictionStandardError;
+    f.ConfidenceLow=f.Estimate-ci;f.ConfidenceHigh=f.Estimate+ci;
+    f.PredictionLow=f.Estimate-pi;f.PredictionHigh=f.Estimate+pi;
+  }
+  document.getElementById('confidence-label').textContent=`${level} confidence intervals`;
+  document.getElementById('prediction-label').textContent=`${level} prediction ranges`;
+  document.getElementById('ci-heading').textContent=`${level} CI (mean)`;
+  document.getElementById('pi-heading').textContent=`${level} prediction range`;
+  document.getElementById('interval-summary').textContent=`α = ${alpha}% → confidence level = ${level}. CI = estimate ± t × SE(mean); prediction range = estimate ± t × SE(future). t uses df = n − 2, shown below.`;
+  render();
+}
+for(const grade of DATA.grades){
+  if(!DATA.colors[grade])continue;
+  const button=document.createElement('button');button.type='button';button.className='grade-button';button.setAttribute('aria-pressed','true');
+  const dot=document.createElement('span');dot.className='dot';dot.style.background=DATA.colors[grade];button.append(dot,document.createTextNode(grade));
+  button.addEventListener('click',()=>{hidden.has(grade)?hidden.delete(grade):hidden.add(grade);button.setAttribute('aria-pressed',String(!hidden.has(grade)));render()});
+  document.getElementById('grades').append(button);
+}
+for(const series of DATA.series.filter(s=>s!=='Overall')){const span=document.createElement('span');span.textContent=DATA.labels[series];document.getElementById('papers').append(span)}
+if(DATA.series.length===1&&DATA.series[0]==='Overall')document.getElementById('papers').textContent='Overall cutoffs only; the source contains no paper trends or weightings.';
+
+function element(name,attrs={},parent=svg,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,String(v));if(text!==undefined)e.textContent=text;parent.append(e);return e}
+function tooltip(node,lines){
+  node.classList.add('node');node.setAttribute('tabindex','0');node.setAttribute('aria-label',lines.join('. '));
+  node.style.color=node.getAttribute('fill');
+  function show(event){if(activeNode)activeNode.classList.remove('is-active');activeNode=node;node.classList.add('is-active');tip.replaceChildren();lines.forEach((line,i)=>{const item=document.createElement(i===0?'strong':'div');item.textContent=line;tip.append(item)});tip.hidden=false;const bounds=node.getBoundingClientRect();const clientX=event.clientX||bounds.right,clientY=event.clientY||bounds.top;const box=tip.getBoundingClientRect();tip.style.left=`${Math.max(8,Math.min(clientX+14,innerWidth-box.width-8))}px`;tip.style.top=`${Math.max(8,Math.min(clientY+14,innerHeight-box.height-8))}px`}
+  node.addEventListener('pointerenter',show);node.addEventListener('pointermove',show);node.addEventListener('focus',show);node.addEventListener('click',show);node.addEventListener('pointerleave',hideTooltip);node.addEventListener('blur',hideTooltip);
+}
+function hideTooltip(){tip.hidden=true;if(activeNode)activeNode.classList.remove('is-active');activeNode=null}
+document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTooltip()});
+document.addEventListener('click',event=>{if(!event.target.closest('.node'))hideTooltip()});
+document.addEventListener('scroll',hideTooltip);
+
+function render(){
+  hideTooltip();svg.replaceChildren();
+  const L=65,R=1050,T=35,B=495;
+  const low=Math.min(0,...forecasts.map(f=>Math.floor(f.PredictionLow/10)*10));
+  const high=Math.max(100,...forecasts.map(f=>Math.ceil(f.PredictionHigh/10)*10));
+  const x=year=>L+(year-minYear)/(DATA.year-minYear+0.9)*(R-L);
+  const y=value=>B-(value-low)/(high-low)*(B-T);
+  const title=element('title',{},svg,`${DATA.subject}: hoverable historical cutoffs and ${DATA.year} forecast intervals`);
+  const shadeX=x((maxYear+DATA.year)/2);
+  element('rect',{x:shadeX,y:T,width:R-shadeX,height:B-T,fill:'#f7f8fa'});
+  element('text',{x:(shadeX+R)/2,y:19,'text-anchor':'middle',fill:'#667085','font-size':12},svg,'FORECAST');
+  for(let v=low;v<=high;v+=20){element('line',{x1:L,y1:y(v),x2:R,y2:y(v),stroke:'#eaecf0'});element('text',{x:L-12,y:y(v)+4,'text-anchor':'end',fill:'#667085','font-size':12},svg,`${v}%`)}
+  const years=new Set([maxYear,DATA.year]);for(let v=minYear;v<=maxYear;v+=2)years.add(v);
+  [...years].sort().forEach(year=>element('text',{x:x(year),y:B+28,'text-anchor':'middle',fill:'#667085','font-size':12},svg,String(year)));
+  element('line',{x1:shadeX,y1:T,x2:shadeX,y2:B,stroke:'#d0d5dd','stroke-dasharray':'3 5'});
+  // Paper histories are drawn first so overall lines remain visually dominant.
+  const seriesOrder=[...DATA.series.filter(s=>s!=='Overall'),...DATA.series.filter(s=>s==='Overall')];
+  for(const series of seriesOrder){for(const grade of DATA.grades){
+    if(hidden.has(grade))continue;
+    const rows=observed.filter(d=>d.grade===grade&&d.series===series).sort((a,b)=>a.year-b.year);
+    const color=DATA.colors[grade],paper=series!=='Overall',opacity=paper ? 0.42 : 1;
+    let path='',lastYear=null;
+    for(const d of rows){if(d.value===null){lastYear=null;continue}path+=`${lastYear!==null&&d.year===lastYear+1?'L':'M'}${x(d.year)},${y(d.value)} `;lastYear=d.year}
+    element('path',{d:path,fill:'none',stroke:color,'stroke-width':paper?1.7:2.8,opacity,'stroke-dasharray':paper?['5 4','2 4','9 4'][DATA.series.indexOf(series)%3]:'none'});
+    for(const d of rows){if(d.value===null)continue;const node=element('circle',{cx:x(d.year),cy:y(d.value),r:paper?4:4.5,fill:color,opacity,cursor:'pointer','data-year':d.year,'data-grade':grade,'data-series':series});tooltip(node,[`${DATA.subject} · ${grade} · ${series}`,`Year: ${d.year}`,`Cutoff: ${pct(d.value)}`,...(paper?[`Paper weighting: ${d.weight===null?'not supplied':pct(d.weight)}`]:[])])}
+  }}
+  // Small horizontal offsets separate overlapping interval bars without changing their year.
+  for(const f of forecasts){
+    if(hidden.has(f.Grade))continue;
+    const grade=f.Grade,color=DATA.colors[grade],paper=f.Series!=='Overall';
+    const fx=x(DATA.year)+(DATA.grades.indexOf(grade)-(DATA.grades.length-1)/2)*3;
+    const g=element('g',{opacity:paper ? 0.42 : 1,'data-forecast-grade':grade,'data-series':f.Series});
+    element('line',{x1:x(f.LastYear),y1:y(f.LastPercentage),x2:fx,y2:y(f.Estimate),stroke:color,'stroke-width':1.8,'stroke-dasharray':'4 4'},g);
+    function bar(lo,hi,width,cap,type){element('line',{x1:fx,y1:y(lo),x2:fx,y2:y(hi),stroke:color,'stroke-width':width,'data-interval':type},g);for(const v of [lo,hi])element('line',{x1:fx-cap,y1:y(v),x2:fx+cap,y2:y(v),stroke:color,'stroke-width':width},g)}
+    if(prediction.checked)bar(f.PredictionLow,f.PredictionHigh,1.2,7,'prediction');
+    if(confidence.checked)bar(f.ConfidenceLow,f.ConfidenceHigh,3.5,4,'confidence');
+    const fy=y(f.Estimate),node=element('path',{d:`M${fx},${fy-6}l6,6l-6,6l-6,-6Z`,fill:color,stroke:'white','stroke-width':1,cursor:'pointer','data-year':DATA.year,'data-grade':grade,'data-series':f.Series},g);
+    tooltip(node,[`${DATA.subject} · ${grade} · ${f.Series}`,`${DATA.year} estimate: ${pct(f.Estimate)}`,`${level} CI (mean): ${range(f.ConfidenceLow,f.ConfidenceHigh)}`,`${level} prediction range: ${range(f.PredictionLow,f.PredictionHigh)}`,`Observed range: ${range(f.HistoricalLow,f.HistoricalHigh)}`,`Fit: ${f.TrainingFrom}–${f.TrainingTo} (${f.Observations} years)`]);
+  }
+  const body=document.getElementById('forecast-table');body.replaceChildren();
+  for(const grade of DATA.grades){for(const f of forecasts.filter(f=>f.Grade===grade)){
+    if(hidden.has(grade))continue;const row=document.createElement('tr');
+    const values=[`${grade} · ${DATA.labels[f.Series]}`,range(f.HistoricalLow,f.HistoricalHigh),pct(f.Estimate),range(f.ConfidenceLow,f.ConfidenceHigh),range(f.PredictionLow,f.PredictionHigh),f.CriticalValue.toPrecision(4),`${f.TrainingFrom}–${f.TrainingTo} (n=${f.Observations}, df=${f.DegreesFreedom})`];
+    values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=value;if(i===0)td.style.color=DATA.colors[grade];if(i===2)td.className='estimate';row.append(td)});body.append(row);
+  }}
+}
+confidence.addEventListener('change',render);prediction.addEventListener('change',render);
+alphaInput.addEventListener('input',updateIntervals);
+document.querySelectorAll('[data-alpha]').forEach(button=>button.addEventListener('click',()=>{alphaInput.value=button.dataset.alpha;updateIntervals()}));
+updateIntervals();
+</script>
+</body>
+</html>
