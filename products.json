@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hubRemote": "origin",
+  "hubBranch": "master",
+  "owner": "Azusalina",
+  "products": [
+    {"folder": "d-ba", "historyPaths": ["d-ba", "ba"]},
+    {"folder": "d-gitpop", "historyPaths": ["d-gitpop", "gitpop"]},
+    {"folder": "d-ict", "historyPaths": ["d-ict", "ict"]},
+    {"folder": "d-jupasanalysis", "historyPaths": ["d-jupasanalysis", "jupasanalysis"]},
+    {"folder": "d-la", "historyPaths": ["d-la", "la"]},
+    {"folder": "d-todos", "historyPaths": ["d-todos", "todos"]},
+    {"folder": "fileX"},
+    {"folder": "mediator"},
+    {"folder": "monitor"},
+    {"folder": "monitor-cli"},
+    {"folder": "toolkit"},
+    {"folder": "track"}
+  ]
+}
