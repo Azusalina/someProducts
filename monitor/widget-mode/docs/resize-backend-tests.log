@@ -1,7 +1,6 @@
 test_layout_validation (test_resize.ResizeTests.test_layout_validation) ... ok
-test_native_script_is_restricted_to_monitor_and_numeric_delta (test_resize.ResizeTests.test_native_script_is_restricted_to_monitor_and_numeric_delta) ... ok
 
 ----------------------------------------------------------------------
-Ran 2 tests in 0.001s
+Ran 1 test in 0.000s
 
 OK

@@ -9,10 +9,11 @@ import subprocess
 
 
 def evaluate(script):
-    value = subprocess.run(['busctl', '--user', 'call', 'org.kde.plasmashell', '/PlasmaShell',
+    value = subprocess.run(['busctl', '--user', '--json=short', 'call', 'org.kde.plasmashell', '/PlasmaShell',
                             'org.kde.PlasmaShell', 'evaluateScript', 's', script],
                            check=True, capture_output=True, text=True, timeout=10).stdout.strip()
-    return json.loads(json.loads(value.removeprefix('s ')))
+    envelope = json.loads(value)
+    return json.loads(envelope['data'][0])
 
 
 def main():

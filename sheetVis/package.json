@@ -1,0 +1,28 @@
+{
+  "name": "sheetvis",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "start": "python server.py",
+    "setup": "python scripts/setup.py",
+    "test": "vitest run && python -m unittest discover -s tests -p 'test_*.py'",
+    "test:browser": "node tests/browser.mjs",
+    "test:pdf": "node tests/pdf.mjs && python tests/compare-omr.py",
+    "test:pdf-filter": "node tests/pdf-filter.mjs"
+  },
+  "dependencies": {
+    "@tonejs/midi": "^2.0.28",
+    "fflate": "^0.8.2",
+    "opensheetmusicdisplay": "^1.9.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "jsdom": "^27.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vitest": "^5.0.4"
+  }
+}

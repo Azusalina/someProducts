@@ -23,3 +23,5 @@ Editable profiles (1.10.0): native SettingsFile syncs validated settings with th
 Note controls (1.11.0): NoteCard has a bounded bottom-edge resize handle, a scrolling editor and Save-dialog export. noteHeight and noteExportUrl are profile settings; the header Save action writes the current plain text through POST /notes/save. See [../docs/description.md](../docs/description.md) for validation and limits.
 
 Two-column to-dos (1.12.0): NoteBoard composes the existing NoteCard and appended TodoCard. TodoColumn displays tasks with reversible done buttons; TodoTools validates and reconciles stable task IDs. Native and preview ConfigTodos pages stage content/appearance settings. Task text/completion and appearance persist in JSON profiles. Detailed validation is in [../docs/description.md](../docs/description.md).
+
+1.13.0 adds inline to-do creation/edit/delete and bounded rectangular border resizing. ResizeTools, BorderGrip and SplitGrip preserve grid/column constraints and profile-backed internal dimensions; native outer sizing uses Plasma's existing layout container. See [../docs/description.md](../docs/description.md) for verification.

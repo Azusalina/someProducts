@@ -1,0 +1,8 @@
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+const M=require('../math.js'),P=require('../plot.js');
+function bench(name,fn,runs=100){for(let i=0;i<10;i++)fn();const samples=[];for(let i=0;i<runs;i++){const t=performance.now();fn();samples.push(performance.now()-t);}samples.sort((a,b)=>a-b);return {name,runs,median_ms:+samples[Math.floor(runs*.5)].toFixed(3),p95_ms:+samples[Math.floor(runs*.95)].toFixed(3)};}
+const makeRows=n=>Array.from({length:n},(_,i)=>({text:`sin(${i+1}x)/${i+1}+cos(x)`}));
+const model=M.build(makeRows(30)),view={cx:0,cy:0,scale:60};
+const results=[bench('compile 30 expressions',()=>M.build(makeRows(30))),bench('sample 30 curves at 1200 × 800',()=>model.entries.forEach(e=>P.sampleCurve(e.fn,view,1200,800))),bench('sample f and first derivative',()=>{const m=M.build([{text:'f(x)=sin(x^2/5)'},{text:"f'(x)"}]);m.entries.forEach(e=>P.sampleCurve(e.fn,view,1200,800));}),bench('accumulation curve int(sin(x),0,x)',()=>{const e=M.build([{text:'int(sin(x),0,x)'}]).entries[0];P.sampleCurve(e.fn,view,1200,800,{integral:true});},30)];
+const files=['index.html','style.css','math.js','plot.js','app.js','latex.js','editor.js','vendor/mathlive/mathlive.min.js','vendor/mathlive/mathlive-static.css','vendor/mathlive/mathlive-fonts.css',...fs.readdirSync(path.join(__dirname,'../vendor/mathlive/fonts')).map(f=>'vendor/mathlive/fonts/'+f)];const bytes=files.reduce((n,f)=>n+fs.statSync(path.join(__dirname,'..',f)).size,0);
+console.log(JSON.stringify({node:process.version,cpu:os.cpus()[0].model,runtime_bytes:bytes,results,note:'Node CPU compilation/sampling only; excludes browser paint, input latency and startup.'},null,2));

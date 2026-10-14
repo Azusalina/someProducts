@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "name": "G502 X LIGHTSPEED",
+  "serial": "DEMO",
+  "layout": 3,
+  "size": 255,
+  "sectors": 16,
+  "buttons": 11,
+  "gbuttons": 11,
+  "active_sector": 1,
+  "mode": 1,
+  "profiles": [
+    {
+      "id": 1,
+      "sector": 1,
+      "enabled": true,
+      "name": "Default",
+      "raw": "0100002003b00440066009800cffffffffffffffffffffffffffffffffffffff8001000180010002800100048001000890070000800100109001000090020000900a00009003000090040000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff440065006600610075006c00740000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd23b",
+      "normal": [
+        "80010001",
+        "80010002",
+        "80010004",
+        "80010008",
+        "90070000",
+        "80010010",
+        "90010000",
+        "90020000",
+        "900a0000",
+        "90030000",
+        "90040000"
+      ],
+      "gshift": [
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff"
+      ]
+    },
+    {
+      "id": 2,
+      "sector": 2,
+      "enabled": true,
+      "name": "",
+      "raw": "0100002003b00440066009800cffffffffffffffffffffffffffffffffffffff8001000180010002800100048001000890070000800100109001000090020000900a00009003000090040000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff440065006600610075006c00740000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd23b",
+      "normal": [
+        "80010001",
+        "80010002",
+        "80010004",
+        "80010008",
+        "90070000",
+        "80010010",
+        "90010000",
+        "90020000",
+        "900a0000",
+        "90030000",
+        "90040000"
+      ],
+      "gshift": [
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff"
+      ]
+    },
+    {
+      "id": 3,
+      "sector": 3,
+      "enabled": false,
+      "name": "",
+      "raw": "0100002003b00440066009800cffffffffffffffffffffffffffffffffffffff8001000180010002800100048001000890070000800100109001000090020000900a00009003000090040000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff440065006600610075006c00740000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd23b",
+      "normal": [
+        "80010001",
+        "80010002",
+        "80010004",
+        "80010008",
+        "90070000",
+        "80010010",
+        "90010000",
+        "90020000",
+        "900a0000",
+        "90030000",
+        "90040000"
+      ],
+      "gshift": [
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff"
+      ]
+    },
+    {
+      "id": 4,
+      "sector": 4,
+      "enabled": false,
+      "name": "",
+      "raw": "0100002003b00440066009800cffffffffffffffffffffffffffffffffffffff8001000180010002800100048001000890070000800100109001000090020000900a00009003000090040000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff440065006600610075006c00740000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd23b",
+      "normal": [
+        "80010001",
+        "80010002",
+        "80010004",
+        "80010008",
+        "90070000",
+        "80010010",
+        "90010000",
+        "90020000",
+        "900a0000",
+        "90030000",
+        "90040000"
+      ],
+      "gshift": [
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff"
+      ]
+    },
+    {
+      "id": 5,
+      "sector": 5,
+      "enabled": false,
+      "name": "",
+      "raw": "0100002003b00440066009800cffffffffffffffffffffffffffffffffffffff8001000180010002800100048001000890070000800100109001000090020000900a00009003000090040000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff440065006600610075006c00740000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd23b",
+      "normal": [
+        "80010001",
+        "80010002",
+        "80010004",
+        "80010008",
+        "90070000",
+        "80010010",
+        "90010000",
+        "90020000",
+        "900a0000",
+        "90030000",
+        "90040000"
+      ],
+      "gshift": [
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff",
+        "ffffffff"
+      ]
+    }
+  ]
+}

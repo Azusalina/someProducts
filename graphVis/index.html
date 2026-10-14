@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="离线函数绘图与微积分可视化工具">
+  <title>graphVis</title><link rel="stylesheet" href="vendor/mathlive/mathlive-static.css"><link rel="stylesheet" href="vendor/mathlive/mathlive-fonts.css"><link rel="stylesheet" href="style.css">
+  <script defer src="vendor/mathlive/mathlive.min.js"></script><script defer src="latex.js"></script><script defer src="math.js"></script><script defer src="editor.js"></script><script defer src="plot.js"></script><script defer src="app.js"></script>
+</head>
+<body class="panel-hidden">
+  <button id="tools-toggle" aria-label="工具栏" aria-expanded="false">⋮</button>
+  <header>
+    <strong>graphVis</strong>
+    <div class="header-actions">
+<button id="add" aria-label="添加表达式">＋</button><button id="delete-expression" aria-label="删除当前表达式">−</button><button id="visibility" aria-label="显示或隐藏当前表达式">◉</button><button id="cycle-color" aria-label="当前表达式颜色"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg></button><button id="controls-toggle" aria-label="数学工具" aria-expanded="false"><span data-math="f(x)"></span></button>
+      <button id="undo" aria-label="撤销">↶</button><button id="redo" aria-label="重做">↷</button>
+      <button id="save">保存</button><button id="open">打开</button><button id="export">PNG</button>
+    </div>
+  </header>
+  <main>
+    <aside id="panel" aria-label="表达式"><div id="expressions"></div></aside>
+    <section id="graph" aria-label="绘图区">
+      <canvas id="canvas" tabindex="0" aria-label="绘图区"></canvas>
+      <canvas id="overlay" aria-hidden="true"></canvas>
+      <div class="graph-actions"><button id="zoom-in" aria-label="放大">＋</button><button id="zoom-out" aria-label="缩小">−</button><button id="reset-view" aria-label="恢复视图">⌂</button><button id="fit-view">适应</button></div>
+      <div id="graph-labels" aria-hidden="true"></div>
+      <div id="readout" aria-live="off"></div>
+      <div id="status" role="status"></div>
+    </section>
+  </main>
+  <section id="tool-controls" aria-label="数学工具" hidden>
+      <div class="input-tools" aria-label="插入数学表达式">
+        <button data-insert="^{2}" data-math="x^2" aria-label="平方">x²</button><button data-insert="\sqrt{#?}" data-math="\sqrt{x}" aria-label="平方根">√</button><button data-insert="\sin" data-math="\sin" aria-label="正弦">sin</button><button data-insert="\pi" data-math="\pi" aria-label="圆周率">π</button><button data-insert="\left|#?\right|" data-math="\lvert x\rvert" aria-label="绝对值">|x|</button><button data-insert="\int_{0}^{x}#?\,\mathrm{d}x" data-math="\int" aria-label="积分">∫</button>
+      </div>
+      <details id="calculus">
+        <summary>微积分</summary>
+        <div class="calculus-body">
+          <div class="source-label"><span>函数</span><div class="source-picker"><button id="source-toggle" aria-label="微积分函数" aria-expanded="false"><span id="source-value"></span></button><div id="source-options" hidden></div></div><select id="source" hidden aria-hidden="true" tabindex="-1"></select></div>
+          <button id="add-derivative" class="full">＋ <span data-math="f'(x)"></span></button>
+          <label class="check"><input id="tangent-on" type="checkbox">切线与斜率</label>
+          <div id="tangent-controls" hidden>
+            <label class="number-label"><span data-math="x_0"></span> <input id="tangent-x" type="number" value="1" step="0.1" aria-label="切点横坐标"></label>
+            <input id="tangent-range" type="range" min="-10" max="10" step="0.01" value="1" aria-label="移动切点">
+            <output id="tangent-value"></output>
+          </div>
+          <label class="check"><input id="integral-on" type="checkbox">定积分 · 有符号面积</label>
+          <div id="integral-controls" hidden>
+            <div class="bounds"><label><span data-math="a"></span> <input id="bound-a" type="number" value="0" step="0.1"></label><label><span data-math="b"></span> <input id="bound-b" type="number" value="3.14" step="0.1"></label></div>
+            <output id="integral-value"></output>
+            <button id="add-integral" class="full">＋ <span data-math="F(x)=\int_a^x f(t)\,\mathrm{d}t"></span></button>
+          </div>
+        </div>
+      </details>
+      <details id="settings"><summary>视图</summary><div class="calculus-body">
+        <div class="settings-row"><label class="check"><input id="grid-on" type="checkbox" checked>网格</label><label>角度 <select id="angle"><option value="rad">弧度</option><option value="deg">度</option></select></label></div>
+        <div class="bounds"><label>中心 <span data-math="x"></span> <input id="center-x" type="number" value="0" step="1"></label><label>中心 <span data-math="y"></span> <input id="center-y" type="number" value="0" step="1"></label></div>
+        <label class="number-label">横轴宽度 <input id="view-width" type="number" min="0.000001" value="20" step="1"></label>
+      </div></details>
+
+<details id="parameter-tools"><summary>参数</summary><div id="parameters" class="calculus-body"></div></details>
+</section>
+      <div class="keyboard-space"><button id="keyboard-toggle" aria-label="小键盘" aria-expanded="false"><svg viewBox="0 0 24 16" width="24" height="16" aria-hidden="true"><rect x="1" y="1" width="22" height="14" rx="2" fill="none" stroke="currentColor"/><path d="M4 5h2m3 0h2m3 0h2m3 0h1M4 8h2m3 0h2m3 0h2m3 0h1M6 11h12" stroke="currentColor" stroke-width="1.5"/></svg></button></div>
+  <input id="file" type="file" accept=".json,application/json" hidden>
+</body>
+</html>

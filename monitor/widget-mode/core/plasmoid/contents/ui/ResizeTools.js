@@ -33,9 +33,13 @@ function rectangle(g,edge,delta,availableWidth,availableHeight) {
     const y=Math.max(0,Math.min(availableHeight-height,edge==="top"?g.y+g.height-height:g.y))
     return {x:x,y:y,width:width,height:height}
 }
-function resizeHost(applet,edge,delta) {
+function host(applet) {
     let item=applet.parent
     while(item && !(item.applet===applet && item.layout)) item=item.parent
+    return item || null
+}
+function resizeHost(applet,edge,delta) {
+    const item=host(applet)
     if(!item) return false
     const layout=item.layout
     const next=rectangle(item,edge,delta,layout.width,layout.height)

@@ -102,3 +102,5 @@ Enable **PROTON**, **WIFI** and **BLUETOOTH** in **Settings → Modules**; Wi-Fi
 If the preview displays **Bridge offline**, run `./scripts/start.sh` from `monitor/widget-mode/core`.
 
 See [description.md](description.md) for background and technical details.
+
+Type in either to-do list's **Add task · Enter** field and press Enter to create an item. Click an item's text to edit; Enter confirms, Escape cancels, and Delete removes the item being edited. Completion survives a text edit. Drag rectangular panel borders to adjust height, shared column boundaries to adjust width, and the pending/urgent divider to adjust their split. Outer borders resize the native Plasma widget; minimum sizes prevent panel overlap/collapse. Internal layout sizes save with the current Profile; native outer placement stays in Plasma.
