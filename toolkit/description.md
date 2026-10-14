@@ -36,6 +36,17 @@ The renderer wraps each section, and print CSS applies `break-inside: avoid-page
 
 The interface, source view, and Markdown preview use a dark black-and-white theme. Buttons, focus rings, status indicators, headings, links, borders, and code highlighting use neutral grayscale accents instead of green. PDF paper is selected independently: white (`#ffffff`, default), warm yellow (`#fff4cc`), or dark black (`#161616`). Text, headings, code, tables, and quotations receive corresponding readable colors. Backgrounds cover the page margins too; embedded image colors are preserved. The Hide sidebar button hides the entire sidebar and gives its width back to the workspace, with an accessible button to reopen it on both desktop and mobile. These interface choices remain in the current page only; no preference storage is added.
 
+## Zen mode
+
+Zen mode fills the browser viewport with the existing rendered preview and hides
+the outline, file controls, toolbar, metadata and status messages. It requires an
+open document and creates no PDF or extra render. Escape exits from either the
+outer page or the focused preview iframe; the listener is reattached after each
+saved-file update. Previous Preview/Source selection, sidebar visibility and PDF
+settings are preserved. Reading position and live watching remain active. The
+mode belongs to the current page, resets on reload, and does not request browser
+fullscreen. On a touch device, exiting requires an Escape-capable keyboard.
+
 ## Architecture and file inventory
 
 | File | Responsibility |
@@ -102,3 +113,10 @@ Validation: Chromium browser regression checks passed for the simplified glass i
 2026-10-07: replaced the process-wide document with per-page sessions. Added scoped file watching, revision guards, event streams, warning states, and exports; refreshing/duplicating pages forks independent sessions with only opaque IDs in browser history. Browser checks used pages sharing one browser context/cookie and verified independent path selection, saved edits, refresh, duplicate isolation, concurrent PDF content, missing-file warnings, and continued watching after another tab closes. Existing browser/Mermaid/export checks passed. PDF evidence is in `/tmp/toolkit-validation/tabs`.
 
 Additional validation: a deliberately slow renderer in one page did not block another page or overwrite a newer missing-file state. The running port-4177 service was restarted with the previously selected file retained as its initial default; live API checks confirmed independent view IDs and document states.
+
+2026-10-15: added page-local Zen mode for an edge-to-edge document preview, with
+Escape handling in both the page and the script-free preview iframe. Browser
+checks verified desktop/mobile viewport coverage, saved-file updates while in
+Zen, restored Source/sidebar choices and focus, and existing PDF/Mermaid export
+workflows. All 13 core/diagram tests passed. Screenshots were inspected at
+`/tmp/toolkit-validation/zen-desktop.png` and `zen-mobile.png`.

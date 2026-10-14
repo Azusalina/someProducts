@@ -58,3 +58,10 @@ input,select,button{background:#ffffff08;border-color:#ffffff35}
 #source,iframe{background:#161616}
 .empty-state{padding:32px 12px}
 @media(max-width:700px){.file-panel{padding:12px}.preview-toolbar{padding:10px}.document-meta{padding:10px}.preview-area{padding:0 8px 8px}}
+/* Zen is a page-local reading mode; source, sidebar and export choices stay intact. */
+body.zen-mode{overflow:hidden}
+.zen-mode .sidebar,.zen-mode .topbar,.zen-mode .file-panel,.zen-mode #message,.zen-mode .preview-toolbar,.zen-mode .document-meta{display:none}
+.zen-mode main{margin:0;width:100%;padding:0}
+.zen-mode .workspace{position:fixed;inset:0;margin:0;border:0;background:#161616;backdrop-filter:none;-webkit-backdrop-filter:none}
+.zen-mode .preview-area{height:100%;min-height:0;padding:0}
+.zen-mode #preview{height:100%;min-height:0}

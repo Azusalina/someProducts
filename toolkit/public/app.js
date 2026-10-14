@@ -4,6 +4,26 @@ let viewId;
 let state = null, sourceView = false, opening = false, exporting = false, style = '';
 let streamError = '', actionError = '', info;
 let previousFilename;
+let zenMode = false, focusBeforeZen;
+
+function setZenMode(active) {
+  if (active && state?.html === undefined) return;
+  if (active === zenMode) return;
+  if (active) focusBeforeZen = document.activeElement;
+  zenMode = active;
+  document.body.classList.toggle('zen-mode', active);
+  $('zen-button').setAttribute('aria-pressed', String(active));
+  updateViews();
+  if (active) $('preview').focus();
+  else (focusBeforeZen?.isConnected ? focusBeforeZen : $('zen-button')).focus();
+}
+function exitZenOnEscape(event) {
+  if (event.key === 'Escape' && zenMode) {
+    event.preventDefault();
+    setZenMode(false);
+  }
+}
+document.addEventListener('keydown', exitZenOnEscape);
 
 async function api(url, options = {}) {
   const response = await fetch(url, { ...options, headers });
@@ -30,14 +50,16 @@ function message() {
   $('message').hidden = items.length === 0;
 }
 function updateViews() {
+  const showSource = sourceView && !zenMode;
   $('empty').hidden = Boolean(state?.html !== undefined);
-  $('preview').hidden = !state || state.html === undefined || sourceView;
-  $('source').hidden = !state || state.html === undefined || !sourceView;
+  $('preview').hidden = !state || state.html === undefined || showSource;
+  $('source').hidden = !state || state.html === undefined || !showSource;
   $('preview-tab').classList.toggle('selected', !sourceView);
   $('source-tab').classList.toggle('selected', sourceView);
   $('preview-tab').setAttribute('aria-pressed', String(!sourceView));
   $('source-tab').setAttribute('aria-pressed', String(sourceView));
   $('export-button').disabled = !state || Boolean(state.error) || exporting;
+  $('zen-button').disabled = state?.html === undefined;
 }
 function draw(next) {
   state = next;
@@ -55,7 +77,12 @@ function draw(next) {
   const sameFile = frame.dataset.filename === state.filename;
   const scroll = sameFile ? (frame.contentWindow?.scrollY || 0) : 0;
   frame.dataset.filename = state.filename;
-  frame.onload = () => frame.contentWindow?.scrollTo(0, scroll);
+  frame.onload = () => {
+    frame.contentWindow?.scrollTo(0, scroll);
+    // Keyboard events inside a focused iframe do not bubble to the parent.
+    // Reattach after each saved-file render without enabling preview scripts.
+    frame.contentDocument?.addEventListener('keydown', exitZenOnEscape);
+  };
   frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="document-theme-black"><article class="document">${state.html || ''}</article></body></html>`;
   const outline = $('outline');
   outline.replaceChildren();
@@ -87,6 +114,7 @@ $('open-form').addEventListener('submit', event => { event.preventDefault(); ope
 $('example-button').addEventListener('click', () => openFile(info.examplePath));
 $('preview-tab').addEventListener('click', () => { sourceView = false; updateViews(); });
 $('source-tab').addEventListener('click', () => { sourceView = true; updateViews(); });
+$('zen-button').addEventListener('click', () => setZenMode(true));
 $('sidebar-toggle').addEventListener('click', () => {
   const collapsed = !$('sidebar').hidden;
   $('sidebar').hidden = collapsed;

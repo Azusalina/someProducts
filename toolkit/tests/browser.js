@@ -22,6 +22,27 @@ try {
   assert.equal(new URL(page.url()).hash, '');
   const preview = page.frameLocator('#preview');
   await preview.locator('h1').filter({ hasText: 'Live document' }).waitFor();
+  async function checkZen() {
+    await page.getByRole('button', { name: 'Zen mode', exact: true }).click();
+    assert.equal(await page.locator('body').evaluate(body => body.classList.contains('zen-mode')), true);
+    for (const selector of ['#sidebar', '.topbar', '.file-panel', '.preview-toolbar', '.document-meta', '#source']) {
+      assert.equal(await page.locator(selector).isVisible(), false, selector);
+    }
+    const bounds = await page.locator('#preview').boundingBox();
+    const viewport = page.viewportSize();
+    assert.deepEqual(bounds, { x: 0, y: 0, ...viewport });
+  }
+  await checkZen();
+  // Saved-file replacement must preserve Zen and its iframe Escape listener.
+  await writeFile(filename, '# Zen update\n\nOriginal paragraph.\n');
+  await preview.locator('h1').filter({ hasText: 'Zen update' }).waitFor();
+  await preview.locator('h1').click();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('body').evaluate(body => body.classList.contains('zen-mode')), false);
+  assert.equal(await page.locator('#zen-button').evaluate(button => button === document.activeElement), true);
+  assert.equal(await page.locator('#sidebar').isVisible(), true);
+  await writeFile(filename, '# Live document\n\nOriginal paragraph.\n\n## Details\n\n中文預覽與匯出。\n');
+  await preview.locator('h1').filter({ hasText: 'Live document' }).waitFor();
   assert.equal(await page.evaluate(() => document.cookie), ''); // Session cookie is HttpOnly.
   await page.reload();
   await preview.locator('h1').filter({ hasText: 'Live document' }).waitFor();
@@ -39,6 +60,15 @@ try {
   assert.equal(await page.locator('#sidebar').isVisible(), true);
   await page.getByRole('button', { name: 'Source', exact: true }).click();
   assert.match(await page.locator('#source').textContent(), /Original paragraph/);
+  await page.getByRole('button', { name: 'Hide sidebar', exact: true }).click();
+  await checkZen();
+  // Escape on the parent page also restores Source and the collapsed outline.
+  await page.locator('#preview').evaluate(frame => frame.blur());
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#source').isVisible(), true);
+  assert.equal(await page.locator('#sidebar').isVisible(), false);
+  assert.equal(await page.locator('#sidebar-toggle').getAttribute('aria-expanded'), 'false');
+  await page.getByRole('button', { name: 'Show sidebar', exact: true }).click();
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
   const before = Date.now();
   await writeFile(`${filename}.tmp`, '# Saved replacement\n\nThe next revision.\n\n## Details\n\n中文預覽與匯出。\n');
@@ -66,8 +96,18 @@ try {
   assert.equal(await page.locator('#sidebar').isVisible(), false);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await page.screenshot({ path: `${evidence}/mobile.png`, fullPage: true });
+  await checkZen();
+  await page.screenshot({ path: `${evidence}/zen-mobile.png` });
+  await preview.locator('h1').click();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#sidebar').isVisible(), false);
+  assert.equal(await page.locator('.preview-toolbar').isVisible(), true);
   await page.getByRole('button', { name: 'Show sidebar', exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1100 });
+  await checkZen();
+  await page.screenshot({ path: `${evidence}/zen-desktop.png` });
+  await preview.locator('h1').click();
+  await page.keyboard.press('Escape');
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export PDF' }).click();
   const download = await downloadPromise;
@@ -119,7 +159,7 @@ try {
   await liveDiagram.screenshot({ path: `${evidence}/mermaid-live-preview.png` });
   assert.deepEqual(errors, []);
   assert.deepEqual(external, []);
-  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['bare URL and reload with automatic HttpOnly session', 'dark interface and document', 'sidebar fully collapses and reopens on desktop/mobile', 'atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'white/yellow/black PDF controls', 'table/code/task/CJK document', 'Mermaid rendering, saved-file update and colored PDF exports', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
+  console.log(JSON.stringify({ result: 'PASS', latencyMs: latency, pdfBytes: pdf.length, checks: ['bare URL and reload with automatic HttpOnly session', 'dark interface and document', 'sidebar fully collapses and reopens on desktop/mobile', 'Zen fills desktop/mobile viewport, updates live, exits on Escape from parent/iframe and restores Source/sidebar', 'atomic save', 'source view', 'delete/recreate recovery', 'invalid path retains preview', 'manual A4 and Letter PDF downloads', 'white/yellow/black PDF controls', 'table/code/task/CJK document', 'Mermaid rendering, saved-file update and colored PDF exports', 'source unchanged', 'no document cache files', 'mobile width', 'no external requests', 'no browser errors'], evidence }, null, 2));
 } finally {
   await browser.close(); await app.close(); await rm(folder, { recursive: true, force: true });
 }
