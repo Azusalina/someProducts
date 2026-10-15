@@ -20,3 +20,5 @@ aside{display:flex;flex-direction:column;overflow:hidden;bottom:calc(8px + var(-
 [data-theme=dark] math-field{color:#edf2f8;--caret-color:#a8ceff;caret-color:#a8ceff;--primary:#a8ceff;--selection-background-color:#3a526f}[data-theme=dark] #readout,[data-theme=dark] #status,[data-theme=dark] .graph-actions button{background:#20262ef0}
 
 #refresh-confirm{border:1px solid var(--line);border-radius:4px;padding:20px;color:inherit;background:#fff}#refresh-confirm::backdrop{background:#0005}#refresh-confirm>div{display:flex;justify-content:flex-end;gap:8px}[data-theme=dark] #refresh-confirm{background:#20262e}
+
+.expression.intersection-pick{outline:2px solid var(--color);outline-offset:-2px}

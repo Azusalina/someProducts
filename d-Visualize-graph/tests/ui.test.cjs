@@ -71,7 +71,7 @@ test('independent axes survive manual zoom, pan, JSON import and equal axis swit
 
 test('symbols require explicit LaTeX commands and P(X=n) renders the probability',()=>{
  const t=boot();seed(t,'X\\sim\\operatorname{poisson}(4)','P(X=2)');assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.get('panel').querySelectorAll('.row-result')[1].dataset.latex,/0\.146525/);
- const f=t.texts()[1];assert.deepEqual(Object.keys(f.inlineShortcuts),[]);f.setValue('',{silenceNotifications:true});f.executeCommand(['typedText','in']);assert.equal(f.value.includes('\\in'),false);f.setValue('\\in',{silenceNotifications:true});assert.match(f.value,/\\in/);t.dom.window.close();
+ const f=t.texts()[1];assert.deepEqual(Object.keys(f.inlineShortcuts),['int','sum']);f.setValue('',{silenceNotifications:true});f.executeCommand(['typedText','in']);assert.equal(f.value.includes('\\in'),false);f.setValue('\\in',{silenceNotifications:true});assert.match(f.value,/\\in/);t.dom.window.close();
 });
 test('implicit curves retain the completed frame and reuse geometry during other edits',()=>{
  const t=boot();let cells=0;const original=t.w.GraphPlot.contourCell;t.w.GraphPlot.contourCell=(...args)=>{cells++;return original(...args);};seed(t,'x^2+y^2=1','x');assert.ok(cells>0);const initial=cells;
@@ -94,4 +94,27 @@ test('refresh asks confirmation, cancellation keeps work, and Enter confirms onc
 });
 test('complex LaTeX results, complex-plane points and component curves render',()=>{
  const t=boot();seed(t,'z=2+3i','z^2','f(x)=x+i');assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.get('panel').querySelectorAll('.row-result')[1].dataset.latex,/-5\+12i/);assert.ok(t.get('graph-labels').querySelector('[data-key="complex-1"]'));assert.ok(t.calls.some(c=>c[0]==='setLineDash'&&c[1]?.[0]===5));t.flush();t.dom.window.close();
+});
+
+test('int and sum shortcuts expand, Enter completes an escape including bounds',()=>{
+ const t=boot();t.click('tools-toggle');const f=t.texts()[0];t.input(f,'int');assert.match(f.value,/\\int/);t.input(f,'sum');assert.match(f.value,/\\sum/);
+ f.setValue('',{silenceNotifications:true});f.executeCommand(['switchMode','latex']);for(const c of '\\int^1_0')f.executeCommand(['typedText',c]);assert.equal(f.mode,'latex');f.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));assert.equal(t.texts().length,1);assert.equal(f.mode,'math');assert.match(f.value,/\\int/);assert.ok(/(?:_0|_\{0\})/.test(f.value));assert.ok(/(?:\^1|\^\{1\})/.test(f.value));t.dom.window.close();
+});
+test('sum arrow limits edit and calculate using the MathLive field',()=>{
+ const t=boot();seed(t,'\\sum_{n=1}^3 n^2');const f=t.texts()[0];assert.match(t.get('panel').querySelector('.row-result').dataset.latex,/14/);f.position=4;f.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));assert.equal(f.position,6);f.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));assert.equal(f.position,4);t.dom.window.close();
+});
+test('Ctrl clicks snap to two curves and create named, undoable, exportable segments',async()=>{
+ const t=boot();seed(t,'y=x','y=2x');const c=t.get('canvas'),select=(x,y)=>c.dispatchEvent(new t.w.MouseEvent('pointerdown',{ctrlKey:true,button:0,clientX:x,clientY:y,bubbles:true,cancelable:true}));
+ select(500,360);select(565,230);t.flush();let m=t.w.GraphMath.build(t.texts().map(f=>({text:f.value}))),segment=m.entries.at(-1);assert.equal(segment.name,'l1');assert.equal(segment.kind,'segment');assert.equal(segment.segment[0][0],0);assert.equal(segment.segment[1][0],1);assert.equal(segment.segment[1][1],2);assert.ok(t.get('graph-labels').querySelector('[data-key="segment-3"]'));
+ select(565,295);select(630,230);t.flush();m=t.w.GraphMath.build(t.texts().map(f=>({text:f.value})));assert.equal(m.entries.at(-1).name,'l2');const count=t.texts().length;t.click('undo');t.flush();assert.equal(t.texts().length,count-1);t.click('redo');t.flush();assert.equal(t.texts().length,count);const exported=t.project(),r=boot();await r.importProject(exported);assert.equal(r.w.GraphMath.build(r.texts().map(f=>({text:f.value}))).entries.at(-1).name,'l2');r.dom.window.close();t.dom.window.close();
+});
+
+test('typing sinx with a domain clips the graph and prevents outside Ctrl selection',()=>{
+ const t=boot();t.click('tools-toggle');const f=t.texts()[0];for(const c of 'sinx{0<=x<=2pi}')f.executeCommand(['typedText',c]);f.dispatchEvent(new t.w.Event('input'));t.flush();assert.equal(t.get('panel').querySelector('.error'),null);const e=t.w.GraphMath.build([{text:f.value}]).entries[0];assert.equal(e.allowed(0,0),true);assert.equal(e.allowed(2*Math.PI,0),true);assert.equal(e.allowed(-1,0),false);
+ const choose=(x,y)=>t.get('canvas').dispatchEvent(new t.w.MouseEvent('pointerdown',{ctrlKey:true,button:0,clientX:500+x*65,clientY:360-y*65,bubbles:true,cancelable:true}));choose(-1,Math.sin(-1));choose(0,0);t.flush();assert.equal(t.texts().length,1,'outside click does not become the first endpoint');choose(1,Math.sin(1));t.flush();assert.equal(t.texts().length,2);assert.match(t.texts()[1].value,/segment/);t.dom.window.close();
+});
+
+test('Ctrl selecting two expression rows marks every visible intersection and saves the pair',async()=>{
+ const t=boot();seed(t,'x^2','y=1');const pick=i=>t.w.document.querySelectorAll('.expression')[i].dispatchEvent(new t.w.MouseEvent('pointerdown',{ctrlKey:true,button:0,bubbles:true,cancelable:true}));pick(0);assert.equal(t.w.document.querySelectorAll('.intersection-pick').length,1);pick(1);t.flush();assert.equal(t.get('graph-labels').querySelectorAll('[data-key^="intersection-"]').length,2);assert.match(t.get('status').textContent,/2/);
+ const project=t.project();assert.equal(JSON.parse(project).intersections.length,1);const r=boot();await r.importProject(project);assert.equal(r.get('graph-labels').querySelectorAll('[data-key^="intersection-"]').length,2);r.dom.window.close();pick(0);pick(1);t.flush();assert.equal(t.get('graph-labels').querySelectorAll('[data-key^="intersection-"]').length,0);t.click('undo');t.flush();assert.equal(t.get('graph-labels').querySelectorAll('[data-key^="intersection-"]').length,2);t.dom.window.close();
 });

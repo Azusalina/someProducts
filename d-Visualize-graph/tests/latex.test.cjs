@@ -24,3 +24,7 @@ test('unparenthesized integral differential ends the body and ignores dx inside 
  close(evaluate('\\int_0^2 x^2dx+1',2),11/3);close(evaluate('\\int_0^2 f(dx)dx',1,['dx=2','f(t)=t^2']),8);
  close(evaluate('\\int_0^2 t^2dt'),8/3);close(evaluate('int f(x)dx',3,['f(x)=x^2']),9);
 });
+
+test('typed domain braces, inclusive endpoints and LaTeX round trip preserve restrictions',()=>{
+ for(const text of ['sinx{0<=x<=2pi}','sinx\\lbrace0<=x<=2pi\\rbrace',L.toLatex('sinx{0<=x<=2pi}')]){const e=M.build([{text}]).entries[0];assert.equal(e.error,undefined);assert.equal(e.allowed(-.1,0),false);assert.equal(e.allowed(0,0),true);assert.equal(e.allowed(2*Math.PI,0),true);assert.equal(e.allowed(2*Math.PI+.1,0),false);close(e.fn(Math.PI/2),1);}
+});

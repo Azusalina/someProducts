@@ -5,7 +5,7 @@
   const C=root.GraphComplex||(typeof require==='function'?require('./complex.js'):null);
   const constants = Object.freeze({ pi: Math.PI, e: Math.E, tau: 2 * Math.PI });
   const arities = {sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,sinh:1,cosh:1,tanh:1,sqrt:1,cbrt:1,abs:1,exp:1,ln:1,log:1,log10:1,log2:1,floor:1,ceil:1,round:1,sign:1,min:2,max:2,pow:2,root:2,atan2:2};
-  const reserved = new Set([...Object.keys(constants), ...Object.keys(arities), 'x', 'y', 'int', 'integral', 'diff','i','re','im','arg','conj','complex','pdf','pmf','cdf','discrete','P']);
+  const reserved = new Set([...Object.keys(constants), ...Object.keys(arities), 'x', 'y', 'int', 'integral', 'diff','sum','segment','i','re','im','arg','conj','complex','pdf','pmf','cdf','discrete','P']);
   const unaryNames=Object.keys(arities).filter(k=>arities[k]===1).sort((a,b)=>b.length-a.length);
   const num = value => ({type:'number', value});
   function normalize(s) {
@@ -58,7 +58,7 @@
         if (peek().type === '(') {
           index++; const args = [];
           if (peek().type !== ')') { do { args.push(expression()); if (peek().type !== ',') break; index++; } while (true); }
-          take(')'); node = {type:'call',name:t.value,order,args};
+          take(')');if(t.value==='sum'&&[2,3].includes(args.length)&&args[0].type==='compare'&&args[0].ops.length===1&&args[0].ops[0]==='='&&args[0].args[0].type==='id'){const [index,lower]=args[0].args;const upper=args[1],body=args[2]||index;args.splice(0,args.length,body,index,lower,upper);}node = {type:'call',name:t.value,order,args};
         } else if(arities[t.value]===1&&!order){node={type:'call',name:t.value,order:0,args:[expression(25)]};}
         else {
           if (order) throw Error("导数写作 f'(x)");
@@ -129,6 +129,7 @@
     function make(n) {
       if (n.type === 'number') return {v:()=>n.value,d:zero};
       if (n.type === 'id') {
+        if(scope.locals?.has(n.name))return {v:()=>scope.vars[n.name],d:zero};
         if (n.name === variable) return {v:x=>x,d:()=>1};
         if (n.name === 'y') return {v:(x,y)=>y,d:zero};
         if (Object.hasOwn(constants,n.name)) return {v:()=>constants[n.name],d:zero};
@@ -163,6 +164,14 @@
         }
       }
       if (n.type === 'call') {
+        if(n.name==='sum'){
+          if(n.order||n.args.length!==4||n.args[1].type!=='id')throw Error('求和写作 sum(表达式,n,k,p)');
+          const name=n.args[1].name;if(Object.hasOwn(constants,name)||['i','y'].includes(name))throw Error('求和下标建议用 n、k 或 j');
+          const local={...scope,vars:Object.create(scope.vars),locals:new Set([...(scope.locals||[]),name])};local.vars[name]=0;
+          const body=compile(n.args[0],local,variable),lower=make(n.args[2]),upper=make(n.args[3]);
+          const value=(x,y,derivative=false)=>{const a=lower.v(x,y),b=upper.v(x,y);if(!Number.isInteger(a)||!Number.isInteger(b))return NaN;if(derivative&&(lower.d(x,y)!==0||upper.d(x,y)!==0))return NaN;return S.sum(k=>{local.vars[name]=k;return (derivative?body.d:body.v)(x,y);},a,b);};
+          return {v:(x,y)=>value(x,y),d:(x,y)=>value(x,y,true)};
+        }
         if(['P','p'].includes(n.name)&&n.args[0]?.type==='compare'){
           const event=n.args[0];if(n.order||n.args.length!==1||event?.type!=='compare'||event.args.length!==2||!['=','=='].includes(event.ops[0])||event.args[0].type!=='id')throw Error('概率写作 P(X=n)');
           const name=event.args[0].name,d=scope.randomVariables?.[name];if(!S.isDistribution(d))throw Error(`先定义 ${name}~distribution`);
@@ -274,6 +283,7 @@
       if (restriction && !def[2]) throw Error('常量不能带定义域限制');
       if (def[2] && (Object.hasOwn(constants,def[2]) || reserved.has(def[2]) && def[2]!=='x')) throw Error('函数参数建议用 x 或 t');
       const ast=parse(def[3]);
+      if(!def[2]&&ast.type==='call'&&ast.name==='segment'&&ast.args.length===4)return {kind:'segment',name:def[1],ast,restriction,text};
       return {kind:def[2]?'function':'variable',name:def[1],parameter:def[2],ast,restriction,text};
     }
     const explicit=text.match(/^([xy])\s*=(?!=)(.*)$/);
@@ -283,12 +293,13 @@
       if(!self&&!(explicit[1]==='x'&&other))return {kind:explicit[1]==='y'?'curve':'vertical',ast:rhs,restriction,text};
     }
     const ast=parse(text);
+    if(ast.type==='call'&&ast.name==='segment'&&ast.args.length===4)return {kind:'segment',ast,restriction,text};
     if (ast.type==='point') return {kind:'point',ast,restriction,text};
     if (ast.type==='compare') {
       if (ast.args.length!==2) throw Error('图形关系使用一个比较符号；连续比较用于 {区间}');
       return {kind:['=','=='].includes(ast.ops[0])?'implicit':'inequality',ast,restriction,text};
     }
-    let coordinates=false;const excluded=probabilityNames(ast);walk(ast,n=>{if(n.type==='id'&&n.name==='x'&&!excluded.has(n))coordinates=true;if(n.type==='call'&&['int','integral','diff'].includes(n.name))coordinates=true;});
+    let coordinates=false;const excluded=probabilityNames(ast);walk(ast,n=>{if(n.type==='call'&&n.name==='sum'&&n.args[1]?.name==='x'){excluded.add(n.args[1]);walk(n.args[0],c=>{if(c.type==='id'&&c.name==='x')excluded.add(c);});}});walk(ast,n=>{if(n.type==='id'&&n.name==='x'&&!excluded.has(n))coordinates=true;if(n.type==='call'&&['int','integral','diff'].includes(n.name))coordinates=true;});
     return {kind:coordinates?'curve':'value',ast,restriction,text};
   }
   function build(rows,angle='rad') {
@@ -343,6 +354,7 @@
           entry.compiled=compile(entry.ast,scope);const d=entry.compiled.v(0,0);if(!S.isDistribution(d))throw Error('~ 的右侧必须为概率分布');entry.distribution=d;entry.discrete=d.discrete;entry.probability=true;entry.fn=x=>d.pdf(x);entry.df=x=>d.discrete?NaN:numericDerivative(d.pdf,x);
         }
         else if(entry.kind==='function') {if(!entry.compiled)throw Error('函数定义无效');entry.fn=x=>entry.compiled.v(x,0);entry.df=x=>entry.compiled.d(x,0);}
+        else if(entry.kind==='segment'){const values=entry.ast.args.map(n=>compile(n,scope).v(0,0));if(!values.every(Number.isFinite))throw Error('线段端点必须为有限实数');entry.segment=[values.slice(0,2),values.slice(2,4)];}
         else if(entry.kind==='point')entry.point=entry.ast.args.map(n=>compile(n,scope).v(0,0));
         else if(['implicit','inequality'].includes(entry.kind)) {
           const a=compile(entry.ast.args[0],scope),b=compile(entry.ast.args[1],scope);

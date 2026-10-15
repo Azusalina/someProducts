@@ -29,6 +29,11 @@
       }else if(cmd==='sqrt'){
         skip();let order=null;if(s[i]==='[')order=toPlain(group('[',']'),true);const value=toPlain(group(),true);out+=order?`root(${value},${order})`:`sqrt(${value})`;
       }else if(['operatorname','mathrm','mathit','mathnormal'].includes(cmd))out+=toPlain(group(),true);
+      else if(cmd==='sum'){
+        let lower=null,upper=null;skip();for(let n=0;n<2&&['_','^'].includes(s[i]);n++){const type=s[i++],value=atom();if(type==='_')lower=value;else upper=value;skip();}
+        const match=lower?.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);if(!match||upper===null)throw Error('求和需要下标 n=k 和上限 p');
+        let body;if(s[i]==='{')body=toPlain(group(),true);else if(s[i]==='(')body=toPlain(group('(',')'),true);else{body=toPlain(s.slice(i),true);i=s.length;}if(!body.trim())throw Error('求和缺少表达式');out+=`sum(${body},${match[1]},${match[2]},${upper})`;
+      }
       else if(cmd==='int'){
         let lower='0',upper='x';skip();
         for(let n=0;n<2&&['_','^'].includes(s[i]);n++){const type=s[i++],value=atom();if(type==='_')lower=value;else upper=value;skip();}
@@ -46,7 +51,7 @@
       else if(['alpha','beta','gamma','delta','theta','lambda','mu','sigma','phi','omega','pi','tau'].includes(cmd))out+=cmd+' ';
       else if(cmd==='cdot'||cmd==='times')out+='*';else if(cmd==='div')out+='/';
       else if(['le','leq'].includes(cmd))out+='<=';else if(['ge','geq'].includes(cmd))out+='>=';else if(['ne','neq'].includes(cmd))out+='!=';else if(cmd==='sim')out+='~';
-      else if(cmd==='{')out+='{';else if(cmd==='}')out+='}';else if(cmd==='vert'||cmd==='lvert'||cmd==='rvert'||cmd==='mid')out+='|';
+      else if(cmd==='{'||cmd==='lbrace')out+='{';else if(cmd==='}'||cmd==='rbrace')out+='}';else if(cmd==='lt')out+='<';else if(cmd==='gt')out+='>';else if(cmd==='vert'||cmd==='lvert'||cmd==='rvert'||cmd==='mid')out+='|';
       else if(cmd==='prime')out+="'";else if(cmd===' ')out+=' ';
       else throw Error(`不支持的数学命令 \\${cmd}`);
     }
@@ -76,6 +81,7 @@
       if(n.name==='sqrt')return '\\sqrt{'+astTex(n.args[0])+'}';
       if(n.name==='root')return '\\sqrt['+astTex(n.args[1])+']{'+astTex(n.args[0])+'}';
       if(n.name==='abs')return '\\left|'+astTex(n.args[0])+'\\right|';
+      if(n.name==='sum'&&n.args.length===4)return '\\sum_{'+astTex(n.args[1])+'='+astTex(n.args[2])+'}^{'+astTex(n.args[3])+'}'+'\\left('+astTex(n.args[0])+'\\right)';
       if(['int','integral'].includes(n.name))return '\\int_{'+astTex(n.args[1]||{type:'number',value:0})+'}^{'+astTex(n.args[2]||{type:'id',name:'x'})+'}'+astTex(n.args[0])+'\\,\\mathrm{d}x';
       if(n.name==='diff'&&n.args.length===1)return '\\frac{d}{dx}\\left('+astTex(n.args[0])+'\\right)';
       const fn=['sin','cos','tan','sinh','cosh','tanh','ln','log','exp','min','max'].includes(n.name)?'\\'+n.name:['asin','acos','atan'].includes(n.name)?'\\arc'+n.name.slice(1):n.name.length===1?identifier(n.name):'\\operatorname{'+n.name+'}';
@@ -89,6 +95,7 @@
       const e=root.GraphMath.classify(source);let tex=astTex(e.ast);
       if(e.kind==='distribution'&&e.randomVariable)tex=identifier(e.randomVariable)+'\\sim '+tex;
       if(e.kind==='function')tex=identifier(e.name)+'\\left('+identifier(e.parameter)+'\\right)='+tex;
+      if(e.kind==='segment'&&e.name)tex=identifier(e.name)+'='+tex;
       if(e.kind==='variable')tex=identifier(e.name)+'='+tex;
       if(e.kind==='vertical')tex='x='+tex;
       if(e.kind==='curve'&&/^\s*y\s*=/.test(toPlain(source)))tex='y='+tex;

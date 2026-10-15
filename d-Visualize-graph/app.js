@@ -7,10 +7,10 @@
   const distributionsSeen=new Set();let autoProbabilityId=null,restoringView=false;
   let nextId=1,toolsOpen=false;
   const row=text=>({id:nextId++,text,color:palette[(nextId-2)%palette.length],visible:true,min:-10,max:10,step:0.1});
-  let state={version:1,rows:[row('')],view:{cx:0,cy:0,scale:65},angle:'rad',grid:true,source:null,tangent:false,tx:1,integral:false,a:0,b:Math.PI,panel:true,theme:'light',areaColor:'#376ca3'};
+  let state={version:1,rows:[row('')],view:{cx:0,cy:0,scale:65},angle:'rad',grid:true,source:null,tangent:false,tx:1,integral:false,a:0,b:Math.PI,panel:true,theme:'light',areaColor:'#376ca3',intersections:[]};
   let model,history=[],future=[],dirty=false,drawRequest=0,historyTimer,activeId=state.rows[0].id;
   let width=0,height=0,ratio=1,renderRevision=0,implicitRequest=0,hoverRequest=0,cache=new Map(),drag=null,hover=null,notice='',noticeUntil=0;
-  const canvas=$('canvas'),overlay=$('overlay'),renderCanvas=document.createElement('canvas'),ctx=renderCanvas.getContext('2d'),screen=canvas.getContext('2d'),ox=overlay.getContext('2d'),relationCache=new Map();
+  const canvas=$('canvas'),overlay=$('overlay'),renderCanvas=document.createElement('canvas'),ctx=renderCanvas.getContext('2d'),screen=canvas.getContext('2d'),ox=overlay.getContext('2d'),relationCache=new Map(),relationHits=new Map();let pendingPoint=null,pendingExpression=null,intersectionNotice=false;const intersectionCache=new Map();
   function serialize(){return JSON.stringify(state);}
   function validateProject(s){
     if(!s||s.version!==1||!Array.isArray(s.rows)||s.rows.length>64)throw Error('项目格式不正确，最多 64 行');
@@ -28,6 +28,7 @@
       if(!finite(r.min,-1e12,1e12)||!finite(r.max,-1e12,1e12)||r.min>=r.max||!finite(r.step,1e-9,1e12))throw Error('无效滑块范围');
       ids.add(r.id);
     }
+    if(s.intersections===undefined)s.intersections=[];if(!Array.isArray(s.intersections)||s.intersections.length>2016||s.intersections.some(p=>!Array.isArray(p)||p.length!==2||p[0]===p[1]||p.some(id=>!ids.has(id))))throw Error('无效交点选择');
     if(s.source!==null&&!ids.has(s.source))s.source=null;
     return s;
   }
@@ -43,7 +44,7 @@
   function updateHistory(){$('undo').disabled=!history.length;$('redo').disabled=!future.length;}
   function undo(redo=false){
     clearTimeout(historyTimer);const from=redo?future:history,to=redo?history:future;if(!from.length)return;
-    to.push(serialize());state=JSON.parse(from.pop());dirty=false;nextId=Math.max(...state.rows.map(r=>r.id))+1;
+    pendingPoint=null;pendingExpression=null;to.push(serialize());state=JSON.parse(from.pop());dirty=false;nextId=Math.max(...state.rows.map(r=>r.id))+1;
     restoringView=true;autoProbabilityId=null;
     renderRows();syncControls();compileRows();persist();
   }
@@ -51,18 +52,19 @@
   function renderRows(){
     const parent=$('expressions');parent.replaceChildren();$('parameters').replaceChildren();
     for(const r of state.rows){
-      const item=make('div','expression');item.dataset.id=r.id;
+      const item=make('div','expression');item.dataset.id=r.id;item.classList.toggle('intersection-pick',pendingExpression===r.id);
+      item.addEventListener('pointerdown',e=>{if(e.button===0&&e.ctrlKey){e.preventDefault();e.stopPropagation();selectIntersectionExpression(r.id);}},{capture:true});
       const line=make('div','expression-row'),input=make('math-field');
       item.style.setProperty('--color',displayColor(r.color));item.classList.toggle('hidden-curve',!r.visible);
       input.setAttribute('aria-label',`表达式 ${state.rows.indexOf(r)+1}`);
       input.onfocus=()=>{activeId=r.id;updateActiveTools();};
       input.oninput=()=>{
-        beforeChange();r.text=input.value;changed();
+        beforeChange();E.expandOperator(input);r.text=input.value;changed();
         clearTimeout(historyTimer);historyTimer=setTimeout(()=>{dirty=false;},650);
       };
       input.addEventListener('keydown',e=>{
         const index=state.rows.indexOf(r);
-        if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addRow('',index+1);}
+        if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(input.mode==='latex'){input.executeCommand(['complete','accept-all']);input.dispatchEvent(new Event('input'));}else addRow('',index+1);}
         else if(['ArrowUp','ArrowDown'].includes(e.key)&&!e.shiftKey&&E.moveIntegralBoundary(input,e.key==='ArrowUp'?'up':'down')){e.preventDefault();}
         else if(e.key==='ArrowUp'&&input.position===0&&index>0){e.preventDefault();focusRow(state.rows[index-1].id);}
         else if(e.key==='ArrowDown'&&input.position===input.lastOffset&&index<state.rows.length-1){e.preventDefault();focusRow(state.rows[index+1].id);}
@@ -95,7 +97,7 @@
   }
   function deleteRow(id){checkpoint();dirty=false;const index=state.rows.findIndex(r=>r.id===id);state.rows.splice(index,1);if(!state.rows.length)state.rows.push(row(''));renderRows();compileRows();persist();focusRow(state.rows[Math.max(0,index-1)].id);}
   function compileRows(){
-    model=M.build(state.rows,state.angle);cache.clear();
+    state.intersections=state.intersections.filter(p=>p.every(id=>state.rows.some(r=>r.id===id)));model=M.build(state.rows,state.angle);cache.clear();relationHits.clear();
     const newProbability=model.entries.find(e=>!e.error&&e.fn&&e.distribution&&(autoProbabilityId===e.id||!distributionsSeen.has(e.id)));
     if(newProbability&&!restoringView){fitProbability(newProbability);if(!distributionsSeen.has(newProbability.id))state.source=newProbability.id;}
     restoringView=false;for(const e of model.entries)if(e.distribution&&e.fn)distributionsSeen.add(e.id);
@@ -225,7 +227,24 @@
     $('status').textContent=Date.now()<noticeUntil?notice:'';
     if(relations.length)drawRelations(relations,revision,present);else present();
   }
-  function present(){screen.drawImage(renderCanvas,0,0,width,height);}
+  function selectIntersectionExpression(id){
+    const e=model.entries.find(e=>e.id===id);if(!e||e.error||e.complex||!e.visible||!['function','curve','distribution','vertical','implicit','inequality','segment'].includes(e.kind)){flash('请选择可见的实数曲线表达式');return;}
+    pendingPoint=null;scheduleHover();if(pendingExpression===null)pendingExpression=id;else if(pendingExpression===id)pendingExpression=null;else{
+      checkpoint();dirty=false;const pair=[pendingExpression,id].sort((a,b)=>a-b),index=state.intersections.findIndex(p=>p[0]===pair[0]&&p[1]===pair[1]);if(index<0)state.intersections.push(pair);else state.intersections.splice(index,1);pendingExpression=null;intersectionNotice=true;changed(false);
+    }
+    document.querySelectorAll('.expression').forEach(row=>row.classList.toggle('intersection-pick',Number(row.dataset.id)===pendingExpression));
+  }
+  function drawIntersections(){
+    const environment=JSON.stringify([state.view,width,height,state.angle,state.rows.map(r=>r.text)]);let total=0,coincident=false;
+    for(const pair of state.intersections){const [a,b]=pair.map(id=>model.entries.find(e=>e.id===id));if(!a||!b||a.error||b.error||!a.visible||!b.visible||a.complex||b.complex)continue;
+      const key=JSON.stringify(pair)+environment;let data=intersectionCache.get(key);if(!data){data=P.intersections(a,b,state.view,width,height);intersectionCache.set(key,data);while(intersectionCache.size>32)intersectionCache.delete(intersectionCache.keys().next().value);}
+      coincident=coincident||data.coincident;total+=data.points.length;
+      data.points.forEach(([x,y],i)=>{const [px,py]=toScreen(x,y);ctx.fillStyle=plotColors().bg;ctx.strokeStyle=plotColors().tangent;ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);ctx.fill();ctx.stroke();graphLabel('intersection-'+pair.join('-')+'-'+i,px,py,`(${numberTex(x)},${numberTex(y)})`,plotColors().tangent);});
+    }
+    if(intersectionNotice){notice=coincident?'存在重合部分，交点不是有限集合':total?`${total} 个可见交点`:'未检测到可见交点';noticeUntil=Date.now()+5500;$('status').textContent=notice;intersectionNotice=false;}
+  }
+  function drawSegments(){for(const e of model.entries){if(e.error||!e.visible||!e.segment)continue;const a=toScreen(...e.segment[0]),b=toScreen(...e.segment[1]);ctx.strokeStyle=displayColor(e.color);ctx.fillStyle=displayColor(e.color);ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();for(const p of [a,b]){ctx.beginPath();ctx.arc(...p,3,0,Math.PI*2);ctx.fill();}graphLabel('segment-'+e.id,(a[0]+b[0])/2,(a[1]+b[1])/2,L.identifier(e.name||'l'+e.id),displayColor(e.color));}}
+  function present(){drawSegments();drawIntersections();screen.drawImage(renderCanvas,0,0,width,height);}
   function flashRelation(){notice='含积分的隐式关系暂不绘制；请使用 y=int(…)';noticeUntil=Date.now()+5000;}
   function drawRelations(entries,revision,done){
     // Small frame slices bound UI blocking; edited expressions cancel stale work.
@@ -236,7 +255,7 @@
       implicitRequest=0;if(revision!==renderRevision)return;const until=performance.now()+6;
       ctx.save();ctx.lineWidth=1.5;
       while(ei<entries.length&&performance.now()<until){
-        const e=entries[ei],cached=relationCache.get(key(e));if(cached){paint(e,cached);ei++;continue;}if(!pending)pending={tiles:[],lines:[]};const p=fromScreen(px,py+step),dx=step/state.view.scale,dy=step/(state.view.yScale||state.view.scale);
+        const e=entries[ei],cached=relationCache.get(key(e));if(cached){relationHits.set(e.id,cached);paint(e,cached);ei++;continue;}if(!pending)pending={tiles:[],lines:[]};const p=fromScreen(px,py+step),dx=step/state.view.scale,dy=step/(state.view.yScale||state.view.scale);
         try{
           if(e.kind==='inequality'){
             const [x,y]=fromScreen(px+step/2,py+step/2),v=e.fn(x,y),ok=Number.isFinite(v)&&({'<':v<0,'<=':v<=0,'>':v>0,'>=':v>=0,'!=':v!==0}[e.op]);
@@ -247,22 +266,48 @@
             ctx.beginPath();for(const [a,b]of lines){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();
           }
         }catch{}
-        px+=step;if(px>=width){px=0;py+=step;}if(py>=height){py=0;relationCache.set(key(e),pending);pending=null;while(relationCache.size>8)relationCache.delete(relationCache.keys().next().value);ei++;}
+        px+=step;if(px>=width){px=0;py+=step;}if(py>=height){py=0;relationCache.set(key(e),pending);relationHits.set(e.id,pending);pending=null;while(relationCache.size>8)relationCache.delete(relationCache.keys().next().value);ei++;}
       }
       ctx.restore();if(ei<entries.length)implicitRequest=requestAnimationFrame(chunk);else{tangent();done();}
     }
     implicitRequest=requestAnimationFrame(chunk);
   }
   function drawHover(){
-    ox.clearRect(0,0,width,height);if(!hover||drag){E.render($('readout'),'');return;}
+    ox.clearRect(0,0,width,height);if(pendingPoint){const p=toScreen(...pendingPoint);ox.strokeStyle=plotColors().cursor;ox.lineWidth=2;ox.beginPath();ox.arc(...p,6,0,Math.PI*2);ox.stroke();}if(!hover||drag){E.render($('readout'),'');return;}
     const [x,y]=fromScreen(...hover),colors=plotColors();let text=`x=${numberTex(x)},\\quad y=${numberTex(y)}`;
     ox.strokeStyle=colors.cursor;ox.lineWidth=1;ox.setLineDash([3,4]);ox.beginPath();ox.moveTo(hover[0],0);ox.lineTo(hover[0],height);ox.moveTo(0,hover[1]);ox.lineTo(width,hover[1]);ox.stroke();ox.setLineDash([]);
     const e=source();if(e?.complex){E.render($('readout'),`x=${numberTex(x)},\\quad f(x)=${complexTex(e.fn(x))}`);return;}if(e){const at=e.discrete?Math.round(x):x,v=sourceFn(e)(at);if(Number.isFinite(v)){const p=toScreen(at,v);ox.fillStyle=displayColor(e.color);ox.beginPath();ox.arc(...p,3.5,0,Math.PI*2);ox.fill();text+=e.discrete?`\\\\${e.probability?'p':'f'}(${numberTex(at)})=${numberTex(v)}`:`\\\\f(x)=${numberTex(v)}${e.step?'':`,\\quad f'(x)=${numberTex(sourceDf(e,x))}`}`;}}
     E.render($('readout'),`\\begin{gathered}${text}\\end{gathered}`);
   }
   function position(e){const r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+  function snapPoint(p){
+    let best=null,distance=13;const consider=q=>{if(!q.every(Number.isFinite))return;const screenPoint=toScreen(...q),d=Math.hypot(screenPoint[0]-p[0],screenPoint[1]-p[1]);if(d<distance){best=q;distance=d;}};
+    const onSegment=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],length=dx*dx+dy*dy,t=length?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;consider(fromScreen(a[0]+t*dx,a[1]+t*dy));};
+    for(const e of model.entries){if(e.error||!e.visible)continue;
+      if(e.segment){onSegment(...e.segment.map(q=>toScreen(...q)));continue;}
+      if(e.kind==='point'){consider(e.point);continue;}
+      if(e.complexScalar){const z=C.is(e.value)?e.value:C.make(e.value);consider([z.re,z.im]);continue;}
+      if(e.kind==='vertical'){const x=e.fn(0),y=fromScreen(...p)[1];if(!e.allowed||e.allowed(x,y))consider([x,y]);continue;}
+      const implicit=relationHits.get(e.id);if(implicit){for(const [a,b]of implicit.lines)onSegment(a,b);continue;}
+      if(!['function','curve','distribution'].includes(e.kind)||!e.fn)continue;
+      for(let px=p[0]-12;px<=p[0]+12;px++){
+        let x=fromScreen(px,0)[0];if(e.discrete)x=Math.round(x);let y=sourceFn(e)(x);
+        if(e.complex){const z=C.is(y)?y:C.make(y);consider([x,z.re]);consider([x,z.im]);}else if(!e.allowed||e.allowed(x,y))consider([x,y]);
+      }
+    }
+    return best;
+  }
+  function selectSegmentPoint(p){
+    const point=snapPoint(p);if(!point){flash('请在曲线上选择点');return;}
+    if(!pendingPoint){pendingPoint=point;scheduleHover();return;}
+    if(Math.hypot(point[0]-pendingPoint[0],point[1]-pendingPoint[1])<1e-10)return;
+    if(state.rows.length>=64){flash('最多 64 行');return;}
+    const used=new Set(model.entries.map(e=>e.name));let n=1;while(used.has('l'+n))n++;
+    checkpoint();dirty=false;const r=row(`l${n}=segment(${[...pendingPoint,...point].map(v=>P.format(v,12)).join(',')})`);state.rows.push(r);pendingPoint=null;renderRows();compileRows();persist();
+  }
   canvas.onpointerdown=e=>{
-    if(e.button!==0)return;canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type='pan';
+    if(e.button!==0)return;if(e.ctrlKey){e.preventDefault();canvas.focus();selectSegmentPoint(position(e));return;}
+canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type='pan';
     if(f&&state.tangent&&!f.discrete&&!f.step){const q=toScreen(state.tx,sourceFn(f)(state.tx));if(Math.hypot(p[0]-q[0],p[1]-q[1])<18)type='tangent';}
     if(type==='pan'&&state.integral&&f){if(Math.abs(p[0]-toScreen(state.a,0)[0])<10)type='a';else if(Math.abs(p[0]-toScreen(state.b,0)[0])<10)type='b';}
     drag={type,start:p,view:{...state.view},pointer:e.pointerId};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging');
@@ -307,12 +352,12 @@
   function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
   function exportProject(){download(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),'graphVis.json');flash('已导出项目 JSON');}
   $('save').onclick=exportProject;$('open').onclick=()=>$('file').click();
-  $('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>100000)throw Error('项目文件过大');const s=validateProject(JSON.parse(await file.text()));checkpoint();dirty=false;state=s;restoringView=true;autoProbabilityId=null;nextId=Math.max(0,...state.rows.map(r=>r.id))+1;if(!state.rows.length)state.rows.push(row(''));renderRows();syncControls();compileRows();resize();persist();flash('项目已打开');}catch(e){flash(`无法打开：${e.message}`);}$('file').value='';};
+  $('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>100000)throw Error('项目文件过大');const s=validateProject(JSON.parse(await file.text()));checkpoint();dirty=false;state=s;pendingPoint=null;pendingExpression=null;restoringView=true;autoProbabilityId=null;nextId=Math.max(0,...state.rows.map(r=>r.id))+1;if(!state.rows.length)state.rows.push(row(''));renderRows();syncControls();compileRows();resize();persist();flash('项目已打开');}catch(e){flash(`无法打开：${e.message}`);}$('file').value='';};
   $('export').onclick=()=>{
     if(implicitRequest){flash('关系绘制中');return;}
     const copy=canvas.cloneNode(false),c=copy.getContext('2d');c.setTransform(ratio,0,0,ratio,0,0);c.drawImage(canvas,0,0,width,height);
     c.font='12px KaTeX_Main, serif';
-    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const point=model.entries.find(e=>e.id===Number(text.slice(6)))?.point;if(!point)continue;text=`(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
+    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('intersection-'))text=label.dataset.latex||text;if(text.startsWith('segment-'))text=model.entries.find(e=>e.id===Number(text.slice(8)))?.name||text;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const point=model.entries.find(e=>e.id===Number(text.slice(6)))?.point;if(!point)continue;text=`(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
     copy.toBlob(blob=>{if(blob)download(blob,'graphVis.png');else flash('无法导出图像');},'image/png');
   };
   $('undo').onclick=()=>undo();$('redo').onclick=()=>undo(true);$('add').onclick=()=>addRow();
@@ -354,7 +399,7 @@
     else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo(e.shiftKey);}
     else if(e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault();addRow();}
     else if((e.ctrlKey||e.metaKey)&&e.key==='/'){e.preventDefault();setTools(!toolsOpen);}
-    else if(e.key==='Escape'){setTools(false);}
+    else if(e.key==='Escape'){pendingPoint=null;pendingExpression=null;document.querySelectorAll('.intersection-pick').forEach(e=>e.classList.remove('intersection-pick'));scheduleHover();setTools(false);}
     else if(!editing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1&&/[A-Za-z0-9\\]/.test(e.key)){e.preventDefault();setTools(true);focusRow(state.rows.find(r=>!r.text)?.id||state.rows.at(-1).id);const input=document.activeElement;input.insert(e.key);input.dispatchEvent(new Event('input'));}
     if(e.defaultPrevented)e.stopPropagation();
   },{capture:true});
