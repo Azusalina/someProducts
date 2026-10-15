@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-15",
+  "target": "x86_64-pc-windows-gnullvm",
+  "compiler": "rustc 1.99.0",
+  "linker": "LLVM-MinGW 20261006 UCRT",
+  "binary": "bin/filex.exe",
+  "bytes": 943104,
+  "sha256": "28cfd1d4daa350ae56c60c0d48b9017f00fda93bca6fde64a1eff4a148e7ab89",
+  "passed": {
+    "linux_shared_rust_tests": 29,
+    "windows_release_cross_build": true,
+    "windows_test_executable_cross_build": true,
+    "powershell_scripts_parse": 5,
+    "bash_syntax": true,
+    "powershell_launcher_mock_handoff": true
+  },
+  "not_run": [
+    "Windows 11 interactive TUI",
+    "CMD and mintty runtime",
+    "Windows test executable",
+    "native clipboard and recycle bin",
+    "IME and Windows RAM measurement"
+  ]
+}
