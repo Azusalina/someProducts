@@ -199,7 +199,7 @@ class JobStore:
             cached = directory / name
             if cached.exists():
                 data = cached.read_bytes()
-                if json.loads(data).get('version') == 3: return data
+                if json.loads(data).get('version') == 4: return data
             index = int(re.fullmatch(r'result-(\d+)\.map\.json', name).group(1))
             job = self.get(identifier)
             if not job or job['state'] != 'done' or index >= len(job['results']):

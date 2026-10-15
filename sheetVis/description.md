@@ -175,3 +175,33 @@ PDF 导入时默认显示原 PDF，重建 MusicXML 预览改为按需加载；�
 Chromium 验证实际原 PDF 左侧／瀑布右侧布局、逐音标记（同一小节 0.05 秒符头 2456/2405 → 1.05 秒符头 2458/2407）、实际音频信号、Space 在播放按钮与滑块聚焦时暂停／继续、进度条鼠标拖拽、晚段换页、倍速、Zen 与 Esc，以及刷新复用同一任务。未观察到页面异常或外部 HTTP 请求。原有工具栏、配色保存／恢复、琴键发声、高度拖动、导入及窄屏测试也通过。
 
 记录：`test-results/chopin-improved.json`、`test-results/chopin-split.png`、`test-results/chopin-feedback.png`、`test-results/browser.json`。复测：运行本机服务后 `npm run test:chopin`，常规回归 `npm test` 与 `npm run test:browser`。保留上一次 `test-results/chopin.json` 作为旧结果对照。位置对应与播放验证均不等于逐音准确性验证。
+
+
+## 2026-10-15 八度线、行内谱号、弧线与连音支持
+
+### 实现与播放语义
+
+PDF 符号识别仍由本机 Audiveris 完成。本次补齐识别结果到播放／原谱定位的处理，不把程序生成的数据统计当作原谱准确率。
+
+- 八度线：保留 `octave-shift` 及原始实际音高；8va／8vb 已包含在标准 MusicXML 的 `pitch` 中，不额外升降八度。新增按谱表和编号检查起止配对，缺失、重复或孤立端点进入反馈，不猜测延伸范围。重建预览先尝试保留八度线，确实遇到排版异常才回退并提示；原始下载保持完整。参见 [MusicXML octave-shift](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/octave-shift/)。
+- 行内谱号：原 PDF 定位按发生拍点应用谱号，处理 backup 后的其他声部，而不把小节末的谱号提前套到开头；涵盖谱号所在谱线和 `clef-octave-change`。音高仍按 MusicXML 明确写出的音高播放，手别由谱表保留。小节中途 `divisions` 变化也按顺序解析。定位映射缓存由 v3 升至 v4，仅重新计算坐标，不重新识别整份 PDF。
+- 延音线：`tie`／`tied` 的 start、stop、continue 支持跨小节续接；同音高、同声部且时间连续时合并为一次击键，保留每个原始符头的高亮区间。跨谱表续接只接受唯一候选，避免误合并同时出现的同音。缺少起始音时独立播放并提示。
+- 连奏线：按编号配对，可跨小节；保留每个音的起奏及谱面时值，仅在同声部、连续且同属一条连奏线的音之间增加至多 30ms、且不超过下音时长 10% 的声音衔接。同音重击不延迟，休止不跨越，其他声部不因位于弧线的时间范围内而被改变。缺失终点的线不推测作用范围。这是当前的采样播放诠释，不是专业演奏建模。
+- 连音：显式 `duration / divisions` 优先，三／五／六连音等不重复缩放。缺少 duration 时才依据音符类型、附点和 `normal-notes / actual-notes` 恢复，并提示人工检查；非法比例不生成猜测音符。参见 [MusicXML time-modification](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/time-modification/) 和 [duration](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/duration/)。
+- “反馈”显示 MusicXML 的八度线起点、谱号变更、连奏线起点、合并延音数量，以及连音音符数；三／五连音统计是参与的音符数，不是连音组数。
+
+### 验证与边界
+
+组合测试谱 `tests/fixtures/notations.musicxml` 包含 8va、同小节高音转低音谱号、跨小节延音、跨小节连奏线、三连音和五连音。验证得到 11 次击键、3 秒；浏览器实际显示这些记号，反馈统计匹配。截图 `test-results/notations.png`。常规 TS 测试 44 项及 Python 测试 25 项通过，构建与 Chromium 回归通过；浏览器未产生外部 HTTP 请求。
+
+额外对保留的肖邦识别结果执行回归（不重新跑 OMR）：仍为 4883 个播放音符、262 个播放小节、750.9583333333333 秒。映射 v4 对应 5049 / 5055 个导出符头，覆盖率不代表音高／节奏正确率。该导出包含 17 个八度线起点、2 个终点，按谱表与编号配对检查有 17 处异常端点／未闭合线；可见仅识别八度数字并不足以保证完整的八度作用范围。另有 140 个三连音音符和 310 个六连音音符，没有五连音输出，因此五连音目前用明确构造的测试谱验证，未据此宣称复杂扫描 PDF 的五连音识别准确率改善。
+
+本次没有训练新图像模型，也没有自动重写这些不确定的八度音高。扫描图像中漏掉的谱号、八度线终点、弧线或连音数字仍可能造成错误，需对照原 PDF 或在乐谱编辑器修正导出的 MusicXML。已有识别任务保留，不为部署这次修改中断任务；后端映射 v4 在下次服务启动后生效。
+
+常规验证：`npm test`、`npm run build`、`npm run test:browser`。保留结果的额外回归：
+
+```bash
+SHEETVIS_REFERENCE_MXL=.data/jobs/e9c05f0e608944b8863ec5248e38f840/result-0.mxl npx vitest run tests/notation-reference.test.ts
+```
+
+该额外测试在未设置环境变量时跳过，避免将本机缓存作为公共测试依赖。记录见 `test-results/notation-reference.json` 和 `test-results/notation-map.json`。运行本地服务测试需要允许绑定回环地址。

@@ -120,6 +120,14 @@ try {
   await expect(page.locator('#play')).toHaveText('播放');
   const download = page.waitForEvent('download'); await page.locator('#download').click();
   expect((await download).suggestedFilename()).toContain('.musicxml');
+  await page.locator('#file').setInputFiles('tests/fixtures/notations.musicxml');
+  await expect(page.locator('#piece-meta')).toContainText('11 个音符');
+  await expect(page.locator('#piece-meta')).toContainText('00:03');
+  await expect(page.locator('#score-view svg')).toHaveCount(1);
+  await page.locator('#feedback-open').click();
+  await expect(page.locator('#read-facts')).toContainText('八度线 1 · 谱号变更 1 · 连奏线 1 · 合并延音 1');
+  await expect(page.locator('#read-facts')).toContainText('三连音 3 · 五连音 5');
+  await page.screenshot({path:'test-results/notations.png',fullPage:true});
   const midi = new Midi(); midi.header.setTempo(96); midi.addTrack().addNote({ midi: 60, time: 0, duration: 1 });
   await writeFile('test-results/test.mid', midi.toArray());
   await page.locator('#file').setInputFiles('test-results/test.mid');
@@ -153,7 +161,7 @@ try {
   await expect(page.locator('#import')).toBeHidden();
   await page.locator('#toolbar-toggle').click(); await expect(page.locator('#import')).toBeVisible();
   expect(errors).toEqual([]); expect(external).toEqual([]);
-  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'recognition quality and reading feedback', 'saved color settings and reload', 'Zen layout and Esc exit', 'score render', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
+  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'recognition quality and reading feedback', 'saved color settings and reload', 'Zen layout and Esc exit', 'score render', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', '8va and inline clef rendering', 'tie and slur notation feedback', 'triplet and quintuplet import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
   console.log('Browser checks passed; audio peak:', amplitude, '; no external requests.');
 } finally {
   if (browser) await browser.close(); server.kill();

@@ -41,6 +41,72 @@ describe('musical timing and structure', () => {
     const s = musicXMLToScore(wrap(measure(note('C', 4) + note('D', 4) + note('E', 4))).replace('>4</divisions>', '>12</divisions>'));
     expect(s.duration).toBeCloseTo(.5); expect(s.notes[1].start).toBeCloseTo(1 / 6);
   });
+  test('notation fixture retains expected pitches, attacks and duration', () => {
+    const s = musicXMLToScore(readFileSync('tests/fixtures/notations.musicxml','utf8'));
+    expect(s.notes).toHaveLength(11); expect(s.duration).toBeCloseTo(3);
+    expect(s.notes.slice(0,3).map(n => n.midi)).toEqual([72,50,52]);
+    expect(s.notes[2].duration).toBe(1); expect(s.notes[2].sources).toHaveLength(2);
+    expect(s.notes[3].duration).toBeCloseTo(1/6); expect(s.notes[6].duration).toBeCloseTo(.1);
+  });
+  test('divisions change exactly at a mid-measure attribute', () => {
+    const s = musicXMLToScore(wrap(measure(note() + '<attributes><divisions>8</divisions></attributes>' + note('D', 8))));
+    expect(s.notes.map(n => n.duration)).toEqual([.5,.5]); expect(s.duration).toBe(1);
+  });
+  test.each([3,5])('%i-tuplet fallback restores missing duration without double scaling explicit duration', actual => {
+    const ratio = `<type>eighth</type><time-modification><actual-notes>${actual}</actual-notes><normal-notes>2</normal-notes></time-modification>`;
+    const missing = note('C',4,ratio).replace('<duration>4</duration>','');
+    const s = musicXMLToScore(wrap(measure(missing.repeat(actual))));
+    expect(s.duration).toBeCloseTo(.5); expect(s.notes[1].start).toBeCloseTo(.5/actual);
+    const explicit = musicXMLToScore(wrap(measure(note('C',4,ratio))));
+    expect(explicit.duration).toBe(.5);
+  });
+  test('dotted tuplet fallback and malformed ratios are handled explicitly', () => {
+    const n = note('C',4,'<type>eighth</type><dot/><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>').replace('<duration>4</duration>','');
+    expect(musicXMLToScore(wrap(measure(n))).duration).toBeCloseTo(.25);
+    const bad = musicXMLToScore(wrap(measure(n.replace('<actual-notes>3','<actual-notes>0')+note())));
+    expect(bad.notes).toHaveLength(1); expect(bad.warnings.join(' ')).toContain('连音比例');
+  });
+  test('8va, 8vb and inline clef changes preserve sounding MusicXML pitch', () => {
+    const shift = (type:string) => `<direction><direction-type><octave-shift type="${type}" size="8"/></direction-type></direction>`;
+    const clef = '<attributes><clef><sign>F</sign><line>4</line></clef></attributes>';
+    const s = musicXMLToScore(wrap(measure(shift('down')+note('C').replace('<octave>4','<octave>5')+shift('stop')+clef+note('D').replace('<octave>4','<octave>3')+shift('up')+note('E').replace('<octave>4','<octave>2')+shift('stop'))));
+    expect(s.notes.map(n => n.midi)).toEqual([72,50,40]);
+    expect(s.notes.every(n => n.hand === 'right')).toBe(true);
+  });
+  test('unpaired ottava is reported without guessing an octave correction', () => {
+    const s = musicXMLToScore(wrap(measure('<direction><direction-type><octave-shift type="down"/></direction-type></direction>'+note())));
+    expect(s.notes[0].midi).toBe(60); expect(s.warnings.join(' ')).toContain('八度线缺少配对');
+  });
+  test('unambiguous cross-staff tie keeps one attack and source locations', () => {
+    const s = musicXMLToScore(wrap(measure(note('C',4,'<tie type="start"/>')+note('C',4,'<tie type="stop"/>').replace('<staff>1','<staff>2'))));
+    expect(s.notes).toHaveLength(1); expect(s.notes[0].duration).toBe(1); expect(s.notes[0].sources).toHaveLength(2);
+  });
+  test('three-part tied continuation keeps one attack and all PDF source segments', () => {
+    const tied = (type:string) => `<notations><tied type="${type}"/></notations>`;
+    const s = musicXMLToScore(wrap(measure(note('C',4,tied('start'))) + measure(note('C',4,tied('continue')),2)+measure(note('C',4,tied('stop')),3)));
+    expect(s.notes).toHaveLength(1); expect(s.notes[0].duration).toBe(1.5);
+    expect(s.notes[0].sources?.map(n => n.start)).toEqual([0,.5,1]);
+  });
+  test('slur retains attacks and adds a bounded legato overlap across measures', () => {
+    const slur = (type:string) => `<notations><slur type="${type}" number="1"/></notations>`;
+    const s = musicXMLToScore(wrap(measure(note('C',4,slur('start'))) + measure(note('D')+note('E',4,slur('stop')),2)));
+    expect(s.notes).toHaveLength(3); expect(s.notes.map(n => n.start)).toEqual([0,.5,1]);
+    expect(s.notes[0].soundDuration).toBeCloseTo(.53); expect(s.notes[1].soundDuration).toBeCloseTo(.53);
+    expect(s.notes[2].soundDuration).toBe(.5);
+  });
+  test('slurs never bridge rests, retrigger the same pitch late, or connect unrelated voices', () => {
+    const start = '<notations><slur type="start"/></notations>', stop = '<notations><slur type="stop"/></notations>';
+    const same = musicXMLToScore(wrap(measure(note('C',4,start)+note('C',4,stop))));
+    expect(same.notes).toHaveLength(2); expect(same.notes[0].soundDuration).toBe(.5);
+    const rest = musicXMLToScore(wrap(measure(note('C',4,start)+'<note><rest/><duration>4</duration></note>'+note('D',4,stop))));
+    expect(rest.notes[0].soundDuration).toBe(.5);
+    const other = musicXMLToScore(wrap(measure(note('C',4,start)+note('D',4,stop).replace('<voice>1','<voice>2'))));
+    expect(other.notes[0].soundDuration).toBe(.5);
+  });
+  test('unclosed slurs report uncertainty and do not extend sound', () => {
+    const s = musicXMLToScore(wrap(measure(note('C',4,'<notations><slur type="start"/></notations>')+note('D'))));
+    expect(s.notes[0].soundDuration).toBe(.5); expect(s.warnings.join(' ')).toContain('连奏线缺少终点');
+  });
   test('ordinary repeat is unfolded', () => {
     const repeat = '<barline><repeat direction="backward"/></barline>';
     const s = musicXMLToScore(wrap(measure(note()) + measure(note('D') + repeat, 2)));

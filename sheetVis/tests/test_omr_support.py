@@ -54,6 +54,24 @@ class OMRSupportTests(unittest.TestCase):
         self.assertEqual(result['positions']['P1:0:0']['page'],1)
         self.assertNotIn('P1:0:1',result['positions'])
 
+    def test_inline_clef_is_applied_at_its_onset_including_backup_voice(self):
+        sheet=ET.fromstring(SHEET)
+        inters=sheet.find('.//sig/inters');relations=sheet.find('.//sig/relations')
+        # Extra physical chord member prevents geometry-only chord matching,
+        # so this exercises the pitch/clef fallback itself.
+        for id,x,pitch in [('12','150','6'),('13','300','0'),('14','300','6')]:
+            head=ET.SubElement(inters,'head',{'id':id,'staff':'1','pitch':pitch})
+            ET.SubElement(head,'bounds',{'x':x,'y':'215','w':'12','h':'10'})
+            rel=ET.SubElement(relations,'relation',{'source':'10','target':id});ET.SubElement(rel,'containment')
+        with zipfile.ZipFile(self.project,'w') as z:
+            z.writestr('book.xml',BOOK);z.writestr('sheet#1/sheet#1.xml',ET.tostring(sheet))
+        def note(step,octave,x):
+            return f'<note default-x="{x}"><pitch><step>{step}</step><octave>{octave}</octave></pitch><duration>1</duration><voice>1</voice><staff>1</staff></note>'
+        xml=self.directory/'inline.musicxml'
+        xml.write_text('<score-partwise><part id="P1"><measure number="1">'+note('B',4,50)+'<attributes><clef><sign>F</sign><line>4</line></clef></attributes>'+note('D',3,200)+'<backup><duration>2</duration></backup>'+note('B',4,50)+'</measure></part></score-partwise>')
+        positions=source_map(self.project,xml)['positions']
+        self.assertEqual([positions[f'P1:0:{i}']['head'] for i in range(3)],['11','13','11'])
+
     def test_octave_display_shift_preserves_originating_head_identity(self):
         xml=self.directory/'ottava.musicxml'
         pitch='<note default-x="50"><pitch><step>B</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><staff>1</staff></note>'

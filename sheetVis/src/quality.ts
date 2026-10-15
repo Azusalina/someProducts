@@ -23,6 +23,21 @@ export function qualityFeedback(score: Score, job?: RecognitionJob) {
   if (!score.notes.some(n => n.hand === 'left') || !score.notes.some(n => n.hand === 'right')) issues.push('播放数据只包含单手；可能是单手乐谱，也可能有声部遗漏。');
   if (score.xml) {
     const doc = parseXML(score.xml);
+    const octaveLines = doc.querySelectorAll('octave-shift[type="up"], octave-shift[type="down"]').length;
+    const slurs = doc.querySelectorAll('slur[type="start"]').length;
+    const tied = score.notes.filter(n => (n.sources?.length ?? 0) > 1).length;
+    const tuplets = [...doc.querySelectorAll('time-modification')];
+    const triplets = tuplets.filter(t => t.querySelector('actual-notes')?.textContent === '3').length;
+    const quintuplets = tuplets.filter(t => t.querySelector('actual-notes')?.textContent === '5').length;
+    const clefs = new Map<string,string>(); let clefChanges = 0;
+    for (const clef of doc.querySelectorAll('clef')) {
+      const key = `${clef.closest('part')?.getAttribute('id')}:${clef.getAttribute('number') ?? '1'}`;
+      const sign = `${clef.querySelector('sign')?.textContent}:${clef.querySelector('line')?.textContent}:${clef.querySelector('clef-octave-change')?.textContent ?? '0'}`;
+      if (clefs.has(key) && clefs.get(key) !== sign) clefChanges++;
+      clefs.set(key,sign);
+    }
+    facts.push(`MusicXML 标记：八度线 ${octaveLines} · 谱号变更 ${clefChanges} · 连奏线 ${slurs} · 合并延音 ${tied}`);
+    if (tuplets.length) facts.push(`连音音符 ${tuplets.length}（三连音 ${triplets} · 五连音 ${quintuplets}），按实际时值播放。`);
     const xmlMeasures = [...doc.querySelectorAll('part > measure')];
     const nonControlling = xmlMeasures.filter(m => m.getAttribute('non-controlling') === 'yes').length;
     if (nonControlling) issues.push(`${nonControlling} 个小节带有识别引擎的节奏异常标记。`);

@@ -130,7 +130,7 @@ def source_map(project, xml_path, score_index=0):
     with zipfile.ZipFile(project) as archive:
         book = ET.fromstring(archive.read('book.xml')); scores = book.findall('score')
         if score_index >= len(scores):
-            return {'version':3,'positions':{},'pages':{},'mapped':0,'total':0}
+            return {'version':4,'positions':{},'pages':{},'mapped':0,'total':0}
         base = 0
         for reference in scores[score_index].findall('page'):
             page_number = int(reference.get('sheet-number')); page_id = reference.get('sheet-page-id')
@@ -165,19 +165,23 @@ def source_map(project, xml_path, score_index=0):
     total = 0
     for part in xml.findall('part'):
         physical_part = re.sub(r'^P', '', part.get('id',''))
-        clefs = {1:'G', 2:'F'}
+        clefs = {1:34, 2:22}
         shifts = {}; divisions = 1
         for measure_index, measure in enumerate(part.findall('measure')):
-            for clef in measure.findall('attributes/clef'):
-                clefs[int(clef.get('number','1'))] = clef.findtext('sign','G')
             source = source_measures.get((physical_part, measure.get('number')))
-            if measure.find('attributes/divisions') is not None:
-                divisions = max(1,float(measure.findtext('attributes/divisions')))
             # XML pitch is sounding pitch. Match the written notehead after
             # applying the time-local octave display shift, including backups.
-            changes = []; note_data = []; beat = 0; chord_beat = 0
+            changes = []; clef_changes = []; note_data = []; beat = 0; chord_beat = 0
             for element in measure:
-                if element.tag == 'backup': beat = max(0,beat-float(element.findtext('duration','0'))/divisions)
+                if element.tag == 'attributes':
+                    if element.find('divisions') is not None:
+                        divisions = max(1, float(element.findtext('divisions')))
+                    for clef in element.findall('clef'):
+                        sign = clef.findtext('sign', 'G')
+                        reference = {'G':(34,2), 'F':(22,4), 'C':(28,3)}.get(sign)
+                        middle = None if reference is None else reference[0] + 2*(reference[1]-int(clef.findtext('line',str(reference[1])))) + 7*int(clef.findtext('clef-octave-change','0'))
+                        clef_changes.append((beat,int(clef.get('number','1')),middle))
+                elif element.tag == 'backup': beat = max(0,beat-float(element.findtext('duration','0'))/divisions)
                 elif element.tag == 'forward': beat += float(element.findtext('duration','0'))/divisions
                 elif element.tag == 'direction':
                     for shift in element.findall('direction-type/octave-shift'):
@@ -192,6 +196,7 @@ def source_map(project, xml_path, score_index=0):
                     note_data.append((element,onset))
                     if not is_chord:beat += float(element.findtext('duration','0'))/divisions
             changes.sort(key=lambda event:event[0])
+            clef_changes.sort(key=lambda event:event[0])
             group_heads = {}
             if source:
                 page_number, left, interline, staff_ids, _, voice_chords = source
@@ -233,7 +238,9 @@ def source_map(project, xml_path, score_index=0):
                 for at, target, shift in changes:
                     if target == staff and at <= onset + 1e-7: delta = shift
                 pitch_index += delta
-                middle = {'G':34,'F':22,'C':28}.get(clefs.get(staff))
+                middle = clefs.get(staff)
+                for at, target, changed_middle in clef_changes:
+                    if target == staff and at <= onset + 1e-7: middle = changed_middle
                 if middle is None: continue
                 candidates = []
                 for head in voice_heads[note.findtext('voice','1')]:
@@ -258,7 +265,8 @@ def source_map(project, xml_path, score_index=0):
                     'w':float(bounds.get('w'))/dimensions['width'], 'h':float(bounds.get('h'))/dimensions['height'],
                     'head':head.get('id'), 'grade':float(head.get('ctx-grade',head.get('grade','0')))}
             for _,staff,delta in changes:shifts[staff]=delta
-    return {'version':3,'positions':positions,'pages':pages,'mapped':len(positions),'total':total}
+            for _,staff,middle in clef_changes:clefs[staff]=middle
+    return {'version':4,'positions':positions,'pages':pages,'mapped':len(positions),'total':total}
 
 
 def repair_dynamics(project):

@@ -430,17 +430,24 @@ $('score-tab').addEventListener('click', async () => {
     const renderer = new OpenSheetMusicDisplay(target, {autoResize:false, backend:'svg', drawTitle:false, drawComposer:false, darkMode:true});
     try {
       const xml = parseXML(current.xml!);
-      const octaveMarks = xml.querySelectorAll('octave-shift');
-      if (octaveMarks.length) {
-        octaveMarks.forEach(e=>e.remove());
-        const warning='重建预览省略八度线以避免排版异常；原 PDF、播放音高与下载不受此预览处理影响。';
+      if (!xml.querySelector('repeat[direction="backward"]')) xml.querySelectorAll('ending').forEach(e=>e.remove());
+      try {
+        await renderer.load(new XMLSerializer().serializeToString(xml));
+        if (token !== revision) { renderer.clear(); return; }
+        renderer.render();
+      } catch (error) {
+        if (!xml.querySelector('octave-shift')) throw error;
+        renderer.clear();
+        xml.querySelectorAll('octave-shift').forEach(e=>e.remove());
+        await renderer.load(new XMLSerializer().serializeToString(xml));
+        if (token !== revision) { renderer.clear(); return; }
+        renderer.render();
+        const warning='重建预览的八度线排版失败，预览暂省略八度线；原 PDF、播放音高与下载保留。';
         if (!current.warnings.includes(warning)) current.warnings.push(warning);
         showWarnings(current.warnings); reflect(current);
       }
-      if (!xml.querySelector('repeat[direction="backward"]')) xml.querySelectorAll('ending').forEach(e=>e.remove());
-      await renderer.load(new XMLSerializer().serializeToString(xml));
       if (token !== revision) { renderer.clear(); return; }
-      renderer.render(); display = renderer;
+      display = renderer;
     } catch { if (token === revision) $('score-view').textContent = '五线谱预览失败'; renderer.clear(); }
     finally { if (token === revision) {busy=false;updateButtons();} }
   } else switchTab(false);

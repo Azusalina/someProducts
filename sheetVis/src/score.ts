@@ -8,14 +8,15 @@ export interface NoteEvent {
 }
 export interface MeasureEvent { number: string; index: number; start: number; duration: number; sourceBeat: number }
 export interface Score { title: string; notes: NoteEvent[]; measures: MeasureEvent[]; duration: number; bpm: number; warnings: string[]; xml?: string }
-type RawNote = { midi: number; beat: number; duration: number; staff: number; voice: string; velocity: number; tieStart: boolean; tieStop: boolean; source: string };
+type SlurMark = { number: string; type: string };
+type RawNote = { slurs: SlurMark[]; midi: number; beat: number; duration: number; staff: number; voice: string; velocity: number; tieStart: boolean; tieStop: boolean; source: string };
 type RawMeasure = { number: string; sourceBeat: number; duration: number; notes: RawNote[]; tempos: { beat: number; bpm: number }[]; pedals: { beat: number; down: boolean }[]; forward: boolean; backward: number; endings: number[] };
 const children = (e: Element, tag: string) => Array.from(e.children).filter(c => c.localName === tag);
 const child = (e: Element, tag: string) => children(e, tag)[0];
 const value = (e: Element, tag: string, fallback = '') => child(e, tag)?.textContent?.trim() ?? fallback;
 const numeric = (e: Element, tag: string, fallback: number) => { const s = value(e, tag); const n = Number(s); return s && Number.isFinite(n) ? n : fallback; };
 const pitchClasses: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-const typeDurations: Record<string, number> = { maxima: 32, long: 16, breve: 8, whole: 4, half: 2, quarter: 1, eighth: .5, '16th': .25, '32nd': .125, '64th': .0625 };
+const typeDurations: Record<string, number> = { maxima: 32, long: 16, breve: 8, whole: 4, half: 2, quarter: 1, eighth: .5, '16th': .25, '32nd': .125, '64th': .0625, '128th': .03125, '256th': .015625 };
 
 export function parseXML(text: string): Document {
   // External entities are never resolved by the browser parser. Reject entity declarations.
@@ -69,16 +70,16 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   const raw: RawMeasure[] = [];
   let divisions = 1, beatsPerMeasure = 4, sourceBeat = 0, activeEndings: number[] = [], velocity = .72;
   for (const measure of children(part, 'measure')) {
-    const attributes = child(measure, 'attributes');
-    if (attributes) {
-      divisions = numeric(attributes, 'divisions', divisions);
-      if (!(divisions > 0)) throw new Error('乐谱的 divisions 必须大于 0。');
-      const time = child(attributes, 'time');
-      if (time) beatsPerMeasure = value(time, 'beats', '4').split('+').reduce((a, b) => a + Number(b), 0) * 4 / numeric(time, 'beat-type', 4);
-    }
     const m: RawMeasure = { number: measure.getAttribute('number') ?? String(raw.length + 1), sourceBeat, duration: 0, notes: [], tempos: [], pedals: [], forward: false, backward: 0, endings: [...activeEndings] };
     let beat = 0, extent = 0, chordBeat = 0, noteIndex = -1;
     for (const el of Array.from(measure.children)) {
+      if (el.localName === 'attributes') {
+        const attributes = el;
+        divisions = numeric(attributes, 'divisions', divisions);
+        if (!(divisions > 0)) throw new Error('乐谱的 divisions 必须大于 0。');
+        const time = child(attributes, 'time');
+        if (time) beatsPerMeasure = value(time, 'beats', '4').split('+').reduce((a, b) => a + Number(b), 0) * 4 / numeric(time, 'beat-type', 4);
+      }
       if (el.localName === 'backup') beat = Math.max(0, beat - numeric(el, 'duration', 0) / divisions);
       if (el.localName === 'forward') { beat += numeric(el, 'duration', 0) / divisions; extent = Math.max(extent, beat); }
       if (el.localName === 'direction') {
@@ -100,7 +101,20 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
       if (el.localName === 'note') {
         noteIndex++;
         if (child(el, 'grace')) { warnings.add('装饰音暂不参与播放。'); continue; }
-        const duration = numeric(el, 'duration', 0) / divisions;
+        // Explicit duration is already scaled for tuplets. Only reconstruct it
+        // from notation when an exporter omitted duration altogether.
+        let duration = numeric(el, 'duration', 0) / divisions;
+        if (!child(el, 'duration')) {
+          const base = typeDurations[value(el, 'type')];
+          const dots = children(el, 'dot').length;
+          const modification = child(el, 'time-modification');
+          const actual = modification ? numeric(modification, 'actual-notes', NaN) : 1;
+          const normal = modification ? numeric(modification, 'normal-notes', NaN) : 1;
+          if (base && actual > 0 && normal > 0) {
+            duration = base * (2 - 2 ** -dots) * normal / actual;
+            warnings.add('部分音符缺少实际时值，已依据音符类型、附点及连音比例恢复；需核对原谱。');
+          } else warnings.add('部分音符缺少有效时值或连音比例，无法恢复，未参与播放。');
+        }
         const isChord = Boolean(child(el, 'chord'));
         const onset = isChord ? chordBeat : beat;
         if (!isChord) chordBeat = beat;
@@ -112,7 +126,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
           if (midi < 21 || midi > 108) warnings.add('部分音符超出标准 88 键钢琴范围，仍会播放，但不显示在键盘范围内。');
           if (!Number.isInteger(midi)) warnings.add('微分音在瀑布中按最近的钢琴键显示。');
           const ties = [...children(el, 'tie'), ...Array.from(el.querySelectorAll('notations > tied'))];
-          m.notes.push({ midi, beat: onset, duration, staff: numeric(el, 'staff', 1), voice: value(el, 'voice', '1'), velocity, tieStart: ties.some(t => t.getAttribute('type') === 'start'), tieStop: ties.some(t => t.getAttribute('type') === 'stop'), source: `${part.getAttribute('id')}:${raw.length}:${noteIndex}` });
+          m.notes.push({ slurs: Array.from(el.querySelectorAll('notations > slur')).map(t => ({number:t.getAttribute('number') ?? '1', type:t.getAttribute('type') ?? ''})), midi, beat: onset, duration, staff: numeric(el, 'staff', 1), voice: value(el, 'voice', '1'), velocity, tieStart: ties.some(t => ['start', 'continue'].includes(t.getAttribute('type') ?? '')), tieStop: ties.some(t => ['stop', 'continue'].includes(t.getAttribute('type') ?? '')), source: `${part.getAttribute('id')}:${raw.length}:${noteIndex}` });
         }
         if (!isChord) beat += duration;
         extent = Math.max(extent, onset + duration, beat);
@@ -140,6 +154,37 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   if (doc.querySelector('ornaments')) warnings.add('颤音等装饰奏法暂按主音播放。');
   if (raw.some(m => m.endings.length) && !raw.some(m => m.backward)) warnings.add('检测到不同结尾标记，但没有反复记号；按谱面顺序播放所有小节，避免遗漏后续乐谱。');
   if (!raw.some(m => m.tempos.length)) warnings.add('未识别速度标记，默认 120 BPM。');
+  // An incomplete visual ottava span must never silently transpose all
+  // following notes. MusicXML pitch remains authoritative for sound.
+  const octaveSpans = new Set<string>(); let incompleteOctaves = 0;
+  for (const direction of part.querySelectorAll('measure > direction')) {
+    for (const mark of direction.querySelectorAll('octave-shift')) {
+      const key = `${value(direction, 'staff', '1')}:${mark.getAttribute('number') ?? '1'}`;
+      const type = mark.getAttribute('type');
+      if (type === 'up' || type === 'down') {
+        if (octaveSpans.has(key)) incompleteOctaves++;
+        octaveSpans.add(key);
+      } else if (type === 'stop') {
+        if (!octaveSpans.delete(key)) incompleteOctaves++;
+      }
+    }
+  }
+  incompleteOctaves += octaveSpans.size;
+  if (incompleteOctaves) warnings.add(`${incompleteOctaves} 处八度线缺少配对起点或终点，作用范围需核对原 PDF；播放使用导出的实际音高，不推测移调。`);
+  const slurStarts = new Map<string, {at:number; voice:string}>();
+  const slurRanges: { id: string; start: number; end: number; voices:string[] }[] = [];
+  const marked = raw.flatMap(m => m.notes.map(n => ({n, at:m.sourceBeat+n.beat}))).sort((a,b) => a.at-b.at);
+  for (const {n, at} of marked) for (const mark of [...n.slurs].sort((a,b) => Number(b.type === 'stop')-Number(a.type === 'stop'))) {
+    if (mark.type === 'stop') {
+      const start = slurStarts.get(mark.number);
+      if (start !== undefined) { slurRanges.push({id:`${mark.number}:${start.at}`, start:start.at, end:at, voices:[start.voice,n.voice]}); slurStarts.delete(mark.number); }
+      else warnings.add('部分连奏线缺少起点，未推测其作用范围。');
+    } else if (mark.type === 'start') {
+      if (slurStarts.has(mark.number)) warnings.add('部分连奏线起点重复，范围可能不完整，需核对原谱。');
+      slurStarts.set(mark.number, {at,voice:n.voice});
+    }
+  }
+  if (slurStarts.size) warnings.add('部分连奏线缺少终点，未推测其作用范围。');
   const order = expandMeasures(raw);
   const tempos: { beat: number; bpm: number }[] = [{ beat: 0, bpm: 120 }];
   const pedals: { beat: number; down: boolean }[] = [];
@@ -163,25 +208,49 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   const notes: NoteEvent[] = [], measures: MeasureEvent[] = [];
   const ties = new Map<string, { note: NoteEvent; endBeat: number }>();
   const beatEnds = new Map<NoteEvent, number>();
+  const articulation = new Map<NoteEvent, {voice:string; sourceOnset:number; slurs:string[]}>();
   for (const { m, source, beat } of expanded) {
     measures.push({ number: m.number, index: source, start: secondsAt(beat), duration: secondsAt(beat + m.duration) - secondsAt(beat), sourceBeat: m.sourceBeat });
     for (const n of m.notes) {
       const onset = beat + n.beat, endBeat = onset + n.duration;
       const key = `${n.staff}:${n.voice}:${n.midi}`;
-      const previous = ties.get(key);
+      let previousKey = key, previous = ties.get(key);
+      if (n.tieStop && (!previous || Math.abs(previous.endBeat-onset) >= 1e-5)) {
+        const candidates = [...ties].filter(([k,t]) => k.split(':').slice(1).join(':') === `${n.voice}:${n.midi}` && Math.abs(t.endBeat-onset) < 1e-5);
+        // Cross-staff ties are valid; simultaneous unisons remain ambiguous.
+        if (candidates.length === 1) [previousKey,previous] = candidates[0];
+      }
       if (n.tieStop && previous && Math.abs(previous.endBeat - onset) < 1e-5) {
         previous.note.sources!.push({ id: n.source, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset) });
         previous.note.duration = secondsAt(endBeat) - previous.note.start;
         previous.note.soundDuration = previous.note.duration;
         previous.endBeat = endBeat; beatEnds.set(previous.note, endBeat);
-        if (!n.tieStart) ties.delete(key);
+        ties.delete(previousKey);
+        if (n.tieStart) ties.set(key, previous);
         continue;
       }
       if (n.tieStop) warnings.add('部分延音线缺少连续的起始音，已作为独立音符播放。');
       const note: NoteEvent = { id: String(notes.length), midi: n.midi, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset), soundDuration: secondsAt(endBeat) - secondsAt(onset), velocity: n.velocity, hand: n.staff >= 2 ? 'left' : 'right', measure: measures.length - 1, sources: [{ id:n.source, start:secondsAt(onset), duration:secondsAt(endBeat)-secondsAt(onset) }] };
       notes.push(note); beatEnds.set(note, endBeat);
+      const sourceOnset = m.sourceBeat + n.beat;
+      articulation.set(note, {voice:n.voice, sourceOnset, slurs:slurRanges.filter(r => r.voices.includes(n.voice) && sourceOnset >= r.start-1e-7 && sourceOnset <= r.end+1e-7).map(r => r.id)});
       if (n.tieStart) ties.set(key, { note, endBeat }); else ties.delete(key);
     }
+  }
+  notes.sort((a, b) => a.start - b.start || a.midi - b.midi);
+  // A slur connects attacks, never merges them. Keep silence and repeats intact;
+  // the small overlap is a playback interpretation, not an extra written value.
+  for (const note of notes) {
+    const current = articulation.get(note)!;
+    if (!current.slurs.length) continue;
+    const next = notes.find(n => n.start > note.start+1e-6 && articulation.get(n)?.voice === current.voice);
+    if (!next) continue;
+    const following = articulation.get(next)!;
+    if (!following.slurs.some(id => current.slurs.includes(id))) continue;
+    if (Math.abs(next.start-note.start-note.duration) > 1e-5) continue;
+    if (following.sourceOnset <= current.sourceOnset) continue;
+    const retrigger = notes.find(n => n.midi === note.midi && n.start > note.start+1e-6);
+    note.soundDuration = Math.max(note.duration, Math.min(next.start+Math.min(.03,next.duration*.1), retrigger?.start ?? Infinity)-note.start);
   }
   pedals.sort((a, b) => a.beat - b.beat);
   for (const note of notes) {
@@ -190,7 +259,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
     if (previous?.down) {
       const release = pedals.find(p => p.beat > end && !p.down)?.beat ?? cursor;
       const retrigger = notes.find(n => n.midi === note.midi && n.start > note.start + 1e-6);
-      note.soundDuration = Math.max(note.duration, Math.min(secondsAt(release), retrigger?.start ?? Infinity) - note.start);
+      note.soundDuration = Math.max(note.soundDuration, Math.min(secondsAt(release), retrigger?.start ?? Infinity) - note.start);
     }
   }
   notes.sort((a, b) => a.start - b.start || a.midi - b.midi);
