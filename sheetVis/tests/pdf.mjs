@@ -9,7 +9,7 @@ try {
   const errors = [], requests = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('request', r => { if (/^https?:/.test(r.url()) && !r.url().startsWith(url)) requests.push(r.url()); });
-  await page.goto(url);
+  await page.goto(`${url}/?demo`);
   await expect(page.locator('#score-view svg')).toHaveCount(1);
   await page.locator('#toolbar-toggle').click();
   await page.locator('#file').setInputFiles('tests/fixtures/demo-score.pdf');
@@ -23,6 +23,7 @@ try {
   await page.locator('#bpm').fill('96'); await page.locator('#bpm').dispatchEvent('change');
   await expect(page.locator('#piece-meta')).toContainText('96 BPM · 00:20');
   const correctedMetadata = await page.locator('#piece-meta').textContent();
+  const job = (await page.locator('#log').getAttribute('href')).split('/')[3];
   await page.locator('#play').click();
   await page.screenshot({ path: 'test-results/pdf-recognized.png', fullPage: true });
   await page.locator('#original-tab').click();
@@ -31,6 +32,6 @@ try {
   await page.locator('#score-tab').click();
   await expect(page.locator('#score-view')).toBeVisible();
   expect(errors).toEqual([]); expect(requests).toEqual([]);
-  await writeFile('test-results/pdf.json', JSON.stringify({ metadata, correctedMetadata, notice, errors, externalRequests: requests, expected: { notes: 56, bpm: 96, duration: 20 }, fixture: 'Self-authored 8-measure C-major exercise printed from OSMD. This is a pipeline smoke test, not an OMR accuracy benchmark.' }, null, 2));
+  await writeFile('test-results/pdf.json', JSON.stringify({ job, metadata, correctedMetadata, notice, errors, externalRequests: requests, expected: { notes: 56, bpm: 96, duration: 20 }, fixture: 'Self-authored 8-measure C-major exercise printed from OSMD. This is a pipeline smoke test, not an OMR accuracy benchmark.' }, null, 2));
   console.log('PDF → Audiveris → MusicXML → waterfall + autoplay passed:', metadata);
 } finally { await browser.close(); }

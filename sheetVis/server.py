@@ -17,15 +17,45 @@ from urllib.parse import unquote, urlsplit
 import uuid
 import xml.etree.ElementTree as ET
 import zipfile
+from omr_support import repair_meters, repair_dynamics, source_map
 
 ROOT = Path(__file__).resolve().parent
 MAX_UPLOAD = 40 * 1024 * 1024
 MAX_JOBS = 8
-TIMEOUT = 600
+TIMEOUT = 3600
+PIPELINE = 'native-meter-source-map-v3'
 OMR_STEPS = ('LOAD', 'BINARY', 'SCALE', 'GRID', 'HEADERS', 'STEM_SEEDS', 'BEAMS', 'LEDGERS', 'HEADS', 'STEMS', 'REDUCTION', 'CUE_BEAMS', 'TEXTS', 'MEASURES', 'CHORDS', 'CURVES', 'SYMBOLS', 'LINKS', 'RHYTHMS', 'PAGE')
 
 
-def recognition_progress(log, state, phase='recognize', selected_pages=None):
+def configuration():
+    path = ROOT / 'config.json'
+    config = json.loads(path.read_text()) if path.exists() else {}
+    if not isinstance(config, dict):
+        raise ValueError('config.json 必须是 JSON 对象。')
+    override = os.environ.get('SHEETVIS_DEFAULT_SCORE')
+    if override is not None:
+        config['default_score'] = override
+    return config
+
+
+def default_score():
+    value = configuration().get('default_score')
+    if not value:
+        return None
+    path = Path(value).expanduser()
+    return path if path.is_absolute() else ROOT / path
+
+
+def quality_report(log):
+    # These are engine diagnostics, not ground-truth accuracy or confidence scores.
+    rhythms = sorted(set(re.findall(r'\[score#(\d+)\].*?S(\d+) MeasureStack#(\d+) no correct rhythm', log)))
+    offsets = set(re.findall(r'\[score#(\d+)\].*?No timeOffset for (\w+Inter#\d+)', log))
+    export_errors = sorted(set(re.findall(r'Error visiting Measure\{#(\d+)\} in \{Page#(\d+)\.\d+\}', log)))
+    return {'rhythm_issues': [{'page': int(p), 'system': int(s), 'stack': int(m)} for p, s, m in rhythms],
+            'missing_offsets': len(offsets), 'export_errors': [{'page': int(p), 'stack': int(m)} for m, p in export_errors], 'accuracy': None}
+
+
+def recognition_progress(log, state, phase='recognize', selected_pages=None, remaining_steps=None):
     if state == 'done':
         return {"progress": 100, "stage": "完成"}
     if state == 'queued':
@@ -41,7 +71,7 @@ def recognition_progress(log, state, phase='recognize', selected_pages=None):
     if phase == 'scan':
         progress = min(24, 2 + int(23 * max(0, reached - 1) / (pages * 4)))
     else:
-        progress = min(95, 25 + int(70 * max(0, reached - 1) / (pages * 16)))
+        progress = min(95, 25 + int(70 * max(0, reached - 1) / (remaining_steps or pages * 16)))
     stage = steps[-1] if steps else '启动'
     if 'Exporting sheet(s)' in log or 'exported to ' in log:
         progress, stage = 97, '导出'
@@ -67,6 +97,12 @@ def staff_pages(project):
     return total, selected
 
 
+def completed_pages(project):
+    with zipfile.ZipFile(project) as archive:
+        book = ET.fromstring(archive.read('book.xml'))
+        return [int(s.get('number')) for s in book.findall('sheet') if 'PAGE' in s.findtext('steps', '').split()]
+
+
 def engine_path():
     configured = os.environ.get("SHEETVIS_AUDIVERIS")
     if configured:
@@ -80,6 +116,7 @@ class JobStore:
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
         self.lock = threading.Lock()
+        self.mapping_lock = threading.Lock()
         self.jobs = {}
         for path in self.directory.glob('*/job.json'):
             try:
@@ -99,13 +136,42 @@ class JobStore:
         with self.lock:
             if self.stopping:
                 raise ValueError("服务正在停止。")
+            digest = hashlib.sha256(data).hexdigest()
+            matches = [j for j in self.jobs.values() if j.get('sha256') == digest]
+            for cached in sorted(matches, key=lambda j: j.get('created', 0), reverse=True):
+                if cached.get('pipeline') != PIPELINE:
+                    continue
+                available = cached['state'] in ('queued', 'running') or (cached['state'] == 'done' and all((self.directory / cached['id'] / r['name']).is_file() for r in cached.get('results', [])) and cached.get('results'))
+                if available:
+                    return cached['id']
             if sum(j["state"] in ("queued", "running") for j in self.jobs.values()) >= MAX_JOBS:
                 raise ValueError("识别队列已满，请等待当前乐谱处理完成。")
             identifier = uuid.uuid4().hex
             directory = self.directory / identifier
             directory.mkdir()
             (directory / "score.pdf").write_bytes(data)
-            job = {"id": identifier, "state": "queued", "created": time.time(), "message": "等待本地识别", "sha256": hashlib.sha256(data).hexdigest(), "results": []}
+            job = {"id": identifier, "state": "queued", "created": time.time(), "message": "等待本地识别", "sha256": digest, "pipeline": PIPELINE, "results": []}
+            # Resume saved OMR stages for the identical PDF after a failed run.
+            for previous in sorted(matches, key=lambda j: j.get('created', 0), reverse=True):
+                if previous['state'] not in ('error','done') or previous.get('phase') != 'recognize':
+                    continue
+                projects = sorted((self.directory / previous['id'] / 'output').rglob('*.omr'))
+                if not projects:
+                    continue
+                try:
+                    total, selected = staff_pages(projects[0])
+                    if not selected:
+                        continue
+                    output = directory / 'output'; output.mkdir()
+                    shutil.copyfile(projects[0], output / 'score.omr')
+                    old_log = self.directory / previous['id'] / 'engine.log'
+                    if old_log.exists():
+                        shutil.copyfile(old_log, directory / 'previous.log')
+                    job['resumed_from'] = previous['id']
+                    job['upgraded_from_complete'] = previous['state'] == 'done'
+                    break
+                except (OSError, zipfile.BadZipFile, ET.ParseError, KeyError):
+                    continue
             self.jobs[identifier] = job
             self.persist(identifier)
             self.executor.submit(self.run, identifier)
@@ -121,8 +187,28 @@ class JobStore:
             log = path.read_text(errors='replace') if path.exists() else ''
         except OSError:
             log = ''
-        job.update(recognition_progress(log, job['state'], job.get('phase', 'scan'), job.get('page_count')))
+        job.update(recognition_progress(log, job['state'], job.get('phase', 'scan'), job.get('page_count'), job.get('remaining_steps')))
+        if job['state'] == 'done':
+            job['quality'] = quality_report(log)
+            job['results'] = [{**r, 'mapping':f'/api/jobs/{identifier}/{Path(r["name"]).stem}.map.json'} for r in job.get('results', [])]
         return job
+
+    def mapping(self, identifier, name):
+        with self.mapping_lock:
+            directory = self.directory / identifier
+            cached = directory / name
+            if cached.exists():
+                data = cached.read_bytes()
+                if json.loads(data).get('version') == 3: return data
+            index = int(re.fullmatch(r'result-(\d+)\.map\.json', name).group(1))
+            job = self.get(identifier)
+            if not job or job['state'] != 'done' or index >= len(job['results']):
+                raise ValueError('音符定位尚未生成。')
+            projects = sorted((directory / 'output').rglob('*.omr'))
+            if not projects: raise ValueError('此记录没有原谱坐标。')
+            result = source_map(projects[0], directory / job['results'][index]['name'], index)
+            data = json.dumps(result,ensure_ascii=False).encode(); temp = cached.with_suffix('.json.part');temp.write_bytes(data);temp.replace(cached)
+            return data
 
     def update(self, identifier, **changes):
         with self.lock:
@@ -173,7 +259,14 @@ class JobStore:
         self.executor.shutdown(wait=True, cancel_futures=True)
 
     def run(self, identifier):
-        self.deadline = time.monotonic() + TIMEOUT
+        try:
+            timeout = float(configuration().get('recognition_timeout_seconds', TIMEOUT))
+            if not 30 <= timeout <= 7200:
+                raise ValueError('recognition_timeout_seconds 必须在 30–7200 之间。')
+        except (OSError, ValueError, TypeError) as exc:
+            self.update(identifier, state='error', message=f'配置读取失败：{exc}')
+            return
+        self.deadline = time.monotonic() + timeout
         directory = self.directory / identifier
         self.update(identifier, state="running", phase="scan", message="筛选乐谱页面")
         engine = engine_path()
@@ -184,24 +277,45 @@ class JobStore:
             Path(env[name]).mkdir(parents=True, exist_ok=True)
         home = ROOT / ".data/engine/home"
         home.mkdir(parents=True, exist_ok=True)
-        env["JAVA_TOOL_OPTIONS"] = f"-Djava.awt.headless=true -Duser.home={home} -Djava.util.prefs.userRoot={home / 'prefs'} -Xmx2g"
+        env["JAVA_TOOL_OPTIONS"] = f"-Djava.awt.headless=true -Duser.home={home} -Djava.util.prefs.userRoot={home / 'prefs'} -Xmx2g -XX:ActiveProcessorCount=2"
         if (ROOT / ".runtime/tessdata/eng.traineddata").exists():
             env["TESSDATA_PREFIX"] = str(ROOT / ".runtime/tessdata")
         output = directory / 'output'
-        command = [str(engine), "-batch", "-step", "GRID", "-save", "-output", str(output), "--", str(directory / "score.pdf")]
+        base = [str(engine), '-batch', '-swap', '-constant', 'org.audiveris.omr.util.OmrExecutors.useParallelism=false']
+        command = [*base, "-step", "GRID", "-save", "-output", str(output), "--", str(directory / "score.pdf")]
         try:
             with (directory / "engine.log").open("wb") as log:
-                self.execute(command, env, log)
+                previous = directory / 'previous.log'
+                if previous.exists() and not self.jobs[identifier].get('upgraded_from_complete'):
+                    log.write(previous.read_bytes()); log.write(b'\nSHEETVIS_RESUME\n'); log.flush()
+                if not (output / 'score.omr').exists():
+                    self.execute(command, env, log)
                 projects = sorted(output.rglob('*.omr'))
                 if not projects:
                     raise RuntimeError('未检测到五线谱页面。')
                 total, selected = staff_pages(projects[0])
                 if not selected:
                     raise RuntimeError('未检测到五线谱页面。')
-                self.update(identifier, phase='recognize', page_count=len(selected), included_pages=selected, skipped_pages=[n for n in range(1, total + 1) if n not in selected], message='识别中')
+                meter_repairs = repair_meters(projects[0], directory/'score.pdf') if configuration().get('repair_native_meter', True) else []
+                if meter_repairs:
+                    # Recompute all affected rhythms; old diagnostics are retained
+                    # separately, not counted as current unresolved errors.
+                    log.seek(0); log.truncate(); log.flush()
+                with zipfile.ZipFile(projects[0]) as archive:
+                    book = ET.fromstring(archive.read('book.xml'))
+                    remaining = sum(len(OMR_STEPS)-len(s.findtext('steps','').split()) for s in book.findall('sheet') if int(s.get('number')) in selected)
+                self.update(identifier, phase='recognize', total_pages=total, page_count=len(selected), included_pages=selected, skipped_pages=[n for n in range(1, total + 1) if n not in selected], message='识别中', timeout_seconds=timeout, meter_repairs=meter_repairs, remaining_steps=max(1,remaining))
                 log.write(b'\nSHEETVIS_TRANSCRIBE\n'); log.flush()
-                command = [str(engine), '-batch', '-export', '-save', '-output', str(output), '-sheets', *map(str, selected), '--', str(projects[0])]
+                command = [*base, '-step', 'PAGE', '-save', '-output', str(output), '-sheets', *map(str, selected), '--', str(projects[0])]
                 exit_code = self.execute(command, env, log)
+                incomplete = sorted(set(selected) - set(completed_pages(projects[0])))
+                if incomplete:
+                    raise RuntimeError(f'乐谱第 {"、".join(map(str, incomplete))} 页未完成识别；已保存进度，重新导入可继续。')
+                dynamics_repairs = repair_dynamics(projects[0])
+                self.update(identifier, dynamics_repairs=dynamics_repairs, message='导出与校验')
+                log.write(b'\nSHEETVIS_EXPORT\n'); log.flush()
+                exit_code = self.execute([*base, '-export', '-save', '-output', str(output), '-sheets', *map(str, selected), '--', str(projects[0])], env, log)
+            self.update(identifier, exit_code=exit_code)
             files = sorted((directory / "output").rglob("*.mxl")) + sorted((directory / "output").rglob("*.musicxml"))
             if not files:
                 if exit_code:
@@ -212,9 +326,9 @@ class JobStore:
                 name = f"result-{index}{path.suffix}"
                 shutil.copyfile(path, directory / name)
                 results.append({"name": name, "url": f"/api/jobs/{identifier}/{name}"})
-            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code)
+            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code, quality=quality_report((directory / 'engine.log').read_text(errors='replace')))
         except subprocess.TimeoutExpired:
-            self.update(identifier, state="error", message="识别超过 10 分钟，请拆分 PDF 后重试。")
+            self.update(identifier, state="error", message=f"识别超过 {timeout / 60:g} 分钟；已保存进度，重新导入可继续。")
         except (OSError, RuntimeError, zipfile.BadZipFile, ET.ParseError) as exc:
             self.update(identifier, state="error", message=str(exc))
 
@@ -245,7 +359,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self' data: blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
         self.end_headers()
         try:
             self.wfile.write(data)
@@ -261,8 +375,24 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(urlsplit(self.path).path)
         if path == "/api/health":
             engine = engine_path()
-            return self.json_response(200, {"app": "sheetVis", "omr": engine.is_file() and os.access(engine, os.X_OK), "samples": (ROOT / "public/samples/manifest.json").is_file(), "engine": "Audiveris", "version": "5.11.0", "local": True})
-        match = re.fullmatch(r"/api/jobs/([a-f0-9]{32})(?:/(result-\d+\.(?:mxl|musicxml)|engine\.log))?", path)
+            return self.json_response(200, {"app": "sheetVis", "api_revision": 3, "omr": engine.is_file() and os.access(engine, os.X_OK), "samples": (ROOT / "public/samples/manifest.json").is_file(), "engine": "Audiveris", "version": "5.11.0", "local": True})
+        if path == '/api/config':
+            try:
+                config = configuration(); source = default_score()
+                return self.json_response(200, {'colors': config.get('colors', {}), 'default_score': {'name': source.name, 'available': source.is_file(), 'url': '/api/default-score'} if source else None})
+            except (OSError, ValueError) as exc:
+                return self.json_response(500, {'error': f'配置读取失败：{exc}'})
+        if path == '/api/default-score':
+            try:
+                source = default_score()
+                if source is None or not source.is_file():
+                    return self.json_response(404, {'error': '默认乐谱不存在。'})
+                if source.stat().st_size > MAX_UPLOAD:
+                    return self.json_response(413, {'error': '默认 PDF 必须小于 40 MB。'})
+                return self.send_bytes(200, source.read_bytes(), 'application/pdf')
+            except (OSError, ValueError) as exc:
+                return self.json_response(500, {'error': f'默认乐谱读取失败：{exc}'})
+        match = re.fullmatch(r"/api/jobs/([a-f0-9]{32})(?:/(result-\d+\.(?:mxl|musicxml)|result-\d+\.map\.json|engine\.log))?", path)
         if match:
             identifier, name = match.groups()
             job = self.server.jobs.get(identifier)
@@ -270,6 +400,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.json_response(404, {"error": "识别任务不存在。"})
             if not name:
                 return self.json_response(200, job)
+            if name.endswith('.map.json'):
+                try: return self.send_bytes(200,self.server.jobs.mapping(identifier,name),'application/json; charset=utf-8')
+                except (ValueError,OSError,KeyError,zipfile.BadZipFile,ET.ParseError) as exc: return self.json_response(422, {'error':str(exc)})
             file = self.server.jobs.directory / identifier / name
             if file.is_file():
                 return self.send_bytes(200, file.read_bytes(), "application/vnd.recordare.musicxml" if name.endswith("mxl") else "text/plain; charset=utf-8")

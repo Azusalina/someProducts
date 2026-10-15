@@ -3,6 +3,12 @@ import { noteName } from './score';
 
 type Key = { midi: number; black: boolean; x: number; width: number };
 const isBlack = (midi: number) => [1, 3, 6, 8, 10].includes(midi % 12);
+export const defaultColors = { left: '#99b585', right: '#86afc0', leftActive: '#c2ddab', rightActive: '#bedbea', background: '#111714' };
+export type WaterfallColors = typeof defaultColors;
+export function validColors(value: unknown): Partial<WaterfallColors> {
+  if (!value || typeof value !== 'object') return {};
+  return Object.fromEntries(Object.entries(value).filter(([key, color]) => key in defaultColors && typeof color === 'string' && /^#[a-f\d]{6}$/i.test(color)));
+}
 
 export class Waterfall {
   private context: CanvasRenderingContext2D;
@@ -13,6 +19,7 @@ export class Waterfall {
   score: Score | null = null;
   lookAhead = 7;
   keyboardHeight = 90;
+  colors: WaterfallColors = { ...defaultColors };
   private previews = new Map<number, number>();
 
   setKeyboardHeight(height: number) {
@@ -56,7 +63,7 @@ export class Waterfall {
   draw(position: number, hands: { left: boolean; right: boolean }, timeScale = 1) {
     const c = this.context, w = this.width, h = this.height;
     const keyboard = this.setKeyboardHeight(this.keyboardHeight), line = h - keyboard, pps = (line - 26) / (this.lookAhead * timeScale);
-    c.fillStyle = '#111714'; c.fillRect(0, 0, w, h);
+    c.fillStyle = this.colors.background; c.fillRect(0, 0, w, h);
     c.save(); c.beginPath(); c.rect(0, 0, w, line); c.clip();
     for (const key of this.keys) if (!key.black) {
       c.strokeStyle = key.midi % 12 === 0 ? '#3b433d' : '#2c332e';
@@ -85,7 +92,7 @@ export class Waterfall {
       const playing = note.start <= position && end > position;
       if (playing && hands[note.hand]) active.set(key.midi, note.hand);
       c.globalAlpha = hands[note.hand] ? 1 : .18;
-      c.fillStyle = note.hand === 'left' ? (playing ? '#c2ddab' : '#99b585') : (playing ? '#bedbea' : '#86afc0');
+      c.fillStyle = note.hand === 'left' ? (playing ? this.colors.leftActive : this.colors.left) : (playing ? this.colors.rightActive : this.colors.right);
       c.beginPath(); c.roundRect(key.x + 1.5, top, Math.max(2, key.width - 3), Math.max(4, bottom - top - 1), 3); c.fill();
       if (key.width > 19 && bottom - top > 19) {
         c.fillStyle = '#26342a'; c.font = '10px monospace'; c.textAlign = 'center';
@@ -99,7 +106,7 @@ export class Waterfall {
     for (const black of [false, true]) for (const key of this.keys.filter(k => k.black === black)) {
       const hand = active.get(key.midi);
       const keyHeight = black ? keyboard * .62 : keyboard;
-      c.fillStyle = this.previews.has(key.midi) ? '#cbd9b2' : hand ? (hand === 'left' ? '#abc794' : '#96bdcf') : black ? '#0c100e' : '#c6cbc2';
+      c.fillStyle = this.previews.has(key.midi) ? '#cbd9b2' : hand ? (hand === 'left' ? this.colors.leftActive : this.colors.rightActive) : black ? '#0c100e' : '#c6cbc2';
       c.fillRect(key.x + .5, line + 2, key.width - 1, keyHeight - 2);
       if (!black && (key.midi % 12 === 0 || key.midi === 21)) {
         c.font = '10px monospace'; c.fillStyle = '#797f74'; c.textAlign = 'center'; c.fillText(noteName(key.midi), key.x + key.width / 2, h - 9); c.textAlign = 'start';

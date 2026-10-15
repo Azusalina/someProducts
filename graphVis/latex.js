@@ -4,7 +4,7 @@
   function toPlain(source,inner=false){
     if(source.length>600)throw Error('表达式最多 600 字符');
     if(!source.includes('\\')&&!inner&&!/[\^_]\s*\{/.test(source))return source;
-    const s=source.trim().replace(/^\$\$?|\$\$?$/g,'').replace(/^\\\(|\\\)$/g,'').replace(/\^\{((?:\\prime\s*){1,2})\}/g,(_,p)=>"'".repeat((p.match(/\\prime/g)||[]).length)).replace(/\\(?:left|right|bigl|bigr|displaystyle|textstyle)\b/g,'').replace(/\\(?:,|;|!|:|quad\b|qquad\b|enspace\b)/g,' ').replace(/\\(?:mathrm|operatorname)\s*\{d\}/g,'d');
+    const s=source.trim().replace(/^\$\$?|\$\$?$/g,'').replace(/^\\\(|\\\)$/g,'').replace(/\^\{((?:\\prime\s*){1,2})\}/g,(_,p)=>"'".repeat((p.match(/\\prime/g)||[]).length)).replace(/\\(?:left|right|bigl|bigr|displaystyle|textstyle)\b/g,'').replace(/\\(?:,|;|!|:|quad\b|qquad\b|enspace\b)/g,' ').replace(/\\(?:mathrm|operatorname|mathit)\s*\{d\s*([A-Za-z])\}/g,'d $1').replace(/\\(?:mathrm|operatorname)\s*\{d\}/g,'d');
     let i=0;
     const skip=()=>{while(/\s/.test(s[i]||'')&&i<s.length)i++;};
     function group(open='{',close='}'){
@@ -32,7 +32,11 @@
       else if(cmd==='int'){
         let lower='0',upper='x';skip();
         for(let n=0;n<2&&['_','^'].includes(s[i]);n++){const type=s[i++],value=atom();if(type==='_')lower=value;else upper=value;skip();}
-        const rest=s.slice(i),differential=rest.match(/(?:\bd\s*([A-Za-z])\b|\\mathrm\s*\{d\}\s*([A-Za-z]))/);
+        const rest=s.slice(i);let differential=null,depth=0;
+        for(let j=0;j<rest.length;j++){
+          if('({['.includes(rest[j]))depth++;else if(')}]'.includes(rest[j]))depth--;
+          if(depth===0&&rest[j]==='d'){const m=rest.slice(j).match(/^d\s*([A-Za-z])(?=$|[^A-Za-z_])/);if(m){differential={index:j,0:m[0],1:m[1]};break;}}
+        }
         if(!differential)throw Error('积分缺少 dx');
         const variable=differential[1]||differential[2];let body=toPlain(rest.slice(0,differential.index),true);
         if(variable!=='x')body=body.replace(new RegExp(`\\b${variable}\\b`,'g'),'x');
@@ -41,7 +45,7 @@
       else if(['arcsin','arccos','arctan'].includes(cmd))out+=cmd.replace('arc','a')+' ';
       else if(['alpha','beta','gamma','delta','theta','lambda','mu','sigma','phi','omega','pi','tau'].includes(cmd))out+=cmd+' ';
       else if(cmd==='cdot'||cmd==='times')out+='*';else if(cmd==='div')out+='/';
-      else if(['le','leq'].includes(cmd))out+='<=';else if(['ge','geq'].includes(cmd))out+='>=';else if(['ne','neq'].includes(cmd))out+='!=';
+      else if(['le','leq'].includes(cmd))out+='<=';else if(['ge','geq'].includes(cmd))out+='>=';else if(['ne','neq'].includes(cmd))out+='!=';else if(cmd==='sim')out+='~';
       else if(cmd==='{')out+='{';else if(cmd==='}')out+='}';else if(cmd==='vert'||cmd==='lvert'||cmd==='rvert'||cmd==='mid')out+='|';
       else if(cmd==='prime')out+="'";else if(cmd===' ')out+=' ';
       else throw Error(`不支持的数学命令 \\${cmd}`);
@@ -83,6 +87,7 @@
     if(!source.trim())return '';
     try{
       const e=root.GraphMath.classify(source);let tex=astTex(e.ast);
+      if(e.kind==='distribution'&&e.randomVariable)tex=identifier(e.randomVariable)+'\\sim '+tex;
       if(e.kind==='function')tex=identifier(e.name)+'\\left('+identifier(e.parameter)+'\\right)='+tex;
       if(e.kind==='variable')tex=identifier(e.name)+'='+tex;
       if(e.kind==='vertical')tex='x='+tex;

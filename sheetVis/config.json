@@ -1,0 +1,11 @@
+{
+  "default_score": "/home/a/Documents/materials/PianoSheets/chopin_ballade1.pdf",
+  "recognition_timeout_seconds": 3600,
+  "colors": {
+    "left": "#99b585",
+    "right": "#86afc0",
+    "leftActive": "#c2ddab",
+    "rightActive": "#bedbea",
+    "background": "#111714"
+  }
+}

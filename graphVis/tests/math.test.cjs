@@ -78,5 +78,6 @@ test('adaptive sampling does not bridge a pole',()=>{
 });
 test('contours interpolate a circle and reject a pole',()=>{
   const circle=P.contourCell((x,y)=>x*x+y*y-1,.9,0,.2,.2,(x,y)=>[x,y]);assert.equal(circle.length,1);
+  const vertex=P.contourCell((x,y)=>x*x+y*y-1,.6,.7,.1,.1,(x,y)=>[x,y]);assert.equal(vertex.length,1,'circle crossing an exact grid vertex remains connected');
   const pole=P.contourCell(x=>1/x,-.1,0,.2,.2,(x,y)=>[x,y]);assert.equal(pole.length,0);
 });

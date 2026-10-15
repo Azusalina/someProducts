@@ -4,10 +4,11 @@ import { unzipSync, strFromU8 } from 'fflate';
 export interface NoteEvent {
   id: string; midi: number; start: number; duration: number; soundDuration: number;
   velocity: number; hand: 'left' | 'right'; measure: number;
+  sources?: { id: string; start: number; duration: number }[];
 }
 export interface MeasureEvent { number: string; index: number; start: number; duration: number; sourceBeat: number }
 export interface Score { title: string; notes: NoteEvent[]; measures: MeasureEvent[]; duration: number; bpm: number; warnings: string[]; xml?: string }
-type RawNote = { midi: number; beat: number; duration: number; staff: number; voice: string; velocity: number; tieStart: boolean; tieStop: boolean };
+type RawNote = { midi: number; beat: number; duration: number; staff: number; voice: string; velocity: number; tieStart: boolean; tieStop: boolean; source: string };
 type RawMeasure = { number: string; sourceBeat: number; duration: number; notes: RawNote[]; tempos: { beat: number; bpm: number }[]; pedals: { beat: number; down: boolean }[]; forward: boolean; backward: number; endings: number[] };
 const children = (e: Element, tag: string) => Array.from(e.children).filter(c => c.localName === tag);
 const child = (e: Element, tag: string) => children(e, tag)[0];
@@ -25,6 +26,9 @@ export function parseXML(text: string): Document {
 }
 
 export function expandMeasures(measures: RawMeasure[]): number[] {
+  // OMR can mistake unrelated marks for voltas. Without a repeat there is no
+  // second pass; filtering by those marks would silently discard the rest.
+  if (!measures.some(m => m.backward)) return measures.map((_, i) => i);
   const output: number[] = [];
   const pairs = new Map<number, number>();
   let start = 0;
@@ -73,7 +77,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
       if (time) beatsPerMeasure = value(time, 'beats', '4').split('+').reduce((a, b) => a + Number(b), 0) * 4 / numeric(time, 'beat-type', 4);
     }
     const m: RawMeasure = { number: measure.getAttribute('number') ?? String(raw.length + 1), sourceBeat, duration: 0, notes: [], tempos: [], pedals: [], forward: false, backward: 0, endings: [...activeEndings] };
-    let beat = 0, extent = 0, chordBeat = 0;
+    let beat = 0, extent = 0, chordBeat = 0, noteIndex = -1;
     for (const el of Array.from(measure.children)) {
       if (el.localName === 'backup') beat = Math.max(0, beat - numeric(el, 'duration', 0) / divisions);
       if (el.localName === 'forward') { beat += numeric(el, 'duration', 0) / divisions; extent = Math.max(extent, beat); }
@@ -94,6 +98,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
         }
       }
       if (el.localName === 'note') {
+        noteIndex++;
         if (child(el, 'grace')) { warnings.add('装饰音暂不参与播放。'); continue; }
         const duration = numeric(el, 'duration', 0) / divisions;
         const isChord = Boolean(child(el, 'chord'));
@@ -107,7 +112,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
           if (midi < 21 || midi > 108) warnings.add('部分音符超出标准 88 键钢琴范围，仍会播放，但不显示在键盘范围内。');
           if (!Number.isInteger(midi)) warnings.add('微分音在瀑布中按最近的钢琴键显示。');
           const ties = [...children(el, 'tie'), ...Array.from(el.querySelectorAll('notations > tied'))];
-          m.notes.push({ midi, beat: onset, duration, staff: numeric(el, 'staff', 1), voice: value(el, 'voice', '1'), velocity, tieStart: ties.some(t => t.getAttribute('type') === 'start'), tieStop: ties.some(t => t.getAttribute('type') === 'stop') });
+          m.notes.push({ midi, beat: onset, duration, staff: numeric(el, 'staff', 1), voice: value(el, 'voice', '1'), velocity, tieStart: ties.some(t => t.getAttribute('type') === 'start'), tieStop: ties.some(t => t.getAttribute('type') === 'stop'), source: `${part.getAttribute('id')}:${raw.length}:${noteIndex}` });
         }
         if (!isChord) beat += duration;
         extent = Math.max(extent, onset + duration, beat);
@@ -133,6 +138,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   }
   if (doc.querySelector('segno, coda') || Array.from(doc.querySelectorAll('sound')).some(e => ['dacapo', 'dalsegno', 'tocoda', 'fine'].some(a => e.hasAttribute(a)))) warnings.add('D.C.／D.S.／Coda 跳转暂不展开；普通反复和不同结尾会展开。');
   if (doc.querySelector('ornaments')) warnings.add('颤音等装饰奏法暂按主音播放。');
+  if (raw.some(m => m.endings.length) && !raw.some(m => m.backward)) warnings.add('检测到不同结尾标记，但没有反复记号；按谱面顺序播放所有小节，避免遗漏后续乐谱。');
   if (!raw.some(m => m.tempos.length)) warnings.add('未识别速度标记，默认 120 BPM。');
   const order = expandMeasures(raw);
   const tempos: { beat: number; bpm: number }[] = [{ beat: 0, bpm: 120 }];
@@ -164,6 +170,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
       const key = `${n.staff}:${n.voice}:${n.midi}`;
       const previous = ties.get(key);
       if (n.tieStop && previous && Math.abs(previous.endBeat - onset) < 1e-5) {
+        previous.note.sources!.push({ id: n.source, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset) });
         previous.note.duration = secondsAt(endBeat) - previous.note.start;
         previous.note.soundDuration = previous.note.duration;
         previous.endBeat = endBeat; beatEnds.set(previous.note, endBeat);
@@ -171,7 +178,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
         continue;
       }
       if (n.tieStop) warnings.add('部分延音线缺少连续的起始音，已作为独立音符播放。');
-      const note: NoteEvent = { id: String(notes.length), midi: n.midi, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset), soundDuration: secondsAt(endBeat) - secondsAt(onset), velocity: n.velocity, hand: n.staff >= 2 ? 'left' : 'right', measure: measures.length - 1 };
+      const note: NoteEvent = { id: String(notes.length), midi: n.midi, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset), soundDuration: secondsAt(endBeat) - secondsAt(onset), velocity: n.velocity, hand: n.staff >= 2 ? 'left' : 'right', measure: measures.length - 1, sources: [{ id:n.source, start:secondsAt(onset), duration:secondsAt(endBeat)-secondsAt(onset) }] };
       notes.push(note); beatEnds.set(note, endBeat);
       if (n.tieStart) ties.set(key, { note, endBeat }); else ties.delete(key);
     }

@@ -18,3 +18,9 @@ test('display round-trips preserve powers, fractions and restrictions',()=>{
 test('unsupported or incomplete LaTeX is rejected without running commands',()=>{
  for(const s of ['\\frac{x}','\\input{secret}','\\href{javascript:alert(1)}{x}','\\sqrt{','\\begin{matrix}1&2\\end{matrix}'])assert.throws(()=>M.parse(s));
 });
+test('unparenthesized integral differential ends the body and ignores dx inside parentheses',()=>{
+ for(const s of ['int x^2dx','int x^2 dx','\\int x^2dx','\\int x^{2}dx','\\int x^2\\mathrm{dx}'])close(evaluate(s,3),9);
+ for(const s of ['\\int_0^2 x^2dx','\\int_0^2 x^2 d x','\\int_0^2 x^2\\mathrm{dx}','\\int_0^2 x^{2}dx'])close(evaluate(s),8/3);
+ close(evaluate('\\int_0^2 x^2dx+1',2),11/3);close(evaluate('\\int_0^2 f(dx)dx',1,['dx=2','f(t)=t^2']),8);
+ close(evaluate('\\int_0^2 t^2dt'),8/3);close(evaluate('int f(x)dx',3,['f(x)=x^2']),9);
+});

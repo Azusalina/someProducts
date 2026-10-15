@@ -21,8 +21,8 @@ test('Enter adds an expression and toolbar insertion targets the mathfield',()=>
  const t=boot();seed(t,'x');const f=t.texts()[0];f.focus();f.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));t.flush();assert.equal(t.texts().length,2);
  [...t.w.document.querySelectorAll('[data-insert]')].find(b=>b.dataset.insert==='\\pi').click();t.flush();assert.equal(t.texts()[1].value,'\\pi');assert.equal(t.texts()[0].value,'x');t.dom.window.close();
 });
-test('parameter sliders remain outside the formula column and undo/redo work',()=>{
- const t=boot();seed(t,'a=2','f(x)=a\\sin x');assert.equal(t.get('panel').querySelector('.slider'),null);const range=t.get('parameters').querySelector('input[type=range]');assert.ok(range);range.dispatchEvent(new t.w.Event('pointerdown'));t.input(range,'3');range.dispatchEvent(new t.w.Event('change'));t.flush();assert.equal(t.texts()[0].value,'a=3');t.click('undo');t.flush();assert.equal(t.texts()[0].value,'a=2');t.click('redo');t.flush();assert.equal(t.texts()[0].value,'a=3');t.dom.window.close();
+test('parameter definitions append a slider and undo/redo work',()=>{
+ const t=boot();seed(t,'a=2','f(x)=a\\sin x');assert.ok(t.get('panel').querySelector('.expression .slider'));assert.equal(t.get('parameters').querySelector('input[type=range]'),null);const range=t.get('panel').querySelector('input[type=range]');assert.ok(range);range.dispatchEvent(new t.w.Event('pointerdown'));t.input(range,'3');range.dispatchEvent(new t.w.Event('change'));t.flush();assert.equal(t.texts()[0].value,'a=3');t.click('undo');t.flush();assert.equal(t.texts()[0].value,'a=2');t.click('redo');t.flush();assert.equal(t.texts()[0].value,'a=3');t.dom.window.close();
 });
 test('row errors are contained and derivative tools retain restricted domains',()=>{
  const t=boot();seed(t,'f(x)=unknown(x)');assert.ok(t.get('panel').querySelector('.error'));t.input(t.texts()[0],'y=x^2\\left\\{x>0\\right\\}');t.click('add-derivative');t.flush();const e=t.w.GraphMath.build(t.texts().map(f=>({text:f.value}))).entries.at(-1);assert.equal(e.error,undefined);assert.equal(e.fn(2),4);assert.equal(e.allowed(-1,0),false);t.dom.window.close();
@@ -30,16 +30,14 @@ test('row errors are contained and derivative tools retain restricted domains',(
 test('implicit plotting and file export work without any guide UI',()=>{
  const t=boot();seed(t,'x^2+y^2=9','y<x^2-2');t.click('export');t.click('save');assert.ok(t.calls.some(c=>c[0]==='download'&&c[1]==='graphVis.png'));assert.ok(t.calls.some(c=>c[0]==='download'&&c[1]==='graphVis.json'));t.dom.window.close();
 });
-test('authored state restores with tools closed; malformed state gives a blank project',()=>{
- const t=boot();seed(t,'f(x)=\\cos x');t.w.dispatchEvent(new t.w.Event('beforeunload'));const saved=t.w.localStorage.getItem('graphVis.v2');t.dom.window.close();const r=boot(saved);assert.match(r.texts()[0].value,/\\cos/);assert.equal(r.w.document.body.classList.contains('tools-open'),false);r.dom.window.close();const invalid=boot('{"version":1}');assert.equal(invalid.texts()[0].value,'');invalid.dom.window.close();
-});
+test('every opening resets all state even when old browser storage exists',()=>{const t=boot();seed(t,'f(x)=\\cos x');t.click('theme-toggle');const saved=t.project();const r=boot(saved);assert.equal(r.texts()[0].value,'');assert.equal(r.w.document.documentElement.dataset.theme,'light');assert.equal(Number(r.get('center-x').value),0);assert.equal(Number(r.get('center-y').value),0);assert.equal(r.get('equal-axes').checked,true);assert.equal(r.w.document.body.classList.contains('tools-open'),false);r.dom.window.close();t.dom.window.close();});
 test('dragging calculus handles, panning and zoom still update controls',()=>{
  const t=boot();seed(t,'f(x)=\\sin x');t.check('tangent-on',true);t.check('integral-on',true);const c=t.get('canvas');const pointer=(type,x,y)=>{const e=new t.w.MouseEvent(type,{clientX:x,clientY:y,button:0,bubbles:true});Object.defineProperty(e,'pointerId',{value:1});c.dispatchEvent(e);};
  pointer('pointerdown',565,360-Math.sin(1)*65);pointer('pointermove',630,360);pointer('pointerup',630,360);t.flush();assert.equal(Number(t.get('tangent-x').value),2);pointer('pointerdown',500,200);pointer('pointermove',565,200);pointer('pointerup',565,200);t.flush();assert.equal(Number(t.get('bound-a').value),1);
  t.check('integral-on',false);t.check('tangent-on',false);pointer('pointerdown',300,200);pointer('pointermove',365,200);pointer('pointerup',365,200);t.flush();assert.equal(Number(t.get('center-x').value),-1);const before=Number(t.get('view-width').value);c.dispatchEvent(new t.w.WheelEvent('wheel',{clientX:500,clientY:360,deltaY:-100,cancelable:true}));t.flush();assert.ok(Number(t.get('view-width').value)<before);t.dom.window.close();
 });
 test('JSON imports remain compatible and invalid imports preserve current work',async()=>{
- const t=boot();seed(t,'f(x)=x^3');t.w.dispatchEvent(new t.w.Event('beforeunload'));const p=t.w.localStorage.getItem('graphVis.v2');t.input(t.texts()[0],'f(x)=x');const file=t.get('file');Object.defineProperty(file,'files',{value:[{size:p.length,text:async()=>p}],configurable:true});await file.onchange();t.flush();assert.match(t.texts()[0].value,/x\^/);Object.defineProperty(file,'files',{value:[{size:10,text:async()=>'{"version":1}'}],configurable:true});await file.onchange();t.flush();assert.match(t.get('status').textContent,/无法打开/);t.dom.window.close();
+ const t=boot();seed(t,'f(x)=x^3');const p=t.project();t.input(t.texts()[0],'f(x)=x');const file=t.get('file');Object.defineProperty(file,'files',{value:[{size:p.length,text:async()=>p}],configurable:true});await file.onchange();t.flush();assert.match(t.texts()[0].value,/x\^/);Object.defineProperty(file,'files',{value:[{size:10,text:async()=>'{"version":1}'}],configurable:true});await file.onchange();t.flush();assert.match(t.get('status').textContent,/无法打开/);t.dom.window.close();
 });
 test('keyboard launcher is separate and tracks visibility and bottom space',()=>{
  const t=boot();t.click('tools-toggle');let visible=false;const k=t.w.mathVirtualKeyboard;k.show=()=>{visible=true;k.dispatchEvent(new t.w.Event('virtual-keyboard-toggle'));};k.hide=()=>{visible=false;k.dispatchEvent(new t.w.Event('virtual-keyboard-toggle'));};Object.defineProperty(k,'visible',{get:()=>visible,configurable:true});Object.defineProperty(k,'boundingRect',{get:()=>({height:visible?260:0}),configurable:true});t.click('keyboard-toggle');assert.equal(t.get('keyboard-toggle').getAttribute('aria-expanded'),'true');assert.equal(t.w.document.documentElement.style.getPropertyValue('--keyboard-height'),'260px');t.click('keyboard-toggle');assert.equal(t.get('keyboard-toggle').getAttribute('aria-expanded'),'false');t.dom.window.close();
@@ -49,4 +47,51 @@ test('LaTeX paste, multi-line paste and limits apply before editor insertion',()
 });
 test('handled keyboard events do not reach the editor after app-level changes',()=>{
  const t=boot();seed(t,'x');let bubbled=false;t.w.document.addEventListener('keydown',()=>{bubbled=true;});const enter=new t.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});t.texts()[0].dispatchEvent(enter);assert.equal(enter.defaultPrevented,true);assert.equal(bubbled,false);assert.equal(t.texts().length,2);const save=new t.w.KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true,cancelable:true});t.texts()[1].dispatchEvent(save);assert.equal(save.defaultPrevented,true);assert.ok(t.calls.some(c=>c[0]==='download'&&c[1]==='graphVis.json'));t.dom.window.close();
+});
+
+test('Poisson notation, inline slider, probability sum and cumulative step graph',()=>{
+ const t=boot();seed(t,'\\lambda=4','x\\sim\\operatorname{poisson}(\\lambda)');assert.equal(t.get('panel').querySelector('.error'),null);assert.equal(t.get('equal-axes').checked,false);assert.ok(Number(t.get('view-height').value)<1);
+ const range=t.get('panel').querySelector('input[type=range]');assert.equal(range.min,'0');t.input(range,'6');t.flush();assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.texts()[0].value,/6/);
+ assert.equal(t.get('tangent-on').disabled,true);t.check('integral-on',true);t.input(t.get('bound-a'),'0');t.input(t.get('bound-b'),'3');t.flush();assert.match(tex(t,'integral-value'),/\\sum/);const probability=t.w.GraphStats.create('poisson',[6]).interval(0,3);assert.ok(tex(t,'integral-value').includes(String(Number(probability.toPrecision(9)))));
+ t.click('add-integral');t.flush();const e=t.w.GraphMath.build(t.texts().map(f=>({text:f.value}))).entries.at(-1);assert.equal(e.error,undefined);assert.equal(e.step,true);assert.ok(Math.abs(e.fn(3.8)-probability)<1e-12);t.dom.window.close();
+});
+test('continuous PDF and d/dx pass through the editor',()=>{
+ const t=boot();seed(t,'x\\sim\\operatorname{normal}(0,1)','\\frac{d}{dx}x^3');assert.equal(t.get('panel').querySelector('.error'),null);const e=t.w.GraphMath.build(t.texts().map(f=>({text:f.value}))).entries.at(-1);assert.equal(e.fn(2),12);t.dom.window.close();
+});
+test('dark mode exports, tools focus the visible caret, and pointer crosshair renders',async()=>{
+ const t=boot();t.click('tools-toggle');assert.equal(t.texts()[0].hasFocus(),true);assert.equal(t.texts()[0].tabIndex,0);t.click('theme-toggle');t.flush();assert.equal(t.w.document.documentElement.dataset.theme,'dark');assert.equal(t.get('theme-toggle').getAttribute('aria-pressed'),'true');
+ const before=t.calls.length;t.get('canvas').dispatchEvent(new t.w.MouseEvent('pointermove',{clientX:200,clientY:100,bubbles:true}));t.flush();assert.match(tex(t,'readout'),/x=.*y=/);assert.ok(t.calls.slice(before).filter(c=>c[0]==='lineTo').length>=2);
+ const saved=t.project();const r=boot();await r.importProject(saved);assert.equal(r.w.document.documentElement.dataset.theme,'dark');r.dom.window.close();t.dom.window.close();
+});
+test('independent axes survive manual zoom, pan, JSON import and equal axis switch',async()=>{
+ const t=boot();seed(t,'x\\sim\\operatorname{poisson}(4)');t.change('view-height','2');t.flush();assert.equal(Number(t.get('view-height').value),2);const old=Number(t.get('center-y').value),c=t.get('canvas');
+ const pointer=(type,y)=>{const e=new t.w.MouseEvent(type,{clientX:100,clientY:y,button:0,bubbles:true});Object.defineProperty(e,'pointerId',{value:1});c.dispatchEvent(e);};pointer('pointerdown',100);pointer('pointermove',136);pointer('pointerup',136);t.flush();assert.ok(Math.abs(Number(t.get('center-y').value)-old-.1)<1e-8);
+ t.click('zoom-in');t.flush();assert.ok(Math.abs(Number(t.get('view-height').value)-1.6)<1e-8);const saved=t.project();const r=boot();await r.importProject(saved);assert.equal(Number(r.get('view-height').value),1.6);r.check('equal-axes',true);r.flush();assert.equal(r.get('equal-axes').checked,true);assert.ok(Math.abs(Number(r.get('view-height').value)/Number(r.get('view-width').value)-.72)<1e-8);r.dom.window.close();t.dom.window.close();
+});
+
+test('symbols require explicit LaTeX commands and P(X=n) renders the probability',()=>{
+ const t=boot();seed(t,'X\\sim\\operatorname{poisson}(4)','P(X=2)');assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.get('panel').querySelectorAll('.row-result')[1].dataset.latex,/0\.146525/);
+ const f=t.texts()[1];assert.deepEqual(Object.keys(f.inlineShortcuts),[]);f.setValue('',{silenceNotifications:true});f.executeCommand(['typedText','in']);assert.equal(f.value.includes('\\in'),false);f.setValue('\\in',{silenceNotifications:true});assert.match(f.value,/\\in/);t.dom.window.close();
+});
+test('implicit curves retain the completed frame and reuse geometry during other edits',()=>{
+ const t=boot();let cells=0;const original=t.w.GraphPlot.contourCell;t.w.GraphPlot.contourCell=(...args)=>{cells++;return original(...args);};seed(t,'x^2+y^2=1','x');assert.ok(cells>0);const initial=cells;
+ const before=t.calls.filter(c=>c[0]==='drawImage').length;t.input(t.texts()[1],'x^2');t.frame();assert.equal(t.calls.filter(c=>c[0]==='drawImage').length,before,'visible image stays intact until the implicit layer is complete');t.flush();assert.equal(cells,initial,'unrelated curve edits reuse implicit geometry');assert.equal(t.calls.filter(c=>c[0]==='drawImage').length,before+1);
+ t.input(t.texts()[0],'x^2+y^2=4');t.flush();assert.ok(cells>initial,'changed implicit expression recomputes geometry');t.dom.window.close();
+});
+test('arrow keys switch integral limits and leave the expression row intact',()=>{
+ const t=boot();seed(t,'\\int_0^2 x^2dx');const f=t.texts()[0];f.position=2;
+ const key=k=>f.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));key('ArrowUp');assert.equal(f.position,4);f.insert('3');f.dispatchEvent(new t.w.Event('input'));assert.match(f.value,/23/);key('ArrowDown');assert.equal(f.position,2);assert.equal(t.texts().length,1);t.flush();
+ const a=t.get('bound-a'),b=t.get('bound-b');a.focus();a.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));assert.equal(t.w.document.activeElement,b);b.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));assert.equal(t.w.document.activeElement,a);t.dom.window.close();
+});
+test('integral expressions draw the integrand and fill its area using an exported chosen color',async()=>{
+ const t=boot();seed(t,'\\int_0^2 x^2dx');const e=t.w.GraphMath.build(t.texts().map(f=>({text:f.value}))).entries[0];assert.equal(e.error,undefined);assert.equal(e.integral.fn(3),9);assert.ok(Math.abs(e.value-8/3)<1e-10);assert.ok(t.calls.some(c=>c[0]==='lineTo'),'definite scalar integral still plots its integrand');
+ t.input(t.get('area-color'),'#e04caf');t.flush();assert.equal(t.get('area-color').value,'#e04caf');assert.ok(t.calls.some(c=>c[0]==='style'&&c[1]==='fillStyle'&&c[2]==='#e04caf40'));assert.ok(t.calls.some(c=>c[0]==='fillRect'&&c[3]===2&&c[4]>0),'area columns are filled');const saved=t.project();assert.equal(JSON.parse(saved).areaColor,'#e04caf');const r=boot();await r.importProject(saved);assert.equal(r.get('area-color').value,'#e04caf');r.dom.window.close();t.dom.window.close();
+});
+
+test('refresh asks confirmation, cancellation keeps work, and Enter confirms once',()=>{
+ const t=boot();seed(t,'x^2');const key=k=>t.w.document.dispatchEvent(new t.w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));key('F5');assert.equal(t.get('refresh-confirm').open,true);assert.equal(t.w.document.activeElement,t.get('refresh-ok'));t.click('refresh-cancel');assert.equal(t.get('refresh-confirm').open,false);assert.equal(t.texts()[0].value,'x^2');
+ const unload=new t.w.Event('beforeunload',{cancelable:true});t.w.dispatchEvent(unload);assert.equal(unload.defaultPrevented,true);key('F5');t.get('refresh-confirm').dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));assert.equal(t.get('refresh-confirm').open,false);const approved=new t.w.Event('beforeunload',{cancelable:true});t.w.dispatchEvent(approved);assert.equal(approved.defaultPrevented,false);t.dom.window.close();
+});
+test('complex LaTeX results, complex-plane points and component curves render',()=>{
+ const t=boot();seed(t,'z=2+3i','z^2','f(x)=x+i');assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.get('panel').querySelectorAll('.row-result')[1].dataset.latex,/-5\+12i/);assert.ok(t.get('graph-labels').querySelector('[data-key="complex-1"]'));assert.ok(t.calls.some(c=>c[0]==='setLineDash'&&c[1]?.[0]===5));t.flush();t.dom.window.close();
 });

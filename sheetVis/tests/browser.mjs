@@ -33,7 +33,7 @@ try {
       return compressor;
     };
   });
-  await page.goto(url);
+  await page.goto(`${url}/?demo`);
   await expect(page.locator('#piece-meta')).toContainText('56 个音符');
   await expect(page.locator('#score-view svg')).toHaveCount(1);
   await expect(page.locator('#engine-status')).toContainText('就绪');
@@ -61,6 +61,31 @@ try {
   expect(await page.evaluate(() => localStorage.getItem('sheetvis.keyboard-height'))).toBe('140');
   await page.locator('#toolbar-toggle').click();
   await page.locator('#left-hand').check(); await page.locator('#right-hand').check();
+  await page.locator('#color-settings summary').click();
+  await page.locator('#color-background').fill('#151822'); await page.locator('#color-background').dispatchEvent('input');
+  await page.locator('#color-left').fill('#d08090'); await page.locator('#color-left').dispatchEvent('input');
+  await expect(page.locator('#colors-status')).toContainText('已保存');
+  expect(JSON.parse(await page.evaluate(() => localStorage.getItem('sheetvis.colors'))).left).toBe('#d08090');
+  await page.reload();
+  await expect(page.locator('#piece-meta')).toContainText('56 个音符');
+  await page.locator('#toolbar-toggle').click();
+  await page.locator('#color-settings summary').click();
+  await expect(page.locator('#color-left')).toHaveValue('#d08090');
+  await expect(page.locator('#color-background')).toHaveValue('#151822');
+  await page.locator('#zen').click();
+  await expect(page.locator('body')).toHaveClass(/zen/);
+  await expect(page.locator('.topbar')).toBeHidden(); await expect(page.locator('#toolbar-toggle')).toBeHidden();
+  await expect(page.locator('.score-section')).toBeHidden(); await expect(page.locator('#read-feedback')).toBeHidden();
+  const zenBox = await page.locator('#waterfall').boundingBox(); expect(zenBox.height).toBe(1040); expect(zenBox.width).toBe(1440);
+  await page.waitForTimeout(100);
+  const color = await page.locator('#waterfall').evaluate(c => [...c.getContext('2d').getImageData(100, 10, 1, 1).data]);
+  expect(color.slice(0, 3)).toEqual([21, 24, 34]);
+  await page.keyboard.press('Tab'); await expect(page.locator('#toolbar')).toBeHidden();
+  await page.screenshot({ path: 'test-results/zen.png' });
+  await page.keyboard.press('Escape'); await expect(page.locator('.topbar')).toBeVisible(); await expect(page.locator('#toolbar')).toBeVisible();
+  await page.locator('#colors-reset').click();
+  expect(await page.evaluate(() => localStorage.getItem('sheetvis.colors'))).toBeNull();
+  await page.locator('#color-settings summary').click();
   await page.screenshot({ path: 'test-results/toolbar.png', fullPage: true });
   await page.locator('#play').click();
   await expect(page.locator('#play')).toHaveText('暂停');
@@ -106,13 +131,17 @@ try {
   await page.route('**/api/recognize', r => r.fulfill({ json: { id }, status: 202 }));
   await page.route(`**/api/jobs/${id}`, r => {
     const state = ++polls < 3 ? 'running' : 'done';
-    return r.fulfill({ json: { state, phase: polls === 1 ? 'scan' : 'recognize', progress: polls === 1 ? 14 : polls === 2 ? 55 : 100, included_pages: [1], results: [{ name: 'result-0.mxl', url: `/api/jobs/${id}/result-0.mxl` }] } });
+    return r.fulfill({ json: { id, state, message: state === 'done' ? '识别完成' : '识别中', total_pages: 2, skipped_pages: [2], phase: polls === 1 ? 'scan' : 'recognize', progress: polls === 1 ? 14 : polls === 2 ? 55 : 100, included_pages: [1], quality: { rhythm_issues: [{ page: 1, system: 1, stack: 2 }], missing_offsets: 2, accuracy: null }, results: [{ name: 'result-0.mxl', url: `/api/jobs/${id}/result-0.mxl` }] } });
   });
   await page.route(`**/api/jobs/${id}/result-0.mxl`, r => r.fulfill({ body: Buffer.from(mxl), contentType: 'application/vnd.recordare.musicxml' }));
   await page.locator('#file').setInputFiles({ name: 'staff-test.pdf', mimeType: 'application/pdf', buffer: await readFile('tests/fixtures/demo-score.pdf') });
   await expect(page.locator('#recognition-percent')).toHaveText('14%');
   await expect(page.locator('#recognition-percent')).toHaveText('55%');
   await expect(page.locator('#recognition-percent')).toHaveText('100%');
+  await expect(page.locator('#read-summary')).toContainText('乐谱 1 页');
+  await page.locator('#feedback-open').click();
+  await expect(page.locator('#quality-issues')).toContainText('1 处小节节奏');
+  await expect(page.locator('#quality-limit')).toContainText('准确率未知');
   await expect(page.locator('#piece-title')).toHaveText('staff-test');
   await page.keyboard.press('Escape');
   await page.locator('#toolbar-toggle').click(); await page.locator('#demo').click(); await page.keyboard.press('Escape');
@@ -124,7 +153,7 @@ try {
   await expect(page.locator('#import')).toBeHidden();
   await page.locator('#toolbar-toggle').click(); await expect(page.locator('#import')).toBeVisible();
   expect(errors).toEqual([]); expect(external).toEqual([]);
-  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'score render', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
+  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'recognition quality and reading feedback', 'saved color settings and reload', 'Zen layout and Esc exit', 'score render', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
   console.log('Browser checks passed; audio peak:', amplitude, '; no external requests.');
 } finally {
   if (browser) await browser.close(); server.kill();

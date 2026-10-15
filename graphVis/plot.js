@@ -12,7 +12,7 @@
   function sampleCurve(fn,view,width,height,options={}) {
     const step=options.integral?Math.max(5,width/240):2;
     const segments=[];let segment=[], evaluations=0;
-    const evalAt=px=>{evaluations++;const x=view.cx+(px-width/2)/view.scale;try{const y=fn(x);return {px,py:height/2-(y-view.cy)*view.scale,x,y};}catch{return {px,py:NaN,x,y:NaN};}};
+    const evalAt=px=>{evaluations++;const x=view.cx+(px-width/2)/view.scale;try{const y=fn(x);return {px,py:height/2-(y-view.cy)*(view.yScale||view.scale),x,y};}catch{return {px,py:NaN,x,y:NaN};}};
     const valid=p=>Number.isFinite(p.py)&&Math.abs(p.py)<height*100;
     function emit(p){if(valid(p)){segment.push(p);}else if(segment.length){segments.push(segment);segment=[];}}
     function edge(a,b,depth){
@@ -38,7 +38,7 @@
       if(a===b)continue;
       const t=a/(a-b),p=[coords[i][0]+(coords[j][0]-coords[i][0])*t,coords[i][1]+(coords[j][1]-coords[i][1])*t];
       const residual=Math.abs(fn(...p)),limit=Math.max(Math.abs(a),Math.abs(b));
-      if(Number.isFinite(residual)&&residual<=Math.max(1e-9,limit*0.8))edges.push(toScreen(...p));
+      if(Number.isFinite(residual)&&residual<=Math.max(1e-9,limit*0.8)){const screen=toScreen(...p);if(!edges.some(q=>Math.hypot(q[0]-screen[0],q[1]-screen[1])<1e-7))edges.push(screen);}
     }
     if(edges.length===4){
       // Asymptotic decider for a saddle; avoid crossing unrelated branches.
@@ -47,6 +47,11 @@
     }
     return edges.length===2?[[edges[0],edges[1]]]:[];
   }
-  const api={niceStep,format,sampleCurve,contourCell};
+  function sampleDiscrete(fn,view,width,height,support=[-Infinity,Infinity]){
+    const a=Math.max(Math.ceil(view.cx-width/(2*view.scale)),Math.ceil(support[0])),b=Math.min(Math.floor(view.cx+width/(2*view.scale)),Math.floor(support[1])),stride=Math.max(1,Math.ceil((b-a+1)/4096)),points=[];
+    for(let k=a;k<=b;k+=stride){const y=fn(k);if(Number.isFinite(y))points.push({x:k,y,px:width/2+(k-view.cx)*view.scale,py:height/2-(y-view.cy)*(view.yScale||view.scale)});}
+    return {points,stride};
+  }
+  const api={niceStep,format,sampleCurve,contourCell,sampleDiscrete};
   root.GraphPlot=api;if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof globalThis==='object'?globalThis:this);

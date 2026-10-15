@@ -1,6 +1,7 @@
 """Compare pitch/beat/staff events of the self-authored fixture with local OMR."""
 from fractions import Fraction
 import json
+import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import zipfile
@@ -38,10 +39,11 @@ def events(root):
 
 
 if __name__ == '__main__':
-    files = sorted(Path('.data/jobs').glob('*/result-0.mxl'), key=lambda path: path.stat().st_mtime)
-    if not files:
-        raise SystemExit('Run the PDF fixture test first.')
-    source = files[-1]
+    record = Path('test-results/pdf.json')
+    job = json.loads(record.read_text()).get('job', '') if record.exists() else ''
+    if not re.fullmatch('[a-f0-9]{32}', job):
+        raise SystemExit('Run the PDF fixture test first to record its job ID.')
+    source = Path('.data/jobs') / job / 'result-0.mxl'
     with zipfile.ZipFile(source) as archive:
         container = ET.fromstring(archive.read('META-INF/container.xml'))
         path = next(e.attrib['full-path'] for e in container.iter() if e.tag.split('}')[-1] == 'rootfile')

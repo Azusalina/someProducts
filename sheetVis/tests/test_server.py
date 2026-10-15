@@ -69,6 +69,42 @@ class LocalServerTests(unittest.TestCase):
         status, _, _ = self.request('GET', '/api/jobs/' + 'a' * 32)
         self.assertEqual(status, 404)
 
+    def test_default_score_reads_only_configured_path(self):
+        pdf = Path(self.temp.name) / 'default.pdf'; pdf.write_bytes(b'%PDF-1.4\nconfigured')
+        with patch('server.default_score', return_value=pdf):
+            status, body, _ = self.request('GET', '/api/default-score?path=/etc/passwd')
+            self.assertEqual((status, body), (200, pdf.read_bytes()))
+            status, body, _ = self.request('GET', '/api/config')
+            config = json.loads(body)
+            self.assertEqual(config['default_score']['name'], 'default.pdf')
+            self.assertTrue(config['default_score']['available'])
+        with patch('server.default_score', return_value=Path(self.temp.name) / 'missing.pdf'):
+            self.assertEqual(self.request('GET', '/api/default-score')[0], 404)
+
+    def test_identical_pdf_reuses_active_or_completed_new_pipeline_job(self):
+        store = server.JobStore(Path(self.temp.name) / 'dedupe')
+        with patch.object(store.executor, 'submit') as submit:
+            first = store.create(b'%PDF-1.4\ndedupe')
+            self.assertEqual(store.create(b'%PDF-1.4\ndedupe'), first)
+            submit.assert_called_once()
+            directory = store.directory / first
+            (directory / 'result-0.mxl').write_bytes(b'result')
+            store.update(first, state='done', results=[{'name':'result-0.mxl'}])
+            self.assertEqual(store.create(b'%PDF-1.4\ndedupe'), first)
+            (directory / 'result-0.mxl').unlink()
+            self.assertNotEqual(store.create(b'%PDF-1.4\ndedupe'), first)
+        store.shutdown()
+
+    def test_quality_deduplicates_engine_diagnostics_and_keeps_accuracy_unknown(self):
+        line = 'INFO [score#3] StackRhythm 224 | S2 MeasureStack#4 no correct rhythm\n'
+        offset = 'INFO [score#3] MeasureRhythm 1044 | Measure{#4} No timeOffset for HeadChordInter#123\n'
+        error = 'WARN [score] PartwiseBuilder 2229 | Error visiting Measure{#9} in {Page#10.1}\n'
+        report = server.quality_report(line * 2 + offset * 2 + error * 2)
+        self.assertEqual(report['rhythm_issues'], [{'page':3,'system':2,'stack':4}])
+        self.assertEqual(report['missing_offsets'], 1)
+        self.assertEqual(report['export_errors'], [{'page':10,'stack':9}])
+        self.assertIsNone(report['accuracy'])
+
     def test_export_is_collected_and_log_saved(self):
         store = server.JobStore(Path(self.temp.name) / 'mock')
         identifier = 'b' * 32
@@ -79,7 +115,7 @@ class LocalServerTests(unittest.TestCase):
         def run(command, env, log):
             out = directory / 'output/score'
             out.mkdir(parents=True, exist_ok=True)
-            if '-step' in command:
+            if '-step' in command and command[command.index('-step')+1] == 'GRID':
                 with zipfile.ZipFile(out / 'score.omr', 'w') as z:
                     z.writestr('book.xml', '<book><sheet number="1"/><sheet number="2"/></book>')
                     z.writestr('sheet#1/sheet#1.xml', '<sheet/>')
@@ -87,6 +123,8 @@ class LocalServerTests(unittest.TestCase):
                 return 0
             self.assertIn('-sheets', command)
             self.assertEqual(command[command.index('-sheets')+1], '2')
+            with zipfile.ZipFile(out / 'score.omr', 'w') as z:
+                z.writestr('book.xml', '<book><sheet number="1"/><sheet number="2"><steps>GRID PAGE</steps></sheet></book>')
             (out / 'score.mxl').write_bytes(b'fixture result')
             return 0
         with patch.object(store, 'execute', side_effect=run):
@@ -98,6 +136,29 @@ class LocalServerTests(unittest.TestCase):
         self.assertEqual(store.get(identifier)['skipped_pages'], [1])
         self.assertEqual(store.get(identifier)['progress'], 100)
         store.executor.shutdown()
+
+    def test_identical_failed_pdf_resumes_saved_grid_and_rejects_partial_export(self):
+        store = server.JobStore(Path(self.temp.name) / 'resume')
+        payload = b'%PDF-1.4\nresume'; previous = 'f' * 32
+        directory = store.directory / previous; output = directory / 'output'; output.mkdir(parents=True)
+        with zipfile.ZipFile(output / 'score.omr', 'w') as z:
+            z.writestr('book.xml', '<book><sheet number="1"/></book>')
+            z.writestr('sheet#1/sheet#1.xml', '<sheet><staff><lines>'+'<line/>'*5+'</lines></staff></sheet>')
+        store.jobs[previous] = {'id':previous,'state':'error','phase':'recognize','created':0,'sha256':server.hashlib.sha256(payload).hexdigest()}
+        with patch.object(store.executor, 'submit'):
+            identifier = store.create(payload)
+        self.assertEqual(store.jobs[identifier]['resumed_from'], previous)
+        def engine(command, env, log):
+            self.assertEqual(command[command.index('-step')+1], 'PAGE')
+            (store.directory / identifier / 'output/partial.mxl').write_bytes(b'partial')
+            return 0
+        with patch.object(store, 'execute', side_effect=engine) as execute:
+            store.run(identifier)
+        self.assertEqual(execute.call_count, 1)
+        self.assertEqual(store.get(identifier)['state'], 'error')
+        self.assertIn('未完成识别', store.get(identifier)['message'])
+        self.assertFalse((store.directory / identifier / 'result-0.mxl').exists())
+        store.shutdown()
 
     def test_timeout_reports_error(self):
         store = server.JobStore(Path(self.temp.name) / 'timeout')

@@ -46,6 +46,13 @@ describe('musical timing and structure', () => {
     const s = musicXMLToScore(wrap(measure(note()) + measure(note('D') + repeat, 2)));
     expect(s.measures.map(m => m.number)).toEqual(['1', '2', '1', '2']); expect(s.duration).toBe(2);
   });
+  test('orphan ending marks without repeats do not discard subsequent music', () => {
+    const second = '<barline location="left"><ending number="2" type="start"/></barline>';
+    const s = musicXMLToScore(wrap(measure(note()) + measure(second + note('D'), 2) + measure(note('E'), 3)));
+    expect(s.measures.map(m => m.number)).toEqual(['1', '2', '3']);
+    expect(s.notes).toHaveLength(3);
+    expect(s.warnings.join(' ')).toContain('没有反复记号');
+  });
   test('first and second endings choose the correct pass', () => {
     const start = '<barline location="left"><repeat direction="forward"/></barline>';
     const first = '<barline location="left"><ending number="1" type="start"/></barline>';

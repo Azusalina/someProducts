@@ -15,7 +15,7 @@ try {
   await page.setContent('<html><head><title>Composer notes</title></head><body style="font:18px serif;padding:40px"><h1>Composer notes</h1><p>Biographical introduction.</p><p>This page contains explanatory prose and no musical staff.</p></body></html>');
   await page.pdf({ path: 'test-results/composer-notes.pdf', format: 'A4' });
   execFileSync('pdfunite', ['test-results/composer-notes.pdf', 'tests/fixtures/demo-score.pdf', 'test-results/composer-notes.pdf', 'test-results/mixed-pages.pdf']);
-  await page.goto(url);
+  await page.goto(`${url}/?demo`);
   await expect(page.locator('#score-view svg')).toHaveCount(1);
   await page.locator('#toolbar-toggle').click();
   await page.locator('#autoplay').uncheck();
