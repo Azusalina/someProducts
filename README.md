@@ -22,14 +22,18 @@ git commit -m "Describe the change"
 git push
 ```
 
+`git commit` records changes locally. `git push` publishes the committed changes
+to the hub and automatically synchronizes the five registered product repositories:
+`fileX`, `mediator`, `monitor`, `toolkit`, and `track`.
+
 The pre-push hook synchronizes changed products to their registered
 repositories before pushing `master` to `origin`. The root `.git` owns all
 objects, commits, and synchronization state; product folders have no nested
 `.git` directories. Only committed changes are published.
 
-All registered destination repositories must exist before enabling automatic
-synchronization. See the current [setup status](description.md#setup-status).
-After the destinations are ready, install the local hook once in each clone:
+Automatic synchronization is enabled in this workspace. Hooks are local Git
+settings and are not installed by `git clone`: install the hook once in each new
+Linux clone. Installation checks that all registered destinations are accessible:
 
 ```sh
 python3 scripts/product-sync.py install

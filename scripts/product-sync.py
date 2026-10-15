@@ -242,12 +242,20 @@ def hook_target(root, config, remote, url, updates):
     return None
 
 
-def install(root):
+def install(root, config):
     if git(root, "config", "--get", "core.hooksPath", check=False).returncode == 0:
         raise RuntimeError("Existing core.hooksPath; integrate product-sync manually")
     path = Path(value(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/pre-push"))
     if path.exists() and MARKER not in path.read_text():
         raise RuntimeError("Existing pre-push hook; preserve it and integrate manually")
+    unavailable = []
+    for product in config["products"]:
+        result = git(root, "ls-remote", "--heads", product["url"], check=False)
+        if result.returncode:
+            unavailable.append(f"{product['folder']}: " + result.stderr.decode(errors="replace").strip())
+    if unavailable:
+        raise RuntimeError("Cannot enable automatic sync until every destination is accessible:\n" +
+                           "\n".join(unavailable))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('#!/bin/sh\n' + MARKER + '\n'
                     'exec python3 "$(git rev-parse --show-toplevel)/scripts/product-sync.py" '
@@ -266,8 +274,7 @@ def main():
     args = parser.parse_args()
     root = Path(value(Path.cwd(), "rev-parse", "--show-toplevel"))
     if args.command == "install":
-        load_config(root)
-        install(root)
+        install(root, load_config(root))
         return
     if args.command == "uninstall":
         path = Path(value(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/pre-push"))

@@ -238,6 +238,16 @@ class ProductSyncTests(unittest.TestCase):
         self.git("config", "core.hooksPath", ".custom-hooks")
         self.assertNotEqual(self.run_sync("install", check=False).returncode, 0)
 
+    def test_install_rejects_missing_destination_without_leaving_a_hook(self):
+        self.run_sync("uninstall")
+        self.config["products"][1]["url"] = str(self.base / "missing.git")
+        (self.root / "products.json").write_text(json.dumps(self.config))
+        result = self.run_sync("install", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"every destination is accessible", result.stderr)
+        self.assertIn(b"b:", result.stderr)
+        self.assertFalse((self.root / ".git/hooks/pre-push").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,7 @@ folder at its repository root. No submodules, nested repositories, or additional
 working copies are introduced.
 
 The registry contains only these desktop/local product repositories under
-`Azusalina`. The six deployed `d-*` website products stay managed by the hub
+`Azusalina`. The deployed `d-*` website products stay managed by the hub
 and are excluded from independent publication:
 
 | Folder / repository | Historical folder names |
@@ -26,25 +26,22 @@ and the root documentation remains in the hub. Ignored folders `crawlers` and
 
 ## Setup status
 
-`fileX`, `mediator`, and `monitor` exist as public GitHub repositories, with their
-product histories published to `master`. Monitor contains both `widget-mode`
+All five registered products (`fileX`, `mediator`, `monitor`, `toolkit`, and
+`track`) have public GitHub repositories and publish their product histories to
+`master`. Monitor contains both `widget-mode`
 and `cli-mode`; the previous `monitor-cli` destination is archived after merging
 its history into Monitor. See [Monitor's description](monitor/description.md).
 
-`toolkit` and `track` are registered and their histories have been prepared in
-the root object database, but their GitHub repositories could not be created:
-GitHub returned a secondary content-creation rate limit, including after
-progressively longer retry intervals. No reset time was supplied for that
-secondary limit. Stop retrying immediately until the limit has subsided.
+On 2026-10-15, debugging confirmed that `.git/hooks/pre-push` had never been
+installed: its activation was deferred on 2026-10-12 because GitHub temporarily
+blocked creation of `toolkit` and `track`. Consequently ordinary hub pushes did
+not run product synchronization. Both missing repositories have now been created,
+and the local hook is enabled. Ordinary `git push` synchronizes committed product
+changes; `git commit` alone only records changes locally.
 
-The automatic pre-push hook is deliberately **not installed yet**, so the two
-missing destinations do not block existing hub pushes. Normal hub Git operations
-remain available. After GitHub permits repository creation, finish setup with:
+On a new Linux clone, install the hook once:
 
 ```sh
-gh repo create Azusalina/toolkit --public
-gh repo create Azusalina/track --public
-python3 scripts/product-sync.py sync
 python3 scripts/product-sync.py install
 git push
 ```
@@ -113,7 +110,9 @@ automatic hook implementation requires Linux with accessible `/proc`.
 escape hatch and does not synchronize products. A later normal push or explicit
 `sync` command repairs this. Hook installation is local to a clone and must be
 repeated after cloning. It refuses to replace an existing unmanaged pre-push
-hook or an existing `core.hooksPath` setting. Uninstallation removes only a hook
+hook or an existing `core.hooksPath` setting. Installation also verifies that
+every registered destination is accessible and lists failures before writing
+the hook. Uninstallation removes only a hook
 with this tool's ownership marker; it does not delete repositories or exports.
 
 ## Configuration and maintenance
@@ -189,6 +188,12 @@ including files already tracked in that source.
 - [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
 ## History
+
+2026-10-15: Created the two destinations previously blocked by GitHub rate
+limits and enabled the root pre-push hook. Added destination checks during hook
+installation and regression coverage for a missing repository. The 13 local
+integration tests passed, including ordinary pushes, up-to-date hub catch-up,
+dry-run safety, divergence, history preservation, and partial failure recovery.
 
 2026-10-12: Added independent public desktop/local product repositories while retaining one
 local Git workspace, the existing total-repository source history, and the
