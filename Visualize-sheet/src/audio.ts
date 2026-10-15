@@ -124,7 +124,8 @@ export class PianoPlayer {
   private schedule() {
     if (!this.playing || !this.context || !this.score) return;
     if (this.position >= this.score.duration) { this.pause(); this.onEnd(); return; }
-    const horizon = this.context.currentTime + .12;
+    // Keep short attacks queued through PDF decoding / layout stalls.
+    const horizon = this.context.currentTime + .35;
     while (this.next < this.score.notes.length) {
       const note = this.score.notes[this.next];
       const when = this.anchorTime + (note.start - this.anchorPosition) / this.speed;

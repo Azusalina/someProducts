@@ -34,6 +34,14 @@ describe('audio transport correctness', () => {
     const position = player.position; Context.instance.currentTime = 10;
     expect(player.position).toBe(position); expect(Context.instance.sources[0].stop).toHaveBeenCalled();
   });
+  test('short attacks remain scheduled through a 200 ms rendering stall', async () => {
+    const player=new PianoPlayer();
+    player.load({...score,notes:[0,.1,.2,.3].map((start,i)=>({...score.notes[0],id:String(i),start,duration:.04,soundDuration:.04}))});
+    await player.play();
+    expect(Context.instance.sources).toHaveLength(4);
+    Context.instance.currentTime=.25;await vi.advanceTimersByTimeAsync(25);
+    expect(Context.instance.sources).toHaveLength(4);player.pause();
+  });
   test('speed changes preserve pitch and position', async () => {
     const player = new PianoPlayer(); player.load(score); await player.play();
     Context.instance.currentTime = 1;

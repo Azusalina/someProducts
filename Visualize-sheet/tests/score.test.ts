@@ -11,6 +11,11 @@ const wrap = (measures: string) => `<score-partwise><part-list><score-part id="P
 const measure = (body: string, number = 1) => `<measure number="${number}" implicit="yes">${number === 1 ? attrs : ''}${body}</measure>`;
 
 describe('musical timing and structure', () => {
+  test('cropped scores without meter do not acquire invented 4/4 silent tails', () => {
+    const s=musicXMLToScore(wrap(`<measure number="120"><attributes><divisions>4</divisions></attributes>${note('C',12)}</measure><measure number="121">${note('D',12)}</measure>`));
+    expect(s.notes.map(n=>n.start)).toEqual([0,1.5]);
+    expect(s.duration).toBe(3);expect(s.warnings.join(' ')).toContain('缺少拍号');
+  });
   test('demo has two staves and expected real duration', () => {
     const s = musicXMLToScore(readFileSync('public/demo.musicxml', 'utf8'));
     expect(s.notes).toHaveLength(56); expect(s.measures).toHaveLength(8);

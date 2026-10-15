@@ -19,13 +19,14 @@ import xml.etree.ElementTree as ET
 import zipfile
 from omr_support import repair_meters, repair_dynamics, source_map
 from octave_support import audit_octaves, training_bundle
+from octave_repair import repair_octaves
 
 ROOT = Path(__file__).resolve().parent
 MAX_UPLOAD = 40 * 1024 * 1024
 MAX_JOBS = 8
 TIMEOUT = 3600
 CONFIG_LOCK = threading.Lock()
-PIPELINE = 'native-meter-source-map-v3'
+PIPELINE = 'image-octaves-source-map-v4'
 OMR_STEPS = ('LOAD', 'BINARY', 'SCALE', 'GRID', 'HEADERS', 'STEM_SEEDS', 'BEAMS', 'LEDGERS', 'HEADS', 'STEMS', 'REDUCTION', 'CUE_BEAMS', 'TEXTS', 'MEASURES', 'CHORDS', 'CURVES', 'SYMBOLS', 'LINKS', 'RHYTHMS', 'PAGE')
 
 
@@ -86,6 +87,8 @@ def copy_project(project, target, pdf):
     try:
         with zipfile.ZipFile(project) as source, zipfile.ZipFile(temp,'w',zipfile.ZIP_DEFLATED) as output:
             book=ET.fromstring(source.read('book.xml'));book.set('path',str(pdf))
+            for path in book.findall('sheet/input/path'):
+                path.text=str(pdf)
             for entry in source.infolist():
                 if entry.filename=='book.xml':
                     output.writestr(entry,ET.tostring(book,encoding='utf-8',xml_declaration=True))
@@ -109,13 +112,16 @@ def default_score():
     return path if path.is_absolute() else ROOT / path
 
 
-def quality_report(log):
+def quality_report(log, inherited=None):
     # These are engine diagnostics, not ground-truth accuracy or confidence scores.
     rhythms = sorted(set(re.findall(r'\[score#(\d+)\].*?S(\d+) MeasureStack#(\d+) no correct rhythm', log)))
     offsets = set(re.findall(r'\[score#(\d+)\].*?No timeOffset for (\w+Inter#\d+)', log))
     export_errors = sorted(set(re.findall(r'Error visiting Measure\{#(\d+)\} in \{Page#(\d+)\.\d+\}', log)))
-    return {'rhythm_issues': [{'page': int(p), 'system': int(s), 'stack': int(m)} for p, s, m in rhythms],
-            'missing_offsets': len(offsets), 'export_errors': [{'page': int(p), 'stack': int(m)} for m, p in export_errors], 'accuracy': None}
+    inherited = inherited or {}
+    issues = {(int(p),int(s),int(m)) for p,s,m in rhythms}
+    issues.update((r['page'],r['system'],r['stack']) for r in inherited.get('rhythm_issues',[]))
+    return {'rhythm_issues': [{'page':p,'system':s,'stack':m} for p,s,m in sorted(issues)],
+            'missing_offsets': max(len(offsets),inherited.get('missing_offsets',0)), 'export_errors': [{'page': int(p), 'stack': int(m)} for m, p in export_errors], 'accuracy': None}
 
 
 def recognition_progress(log, state, phase='recognize', selected_pages=None, remaining_steps=None):
@@ -252,6 +258,7 @@ class JobStore:
                         if old_log.exists(): shutil.copyfile(old_log, directory/'previous.log')
                         job['resumed_from'] = previous['id']
                         job['upgraded_from_complete'] = previous['state'] == 'done'
+                        job['inherited_rhythm_quality'] = previous.get('quality') if previous['state'] == 'done' else None
                         restored = True;break
                     except (OSError,zipfile.BadZipFile,ET.ParseError,KeyError): continue
                 if restored: break
@@ -263,6 +270,8 @@ class JobStore:
     def get(self, identifier):
         with self.lock:
             job = dict(self.jobs[identifier]) if identifier in self.jobs else None
+        if job is not None:
+            job['upgrade_available'] = job.get('pipeline') != PIPELINE
         if job is None:
             return None
         path = self.directory / identifier / 'engine.log'
@@ -272,7 +281,7 @@ class JobStore:
             log = ''
         job.update(recognition_progress(log, job['state'], job.get('phase', 'scan'), job.get('page_count'), job.get('remaining_steps')))
         if job['state'] == 'done':
-            job['quality'] = quality_report(log)
+            job['quality'] = quality_report(log,job.get('inherited_rhythm_quality'))
             job['results'] = [{**r, 'mapping':f'/api/jobs/{identifier}/{Path(r["name"]).stem}.map.json'} for r in job.get('results', [])]
         return job
 
@@ -498,6 +507,7 @@ class JobStore:
                     raise RuntimeError('未检测到五线谱页面。')
                 meter_repairs = repair_meters(projects[0], directory/'score.pdf') if config.get('repair_native_meter', True) else []
                 if meter_repairs:
+                    self.update(identifier,inherited_rhythm_quality=None)
                     # Recompute all affected rhythms; old diagnostics are retained
                     # separately, not counted as current unresolved errors.
                     log.seek(0); log.truncate(); log.flush()
@@ -513,9 +523,10 @@ class JobStore:
                 if incomplete:
                     raise RuntimeError(f'乐谱第 {"、".join(map(str, incomplete))} 页未完成识别；已保存进度，重新导入可继续。')
                 self.checkpoint(identifier,projects[0])
+                octave_recovery = repair_octaves(projects[0])
                 octave_audit = audit_octaves(projects[0], directory/'score.pdf')
                 dynamics_repairs = repair_dynamics(projects[0])
-                self.update(identifier, octave_audit=octave_audit, dynamics_repairs=dynamics_repairs, message='导出与校验')
+                self.update(identifier, octave_audit=octave_audit, octave_recovery=octave_recovery, dynamics_repairs=dynamics_repairs, message='导出与校验')
                 log.write(b'\nSHEETVIS_EXPORT\n'); log.flush()
                 exit_code = self.execute([*base, '-export', '-save', '-output', str(output), '-sheets', *map(str, selected), '--', str(projects[0])], env, log)
             self.update(identifier, exit_code=exit_code)
@@ -529,7 +540,7 @@ class JobStore:
                 name = f"result-{index}{path.suffix}"
                 shutil.copyfile(path, directory / name)
                 results.append({"name": name, "url": f"/api/jobs/{identifier}/{name}"})
-            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code, quality=quality_report((directory / 'engine.log').read_text(errors='replace')))
+            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code, quality=quality_report((directory / 'engine.log').read_text(errors='replace'),self.jobs[identifier].get('inherited_rhythm_quality')))
         except subprocess.TimeoutExpired:
             self.update(identifier, state="error", message=f"识别超过 {timeout / 60:g} 分钟；已保存进度，重新导入可继续。")
         except (OSError, RuntimeError, zipfile.BadZipFile, ET.ParseError) as exc:
@@ -562,7 +573,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self' data: blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src 'self'; font-src 'self' data: blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
         self.end_headers()
         try:
             self.wfile.write(data)

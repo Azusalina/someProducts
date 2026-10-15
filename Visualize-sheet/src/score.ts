@@ -80,7 +80,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   const part = parts.find(p => p.getAttribute('id') === pianoId) ?? parts[0];
   if (parts.length > 1) warnings.add('检测到多个乐器声部，目前只播放选中的钢琴声部（未找到钢琴标记时使用第一声部）。');
   const raw: RawMeasure[] = [];
-  let divisions = 1, beatsPerMeasure = 4, sourceBeat = 0, activeEndings: number[] = [], velocity = .72;
+  let divisions = 1, beatsPerMeasure = 0, sourceBeat = 0, activeEndings: number[] = [], velocity = .72;
   for (const measure of children(part, 'measure')) {
     const m: RawMeasure = { number: measure.getAttribute('number') ?? String(raw.length + 1), sourceBeat, duration: 0, notes: [], tempos: [], pedals: [], forward: false, backward: 0, endings: [...activeEndings] };
     let beat = 0, extent = 0, chordBeat = 0, noteIndex = -1;
@@ -152,8 +152,11 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
     }
     const implicit = measure.getAttribute('implicit') === 'yes' || measure.getAttribute('number') === '0';
     const pickup = raw.length === 0 && extent > 0 && extent < beatsPerMeasure;
-    m.duration = implicit || pickup ? extent || beatsPerMeasure : Math.max(extent, beatsPerMeasure);
-    if (!implicit && !pickup && extent > 0 && Math.abs(extent - beatsPerMeasure) > 1e-5) warnings.add('部分小节的音符时值与拍号不一致；不足的部分保留为静默，超出的部分按实际时值播放。');
+    // A cropped score often has no inherited signature. Inventing 4/4 here
+    // inserts a silent tail into every shorter measure and misaligns playback.
+    m.duration = implicit || pickup || !beatsPerMeasure ? extent || beatsPerMeasure || 4 : Math.max(extent, beatsPerMeasure);
+    if (!beatsPerMeasure) warnings.add('乐谱片段缺少拍号，按导出音符的实际时值连接小节，未假定 4/4；原有节奏识别错误仍需核对。');
+    if (beatsPerMeasure && !implicit && !pickup && extent > 0 && Math.abs(extent - beatsPerMeasure) > 1e-5) warnings.add('部分小节的音符时值与拍号不一致；不足的部分保留为静默，超出的部分按实际时值播放。');
     sourceBeat += m.duration;
     raw.push(m);
   }

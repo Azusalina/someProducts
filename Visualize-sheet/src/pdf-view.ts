@@ -69,7 +69,8 @@ export class PDFView {
     try { await previous?.destroy(); } catch { /* Superseded worker cleanup. */ }
     if (generation !== this.generation) return;
     const assetRoot = import.meta.env.DEV ? '/node_modules/pdfjs-dist/' : '/pdfjs/';
-    const loading = getDocument({ data: new Uint8Array(data.slice(0)), useWasm:false,
+    const loading = getDocument({ data: new Uint8Array(data.slice(0)),
+      wasmUrl:`${assetRoot}wasm/`,
       standardFontDataUrl:`${assetRoot}${import.meta.env.DEV ? 'standard_fonts' : 'fonts'}/`,
       cMapUrl:`${assetRoot}cmaps/`, cMapPacked:true });
     this.loading = loading;

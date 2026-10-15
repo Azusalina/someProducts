@@ -469,7 +469,7 @@ async function openCached(id:string,filename:string,startup=false) {
     const job=await status.json() as RecognitionJob, data=await source.blob();
     if(token!==revision)return;
     if(job.state!=='done' && !['cancelled','error'].includes(job.state))throw new Error('此缓存仍在识别中。');
-    await loadFile(new File([data],filename,{type:'application/pdf'}),startup,job.state==='done' ? job : undefined);
+    await loadFile(new File([data],filename,{type:'application/pdf'}),startup,job.state==='done' && !job.upgrade_available ? job : undefined);
   }catch(error){if(token===revision)notice(String(error),'error');}
   finally{if(token===revision){busy=false;updateButtons();}}
 }

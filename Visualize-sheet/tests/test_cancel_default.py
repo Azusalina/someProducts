@@ -69,13 +69,14 @@ class CancelDefaultTests(unittest.TestCase):
         payload=(directory/'score.pdf').read_bytes();(output/'score.omr').write_bytes(b'partial zip')
         self.store.jobs[identifier].update(phase='recognize',sha256=server.hashlib.sha256(payload).hexdigest())
         with zipfile.ZipFile(directory/'checkpoint.omr','w') as z:
-            z.writestr('book.xml','<book path="/old/score.pdf"><sheet number="1"/></book>')
+            z.writestr('book.xml','<book path="/old/score.pdf"><sheet number="1"><input><path>/old/score.pdf</path><number>1</number></input></sheet></book>')
             z.writestr('sheet#1/sheet#1.xml','<sheet><staff><lines>'+'<line/>'*5+'</lines></staff></sheet>')
         with patch.object(self.store.executor,'submit'):
             resumed=self.store.create(payload)
         self.assertEqual(self.store.jobs[resumed]['resumed_from'],identifier)
         with zipfile.ZipFile(self.store.directory/resumed/'output/score.omr') as z:
             self.assertEqual(server.ET.fromstring(z.read('book.xml')).get('path'),str(self.store.directory/resumed/'score.pdf'))
+            self.assertEqual(server.ET.fromstring(z.read('book.xml')).findtext('sheet/input/path'),str(self.store.directory/resumed/'score.pdf'))
     def test_default_cache_validation_persistence_and_deletion_fallback(self):
         identifier='f'*32;directory=self.job(identifier,'done');(directory/'result-0.mxl').write_bytes(b'result')
         self.store.jobs[identifier]['results']=[{'name':'result-0.mxl'}]

@@ -2,10 +2,12 @@ import { parseXML, type Score } from './score';
 
 export interface RecognitionJob {
   id: string; state: string; message?:string; results: { name: string; url: string }[];
+  upgrade_available?:boolean;
   total_pages?: number; included_pages?: number[]; skipped_pages?: number[];
   quality?: { rhythm_issues: { page: number; system: number; stack: number }[]; missing_offsets: number; export_errors?: { page: number; stack: number }[]; accuracy: null };
   exit_code?: number;
   octave_audit?: {upper:number;lower:number;native_labels:number;findings:{page:number;reason:string}[]};
+  octave_recovery?: {available:boolean;repairs:{page:number;kind:string}[];reason?:string};
   resources?: {threads:number; memory_mb:number; parallel:boolean};
   meter_repairs?: {page:number;stack:string;meter:string;source:string}[];
   dynamics_repairs?: {page:number;wedge:string;reason:string}[];
@@ -20,6 +22,8 @@ export function qualityFeedback(score: Score, job?: RecognitionJob) {
     facts.push(`八度复核：高八度 ${audit.upper} · 低八度 ${audit.lower} · PDF 文本标记 ${audit.native_labels}`);
     if (audit.findings.length) issues.push(`八度线有 ${audit.findings.length} 处范围或位置待核查（PDF 第 ${[...new Set(audit.findings.map(f=>f.page))].join('、')} 页）；未根据不确定范围改写音高。`);
   }
+  if (job?.octave_recovery?.repairs.length) facts.push(`依据扫描图像恢复 ${job.octave_recovery.repairs.length} 处八度线的范围和谱表关联，并由识别引擎重新导出实际音高。`);
+  if (job?.octave_recovery && !job.octave_recovery.available) issues.push('图像八度线恢复不可用：需要本地 Pillow；现有 OMR 八度标记仍需核查。');
   if (job?.resources) facts.push(`本地识别：${job.resources.threads} 个 CPU 核心 · Java 内存上限 ${job.resources.memory_mb} MB${job.resources.parallel ? ' · 并行处理' : ''}`);
   if (job?.meter_repairs?.length) facts.push(...job.meter_repairs.map(r=>`依据双谱表内嵌数字，恢复 PDF 第 ${r.page} 页第 ${r.stack} 小节拍号 ${r.meter}，并重新计算节奏。`));
   if (job?.dynamics_repairs?.length) issues.push(`省略 ${job.dynamics_repairs.length} 个起奏位置未解析的渐强／渐弱标记，以避免整个小节导出失败；音符保留。`);

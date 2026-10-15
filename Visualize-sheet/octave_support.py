@@ -39,7 +39,10 @@ def audit_octaves(project, pdf=None):
                     observed.append({'page':page,'id':mark.get('id'),'kind':kind,'x':float(bounds.get('x'))/width,'y':float(bounds.get('y'))/height})
                     reason=None
                     if p1 is None or p2 is None: reason='missing_line'
-                    elif abs(float(p2.get('x'))-float(p1.get('x'))) <= interline*3.1: reason='short_or_fallback_line'
+                    elif abs(float(p2.get('x'))-float(p1.get('x'))) <= interline*3.1:
+                        sides={r.find('octave-shift-chord').get('side') for r in system.findall('sig/relations/relation')
+                               if r.get('source')==mark.get('id') and r.find('octave-shift-chord') is not None}
+                        if not {'LEFT','RIGHT'} <= sides: reason='short_or_fallback_line'
                     staff=next((s for s in system.findall('part/staff') if s.get('id')==mark.get('staff')),None)
                     if staff is not None and p1 is not None:
                         ys=[float(p.get('y')) for p in staff.findall('lines/line/point')]

@@ -9,5 +9,6 @@
     "background": "#111714"
   },
   "recognition_threads": 0,
-  "recognition_memory_mb": 4096
+  "recognition_memory_mb": 4096,
+  "default_cache": "bae8e291e7c349a68c7b89c3cfb40e6d"
 }
