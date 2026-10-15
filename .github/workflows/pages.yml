@@ -16,6 +16,7 @@ on:
       - 'd-la/**'
       - 'todos/**'
       - 'd-todos/**'
+      - 'd-Visualize-graph/**'
       - 'scripts/build-pages.mjs'
       - 'pages/**'
       - '.github/workflows/pages.yml'

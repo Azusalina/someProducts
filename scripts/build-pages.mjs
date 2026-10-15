@@ -11,6 +11,7 @@ const sites = {
   ict: ['index.html', 'favicon.svg', 'app.js', 'lessons.js', 'style.css', 'vendor'],
   jupasanalysis: ['index.html', 'favicon.svg', 'app.js', 'data.js', 'model.mjs', 'style.css'],
   la: ['index.html', 'notes.html', 'playground.html', 'styles.css', 'assets', 'js', 'vendor', 'examples', 'ref'],
+  'Visualize-graph': ['index.html', 'style.css', 'app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js', 'vendor'],
   todos: ['product1']
 };
 
@@ -24,7 +25,10 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const [name, files] of Object.entries(sites)) {
   const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : name);
-  if (name === 'todos') {
+  if (name === 'Visualize-graph') {
+    for (const file of ['app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js']) run(source, ['--check', file]);
+    for (const file of ['math', 'stats', 'complex', 'latex']) run(source, [`tests/${file}.test.cjs`]);
+  } else if (name === 'todos') {
     run(source, ['tests/check_static.mjs']);
   } else if (name === 'gitpop') {
     run(source, ['--test', 'test/discovery.test.js']);

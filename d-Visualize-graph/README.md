@@ -6,6 +6,8 @@ graphVis 是极简的离线函数绘图与微积分可视化工具。输入表�
 
 ## How to use
 
+在线打开 [graphVis](https://azusalina.github.io/someProducts/Visualize-graph/)，或离线使用下述方式。
+
 使用支持 Canvas、ResizeObserver、Web Components 和 FontFace 的现代浏览器，直接打开本文件夹中的 [index.html](index.html)。无需安装、编译或联网；保留同目录的 CSS、JS 和 vendor 文件夹。
 
 每次打开或刷新均为空白，全部设置重置；x/y 单位比例为 1:1，屏幕中心为 (0,0)。F5、Ctrl+R / Cmd+R 先弹出确认框，Enter 确认刷新，取消则保留当前内容。浏览器刷新按钮和关闭页面时使用浏览器原生离开提示（是否显示及按键由浏览器控制）。点击左上角唯一的 `⋮` 按钮，呼出表达式列和工具栏；再点收起。表达式列只放公式、计算结果和定义变量时附加的滑块，其他控件在独立工具区。
