@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
   <script type="module" src="/pdf-pages.js"></script>
+  <script type="module" src="/photos.js"></script>
+  <script type="module" src="/tools.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -15,7 +17,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -61,6 +63,21 @@
           <iframe id="pdf-native-preview" title="PDF document preview" hidden></iframe>
         </section>
       </div>
+    </section>
+    <section id="photos-workspace" aria-label="Photos to PDF" hidden>
+      <label for="photos-files">Add photos</label>
+      <input id="photos-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif">
+      <p id="photos-status" role="status" aria-live="polite">Add photos to combine them into one PDF.</p>
+      <p id="photos-count">0 photos · one photo per PDF page</p>
+      <ol id="photos-list" aria-label="Photo page order"></ol>
+      <fieldset id="photos-options" disabled>
+        <legend>PDF options</legend>
+        <label for="photos-paper">Page size</label>
+        <select id="photos-paper"><option value="A4">A4 · fit without cropping</option><option value="Letter">Letter · fit without cropping</option><option value="photo">Fit photo · no margins</option></select>
+        <label for="photos-name">PDF filename</label>
+        <input id="photos-name" value="photos.pdf" autocomplete="off">
+      </fieldset>
+      <div class="pdf-save-controls"><button id="photos-save" disabled>Save photos as PDF</button><button id="photos-clear" disabled>Clear photos</button></div>
     </section>
   </main>
 </body>

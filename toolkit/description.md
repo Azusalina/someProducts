@@ -12,6 +12,39 @@ Every page load creates a fresh server-side view. Browser history stores only an
 
 A file supplied to the CLI is the initial default for newly opened pages. It does not force already open pages back to that file. Separate toolkit processes and ports remain available, but are no longer needed for independent documents.
 
+## Photos to PDF
+
+The browser-local Photos to PDF tool appends multiple JPEG, PNG, WebP or AVIF
+files in picker order. Thumbnail rows allow reordering/removal before an explicit
+save-as download. Each photo produces one page. A4 and Letter use a 12 mm margin,
+center the whole image, preserve its aspect ratio, and choose landscape for wide
+photos. Fit photo maps decoded pixels to points at 96 DPI without margins. There
+is no cropping, OCR, automatic export, or upload. A photo-only PDF can subsequently
+be opened in PDF pages for ordinary page extraction/removal.
+
+Browser decoding and Canvas normalization apply EXIF orientation before PDF
+embedding. JPEG photos are re-encoded at quality 0.92; other accepted formats
+become PNG, preserving alpha. Transparent image areas appear against the PDF's
+normal white page. Browser support is required for decoding the selected format;
+HEIC and animated/multi-frame image import are outside this tool's scope. A bad
+image is skipped with a filename-specific message while valid photos remain.
+
+The current tab retains normalized image bytes and blob thumbnail URLs in memory,
+independently of Markdown and PDF page selections. Limits: 100 photos, 25 MB and
+32 megapixels per photo, 100 MB aggregate source files and 100 MB normalized image
+data. Images are normalized one at a time; a save embeds them sequentially.
+Remove/clear revokes thumbnail URLs. Reload clears the selection. Shared tool
+navigation is in `public/tools.js`, photo controls in `public/photos.js`, and PDF
+layout/embedding in `public/photo-pdf.js`. The server serves these modules and the
+existing local PDF-LIB distribution; no new dependency is needed.
+
+Validation: `npm test` checks portrait/landscape fit and aspect ratios.
+`npm run test:photos` verifies actual PNG/JPEG imports, append/reorder/remove/clear,
+EXIF orientation, invalid-image recovery, A4/Letter/Fit photo output geometry,
+rendered PDF page color order, immutable sources, independent tabs, tool switching,
+mobile width and absence of image uploads or external network requests. Evidence
+is in `/tmp/toolkit-validation/photos`.
+
 ## PDF page editor
 
 The PDF pages tool runs locally in the browser using the installed

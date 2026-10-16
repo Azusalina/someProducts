@@ -92,3 +92,16 @@ body.zen-mode{overflow:hidden}
 #pdf-open-preview{display:inline-block;margin-bottom:12px;color:#ddd;font-size:12px}
 #pdf-native-preview{height:75vh;min-height:400px;background:#262626}
 @media(max-width:700px){.pdf-edit-layout{grid-template-columns:minmax(0,1fr)}#pdf-pages-workspace{padding:12px}#pdf-native-preview{height:65vh}}
+
+.photos-mode .sidebar,.photos-mode #sidebar-toggle,.photos-mode .file-panel,.photos-mode #markdown-workspace,.photos-mode #message,.photos-mode #connection{display:none!important}
+.photos-mode main{margin-left:0;width:100%}
+#photos-workspace{padding:16px;border:1px solid #ffffff18;background:#191919a6}
+#photos-workspace label{display:block;font-size:13px;margin:10px 0 8px}
+#photos-files,#photos-name,#photos-paper{max-width:100%}
+#photos-status,#photos-count{white-space:pre-line;overflow-wrap:anywhere;font-size:12px;color:#bbb;line-height:1.6}
+#photos-list{padding:0;margin:16px 0;list-style:none}
+#photos-list li{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #333}
+#photos-list img{width:96px;height:72px;object-fit:contain;background:#111;flex-shrink:0}
+#photos-list li span{flex:1;min-width:0;font-size:13px;overflow-wrap:anywhere}
+#photos-options{margin:0;padding:12px;border:1px solid #444;min-width:0}
+@media(max-width:700px){#photos-list li{flex-wrap:wrap}#photos-list li span{flex-basis:calc(100% - 104px)}#photos-workspace{padding:12px}}

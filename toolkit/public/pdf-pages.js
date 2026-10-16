@@ -105,14 +105,5 @@ async function produce(download) {
 }
 $('pdf-save').addEventListener('click', () => produce(true));
 $('pdf-preview-result').addEventListener('click', () => produce(false));
-for (const [id, pdf] of [['pdf-pages-tab', true], ['markdown-tab', false]]) {
-  $(id).addEventListener('click', () => {
-    document.body.classList.toggle('pdf-mode', pdf);
-    $('pdf-pages-workspace').hidden = !pdf;
-    $('markdown-tab').setAttribute('aria-pressed', String(!pdf));
-    $('pdf-pages-tab').setAttribute('aria-pressed', String(pdf));
-    $('tool-title').textContent = pdf ? 'PDF pages' : 'Markdown to PDF';
-  });
-}
 window.addEventListener('pagehide', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); });
 update();

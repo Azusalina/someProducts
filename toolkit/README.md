@@ -1,10 +1,10 @@
 # What is it?
 
-A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, or extract, delete and reorder pages from an existing PDF into a new file. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
+A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, combine photos into one PDF, or extract, delete and reorder pages from an existing PDF into a new file. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
 
 # How to use
 
-Requires Node.js 22 or newer and npm. Chrome or Chromium is needed for PDF export and Mermaid diagrams; ordinary Markdown preview works without it.
+Requires Node.js 22 or newer and npm. Chrome or Chromium is needed for Markdown PDF export and Mermaid diagrams; ordinary Markdown preview works without it.
 
 ```bash
 cd /home/a/Documents/someProducts/toolkit
@@ -28,6 +28,15 @@ page without uploading the PDF. Each tab has its own PDF selection. The preview
 uses your browser's PDF viewer; **Open preview in new tab** is available if it
 cannot display embedded PDFs. Page editing also works without Chromium installed
 on the server. Password-protected PDFs and interactive forms are not supported.
+
+To combine photos, click **Photos to PDF**, then **Add photos** and select several
+JPEG, PNG, WebP or AVIF files. You can add more batches, move photos earlier/later,
+remove individual photos, or clear the list. Choose **A4**, **Letter** or **Fit
+photo**, enter a filename, then click **Save photos as PDF**. Each photo becomes
+one page in list order. A4/Letter pages automatically use portrait or landscape
+orientation and fit the whole image without cropping; Fit photo has no margins.
+Photo processing stays in the current browser tab and leaves the originals
+unchanged. No uploads or server-side Chromium are needed for this tool.
 
 Select **A4** or **Letter** and **White paper**, **Yellow paper**, or **Black paper**, then click **Export PDF** to download the current saved version. PDF background defaults to white and is independent of the dark preview. A heading and its content up to the next heading move together to the next page when they do not fit; sections longer than a full page can span pages. No PDF is generated automatically. Your browser controls the download location.
 
