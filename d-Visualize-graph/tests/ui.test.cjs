@@ -133,5 +133,9 @@ test('ordinary input clicks move the caret to the end and preserve selected rang
 });
 
 test('combination and permutation inputs render results and update with parameter sliders',()=>{
- const t=boot();seed(t,'n=5','r=2','n(n,r)','p(n,r)');assert.equal(t.get('panel').querySelector('.error'),null);let results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/10/);assert.match(results[3].dataset.latex,/20/);const slider=t.get('panel').querySelector('input[aria-label="参数 n"]');t.input(slider,'6');t.flush();results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/15/);assert.match(results[3].dataset.latex,/30/);t.dom.window.close();
+ const t=boot();seed(t,'n=5','r=2','c(n,r)','p(n,r)');assert.equal(t.get('panel').querySelector('.error'),null);let results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/10/);assert.match(results[3].dataset.latex,/20/);const slider=t.get('panel').querySelector('input[aria-label="参数 n"]');t.input(slider,'6');t.flush();results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/15/);assert.match(results[3].dataset.latex,/30/);t.dom.window.close();
+});
+
+test('factorial renders in the mathfield and updates with parameter sliders',()=>{
+ const t=boot();seed(t,'n=5','n!','(n-2)!');assert.equal(t.get('panel').querySelector('.error'),null);assert.match(t.texts()[1].value,/!/);let results=t.get('panel').querySelectorAll('.row-result');assert.match(results[1].dataset.latex,/120/);assert.match(results[2].dataset.latex,/6/);t.input(t.get('panel').querySelector('input[aria-label="参数 n"]'),'6');t.flush();results=t.get('panel').querySelectorAll('.row-result');assert.match(results[1].dataset.latex,/720/);assert.match(results[2].dataset.latex,/24/);t.dom.window.close();
 });

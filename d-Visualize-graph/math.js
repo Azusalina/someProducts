@@ -4,7 +4,7 @@
   const S=root.GraphStats||(typeof require==='function'?require('./stats.js'):null);
   const C=root.GraphComplex||(typeof require==='function'?require('./complex.js'):null);
   const constants = Object.freeze({ pi: Math.PI, e: Math.E, tau: 2 * Math.PI });
-  const arities = {sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,sinh:1,cosh:1,tanh:1,sqrt:1,cbrt:1,abs:1,exp:1,ln:1,log:1,log10:1,log2:1,floor:1,ceil:1,round:1,sign:1,min:2,max:2,pow:2,root:2,atan2:2};
+  const arities = {factorial:1,sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,sinh:1,cosh:1,tanh:1,sqrt:1,cbrt:1,abs:1,exp:1,ln:1,log:1,log10:1,log2:1,floor:1,ceil:1,round:1,sign:1,min:2,max:2,pow:2,root:2,atan2:2};
   const reserved = new Set([...Object.keys(constants), ...Object.keys(arities), 'x', 'y', 'int', 'integral', 'diff','sum','segment','i','re','im','arg','conj','complex','pdf','pmf','cdf','discrete','P']);
   const unaryNames=Object.keys(arities).filter(k=>arities[k]===1).sort((a,b)=>b.length-a.length);
   const num = value => ({type:'number', value});
@@ -67,6 +67,7 @@
         if(functionPower)node={type:'binary',op:'^',left:node,right:functionPower};
       } else throw Error(t.type === 'end' ? '请输入完整表达式' : `这里不能使用「${t.value}」`);
       while (true) {
+        if(peek().type==='!'&&min<=40){index++;node={type:'call',name:'factorial',order:0,args:[node]};continue;}
         if(peek().type==='.'){
           index++;const method=take('id').value;if(!['pdf','pmf','cdf'].includes(method))throw Error('未知分布方法');take('(');const arg=expression();take(')');node={type:'call',name:method,order:0,args:[node,arg]};continue;
         }
@@ -131,7 +132,7 @@
     for(let i=0;i<count;i++){total=total*(N-BigInt(i))/(permutation?1n:BigInt(i+1));if(total>=limit)return Infinity;}
     return Number(total);
   }
-  const distributionNode=n=>n.type==='call'&&n.name==='n'?{...n,name:'normal'}:n;
+  const factorial=n=>combinatoric(n,n,true);
   const zero = () => 0;
   function compile(node,scope,variable='x') {
     function make(n) {
@@ -172,6 +173,10 @@
         }
       }
       if (n.type === 'call') {
+        if(n.name==='factorial'){
+          if(n.order||n.args.length!==1)throw Error('阶乘需要一个非负整数');const a=make(n.args[0]);
+          return {v:(x,y)=>factorial(a.v(x,y)),d:(x,y)=>a.d(x,y)===0?0:NaN};
+        }
         if(n.name==='sum'){
           if(n.order||n.args.length!==4||n.args[1].type!=='id')throw Error('求和写作 sum(表达式,n,k,p)');
           const name=n.args[1].name;if(Object.hasOwn(constants,name)||['i','y'].includes(name))throw Error('求和下标建议用 n、k 或 j');
@@ -186,7 +191,7 @@
           let self=false;walk(event.args[1],p=>{if(p.type==='id'&&p.name===name)self=true;});if(self)throw Error('概率右侧不能引用同一随机变量');
           const at=make(event.args[1]);return {v:(x,y)=>{const k=at.v(x,y);return Number.isFinite(k)?d.discrete?d.pmf(k):0:NaN;},d:()=>NaN};
         }
-        if((n.name==='n'||n.name==='p')&&n.args.length===2){
+        if((n.name==='c'||n.name==='p')&&n.args.length===2){
           if(n.order)throw Error('组合与排列不支持导数');const [a,b]=n.args.map(make);
           return {v:(x,y)=>combinatoric(a.v(x,y),b.v(x,y),n.name==='p'),d:(x,y)=>a.d(x,y)===0&&b.d(x,y)===0?0:NaN};
         }
@@ -197,7 +202,7 @@
           return {v,d:()=>NaN,distribution:varying?undefined:()=>v(0,0)};
         }
         if(['pdf','pmf','cdf'].includes(n.name)){
-          if(n.order||n.args.length!==2)throw Error('概率函数需要分布和横坐标');const dist=make(distributionNode(n.args[0])),at=make(n.args[1]);
+          if(n.order||n.args.length!==2)throw Error('概率函数需要分布和横坐标');const dist=make(n.args[0]),at=make(n.args[1]);
           const get=(x,y)=>{const d=dist.v(x,y);if(!S.isDistribution(d))throw Error('第一个参数必须为概率分布');return d;};
           const initial=get(0,0);if(n.name==='pmf'&&!initial.discrete)throw Error('连续分布使用 pdf');
           let coordinates=false;walk(n.args[1],p=>{if(p.type==='id'&&[variable,'y'].includes(p.name))coordinates=true;});
@@ -290,7 +295,7 @@
     const match=text.match(/\{([^{}]+)\}\s*$/);
     if (match) {restriction=parse(match[1]);text=text.slice(0,match.index).trim();}
     const distribution=text.match(/^([A-Za-z][A-Za-z0-9_]*)\s*~\s*(.+)$/);
-    if(distribution)return {kind:'distribution',randomVariable:distribution[1],ast:distributionNode(parse(distribution[2])),restriction,text};
+    if(distribution)return {kind:'distribution',randomVariable:distribution[1],ast:parse(distribution[2]),restriction,text};
     const def=text.match(/^([A-Za-z][A-Za-z0-9_]*)(?:\s*\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\))?\s*=(?!=)(.*)$/);
     if (def && !['x','y'].includes(def[1])) {
       if (reserved.has(def[1])||S.canonical(def[1])&&(def[1]!=='n'||def[2])) throw Error(`${def[1]} 是保留名称`);
@@ -390,11 +395,11 @@
         entry.hasIntegral=entry.hasIntegral||false;walk(entry.ast,n=>{if(n.type==='call'&&['int','integral'].includes(n.name))entry.hasIntegral=true;if(definitions.get(n.name)?.hasIntegral)entry.hasIntegral=true;});
       }catch(e){entry.error=e.message;}
     }
-    const parameterHints=Object.create(null);for(const e of entries)if(e.ast)walk(e.ast,n=>{if(n.type==='call'&&n.name!=='n'&&S.canonical(n.name)){const hints=S.hints[S.canonical(n.name)];n.args.forEach((a,i)=>{if(a.type==='id'&&hints[i])parameterHints[a.name]={...parameterHints[a.name],...hints[i]};});}});
-    C.enrich(entries,scope,{walk,constants});
+    const parameterHints=Object.create(null);for(const e of entries)if(e.ast)walk(e.ast,n=>{if(n.type==='call'&&S.canonical(n.name)){const hints=S.hints[S.canonical(n.name)];n.args.forEach((a,i)=>{if(a.type==='id'&&hints[i])parameterHints[a.name]={...parameterHints[a.name],...hints[i]};});}});
+    C.enrich(entries,scope,{walk,constants,factorial});
     return {scope,entries,parameterHints};
   }
-  const api={normalize,parse,classify,compile,build,integrate,numericDerivative,walk,constants};
+  const api={normalize,parse,classify,compile,build,integrate,numericDerivative,walk,constants,factorial};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.GraphMath=api;
 })(typeof globalThis==='object'?globalThis:this);

@@ -1,6 +1,6 @@
 {
   "name": "graphvis",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "description": "Offline function and calculus visualization",
   "scripts": {

@@ -79,6 +79,7 @@
       return a+({'&&':'\\land ','||':'\\lor '}[n.op]||n.op)+(n.op==='-'&&n.right.type==='binary'&&['+','-'].includes(n.right.op)?wrap(b):b);
     }
     if(n.type==='call'){
+      if(n.name==='factorial'&&n.args.length===1){const a=n.args[0],tex=astTex(a);return (['number','id'].includes(a.type)?tex:'\\left('+tex+'\\right)')+'!';}
       if(n.name==='sqrt')return '\\sqrt{'+astTex(n.args[0])+'}';
       if(n.name==='root')return '\\sqrt['+astTex(n.args[1])+']{'+astTex(n.args[0])+'}';
       if(n.name==='abs')return '\\left|'+astTex(n.args[0])+'\\right|';

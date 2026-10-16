@@ -88,13 +88,22 @@ test('point definitions reject duplicate names and nonfinite or unbound coordina
  assert.match(last('a=(1,2)','a=3').error,/已经定义/);assert.match(last('a=3','a=(1,2)').error,/已经定义/);assert.match(last('a=(1/0,2)').error,/有限/);assert.match(last('a=(x,y)').error,/参数/);
 });
 
-test('n(n,r) and p(n,r) compute combinations and permutations with exact integer intermediates',()=>{
- for(const [text,value]of [['n(5,2)',10],['p(5,2)',20],['n(0,0)',1],['p(0,0)',1],['n(20,20)',1],['p(10,10)',3628800],['n(1000,2)',499500],['n(52,5)',2598960],['n(1000,998)',499500]]){const e=last(text);assert.equal(e.error,undefined,text);assert.equal(e.value,value,text);}
- assert.equal(last('n=8','r=3','n(n,r)').value,56);assert.equal(last('n=8','r=3','p(n,r)').value,336);assert.equal(last('n(5,2)+p(5,2)').value,30);assert.equal(last('n(5,2)*x').fn(3),30);
- for(const text of ['n(-1,0)','p(5,-1)','n(3,4)','p(4,1.5)','n(9007199254740992,1)'])assert.ok(Number.isNaN(last(text).value),text);
- assert.equal(last('n(2000,1000)').value,Infinity);assert.equal(last('p(1000,999)').value,Infinity);
+test('c(n,r) and p(n,r) compute combinations and permutations with exact integer intermediates',()=>{
+ for(const [text,value]of [['c(5,2)',10],['p(5,2)',20],['c(0,0)',1],['p(0,0)',1],['c(20,20)',1],['p(10,10)',3628800],['c(1000,2)',499500],['c(52,5)',2598960],['c(1000,998)',499500]]){const e=last(text);assert.equal(e.error,undefined,text);assert.equal(e.value,value,text);}
+ assert.equal(last('n=8','r=3','c(n,r)').value,56);assert.equal(last('n=8','r=3','p(n,r)').value,336);assert.equal(last('c(5,2)+p(5,2)').value,30);assert.equal(last('c(5,2)*x').fn(3),30);
+ for(const text of ['c(-1,0)','p(5,-1)','c(3,4)','p(4,1.5)','c(9007199254740992,1)'])assert.ok(Number.isNaN(last(text).value),text);
+ assert.equal(last('c(2000,1000)').value,Infinity);assert.equal(last('p(1000,999)').value,Infinity);
 });
 test('combinatoric calls coexist with normal distribution aliases and lowercase event probability',()=>{
- const m=build('X~n(0,1)','p(X=2)','n(5,2)','p(5,2)','pdf(n(0,1),0)');m.entries.forEach(e=>assert.equal(e.error,undefined));assert.equal(m.entries[0].distribution.family,'normal');assert.equal(m.entries[1].value,0);assert.equal(m.entries[2].value,10);assert.equal(m.entries[3].value,20);close(m.entries[4].value,1/Math.sqrt(2*Math.PI));
- const hints=build('n=5','r=2','n(n,r)').parameterHints;assert.equal(hints.r,undefined);
+ const m=build('X~n(0,1)','p(X=2)','c(5,2)','p(5,2)','pdf(n(0,1),0)');m.entries.forEach(e=>assert.equal(e.error,undefined));assert.equal(m.entries[0].distribution.family,'normal');assert.equal(m.entries[1].value,0);assert.equal(m.entries[2].value,10);assert.equal(m.entries[3].value,20);close(m.entries[4].value,1/Math.sqrt(2*Math.PI));
+ assert.equal(last('n(5,2)').kind,'distribution');assert.equal(last('n(5,2)').distribution.family,'normal');
+ const hints=build('n=5','r=2','c(n,r)').parameterHints;assert.equal(hints.r,undefined);
+});
+
+test('factorial accepts numbers, variables and brackets with postfix precedence',()=>{
+ for(const [text,value]of [['0!',1],['5!',120],['(5-2)!',6],['2^3!',64],['3!^2',36],['-3!',-6],['2*3!',12],['2(3!)',12],['factorial(5)',120]])assert.equal(last(text).value,value,text);
+ assert.equal(last('n=5','r=2','n!/(r!*(n-r)!)').value,10);assert.equal(last('n=5','n!').value,120);assert.equal(last('170!').value,7.257415615307999e306);assert.equal(last('171!').value,Infinity);
+ for(const text of ['(-1)!','1.5!'])assert.ok(Number.isNaN(last(text).value),text);
+ const L=require('../latex.js');for(const text of ['5!','(5-2)!','2^3!','3!^2','n!/(r!*(n-r)!)'])assert.deepEqual(M.parse(L.toLatex(text)),M.parse(text),text);
+ assert.equal(last('5!+i').value.re,120);assert.equal(last('5!+i').value.im,1);
 });
