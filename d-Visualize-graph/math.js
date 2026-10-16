@@ -273,6 +273,8 @@
   }
   function classify(source) {
     let text=normalize(source), restriction=null;
+    const label=text.match(/^(l\d+)\s*:\s*(.+)$/);
+    if(label){const relation=classify(label[2]);if(!['curve','vertical','implicit'].includes(relation.kind))throw Error('直线标签后需要方程');return {...relation,name:label[1],lineLabel:true};}
     const match=text.match(/\{([^{}]+)\}\s*$/);
     if (match) {restriction=parse(match[1]);text=text.slice(0,match.index).trim();}
     const distribution=text.match(/^([A-Za-z][A-Za-z0-9_]*)\s*~\s*(.+)$/);

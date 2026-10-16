@@ -4,7 +4,7 @@
   function toPlain(source,inner=false){
     if(source.length>600)throw Error('表达式最多 600 字符');
     if(!source.includes('\\')&&!inner&&!/[\^_]\s*\{/.test(source))return source;
-    const s=source.trim().replace(/^\$\$?|\$\$?$/g,'').replace(/^\\\(|\\\)$/g,'').replace(/\^\{((?:\\prime\s*){1,2})\}/g,(_,p)=>"'".repeat((p.match(/\\prime/g)||[]).length)).replace(/\\(?:left|right|bigl|bigr|displaystyle|textstyle)\b/g,'').replace(/\\(?:,|;|!|:|quad\b|qquad\b|enspace\b)/g,' ').replace(/\\(?:mathrm|operatorname|mathit)\s*\{d\s*([A-Za-z])\}/g,'d $1').replace(/\\(?:mathrm|operatorname)\s*\{d\}/g,'d');
+    const s=source.replace(/\\ell\s*_\s*(?:\{(\d+)\}|(\d+))/g,(_,a,b)=>'l'+(a||b)).trim().replace(/^\$\$?|\$\$?$/g,'').replace(/^\\\(|\\\)$/g,'').replace(/\^\{((?:\\prime\s*){1,2})\}/g,(_,p)=>"'".repeat((p.match(/\\prime/g)||[]).length)).replace(/\\(?:left|right|bigl|bigr|displaystyle|textstyle)\b/g,'').replace(/\\(?:,|;|!|:|quad\b|qquad\b|enspace\b)/g,' ').replace(/\\(?:mathrm|operatorname|mathit)\s*\{d\s*([A-Za-z])\}/g,'d $1').replace(/\\(?:mathrm|operatorname)\s*\{d\}/g,'d');
     let i=0;
     const skip=()=>{while(/\s/.test(s[i]||'')&&i<s.length)i++;};
     function group(open='{',close='}'){
@@ -58,6 +58,7 @@
     return out.replace(/\|([^|]+)\|/g,'abs($1)');
   }
   function identifier(name){
+    if(/^l\d+$/.test(name))return '\\ell_{'+name.slice(1)+'}';
     const greek=['alpha','beta','gamma','delta','theta','lambda','mu','sigma','phi','omega','pi','tau'];
     const [base,sub]=name.split('_');return (greek.includes(base)?'\\'+base:base.length===1?base:'\\mathrm{'+base+'}')+(sub?'_{'+sub+'}':'');
   }
@@ -98,7 +99,8 @@
       if(['segment','point'].includes(e.kind)&&e.name)tex=identifier(e.name)+'='+tex;
       if(e.kind==='variable')tex=identifier(e.name)+'='+tex;
       if(e.kind==='vertical')tex='x='+tex;
-      if(e.kind==='curve'&&/^\s*y\s*=/.test(toPlain(source)))tex='y='+tex;
+      if(e.kind==='curve'&&(e.lineLabel||/^\s*y\s*=/.test(toPlain(source))))tex='y='+tex;
+      if(e.lineLabel)tex=identifier(e.name)+':\\quad '+tex;
       if(e.restriction)tex+='\\left\\{'+astTex(e.restriction)+'\\right\\}';
       return tex;
     }catch{return source.includes('\\')?source:source.replace(/[{}]/g,m=>'\\'+m);}

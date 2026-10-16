@@ -10,7 +10,7 @@
   let state={version:1,rows:[row('')],view:{cx:0,cy:0,scale:65},angle:'rad',grid:true,source:null,tangent:false,tx:1,integral:false,a:0,b:Math.PI,panel:true,theme:'light',areaColor:'#376ca3',intersections:[]};
   let model,history=[],future=[],dirty=false,drawRequest=0,historyTimer,activeId=state.rows[0].id;
   let width=0,height=0,ratio=1,renderRevision=0,implicitRequest=0,hoverRequest=0,cache=new Map(),drag=null,hover=null,notice='',noticeUntil=0;
-  const canvas=$('canvas'),overlay=$('overlay'),renderCanvas=document.createElement('canvas'),ctx=renderCanvas.getContext('2d'),screen=canvas.getContext('2d'),ox=overlay.getContext('2d'),relationCache=new Map(),relationHits=new Map();let pendingPoint=null,pendingExpression=null,intersectionNotice=false;const intersectionCache=new Map();
+  const canvas=$('canvas'),overlay=$('overlay'),renderCanvas=document.createElement('canvas'),ctx=renderCanvas.getContext('2d'),screen=canvas.getContext('2d'),ox=overlay.getContext('2d'),relationCache=new Map(),relationHits=new Map();let pendingPointId=null,pendingPoint=null,pendingExpression=null,intersectionNotice=false;const intersectionCache=new Map();
   function serialize(){return JSON.stringify(state);}
   function validateProject(s){
     if(!s||s.version!==1||!Array.isArray(s.rows)||s.rows.length>64)throw Error('项目格式不正确，最多 64 行');
@@ -59,6 +59,7 @@
       item.style.setProperty('--color',displayColor(r.color,r.customColor));item.classList.toggle('hidden-curve',!r.visible);
       input.setAttribute('aria-label',`表达式 ${state.rows.indexOf(r)+1}`);
       input.onfocus=()=>{activeId=r.id;updateActiveTools();};
+      input.addEventListener('click',e=>{if(!e.ctrlKey&&!e.shiftKey&&e.detail<2&&input.selection.ranges.every(([a,b])=>a===b))input.position=input.lastOffset;});
       input.oninput=()=>{
         beforeChange();E.expandOperator(input);r.text=input.value;changed();
         clearTimeout(historyTimer);historyTimer=setTimeout(()=>{dirty=false;},650);
@@ -192,7 +193,7 @@
     }
     if(e.kind==='vertical'){
       const x=e.fn(0);if(!Number.isFinite(x))return;const px=toScreen(x,0)[0];ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.lineWidth=2;ctx.beginPath();let pen=false;
-      for(let py=0;py<=height;py+=2){const y=fromScreen(px,py)[1];if(e.allowed&&!e.allowed(x,y)){pen=false;continue;}if(pen)ctx.lineTo(px,py);else ctx.moveTo(px,py);pen=true;}ctx.stroke();return;
+      for(let py=0;py<=height;py+=2){const y=fromScreen(px,py)[1];if(e.allowed&&!e.allowed(x,y)){pen=false;continue;}if(pen)ctx.lineTo(px,py);else ctx.moveTo(px,py);pen=true;}ctx.stroke();if(e.lineLabel)graphLabel('line-'+e.id,px,height*.35,L.identifier(e.name),displayColor(e.color,e.customColor));return;
     }
     if(e.kind==='point'){
       const [x,y]=e.point;if(![x,y].every(Number.isFinite)||e.allowed&&!e.allowed(x,y))return;const [px,py]=toScreen(x,y);ctx.fillStyle=displayColor(e.color,e.customColor);ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fill();graphLabel('point-'+e.id,px,py,`${e.name?L.identifier(e.name)+'=':''}\\left(${numberTex(x)},${numberTex(y)}\\right)`,displayColor(e.color,e.customColor));return;
@@ -200,6 +201,7 @@
     let data=cache.get(e.id);if(!data){data=P.sampleCurve(e.integral?e.fn:sourceFn(e),state.view,width,height,{integral:e.hasIntegral});cache.set(e.id,data);}
     ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.lineWidth=2;ctx.lineJoin='round';ctx.setLineDash(e.integral||e.componentDash?[5,4]:[]);ctx.beginPath();
     for(const segment of data.segments){if(!segment.length)continue;ctx.moveTo(segment[0].px,segment[0].py);for(let i=1;i<segment.length;i++)ctx.lineTo(segment[i].px,segment[i].py);}ctx.stroke();ctx.setLineDash([]);
+    if(e.lineLabel){const points=data.segments.flat().filter(p=>p.py>20&&p.py<height-20);const p=points[Math.floor(points.length*.6)];if(p)graphLabel('line-'+e.id,p.px,p.py,L.identifier(e.name),displayColor(e.color,e.customColor));}
   }
   function shadeIntegral(){
     const e=source();if(!e||!state.integral||e.complex)return;if(e.integral)return;if(e.discrete){for(const [label,x]of [['a',state.a],['b',state.b]]){const px=toScreen(x,0)[0];handle(ctx,px,Math.max(20,Math.min(height-24,toScreen(0,0)[1])),label);}return;}const fn=sourceFn(e),left=Math.min(state.a,state.b),right=Math.max(state.a,state.b),start=Math.max(0,toScreen(left,0)[0]),end=Math.min(width,toScreen(right,0)[0]),base=toScreen(0,0)[1];
@@ -282,32 +284,30 @@
   }
   function position(e){const r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
   function snapPoint(p){
-    let best=null,distance=13;const consider=q=>{if(!q.every(Number.isFinite))return;const screenPoint=toScreen(...q),d=Math.hypot(screenPoint[0]-p[0],screenPoint[1]-p[1]);if(d<distance){best=q;distance=d;}};
-    const onSegment=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],length=dx*dx+dy*dy,t=length?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;consider(fromScreen(a[0]+t*dx,a[1]+t*dy));};
-    for(const e of model.entries){if(e.error||!e.visible)continue;
-      if(e.segment){onSegment(...e.segment.map(q=>toScreen(...q)));continue;}
-      if(e.kind==='point'){consider(e.point);continue;}
-      if(e.complexScalar){const z=C.is(e.value)?e.value:C.make(e.value);consider([z.re,z.im]);continue;}
-      if(e.kind==='vertical'){const x=e.fn(0),y=fromScreen(...p)[1];if(!e.allowed||e.allowed(x,y))consider([x,y]);continue;}
-      const implicit=relationHits.get(e.id);if(implicit){for(const [a,b]of implicit.lines)onSegment(a,b);continue;}
-      if(!['function','curve','distribution'].includes(e.kind)||!e.fn)continue;
-      for(let px=p[0]-12;px<=p[0]+12;px++){
-        let x=fromScreen(px,0)[0];if(e.discrete)x=Math.round(x);let y=sourceFn(e)(x);
-        if(e.complex){const z=C.is(y)?y:C.make(y);consider([x,z.re]);consider([x,z.im]);}else if(!e.allowed||e.allowed(x,y))consider([x,y]);
-      }
+    let best=null,distance=13;
+    for(const e of model.entries){
+      if(e.error||!e.visible||e.kind!=='point'||!e.point.every(Number.isFinite)||e.allowed&&!e.allowed(...e.point))continue;
+      const q=toScreen(...e.point),d=Math.hypot(q[0]-p[0],q[1]-p[1]);
+      if(d<distance){best=e;distance=d;}
     }
     return best;
   }
-  function selectSegmentPoint(p){
-    const point=snapPoint(p);if(!point){flash('请在曲线上选择点');return;}
-    if(!pendingPoint){pendingPoint=point;scheduleHover();return;}
-    if(Math.hypot(point[0]-pendingPoint[0],point[1]-pendingPoint[1])<1e-10)return;
+  function selectLinePoint(p){
+    const picked=snapPoint(p);if(!picked){flash('请选择已定义的点');return;}
+    const previous=model.entries.find(e=>e.id===pendingPointId&&e.kind==='point'&&!e.error&&e.visible);
+    if(!pendingPoint||!previous){pendingPoint=picked.point;pendingPointId=picked.id;scheduleHover();return;}
+    const point=picked.point,first=previous.point;
+    if(Math.hypot(point[0]-first[0],point[1]-first[1])<1e-10)return;
     if(state.rows.length>=64){flash('最多 64 行');return;}
     const used=new Set(model.entries.map(e=>e.name));let n=1;while(used.has('l'+n))n++;
-    checkpoint();dirty=false;const r=row(`l${n}=segment(${[...pendingPoint,...point].map(v=>P.format(v,12)).join(',')})`);state.rows.push(r);pendingPoint=null;renderRows();compileRows();persist();
+    const dx=point[0]-first[0],dy=point[1]-first[1],format=v=>P.format(v,12);
+    let equation;
+    if(dx===0)equation='x='+format(first[0]);
+    else{const m=dy/dx,b=first[1]-m*first[0];equation='y='+format(m)+'*x'+(b<0?'-':'+')+format(Math.abs(b));}
+    checkpoint();dirty=false;state.rows.push(row(`l${n}: ${equation}`));pendingPoint=null;renderRows();compileRows();persist();
   }
   canvas.onpointerdown=e=>{
-    if(e.button!==0)return;if(e.ctrlKey){e.preventDefault();canvas.focus();selectSegmentPoint(position(e));return;}
+    if(e.button!==0)return;if(e.ctrlKey){e.preventDefault();canvas.focus();selectLinePoint(position(e));return;}
 canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type='pan';
     if(f&&state.tangent&&!f.discrete&&!f.step){const q=toScreen(state.tx,sourceFn(f)(state.tx));if(Math.hypot(p[0]-q[0],p[1]-q[1])<18)type='tangent';}
     if(type==='pan'&&state.integral&&f){if(Math.abs(p[0]-toScreen(state.a,0)[0])<10)type='a';else if(Math.abs(p[0]-toScreen(state.b,0)[0])<10)type='b';}
@@ -360,7 +360,7 @@ canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type=
     if(implicitRequest){flash('关系绘制中');return;}
     const copy=canvas.cloneNode(false),c=copy.getContext('2d');c.setTransform(ratio,0,0,ratio,0,0);c.drawImage(canvas,0,0,width,height);
     c.font='12px KaTeX_Main, serif';
-    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('intersection-'))text=label.dataset.latex||text;if(text.startsWith('segment-'))text=model.entries.find(e=>e.id===Number(text.slice(8)))?.name||text;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const entry=model.entries.find(e=>e.id===Number(text.slice(6))),point=entry?.point;if(!point)continue;text=`${entry.name?entry.name+'=':''}(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
+    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('intersection-'))text=label.dataset.latex||text;if(text.startsWith('line-'))text=(model.entries.find(e=>e.id===Number(text.slice(5)))?.name||text).replace(/^l(\d+)$/,'ℓ$1');if(text.startsWith('segment-'))text=model.entries.find(e=>e.id===Number(text.slice(8)))?.name||text;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const entry=model.entries.find(e=>e.id===Number(text.slice(6))),point=entry?.point;if(!point)continue;text=`${entry.name?entry.name+'=':''}(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
     copy.toBlob(blob=>{if(blob)download(blob,'graphVis.png');else flash('无法导出图像');},'image/png');
   };
   $('undo').onclick=()=>undo();$('redo').onclick=()=>undo(true);$('add').onclick=()=>addRow();
