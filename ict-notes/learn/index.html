@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICT Unit C Study Guide</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+
+<header class="hero center">
+  <div class="hero-copy">
+    <h1>Computer and its Applications</h1>
+    <p class="lead">Five chapters, one journey: from the link you click to the page you read.</p>
+    <div class="cta">
+      <a class="btn pri" href="ch16-networking.html">Start learning</a>
+      <a class="btn" href="#story">Follow one click</a>
+    </div>
+  </div>
+  <nav class="pipe" aria-label="Chapters">
+    <a class="stop" href="ch16-networking.html"><b>Ch16</b>Networking</a>
+    <a class="stop" href="ch17-protocols.html"><b>Ch17</b>Protocols</a>
+    <a class="stop" href="ch18-services.html"><b>Ch18</b>Services</a>
+    <a class="stop" href="ch19-html.html"><b>Ch19</b>HTML</a>
+    <a class="stop" href="ch20-web-authoring.html"><b>Ch20</b>Web authoring</a>
+  </nav>
+</header>
+
+<h2 id="story">The whole unit in one click</h2>
+<p>Every chapter in Unit C is one stage of the same journey. Step through it once and the chapter titles stop being a list of unrelated topics.</p>
+
+<div class="demo" id="journey">
+  <h4>Follow one click on a link</h4>
+  <p class="hint">You click a link to <code>http://www.example.com/index.html</code>. Press Next to see what happens.</p>
+  <svg class="dia" id="j-svg" viewBox="0 0 520 210" role="img" aria-label="Browser, router, DNS server and web server"></svg>
+  <ol class="steps" id="j-steps"></ol>
+  <div class="row">
+    <button class="btn" id="j-back">Back</button>
+    <button class="btn pri" id="j-next">Next</button>
+    <button class="btn" id="j-reset">Restart</button>
+  </div>
+  <p class="status" id="j-chap"></p>
+</div>
+
+<h2 id="chapters">What each chapter answers</h2>
+<div class="bento">
+  <a class="tile t1" href="ch16-networking.html"><div><h3>Ch16 Networking and Internet basics</h3><p>What a network is, how devices connect over cables and Wi-Fi, and what each box in the network does.</p></div><span class="go">Open chapter</span></a>
+  <a class="tile t2" href="ch17-protocols.html"><div><h3>Ch17 Communication software and protocols</h3><p>The rules computers follow: layers, packets, IP addresses, domain names.</p></div><span class="go">Open chapter</span></a>
+  <a class="tile t3" href="ch18-services.html"><div><h3>Ch18 Services and applications</h3><p>Searching, e-mail, streaming, file types, e-commerce and e-learning.</p></div><span class="go">Open chapter</span></a>
+  <a class="tile t4" href="ch19-html.html"><div><h3>Ch19 Introduction to HTML</h3><p>What a web page is made of, how HTTP delivers it, the basic tags.</p></div><span class="go">Open chapter</span></a>
+  <a class="tile t5" href="ch20-web-authoring.html"><div><h3>Ch20 Elementary web authoring</h3><p>Planning, building and publishing a site: paths, structures, Dreamweaver.</p></div><span class="go">Open chapter</span></a>
+</div>
+
+<h2 id="how">How to study with these pages</h2>
+<ol>
+  <li>Read the plain-words explanation first, then try the interactive box under it.</li>
+  <li>Use the tables to memorise. The tables are the exam facts; the explanations are why they are true.</li>
+  <li>Close each chapter with the "Check yourself" questions. Open the answer only after you have said yours out loud.</li>
+</ol>
+
+<h2 id="fixes">Mistakes found in the notes</h2>
+<p>While rebuilding the notes I found a few places where the PDF is wrong or unclear. Each one is also flagged inside its chapter, in an orange box. Confirm with your teacher or textbook if an exam answer depends on it.</p>
+<div class="tbl"><table>
+<tr><th>Where</th><th>Notes say</th><th>Better version</th></tr>
+<tr><td>Ch17 ports</td><td>FTP: Port 20</td><td>FTP uses port 20 for data and port 21 for control commands.</td></tr>
+<tr><td>Ch17 PDU list</td><td>Data link layer: "Packet"</td><td>The data link layer unit is a <strong>frame</strong>. The notes' own table on the same page says Frames.</td></tr>
+<tr><td>Ch17 OSI table</td><td>Application = 1 ... Physical = 7</td><td>Official numbering is the reverse: Physical = 1, Application = 7. Layer names matter more than numbers.</td></tr>
+<tr><td>Ch17 ports</td><td>"1/number is proportional to security level"</td><td>No such rule. Security comes from encryption (SSH is safe, Telnet is not), not from the port number.</td></tr>
+<tr><td>Ch17 DNS</td><td>Domain Name Server</td><td>DNS stands for Domain Name <strong>System</strong>. The machines that answer are DNS servers.</td></tr>
+<tr><td>Ch18 footnote</td><td>"ETF"</td><td>Electronic Funds Transfer is abbreviated <strong>EFT</strong>.</td></tr>
+<tr><td>Ch20 paths</td><td><code>.../</code> "for folder from the foot"</td><td>The symbol is <code>../</code> (two dots) and means "go up one folder".</td></tr>
+</table></div>
+
+</main>
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  var svg = U.$("#j-svg"), list = U.$("#j-steps"), chap = U.$("#j-chap"), i = 0, busy = false;
+  var P = { B: [70, 150], R: [210, 150], S: [450, 150], D: [210, 50] };
+  var names = { B: "Browser", R: "Router", S: "Web server", D: "DNS server" };
+  var steps = [
+    { hl: "B", t: "You click the link. The browser reads the address and sees the host name www.example.com.", c: "Ch19 and Ch20: the page was built with HTML and published on a web server." },
+    { path: ["B", "R", "D", "R", "B"], t: "The browser asks a DNS server: what is the IP address of www.example.com? The answer comes back.", c: "Ch17: DNS turns names into numbers." },
+    { hl: "B", t: "The browser builds an HTTP request: GET /index.html. TCP chops it into numbered packets, IP stamps the destination address on each.", c: "Ch17: TCP/IP, the layers, packets." },
+    { path: ["B", "R", "S"], t: "The packets leave your computer through the NIC, over Wi-Fi or a cable, through a switch and a router towards the Internet.", c: "Ch16: network hardware and transmission media." },
+    { path: ["S", "R", "B"], t: "The web server receives the packets, TCP puts them back in order, and the server answers with the HTML file.", c: "Ch17 and Ch19: reassembly, HTTP response." },
+    { hl: "B", t: "Your browser reads the HTML tags, asks for the images and files it mentions, and draws the page.", c: "Ch19: tags, links, images. Ch18: file formats and services." }
+  ];
+  var boxes = {};
+  steps.forEach(function (s) { var li = document.createElement("li"); li.textContent = s.t; list.appendChild(li); });
+  function build() {
+    svg.innerHTML = "";
+    [["B", "R"], ["R", "S"], ["R", "D"]].forEach(function (p) {
+      U.svg("line", { x1: P[p[0]][0], y1: P[p[0]][1], x2: P[p[1]][0], y2: P[p[1]][1], "class": "wire" }, svg);
+    });
+    Object.keys(P).forEach(function (k) {
+      boxes[k] = U.svg("rect", { x: P[k][0] - 56, y: P[k][1] - 22, width: 112, height: 44, rx: 12, "class": "box" }, svg);
+      var t = U.svg("text", { x: P[k][0], y: P[k][1] + 5, "class": "mid" }, svg); t.textContent = names[k];
+    });
+  }
+  function draw() {
+    U.$$("li", list).forEach(function (li, k) { li.className = k === i ? "on" : (k < i ? "done" : ""); });
+    chap.innerHTML = "<b>Covered in:</b> " + steps[i].c;
+    U.$("#j-back").disabled = i === 0 || busy;
+    U.$("#j-next").disabled = i === steps.length - 1 || busy;
+  }
+  function mark(keys) { Object.keys(boxes).forEach(function (k) { boxes[k].setAttribute("class", keys.indexOf(k) >= 0 ? "box on" : "box"); }); }
+  async function play() {
+    var s = steps[i]; busy = true; draw();
+    if (s.hl) { mark([s.hl]); await U.sleep(600); }
+    else {
+      var d = U.svg("circle", { r: 8, "class": "pkt" }, svg);
+      for (var k = 0; k < s.path.length - 1; k++) {
+        mark([s.path[k]]);
+        await U.move(d, P[s.path[k]], P[s.path[k + 1]], 600);
+      }
+      mark([s.path[s.path.length - 1]]); await U.sleep(300); d.remove();
+    }
+    busy = false; draw();
+  }
+  U.$("#j-next").onclick = function () { if (!busy && i < steps.length - 1) { i++; play(); } };
+  U.$("#j-back").onclick = function () { if (!busy && i > 0) { i--; mark([]); draw(); } };
+  U.$("#j-reset").onclick = function () { if (busy) return; i = 0; build(); draw(); };
+  build(); mark(["B"]); draw();
+})();
+</script>
+</body>
+</html>

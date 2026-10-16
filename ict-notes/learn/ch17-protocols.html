@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch17 Communication Software and Protocols</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="hero-copy">
+    <p class="kicker">Chapter 17</p>
+    <h1>Communication software and protocols</h1>
+    <p class="lead">The rules computers follow to talk: layers, packets, IP addresses and domain names.</p>
+  </div>
+  <div class="hero-vis" id="hero-vis" aria-hidden="true"></div>
+</header>
+
+<h2 id="protocols">What a protocol is</h2>
+<p>A <strong>communication protocol</strong> is a set of rules about how data is formatted and signalled, so that every device on the path can understand it. <strong>Communication software</strong> (your browser, your mail program) uses a protocol to send digital messages through the network, working together with the communication devices.</p>
+<div class="tbl"><table>
+<tr><th>Protocol</th><th>Used for</th></tr>
+<tr><td class="k">TCP/IP (Transmission Control Protocol / Internet Protocol)</td><td>Network communication over the Internet and an intranet</td></tr>
+<tr><td class="k">SMTP (Simple Mail Transfer Protocol)</td><td>Sending e-mail</td></tr>
+<tr><td class="k">WAP (Wireless Application Protocol)</td><td>Wireless communication for handheld devices</td></tr>
+<tr><td class="k">VoIP (Voice over Internet Protocol)</td><td>Phone calls over the Internet using Internet phone software</td></tr>
+<tr><td class="k">Telnet, SSH (Secure Shell)</td><td>Remote logon: using a server from your own computer</td></tr>
+<tr><td class="k">HTTP (HyperText Transfer Protocol)</td><td>Fetching web pages</td></tr>
+<tr><td class="k">FTP (File Transfer Protocol)</td><td>Transferring files</td></tr>
+</table></div>
+
+<h3>Port numbers</h3>
+<p>A <strong>port</strong> is a numbered door on a computer. The number tells the server which service the data is for.</p>
+<div class="tbl"><table>
+<tr><th>Service</th><th>Port</th></tr>
+<tr><td class="k">HTTP</td><td>80</td></tr>
+<tr><td class="k">FTP</td><td>20 (data)</td></tr>
+<tr><td class="k">SMTP</td><td>25</td></tr>
+<tr><td class="k">Telnet</td><td>23</td></tr>
+</table></div>
+<div class="callout fix"><b class="t">Notes unclear</b>
+<p>The notes add "1/number is proportional to security level". That is not a real rule. A lower port number is not safer. Safety comes from encryption: SSH is encrypted, Telnet is not. Also, FTP uses port 20 for data but port 21 for control commands.</p></div>
+
+<h2 id="osi">The OSI model: seven layers</h2>
+<p>Sending a message is a big job, so it is split into seven smaller jobs. Each layer does one job and hands the result to the layer below. <strong>OSI</strong> means Open System Interconnection.</p>
+<div class="callout tip"><b class="t">Memory hook</b><p>Top to bottom: <em>All People Seem To Need Data Processing</em> = Application, Presentation, Session, Transport, Network, Data link, Physical.</p></div>
+<div class="tbl"><table>
+<tr><th>Layer</th><th>Its job (sender side)</th><th>Data unit</th><th>Protocols and technology</th></tr>
+<tr><td class="k">Application</td><td>Gives the program an interface and sets up communication with the application software</td><td>User data</td><td rowspan="3" style="vertical-align:middle">Application: DNS, FTP, SMTP, POP3, IMAP, HTTP, Telnet.<br>Presentation: SSL.<br>Session: H.245.</td></tr>
+<tr><td class="k">Presentation</td><td>Converts the data format so it can be sent and the receiver's system can read it</td><td>Encoded user data</td></tr>
+<tr><td class="k">Session</td><td>Sets up and keeps the conversation open while data is sent</td><td>Sessions</td></tr>
+<tr><td class="k">Transport</td><td>Adds a Transport Header (TH) to the data</td><td>Segment</td><td>TCP</td></tr>
+<tr><td class="k">Network (adds IP address)</td><td>Adds a Network Header (NH) with network address information</td><td>Packet (datagram)</td><td>IP</td></tr>
+<tr><td class="k">Data link (adds physical address)</td><td>Adds a Data Link Header (DH) with the physical address and error-checking, plus a Trailer (DT) marking the end</td><td>Frame</td><td>IEEE 802.11 (WLAN, Wi-Fi)</td></tr>
+<tr><td class="k">Physical</td><td>Sends the frame as bits over the cable or radio</td><td>Bits</td><td></td></tr>
+</table></div>
+<div class="callout fix"><b class="t">Notes unclear</b>
+<p>The notes number the layers 1 to 7 from Application down to Physical. The official numbering is the other way round (Physical = 1, Application = 7). Learn the <em>names and order top to bottom</em>; do not rely on the numbers. The notes also list "Data Link Packet" in the summary list, but the data link unit is a <strong>frame</strong>.</p></div>
+
+<h3>Watch a message get wrapped and unwrapped</h3>
+<p>On the way down, each layer adds its own label (a header) in front of the data, like putting a letter in an envelope, then that envelope in a bigger envelope. At the receiver, each layer removes its own label and passes the rest up.</p>
+
+<div class="demo">
+  <h4>Encapsulation, step by step</h4>
+  <p class="hint">Use Next to move one layer at a time. Teal marks what just changed.</p>
+  <div class="two">
+    <ul class="stack" id="osi-stack"></ul>
+    <div>
+      <p class="small" id="osi-side" style="margin:0 0 6px"></p>
+      <div class="chips" id="osi-chips" style="min-height:44px"></div>
+      <p style="margin:12px 0 0"><strong id="osi-pdu"></strong></p>
+      <p id="osi-text" style="margin:6px 0 0"></p>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn" id="osi-back">Back</button>
+    <button class="btn pri" id="osi-next">Next</button>
+    <button class="btn" id="osi-play">Play all</button>
+    <button class="btn" id="osi-reset">Restart</button>
+  </div>
+</div>
+
+<h2 id="tcpip">TCP/IP: how data crosses the Internet</h2>
+<p>The Internet is a <strong>packet switching network</strong>: a big message is cut into small pieces called packets. Each packet travels on its own and may take a different route. TCP and IP split the work.</p>
+<div class="tbl"><table>
+<tr><th>Layer</th><th>Sender's job</th><th>Receiver's job</th></tr>
+<tr><td class="k">TCP</td><td>1. Divide the data into packets.<br>2. Give every packet a unique number.<br>3. Pass the packets to IP.</td><td>Put the packets back together into the original file.</td></tr>
+<tr><td class="k">IP</td><td>1. Add the destination IP address to each packet.<br>2. Fragment packets if needed.<br>3. Choose the shortest path to the destination.</td><td></td></tr>
+</table></div>
+
+<div class="demo">
+  <h4>Packets arrive in the wrong order. TCP fixes it.</h4>
+  <p class="hint">Each packet gets a number so the receiver can rebuild the message even if packets arrive out of order.</p>
+  <p class="small" style="margin:0 0 4px">Message cut into packets (sender)</p>
+  <div class="chips" id="pk-sent"></div>
+  <p class="small" style="margin:12px 0 4px">Arrived at the receiver, in the order they came</p>
+  <div class="chips" id="pk-arr" style="min-height:36px"></div>
+  <p class="small" style="margin:12px 0 4px">After TCP puts them in number order</p>
+  <div class="chips" id="pk-fin" style="min-height:36px"></div>
+  <div class="row"><button class="btn pri" id="pk-go">Send the message</button></div>
+  <p class="status" id="pk-status"></p>
+</div>
+
+<h2 id="ip">IP addresses</h2>
+<p>An <strong>IP address</strong> identifies a computer on a network, like a postal address. It has two parts: a <strong>network address</strong> (which network) and a <strong>host address</strong> (which device inside that network). Some addresses also start with a class number.</p>
+<p><strong>IPv4</strong> uses 32 bits, written as four groups of 8 bits (so there are (2<sup>8</sup>)<sup>4</sup> addresses in total). Example: <code>127.0.0.1</code> is <code>01111111.00000000.00000000.00000001</code> in binary, a class A address. Classes D and E are not used for normal computers.</p>
+<div class="tbl"><table>
+<tr><th>Class</th><th>Starts with (class bits)</th><th>Bits that are network</th><th>Bits that are host</th><th>Number of hosts</th></tr>
+<tr><td class="k">A</td><td>0</td><td>bits 1 to 7</td><td>bits 8 to 31</td><td>2<sup>24</sup> - 2</td></tr>
+<tr><td class="k">B</td><td>10</td><td>bits 2 to 15</td><td>bits 16 to 31</td><td>2<sup>16</sup> - 2</td></tr>
+<tr><td class="k">C</td><td>110</td><td>bits 3 to 23</td><td>bits 24 to 31</td><td>2<sup>8</sup> - 2</td></tr>
+</table></div>
+<p class="small">Bits are counted from 0 on the left. The "- 2" removes two reserved addresses: all host bits 0 (the network itself) and all host bits 1 (broadcast to everyone).</p>
+
+<div class="demo">
+  <h4>IP address explorer</h4>
+  <p class="hint">Type an IPv4 address, or pick an example. Orange = class bits, teal = network bits, grey = host bits.</p>
+  <div class="row">
+    <input type="text" id="ip-in" value="192.168.1.10" style="width:170px" aria-label="IPv4 address" inputmode="decimal">
+    <button class="btn" data-ip="10.20.30.40">Class A</button>
+    <button class="btn" data-ip="172.16.5.4">Class B</button>
+    <button class="btn" data-ip="192.168.1.10">Class C</button>
+    <button class="btn" data-ip="224.0.0.1">Class D</button>
+    <button class="btn" data-ip="127.0.0.1">127.0.0.1</button>
+  </div>
+  <div class="out" id="ip-bits" style="line-height:2"></div>
+  <div class="tbl" style="margin-top:12px"><table id="ip-tbl"></table></div>
+  <p class="status" id="ip-msg"></p>
+</div>
+
+<p><strong>IPv6</strong> was created because IPv4 addresses are running out. It uses 128 bits: eight groups of 16 bits, so (2<sup>16</sup>)<sup>8</sup> addresses. Example from the notes: <code>1010:0:0:8:800:2000:4:300</code>.</p>
+
+<h2 id="dns">Domain names and DNS</h2>
+<p>People remember names; computers need numbers. The <strong>DNS</strong> (Domain Name System) translates a <strong>domain name</strong> such as <code>www.example.com</code> into an IP address. A full name like that is called a <strong>fully qualified domain name</strong> (FQDN).</p>
+<div class="callout fix"><b class="t">Notes unclear</b><p>The notes write "Domain Name Server". The system is DNS (Domain Name System); the computers that answer lookups are DNS servers.</p></div>
+
+<div class="demo">
+  <h4>A DNS lookup</h4>
+  <p class="hint">The address 203.0.113.25 is a reserved example address used in documentation.</p>
+  <svg class="dia" id="dns-svg" viewBox="0 0 520 200" role="img" aria-label="Browser, DNS server and web server"></svg>
+  <ol class="steps" id="dns-steps"></ol>
+  <div class="row"><button class="btn pri" id="dns-next">Next</button><button class="btn" id="dns-reset">Restart</button></div>
+</div>
+
+<h3>Anatomy of a URL</h3>
+<p>A <strong>URL</strong> (Uniform Resource Locator) points to one particular page or file on a website. Click each part.</p>
+<div class="demo">
+  <div class="row">
+    <button class="btn" id="url-a" aria-pressed="true">A normal URL</button>
+    <button class="btn" id="url-b" aria-pressed="false">A Hong Kong URL</button>
+  </div>
+  <div class="row mono" id="url-parts" style="font-size:16px;gap:2px"></div>
+  <div class="out" id="url-info" style="margin-top:10px"></div>
+</div>
+<ul>
+  <li>The <strong>top-level domain</strong> (TLD) is either a generic name (com, org, net) or a country code (cn, tw, hk).</li>
+  <li><strong>HKIRC</strong> manages the registry of domain names ending in <code>.hk</code>. Network Solutions, Inc. is a company that registers domain names.</li>
+  <li>FTP addresses work the same way: <code>ftp://user@domain/folder/file</code>.</li>
+</ul>
+
+<h2 id="check">Check yourself</h2>
+<details class="qa"><summary>List the OSI layers from top to bottom.</summary><div><p>Application, Presentation, Session, Transport, Network, Data link, Physical.</p></div></details>
+<details class="qa"><summary>Which layer adds the IP address? Which adds the physical (MAC) address?</summary><div><p>The network layer adds the IP address (in the Network Header). The data link layer adds the physical address (in the Data Link Header).</p></div></details>
+<details class="qa"><summary>Name the data unit at the transport, network and data link layers.</summary><div><p>Segment, packet (datagram), frame.</p></div></details>
+<details class="qa"><summary>Why does TCP number every packet?</summary><div><p>Packets can take different routes and arrive in a different order. The numbers let the receiving TCP put them back in the right order and rebuild the file.</p></div></details>
+<details class="qa"><summary>What does IP do that TCP does not?</summary><div><p>IP adds the destination address, can fragment packets, and chooses the shortest path.</p></div></details>
+<details class="qa"><summary>Which class is 172.16.5.4, and how many hosts can its network hold?</summary><div><p>First byte 172 starts with bits 10, so class B. Hosts: 2<sup>16</sup> - 2 = 65,534.</p></div></details>
+<details class="qa"><summary>What does DNS do, and why is it needed?</summary><div><p>It translates a domain name into an IP address. People remember names, but routers and computers need the number.</p></div></details>
+<details class="qa"><summary>In http://www.google.com/google-earth/Readme.html, name each part.</summary><div><p>http = protocol; www = host name; google = second-level domain; com = top-level domain; google-earth = folder; Readme.html = document.</p></div></details>
+
+</main>
+<script src="assets/app.js"></script>
+<script>
+/* OSI encapsulation stepper */
+(function () {
+  var layers = [
+    ["Application", "Data", "AH"], ["Presentation", "Data", "PH"], ["Session", "Data", "SH"],
+    ["Transport", "Segment", "TH"], ["Network", "Packet", "NH"], ["Data link", "Frame", "DH"], ["Physical", "Bits", ""]
+  ];
+  var texts = [
+    "You type a message. At this point it is just user data.",
+    "Application layer: the program hands the data over and a header (AH) is added.",
+    "Presentation layer: converts the format so the receiver can read it, adds PH.",
+    "Session layer: keeps the conversation open, adds SH.",
+    "Transport layer adds the Transport Header (TH). The unit is now a segment.",
+    "Network layer adds the Network Header (NH), which carries the IP address. The unit is now a packet.",
+    "Data link layer adds a Data Link Header (DH) with the physical address and a Trailer (DT) marking the end. The unit is now a frame.",
+    "Physical layer sends the frame as bits over the cable or radio.",
+    "Receiver, physical layer: the bits are collected and the frame is rebuilt.",
+    "Receiver, data link layer: checks for errors, removes DH and DT. A packet is left.",
+    "Receiver, network layer: removes NH. A segment is left.",
+    "Receiver, transport layer: removes TH, and puts the segments in order.",
+    "Receiver, session layer: removes SH.",
+    "Receiver, presentation layer: removes PH and converts the format back.",
+    "Receiver, application layer: removes AH. The original data is handed to the program."
+  ];
+  var H = ["AH", "PH", "SH", "TH", "NH", "DH"];
+  var s = 0, timer = null;
+  var stack = U.$("#osi-stack"), chips = U.$("#osi-chips");
+  layers.forEach(function (l, i) {
+    var li = document.createElement("li");
+    li.innerHTML = "<span>" + l[0] + "</span><span>" + l[1] + "</span>";
+    stack.appendChild(li);
+  });
+  function level(st) { return st <= 6 ? st : (st <= 8 ? 6 : 14 - st); }
+  function active(st) { if (st === 0) return -1; if (st <= 6) return st - 1; if (st <= 8) return 6; return 14 - st; }
+  function draw() {
+    U.$$("li", stack).forEach(function (li, i) { li.className = i === active(s) ? "on" : ""; });
+    chips.innerHTML = "";
+    var side = s === 0 ? "Sender" : (s <= 7 ? "Sender, going down" : "Receiver, going up");
+    U.$("#osi-side").textContent = side;
+    if (s === 7) {
+      var c = document.createElement("span"); c.className = "chip new"; c.textContent = "0110 1001 1100 0101 ...";
+      chips.appendChild(c);
+    } else {
+      var n = level(s), k;
+      var newest = s >= 1 && s <= 6 ? n - 1 : -1;
+      for (k = n - 1; k >= 0; k--) {
+        var h = document.createElement("span");
+        h.className = "chip" + (k === newest ? " new" : "");
+        h.textContent = H[k]; chips.appendChild(h);
+      }
+      var d = document.createElement("span"); d.className = "chip data"; d.textContent = "data"; chips.appendChild(d);
+      if (n === 6) {
+        var t = document.createElement("span"); t.className = "chip" + (s === 6 ? " new" : ""); t.textContent = "DT"; chips.appendChild(t);
+      }
+    }
+    var a = active(s);
+    U.$("#osi-pdu").textContent = a < 0 ? "Data unit: user data" : "Data unit: " + layers[a][1];
+    U.$("#osi-text").textContent = texts[s];
+    U.$("#osi-back").disabled = s === 0; U.$("#osi-next").disabled = s === texts.length - 1;
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; U.$("#osi-play").textContent = "Play all"; } }
+  U.$("#osi-next").onclick = function () { stop(); if (s < texts.length - 1) { s++; draw(); } };
+  U.$("#osi-back").onclick = function () { stop(); if (s > 0) { s--; draw(); } };
+  U.$("#osi-reset").onclick = function () { stop(); s = 0; draw(); };
+  U.$("#osi-play").onclick = function () {
+    if (timer) { stop(); return; }
+    if (s === texts.length - 1) s = 0;
+    U.$("#osi-play").textContent = "Pause"; draw();
+    timer = setInterval(function () { if (s < texts.length - 1) { s++; draw(); } else { stop(); } }, 1400);
+  };
+  draw();
+})();
+
+/* Packets out of order */
+(function () {
+  var words = ["SEE ", "YOU ", "AT ", "THE ", "LAB"], busy = false;
+  var sent = U.$("#pk-sent"), arr = U.$("#pk-arr"), fin = U.$("#pk-fin"), st = U.$("#pk-status");
+  function chip(i, cls) {
+    var c = document.createElement("span"); c.className = "chip " + (cls || "");
+    c.textContent = "#" + (i + 1) + " " + words[i].replace(/ /g, "_"); return c;
+  }
+  words.forEach(function (w, i) { sent.appendChild(chip(i)); });
+  st.textContent = "Each packet also carries the destination IP address (added by IP).";
+  U.$("#pk-go").onclick = async function () {
+    if (busy) return; busy = true;
+    arr.innerHTML = ""; fin.innerHTML = "";
+    var idx = words.map(function (_, i) { return i; }), order;
+    do { order = idx.slice().sort(function () { return Math.random() - 0.5; }); }
+    while (order.every(function (v, i) { return v === i; }));
+    st.textContent = "Packets are travelling by different routes...";
+    for (var k = 0; k < order.length; k++) {
+      await U.sleep(450 + Math.random() * 500);
+      arr.appendChild(chip(order[k], "new"));
+    }
+    var seen = order.map(function (v) { return "#" + (v + 1); }).join(", ");
+    st.innerHTML = "Arrival order was <b>" + seen + "</b>. TCP now sorts by number...";
+    await U.sleep(900);
+    for (var j = 0; j < words.length; j++) { fin.appendChild(chip(j, "new")); await U.sleep(180); }
+    st.innerHTML = "Rebuilt message: <b>" + words.join("") + "</b>";
+    busy = false;
+  };
+})();
+
+/* IP explorer */
+(function () {
+  var inp = U.$("#ip-in"), bitsBox = U.$("#ip-bits"), tbl = U.$("#ip-tbl"), msg = U.$("#ip-msg");
+  function pad(n) { var s = n.toString(2); return "00000000".slice(s.length) + s; }
+  function draw() {
+    var parts = inp.value.trim().split(".");
+    var ok = parts.length === 4 && parts.every(function (p) { return /^\d{1,3}$/.test(p) && +p <= 255; });
+    if (!ok) { bitsBox.textContent = ""; tbl.innerHTML = ""; msg.textContent = "Enter four numbers from 0 to 255 separated by dots."; return; }
+    var o = parts.map(Number), bits = o.map(pad).join(""), first = o[0];
+    var cls = first < 128 ? "A" : first < 192 ? "B" : first < 224 ? "C" : first < 240 ? "D" : "E";
+    var cb = { A: 1, B: 2, C: 3, D: 4, E: 4 }[cls], ne = { A: 8, B: 16, C: 24, D: 0, E: 0 }[cls];
+    var html = "";
+    for (var g = 0; g < 4; g++) {
+      html += '<span class="bitgrp">';
+      for (var b = 0; b < 8; b++) {
+        var i = g * 8 + b, c = i < cb ? "c" : (i < ne ? "n" : "h");
+        html += '<span class="bit ' + c + '">' + bits[i] + "</span>";
+      }
+      html += "</span>";
+    }
+    bitsBox.innerHTML = html;
+    var rows = [["Class", cls + (cls === "D" ? " (multicast, not for normal computers)" : cls === "E" ? " (experimental, not for normal computers)" : "")],
+                ["Class bits", bits.slice(0, cb)]];
+    if (ne) {
+      var net = o.map(function (v, i) { return i < ne / 8 ? v : 0; }).join("."), host = o.map(function (v, i) { return i < ne / 8 ? 0 : v; }).join(".");
+      rows.push(["Network part", net + " (" + (ne - cb) + " bits after the class bits)"]);
+      rows.push(["Host part", host + " (" + (32 - ne) + " bits)"]);
+      rows.push(["Hosts in this network", "2^" + (32 - ne) + " - 2 = " + (Math.pow(2, 32 - ne) - 2).toLocaleString("en")]);
+    }
+    tbl.innerHTML = rows.map(function (r) { return "<tr><td class='k'>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("");
+    msg.textContent = first === 127 ? "127.0.0.1 is the loopback address: it always means 'this computer itself'." : "";
+  }
+  inp.addEventListener("input", draw);
+  U.$$("[data-ip]").forEach(function (b) { b.onclick = function () { inp.value = b.dataset.ip; draw(); }; });
+  draw();
+})();
+
+/* DNS lookup */
+(function () {
+  var svg = U.$("#dns-svg"), list = U.$("#dns-steps"), i = 0, busy = false;
+  var P = { B: [70, 140], D: [260, 50], W: [450, 140] };
+  var names = { B: "Your browser", D: "DNS server", W: "Web server" };
+  var steps = [
+    { f: "B", t: "D", tx: "The browser asks the DNS server: what is the IP address of www.example.com?" },
+    { f: "D", t: "B", tx: "The DNS server replies: 203.0.113.25." },
+    { f: "B", t: "W", tx: "The browser sends an HTTP request (port 80) to 203.0.113.25." },
+    { f: "W", t: "B", tx: "The web server answers with the web page." }
+  ];
+  steps.forEach(function (s) { var li = document.createElement("li"); li.textContent = s.tx; list.appendChild(li); });
+  function build() {
+    svg.innerHTML = "";
+    [["B", "D"], ["D", "W"], ["B", "W"]].forEach(function (p) {
+      U.svg("line", { x1: P[p[0]][0], y1: P[p[0]][1], x2: P[p[1]][0], y2: P[p[1]][1], "class": "wire" }, svg);
+    });
+    Object.keys(P).forEach(function (k) {
+      U.svg("rect", { x: P[k][0] - 55, y: P[k][1] - 22, width: 110, height: 44, rx: 12, "class": "box" }, svg);
+      var t = U.svg("text", { x: P[k][0], y: P[k][1] + 5, "class": "mid" }, svg); t.textContent = names[k];
+    });
+  }
+  function draw() { U.$$("li", list).forEach(function (li, k) { li.className = k === i - 1 ? "on" : (k < i - 1 ? "done" : ""); }); U.$("#dns-next").disabled = i >= steps.length; }
+  U.$("#dns-next").onclick = async function () {
+    if (busy || i >= steps.length) return; busy = true;
+    var s = steps[i], p = U.svg("circle", { r: 8, "class": "pkt" }, svg);
+    i++; draw();
+    await U.move(p, P[s.f], P[s.t], 900); p.remove(); busy = false;
+  };
+  U.$("#dns-reset").onclick = function () { if (busy) return; i = 0; build(); draw(); };
+  build(); draw();
+})();
+
+/* URL anatomy */
+(function () {
+  var sets = {
+    a: [["http", "Protocol", "The rules used to fetch the page (HyperText Transfer Protocol)."], ["://", "Separator", "Divides the protocol from the address."],
+        ["www", "Host name", "The name of the server inside the domain. Together, www.google.com is the fully qualified domain name."], [".", "Dot", "Separates levels of the domain name, read from right to left."],
+        ["google", "Second-level domain", "The name that the organisation registered."], [".", "Dot", "Separates levels."],
+        ["com", "Top-level domain (TLD)", "A generic name (com, org, net) or a country code (cn, tw, hk)."],
+        ["/google-earth/", "Folder name", "A folder on the web server."], ["Readme.html", "Document name", "The file the browser will display."]],
+    b: [["https", "Protocol", "A secure version of HTTP."], ["://", "Separator", ""], ["www", "Host name", "The server name."], [".", "Dot", ""],
+        ["example", "Second-level domain", "The registered name."], [".", "Dot", ""], ["com", "Generic part", "Shows the type of organisation (commercial)."], [".", "Dot", ""],
+        ["hk", "Country-code TLD", "hk = Hong Kong. Names ending in .hk are managed by HKIRC."], ["/", "Root", "The top folder of the site, where index.html usually lives."]]
+  };
+  var box = U.$("#url-parts"), info = U.$("#url-info"), cur = "a";
+  function show(k) {
+    cur = k; box.innerHTML = ""; info.textContent = "Click a part of the address.";
+    U.$("#url-a").setAttribute("aria-pressed", k === "a"); U.$("#url-b").setAttribute("aria-pressed", k === "b");
+    sets[k].forEach(function (p) {
+      var b = document.createElement("button"); b.className = "btn"; b.style.padding = "6px 8px"; b.style.fontFamily = "var(--mono)"; b.textContent = p[0];
+      b.onclick = function () { U.$$("button", box).forEach(function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); info.innerHTML = "<b>" + U.esc(p[1]) + "</b>" + (p[2] ? ": " + U.esc(p[2]) : ""); };
+      box.appendChild(b);
+    });
+  }
+  U.$("#url-a").onclick = function () { show("a"); }; U.$("#url-b").onclick = function () { show("b"); };
+  show("a");
+})();
+</script>
+</body>
+</html>

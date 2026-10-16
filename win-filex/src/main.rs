@@ -5,11 +5,13 @@ macro_rules! ui_format {
     };
 }
 mod config;
+mod edit;
 #[cfg(not(windows))]
 mod files;
 #[cfg(windows)]
 #[path = "files_windows.rs"]
 mod files;
+mod git_status;
 #[cfg(not(windows))]
 mod input;
 #[cfg(windows)]
@@ -25,6 +27,7 @@ mod terminal_host;
 mod terminal_host;
 mod terminal_profile;
 mod tmux;
+mod transfer;
 mod tui;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;

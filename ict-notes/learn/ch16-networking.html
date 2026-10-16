@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch16 Networking and Internet Basics</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="hero-copy">
+    <p class="kicker">Chapter 16</p>
+    <h1>Networking and Internet basics</h1>
+    <p class="lead">How computers connect, what a network gives you, and what each box in it does.</p>
+  </div>
+  <div class="hero-vis" id="hero-vis" aria-hidden="true"></div>
+</header>
+
+<h2 id="network">What a computer network is</h2>
+<p>A <strong>computer network</strong> is a group of computers, peripherals (printers, scanners) and communication devices linked together. It exists for two reasons: to <strong>exchange information</strong> and to <strong>share resources</strong>.</p>
+<div class="pair">
+  <div><h4>LAN: Local Area Network</h4><p>Covers a small area such as a classroom, an office or one building.</p></div>
+  <div><h4>WAN: Wide Area Network</h4><p>Covers a wide geographical area, such as a city or a country. The Internet is the largest WAN.</p></div>
+</div>
+
+<h3>Two ways to organise a LAN</h3>
+<p>In a <strong>peer-to-peer</strong> network every computer is equal: each one can share files and also use files from others. In a <strong>client/server</strong> network one powerful computer (the server) holds the shared resources and every other computer (a client) asks it for things.</p>
+
+<div class="demo">
+  <h4>Where does the request go?</h4>
+  <p class="hint">Switch the network type, then press Request. Watch the path the request takes.</p>
+  <div class="row">
+    <button class="btn" id="cs-p2p" aria-pressed="true">Peer-to-peer</button>
+    <button class="btn" id="cs-cs" aria-pressed="false">Client/server</button>
+    <button class="btn pri" id="cs-go">Request report.docx from W1</button>
+  </div>
+  <svg class="dia" id="cs-svg" viewBox="0 0 520 240" role="img" aria-label="Network diagram"></svg>
+  <p class="status" id="cs-status"></p>
+</div>
+
+<div class="tbl"><table>
+<tr><th>Feature</th><th>Peer-to-peer</th><th>Client/server</th></tr>
+<tr><td class="k">Central server</td><td>No</td><td>Yes</td></tr>
+<tr><td class="k">Shared resources live on</td><td>The peer workstations</td><td>The central server</td></tr>
+<tr><td class="k">Number of workstations</td><td>Small</td><td>Large</td></tr>
+<tr><td class="k">Load it can handle</td><td>Lower</td><td>Higher</td></tr>
+<tr><td class="k">Security control</td><td>Poor (each user sets their own)</td><td>Good (managed in one place)</td></tr>
+<tr><td class="k">Cost</td><td>Low</td><td>High (server, software, an administrator)</td></tr>
+</table></div>
+<div class="callout tip"><b class="t">Memory hook</b><p>Every row follows from one fact. Peer-to-peer has no boss computer, so it is cheap and simple but small and hard to secure. Client/server has a boss computer, so it is expensive but large and well controlled.</p></div>
+
+<h2 id="services">Network services</h2>
+<p>The notes list seven services in three groups. For each one, learn what it is and the benefit the exam expects.</p>
+
+<h3>Communication</h3>
+<div class="tbl"><table>
+<tr><th>Service</th><th>What it is</th><th>Benefit and remark</th></tr>
+<tr><td class="k">Internal communication</td><td>Computers in the organisation send messages to each other: e-mail, instant message, file transfer.</td><td>Fast and cheap compared with paper memos.</td></tr>
+<tr><td class="k">Network conferencing</td><td>Two-way audio and video between people in different places.</td><td>Instant and saves travel cost. Video must be compressed or it is too big to send.</td></tr>
+</table></div>
+<h3>Sharing</h3>
+<div class="tbl"><table>
+<tr><th>Service</th><th>What it is</th><th>Benefit and remark</th></tr>
+<tr><td class="k">Hardware sharing</td><td>LAN: share hard disks, printers, scanners. WAN: share hard disk storage space.</td><td>Better monitoring and use of devices; saves money (one printer for a whole room).</td></tr>
+<tr><td class="k">Sharing licensed software</td><td>Many computers use one network licence at the same time.</td><td>Lower cost and no need to install on every machine.</td></tr>
+<tr><td class="k">Internet access</td><td>Many computers reach the Internet through one network connection.</td><td>Lower cost; the connection is easier to monitor and protect.</td></tr>
+</table></div>
+<h3>Data</h3>
+<div class="tbl"><table>
+<tr><th>Service</th><th>What it is</th><th>Benefit and remark</th></tr>
+<tr><td class="k">Centralised data management</td><td>Data is kept on a network server instead of on each computer. Security tools: firewall, VPN (Virtual Private Network), dedicated leased line, virtual connection (tunnel).</td><td>Information stays up to date, security is easier to control, staff are more productive.</td></tr>
+<tr><td class="k">Information backup</td><td>Copies of data from individual computers are saved to a server over the network.</td><td>Rapid system recovery after a failure.</td></tr>
+</table></div>
+
+<h2 id="wireless">Wireless connection</h2>
+<p>A <strong>WLAN</strong> (wireless LAN) connects devices by radio instead of cable. Two parts are needed:</p>
+<ul>
+  <li><strong>Access point:</strong> talks to wireless devices by radio, and also connects to the wired network. It converts between radio signals and digital signals.</li>
+  <li><strong>Wireless NIC</strong> (Network Interface Card): the part inside your device that lets it join the WLAN.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Type</th><th>How it works</th></tr>
+<tr><td class="k">Satellite broadband</td><td>A microwave link to a satellite. Used in remote areas where there are no wires. It uses microwaves because ordinary radio waves are reflected back by the ionosphere instead of passing through it.</td></tr>
+<tr><td class="k">Microwave broadband</td><td>An access point on top of a building plus subscriber units. Each subscriber unit needs a clear <strong>line of sight</strong> to the access point.</td></tr>
+<tr><td class="k">Wi-Fi (wireless fidelity)</td><td>Converts digital data to radio signals and back. Speed from 11 Mbps (802.11b) up to 600 Mbps (802.11n). Range from 38 m indoors (802.11b) up to 250 m outdoors (802.11n).</td></tr>
+</table></div>
+<div class="pair">
+  <div><h4>Advantages of wireless</h4><ul><li>Lower set-up cost</li><li>Flexible network layout</li><li>Can reach outdoor areas</li></ul></div>
+  <div><h4>Disadvantages of wireless</h4><ul><li>Unstable signal</li><li>Higher risk of unauthorised access</li><li>Slower than wired</li><li>Limited coverage</li><li>A large wireless network costs more</li></ul></div>
+</div>
+
+<h2 id="links">Comparing communication links</h2>
+<div class="tbl"><table>
+<tr><th></th><th>Twisted-pair</th><th>Coaxial</th><th>Optical fibre</th><th>Wireless</th></tr>
+<tr><td class="k">Speed (DTS)</td><td>10 Mbps, 100 Mbps</td><td>up to about 299 Mbps</td><td>100 Mbps to 10 Gbps</td><td>11 to 600 Mbps</td></tr>
+<tr><td class="k">Signal carried</td><td>Electrical</td><td>Electrical</td><td>Light (optical)</td><td>Radio waves</td></tr>
+<tr><td class="k">Cost</td><td>Cheap</td><td>More expensive</td><td>Most expensive</td><td>Grows with network size</td></tr>
+</table></div>
+<p class="small">DTS = data transmission speed.</p>
+
+<div class="demo">
+  <h4>How long will a file take?</h4>
+  <p class="hint">Speeds are given in <strong>bits</strong> per second (Mbps) but file sizes are in <strong>bytes</strong> (MB). One byte is 8 bits, so multiply the file size by 8 first. Results are the best case.</p>
+  <div class="row">
+    <label>File size <input type="number" id="fs-size" value="50" min="1" style="width:90px"></label>
+    <select id="fs-unit"><option value="1">MB</option><option value="1000">GB</option></select>
+    <label>Connection
+      <select id="fs-link">
+        <option value="0.056">Dial-up, 56 kbps</option>
+        <option value="0.128">ISDN, 128 kbps</option>
+        <option value="8">ADSL, 8 Mbps</option>
+        <option value="11">Wi-Fi 802.11b, 11 Mbps</option>
+        <option value="100" selected>Twisted-pair, 100 Mbps</option>
+        <option value="600">Wi-Fi 802.11n, 600 Mbps</option>
+        <option value="1000">Fast broadband or Gigabit, 1000 Mbps</option>
+        <option value="10000">Optical fibre, 10 Gbps</option>
+      </select>
+    </label>
+  </div>
+  <div class="out" id="fs-out"></div>
+</div>
+
+<h2 id="access">Methods of Internet access</h2>
+<div class="tbl"><table>
+<tr><th></th><th>Broadband</th><th>Wi-Fi hot spot</th><th>WAP</th><th>GPRS</th><th>ISDN</th><th>Dial-up</th></tr>
+<tr><td class="k">Max speed</td><td>1.5 to 1000 Mbps</td><td>11 to 600 Mbps</td><td>10 to 153 kbps</td><td>115.2 kbps</td><td>128 kbps (digital)</td><td>56 kbps (analogue)</td></tr>
+<tr><td class="k">Cost (per notes)</td><td>High</td><td>Very high</td><td>Very high</td><td>Very high</td><td>Average</td><td>Low</td></tr>
+<tr><td class="k">Runs over</td><td>ADSL: telephone network. Cable: cable TV network</td><td>Wi-Fi access points</td><td>Mobile phone network</td><td>Mobile phone network</td><td>Telephone network</td><td>Telephone network</td></tr>
+<tr><td class="k">Security</td><td>High</td><td>Low</td><td>Average</td><td>Average</td><td>Very high</td><td>High</td></tr>
+<tr><td class="k">Typical users</td><td>Households, schools, large organisations</td><td>Travellers, PDA users</td><td>Smartphone, PDA</td><td>Smartphone, PDA, notebook</td><td>Schools, companies, large organisations</td><td>Remote households, travellers</td></tr>
+<tr><td class="k">Popularity</td><td>Majority</td><td>Moderate</td><td>Minority</td><td>Minority</td><td>Minority</td><td>Minority</td></tr>
+</table></div>
+<ul class="small">
+  <li>WAP = Wireless Application Protocol. GPRS = General Packet Radio Service. ISDN = Integrated Services Digital Network.</li>
+  <li>ADSL = Asymmetric Digital Subscriber Line: upload is slower than download (the notes give 640 kbps up, 9 Mbps down). SDSL = Symmetric: upload equals download (24 Mbps).</li>
+  <li>Cable broadband shares the cable network with neighbours in the same area (30 Mbps).</li>
+  <li>Dial-up uses the voice telephone line (56 kbps). A DSL modem sends data on the same line without blocking voice (8 Mbps down, 1 Mbps up).</li>
+</ul>
+<div class="callout tip"><b class="t">Pick the right one</b><p>A school with hundreds of users needs speed and reliability: broadband or ISDN. A traveller with a phone has no fixed line: WAP, GPRS or a Wi-Fi hot spot. A remote home with only a phone line: dial-up. Exam questions usually give a user and ask you to match them.</p></div>
+
+<h2 id="hardware">Network hardware</h2>
+<h3>Network Interface Card (NIC)</h3>
+<p>A NIC is an expansion card that connects a computer to a network. Every NIC has a unique <strong>MAC address</strong> (media access control address) that identifies that computer on the network. A NIC is described by three things: its <strong>connector</strong> (BNC or RJ-45), its <strong>expansion bus</strong> (ISA, PCI, PCMCIA, USB) and its <strong>bandwidth</strong> (10, 100 or 1000 Mbps; 1 Mb = 1000 Kb here, not 1024).</p>
+
+<h3>Connection devices</h3>
+<div class="tbl"><table>
+<tr><th>Device</th><th>What it does</th><th>Used for</th></tr>
+<tr><td class="k">Switch</td><td>Central connection point. Sends data only to the computer it is meant for. High speed (10 Mbps to 1 Gbps).</td><td>Computers to servers</td></tr>
+<tr><td class="k">Hub</td><td>Central connection point. Repeats everything to every port. Low speed.</td><td>Small, cheap LANs</td></tr>
+<tr><td class="k">Bridge</td><td>Connects two networks of the same type (LAN A1 to LAN A2).</td><td>LAN to LAN</td></tr>
+<tr><td class="k">Router</td><td>Connects different networks (network A to network B) and chooses the route. "Translation" between networks.</td><td>LAN to the Internet. A home router is a switching router.</td></tr>
+<tr><td class="k">Modem</td><td>Converts between digital signals and analogue signals. <strong>Mo</strong>dulation turns digital into analogue to send. <strong>Dem</strong>odulation turns analogue back into digital.</td><td>See types below</td></tr>
+<tr><td class="k">Repeater</td><td>Amplifies the received signal, removes unwanted noise, and sends the cleaned signal on.</td><td>Connecting far-apart devices</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>Modem type</th><th>Converts between</th><th>Used for</th></tr>
+<tr><td class="k">Dial-up modem</td><td>Digital signals and analogue telephone signals</td><td>Dial-up connection</td></tr>
+<tr><td class="k">Cable modem</td><td>Digital signals and analogue cable TV signals</td><td>Broadband over TV cable</td></tr>
+<tr><td class="k">DSL modem</td><td>Filters the DSL signal, and converts it to signals the computer can process</td><td>Broadband over telephone cable</td></tr>
+</table></div>
+
+<div class="demo">
+  <h4>Hub or switch: who receives the data?</h4>
+  <p class="hint">A sends a message to C. Choose the device in the middle and press Send.</p>
+  <div class="row">
+    <button class="btn" id="hs-hub" aria-pressed="true">Hub</button>
+    <button class="btn" id="hs-sw" aria-pressed="false">Switch</button>
+    <button class="btn pri" id="hs-go">A sends to C</button>
+  </div>
+  <svg class="dia" id="hs-svg" viewBox="0 0 520 250" role="img" aria-label="Four computers around a central device"></svg>
+  <p class="status" id="hs-status"></p>
+</div>
+
+<div class="demo">
+  <h4>What a modem does to a signal</h4>
+  <p class="hint">Type some bits. The modem turns each bit into a different tone (a fast wave for 1, a slow wave for 0) so the data can travel on an analogue line.</p>
+  <div class="row"><label>Bits <input type="text" id="mo-bits" value="10110010" maxlength="12" style="width:150px" inputmode="numeric"></label></div>
+  <svg class="dia" id="mo-svg" viewBox="0 0 520 190" role="img" aria-label="Digital bits above the analogue wave that carries them"></svg>
+  <p class="status">Top: digital signal (just high and low). Bottom: analogue signal (a continuous wave). The receiver's modem reads the tones and rebuilds the bits (demodulation).</p>
+</div>
+
+
+<div class="demo">
+  <h4>Which device is it?</h4>
+  <p class="hint">Read the situation, then pick the device that does the job.</p>
+  <div id="dv-quiz"></div>
+</div>
+
+<h2 id="cables">Transmission media: cables</h2>
+<div class="tbl"><table>
+<tr><th>Cable</th><th>Key points</th><th>Typical use</th></tr>
+<tr><td class="k">Twisted-pair</td><td>Pairs of wires twisted together; twisting reduces electromagnetic interference. <strong>STP</strong> (shielded) has a metal wrapper. <strong>UTP</strong> (unshielded) does not.</td><td>Categories Cat 1 to Cat 6. Up to 1 Gbps, up to 100 m.</td></tr>
+<tr><td class="k">Coaxial</td><td>Less noise, higher speed, longer distance than twisted-pair.</td><td>VCR and cable TV connections.</td></tr>
+<tr><td class="k">Optical fibre</td><td>Carries light. Advantages: large capacity, high speed, secure transmission, thin, light and durable. Disadvantages: high cost, hard to install or change, needs a device to convert signals.</td><td>Backbones and high-speed links.</td></tr>
+</table></div>
+
+<h2 id="check">Check yourself</h2>
+<details class="qa"><summary>Why is a client/server network more secure than peer-to-peer?</summary><div><p>Resources and user accounts are managed in one place (the server), so the administrator can set rules once. In peer-to-peer each user controls their own shared files.</p></div></details>
+<details class="qa"><summary>Name three advantages and two disadvantages of a WLAN.</summary><div><p>Advantages: lower set-up cost, flexible layout, can extend outdoors. Disadvantages: unstable signal, higher risk of intrusion, slower than wired, limited range.</p></div></details>
+<details class="qa"><summary>What is the difference between a hub and a switch?</summary><div><p>A hub copies every message to all ports (slow, wasteful). A switch sends the message only to the port of the destination computer (fast).</p></div></details>
+<details class="qa"><summary>Bridge or router: which connects a LAN to the Internet?</summary><div><p>A router. A bridge joins two networks of the same type.</p></div></details>
+<details class="qa"><summary>What do the letters in MODEM stand for in the notes' sense (MO and DEM)?</summary><div><p>Modulation (digital to analogue, when sending) and demodulation (analogue to digital, when receiving).</p></div></details>
+<details class="qa"><summary>Give two reasons to choose optical fibre, and two reasons not to.</summary><div><p>Choose: very high speed, secure, large capacity. Avoid: expensive, difficult to install or change, needs a signal conversion device.</p></div></details>
+<details class="qa"><summary>A 600 MB video over a 100 Mbps link: about how long?</summary><div><p>600 MB x 8 = 4800 Mb. 4800 / 100 = 48 seconds at best.</p></div></details>
+<details class="qa"><summary>Why does satellite broadband use microwaves instead of radio waves?</summary><div><p>Radio waves are reflected by the ionosphere. Microwaves pass through it and reach the satellite.</p></div></details>
+
+</main>
+<script src="assets/app.js"></script>
+<script>
+/* Peer-to-peer vs client/server */
+(function () {
+  var svg = U.$("#cs-svg"), status = U.$("#cs-status"), mode = "p2p", busy = false;
+  var P = { W1: [90, 50], W2: [430, 50], W3: [90, 190], W4: [430, 190], S: [260, 120] };
+  var hold = null;
+  function box(name, label, on) {
+    var p = P[name];
+    U.svg("rect", { x: p[0] - 48, y: p[1] - 20, width: 96, height: 40, rx: 12, "class": "box" + (on ? " on" : "") }, svg);
+    var t = U.svg("text", { x: p[0], y: p[1] + 5, "class": "mid" }, svg); t.textContent = label;
+  }
+  function build() {
+    svg.innerHTML = "";
+    var pairs = mode === "p2p" ? [["W1","W2"],["W1","W3"],["W1","W4"],["W2","W3"],["W2","W4"],["W3","W4"]] : [["W1","S"],["W2","S"],["W3","S"],["W4","S"]];
+    pairs.forEach(function (pr) { U.svg("line", { x1: P[pr[0]][0], y1: P[pr[0]][1], x2: P[pr[1]][0], y2: P[pr[1]][1], "class": "wire" }, svg); });
+    ["W1","W2","W3","W4"].forEach(function (n) { box(n, n === "W1" ? "W1 (you)" : n, false); });
+    if (mode === "cs") box("S", "Server", false);
+    var h = mode === "p2p" ? "W4" : "S";
+    var t = U.svg("text", { x: P[h][0], y: P[h][1] + (h === "S" ? 36 : 38), "class": "sm mid" }, svg);
+    t.textContent = "holds report.docx";
+    hold = h;
+    status.textContent = mode === "p2p"
+      ? "Peer-to-peer: no server. The file sits on the workstation of a colleague, so W1 must ask W4 directly."
+      : "Client/server: every shared file sits on the server, so W1 asks the server, whoever put the file there.";
+  }
+  function pkt() { return U.svg("circle", { r: 8, "class": "pkt", cx: 0, cy: 0 }, svg); }
+  async function go() {
+    if (busy) return; busy = true; build();
+    var d = P[hold], a = P.W1;
+    var p = pkt();
+    status.innerHTML = "<b>Request</b> travels from W1 to " + (hold === "S" ? "the server" : "W4") + "...";
+    await U.move(p, a, d, 800);
+    p.remove(); await U.sleep(200);
+    var q = pkt();
+    status.innerHTML = "<b>File</b> comes back to W1.";
+    await U.move(q, d, a, 800);
+    q.remove();
+    status.innerHTML = "Done. Path: W1 to " + (hold === "S" ? "server" : "W4") + " and back. " + (mode === "p2p" ? "If W4 is switched off, nobody can get this file." : "If the server is down, nobody can get any file, so it needs good care.");
+    busy = false;
+  }
+  function set(m) {
+    if (busy) return; mode = m;
+    U.$("#cs-p2p").setAttribute("aria-pressed", m === "p2p"); U.$("#cs-cs").setAttribute("aria-pressed", m === "cs");
+    build();
+  }
+  U.$("#cs-p2p").onclick = function () { set("p2p"); };
+  U.$("#cs-cs").onclick = function () { set("cs"); };
+  U.$("#cs-go").onclick = go;
+  build();
+})();
+
+/* Transfer-time calculator */
+(function () {
+  function fmt(s) {
+    if (s < 1) return (s * 1000).toFixed(0) + " milliseconds";
+    if (s < 90) return s.toFixed(1) + " seconds";
+    if (s < 5400) return (s / 60).toFixed(1) + " minutes";
+    return (s / 3600).toFixed(1) + " hours";
+  }
+  function calc() {
+    var size = parseFloat(U.$("#fs-size").value) * parseFloat(U.$("#fs-unit").value);
+    var mbps = parseFloat(U.$("#fs-link").value);
+    if (!(size > 0)) { U.$("#fs-out").textContent = "Enter a file size."; return; }
+    var mb = size * 8, s = mb / mbps;
+    U.$("#fs-out").innerHTML = size + " MB x 8 = <b>" + mb + " Mb</b>. Then " + mb + " Mb / " + mbps + " Mbps = <b>" + fmt(s) + "</b>.";
+  }
+  ["#fs-size", "#fs-unit", "#fs-link"].forEach(function (id) { U.$(id).addEventListener("input", calc); });
+  calc();
+})();
+
+/* Hub vs switch */
+(function () {
+  var svg = U.$("#hs-svg"), status = U.$("#hs-status"), mode = "hub", busy = false;
+  var P = { A: [70, 50], B: [70, 200], C: [450, 50], D: [450, 200] }, H = [260, 125];
+  var tags = {};
+  function build() {
+    svg.innerHTML = "";
+    Object.keys(P).forEach(function (k) {
+      U.svg("line", { x1: P[k][0], y1: P[k][1], x2: H[0], y2: H[1], "class": "wire" }, svg);
+    });
+    U.svg("rect", { x: H[0] - 44, y: H[1] - 20, width: 88, height: 40, rx: 12, "class": "box" }, svg);
+    var t = U.svg("text", { x: H[0], y: H[1] + 5, "class": "mid" }, svg); t.textContent = mode === "hub" ? "Hub" : "Switch";
+    Object.keys(P).forEach(function (k) {
+      U.svg("rect", { x: P[k][0] - 40, y: P[k][1] - 20, width: 80, height: 40, rx: 12, "class": "box", id: "hs-" + k }, svg);
+      var l = U.svg("text", { x: P[k][0], y: P[k][1] + 5, "class": "mid" }, svg); l.textContent = k;
+      tags[k] = U.svg("text", { x: P[k][0], y: P[k][1] + (k < "C" ? 40 : 40), "class": "sm mid" }, svg);
+    });
+    status.textContent = mode === "hub" ? "A hub has no memory of who is where, so it repeats the message to every other port." : "A switch learns which computer is on which port, so it forwards the message to the right port only.";
+  }
+  function dot() { return U.svg("circle", { r: 7, "class": "pkt" }, svg); }
+  async function go() {
+    if (busy) return; busy = true; build();
+    var p = dot(); await U.move(p, P.A, H, 700); p.remove();
+    var targets = mode === "hub" ? ["B", "C", "D"] : ["C"];
+    await Promise.all(targets.map(function (t) {
+      var q = dot();
+      return U.move(q, H, P[t], 700).then(function () {
+        q.remove();
+        var r = U.$("#hs-" + t);
+        if (t === "C") { r.setAttribute("class", "box on"); tags[t].textContent = "accepts the message"; }
+        else { r.setAttribute("class", "box dim"); tags[t].textContent = "not for me, ignores it"; }
+      });
+    }));
+    status.innerHTML = mode === "hub" ? "<b>Hub:</b> B and D also received the data. That wastes bandwidth and lets them listen in." : "<b>Switch:</b> only C received the data. Faster, quieter and safer.";
+    busy = false;
+  }
+  function set(m) { if (busy) return; mode = m; U.$("#hs-hub").setAttribute("aria-pressed", m === "hub"); U.$("#hs-sw").setAttribute("aria-pressed", m === "sw"); build(); }
+  U.$("#hs-hub").onclick = function () { set("hub"); };
+  U.$("#hs-sw").onclick = function () { set("sw"); };
+  U.$("#hs-go").onclick = go;
+  build();
+})();
+
+/* Modulation picture */
+(function () {
+  var svg = U.$("#mo-svg"), input = U.$("#mo-bits");
+  function draw() {
+    var bits = input.value.replace(/[^01]/g, "").slice(0, 12);
+    svg.innerHTML = "";
+    if (!bits) { return; }
+    var w = 480 / bits.length, x0 = 20, top = 20, hi = 20, lo = 70, mid = 135, amp = 24;
+    var d = "M" + x0 + " " + (bits[0] === "1" ? hi : lo);
+    for (var i = 0; i < bits.length; i++) {
+      var y = bits[i] === "1" ? hi : lo, x = x0 + i * w;
+      d += " L" + x + " " + y + " L" + (x + w) + " " + y;
+      var t = U.svg("text", { x: x + w / 2, y: 12, "class": "sm mid" }, svg); t.textContent = bits[i];
+      U.svg("line", { x1: x, y1: 8, x2: x, y2: 150, stroke: "var(--line)", "stroke-width": 1 }, svg);
+    }
+    U.svg("path", { d: d, "class": "wire hot", "stroke-linejoin": "round" }, svg);
+    var path = "M" + x0 + " " + mid, ph = 0;
+    for (var j = 0; j < bits.length; j++) {
+      var cycles = bits[j] === "1" ? 4 : 1.5, n = 24;
+      for (var k = 1; k <= n; k++) {
+        var xx = x0 + j * w + (w * k) / n;
+        ph += (cycles * 2 * Math.PI) / n;
+        path += " L" + xx.toFixed(1) + " " + (mid + amp * Math.sin(ph)).toFixed(1);
+      }
+    }
+    U.svg("path", { d: path, "class": "wire hot", fill: "none" }, svg);
+    var a = U.svg("text", { x: 20, y: 183, "class": "sm" }, svg); a.textContent = "fast wave = 1, slow wave = 0";
+  }
+  input.addEventListener("input", draw); draw();
+})();
+
+/* Which device? */
+U.quiz(U.$("#dv-quiz"), [
+  { q: "You want to connect your home network to the Internet.", a: 3, why: "A router connects different networks, here your LAN and the Internet." },
+  { q: "You need to join two LANs of the same type into one network.", a: 2, why: "A bridge connects networks of the same type." },
+  { q: "In a busy server room, data should go only to the computer it is meant for.", a: 1, why: "A switch forwards data to the destination port only, at high speed." },
+  { q: "A cheap device that repeats every message to every port, slowly.", a: 0, why: "That is a hub: low speed, no targeting." },
+  { q: "Your computer must send digital data over an analogue telephone line.", a: 4, why: "A modem modulates digital signals into analogue ones, and demodulates them at the other end." },
+  { q: "The cable is very long, so the signal arrives weak and noisy.", a: 5, why: "A repeater amplifies the signal and removes noise before sending it on." }
+], ["Hub", "Switch", "Bridge", "Router", "Modem", "Repeater"]);
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch20 Elementary Web Authoring</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="hero-copy">
+    <p class="kicker">Chapter 20</p>
+    <h1>Elementary web authoring</h1>
+    <p class="lead">Plan, build, publish and test a website, from folder paths to site structure.</p>
+  </div>
+  <div class="hero-vis" id="hero-vis" aria-hidden="true"></div>
+</header>
+
+<h2 id="overview">What web authoring is</h2>
+<p><strong>Web authoring</strong> is creating a <strong>website</strong>: a collection of related web pages that are organised and linked together. There are two big design jobs:</p>
+<div class="pair">
+  <div><h4>Structure (the inside)</h4><p>How the pages are organised and linked: which page leads to which.</p></div>
+  <div><h4>Layout (the outside)</h4><p>How each page looks: where text, pictures and menus sit.</p></div>
+</div>
+<ul>
+  <li><strong>Copyright:</strong> you need the owner's <strong>written permission</strong> before using their text, pictures, music or video.</li>
+  <li><strong>JavaScript</strong> is a scripting language that adds behaviour (decisions, calculations) to a page. In the syllabus it is called a scripting language, not a programming language, because it normally runs together with another application, the browser.</li>
+</ul>
+
+<h2 id="phases">Planning and organising a website</h2>
+<div class="tbl"><table>
+<tr><th>Phase</th><th>What you do</th></tr>
+<tr><td class="k">Planning</td><td><ul style="margin:0"><li>Identify the intended audience</li><li>Set clear objectives for the site</li><li>Design the information structure (inside)</li><li>Design the content and layout of each page (outside)</li><li>Prepare the materials: text, pictures, sound</li></ul></td></tr>
+<tr><td class="k">Building</td><td><ul style="margin:0"><li>Use an IDE (integrated development environment) authoring tool</li><li>Use suitable multimedia</li><li>Group the content into categories</li><li>Avoid very long pages</li><li>Keep a uniform design</li><li>Add hyperlinks so visitors can navigate</li><li>Make pages load in a reasonable time</li><li>Keep content updated</li></ul></td></tr>
+<tr><td class="k">Publishing and testing</td><td><ul style="margin:0"><li><strong>Publish:</strong> upload all pages and the files they need to a web server</li><li><strong>Test:</strong> find broken and missing hyperlinks, scan for outdated files, test the loading time of pages and the files they link to</li></ul></td></tr>
+</table></div>
+
+<h2 id="paths">Relative path and absolute path</h2>
+<p>A link needs to say where the target file is. There are two ways to say it.</p>
+<div class="tbl"><table>
+<tr><th></th><th>Relative path</th><th>Absolute path</th></tr>
+<tr><td class="k">Looks like</td><td><code>&lt;A href="../folder/file.html"&gt;</code></td><td><code>&lt;A href="https://www.abc.com/folder/file.html"&gt;</code></td></tr>
+<tr><td class="k">Starts from</td><td>The folder the current page is in</td><td>The full web address</td></tr>
+<tr><td class="k">Symbols</td><td><code>./</code> = this folder (a sub-folder or file in the same folder).<br><code>../</code> = go up one folder (the parent).</td><td>Full address including domain name</td></tr>
+<tr><td class="k">Risk</td><td>Breaks if you move the page without its target</td><td>Breaks if the domain name or a folder name changes</td></tr>
+</table></div>
+<div class="callout fix"><b class="t">Notes unclear</b><p>The notes write ".../" for "folder from the foot". The real symbol is <code>../</code> with two dots, and it means "go up to the parent folder".</p></div>
+
+<div class="demo">
+  <h4>Work out the path</h4>
+  <p class="hint">The site below has folders and files. Pick the page you are writing on and the file you want to link to.</p>
+  <div class="two">
+    <pre id="pt-tree" style="margin:0"></pre>
+    <div>
+      <div class="row"><label>This page is <select id="pt-from"></select></label></div>
+      <div class="row"><label>Link to <select id="pt-to"></select></label></div>
+      <div class="out" id="pt-out"></div>
+    </div>
+  </div>
+</div>
+
+<h2 id="structure">Structure: how pages are organised</h2>
+<p>Pick the structure that matches how visitors will use the site.</p>
+<div class="demo">
+  <h4>Four structures</h4>
+  <p class="hint">Choose a structure, then press Walk to follow a visitor.</p>
+  <div class="row">
+    <button class="btn" data-s="hier" aria-pressed="true">Hierarchical</button>
+    <button class="btn" data-s="lin" aria-pressed="false">Linear</button>
+    <button class="btn" data-s="cyc" aria-pressed="false">Cyclic</button>
+    <button class="btn" data-s="com" aria-pressed="false">Composite</button>
+    <button class="btn pri" id="st-walk">Walk</button>
+  </div>
+  <svg class="dia" id="st-svg" viewBox="0 0 520 220" role="img" aria-label="Site structure diagram"></svg>
+  <p class="status" id="st-text"></p>
+</div>
+<div class="tbl"><table>
+<tr><th>Structure</th><th>Idea</th><th>Best for</th></tr>
+<tr><td class="k">Hierarchical</td><td>A tree. The homepage (<code>index.html</code>) is the top-level page and the parent of all pages. Lower pages are its children. The most common structure.</td><td>Most websites, where visitors pick a topic</td></tr>
+<tr><td class="k">Linear</td><td>Pages in one fixed order, one after another. Simple and clear.</td><td>Self-learning sites, lessons to follow in order</td></tr>
+<tr><td class="k">Cyclic</td><td>Pages in an order that loops back to the start.</td><td>Repeating sequences, slide-show style</td></tr>
+<tr><td class="k">Composite</td><td>Hierarchical and cyclic combined.</td><td>Large sites with different needs in different parts</td></tr>
+</table></div>
+
+<h2 id="dw">Building with Adobe Dreamweaver CS3</h2>
+<p><strong>Adobe Dreamweaver</strong> is a web authoring tool: you design pages and manage the whole site visually, and its tools automate page design and site maintenance. Building a site goes through four jobs:</p>
+<div class="tbl"><table>
+<tr><th>Job</th><th>What it means</th></tr>
+<tr><td class="k">Defining</td><td>Give the new site a name and choose its local root folder (the folder on your computer that holds the site).</td></tr>
+<tr><td class="k">Managing</td><td>Create pages and build the site's structure. Manage files on your own computer and on the remote site. Track updates and broken links between files.</td></tr>
+<tr><td class="k">Designing</td><td>Use the tools, organised in bars and panels, to build the pages.</td></tr>
+<tr><td class="k">Uploading</td><td>Send all the required files to the web server through the Files panel.</td></tr>
+</table></div>
+
+<h2 id="check">Check yourself</h2>
+<details class="qa"><summary>Name the two main design jobs in web authoring.</summary><div><p>Structure (how pages are organised and linked) and layout (how each page looks).</p></div></details>
+<details class="qa"><summary>List what you should test before and after publishing.</summary><div><p>Broken and missing hyperlinks, outdated files, and the loading time of pages and the files they link to.</p></div></details>
+<details class="qa"><summary>A page in <code>pages/</code> links to <code>images/logo.png</code> in the site root. Write the relative path.</summary><div><p><code>../images/logo.png</code>: go up one folder out of <code>pages</code>, then into <code>images</code>.</p></div></details>
+<details class="qa"><summary>Why might an absolute path stop working?</summary><div><p>If the domain name or a folder name changes, the full address no longer points to the file.</p></div></details>
+<details class="qa"><summary>Which structure fits a self-study course, and why?</summary><div><p>Linear. Pages follow one clear order, so the learner always knows what comes next.</p></div></details>
+<details class="qa"><summary>Which page is the parent of all pages in a hierarchical site?</summary><div><p>The homepage, usually <code>index.html</code>.</p></div></details>
+<details class="qa"><summary>Name the four jobs in building a site with Dreamweaver.</summary><div><p>Defining, managing, designing, uploading.</p></div></details>
+
+</main>
+<script src="assets/app.js"></script>
+<script>
+/* Path calculator */
+(function () {
+  var files = ["index.html", "about.html", "images/logo.png", "images/photo.jpg", "pages/news.html", "pages/photos/gallery.html"];
+  var froms = ["index.html", "about.html", "pages/news.html", "pages/photos/gallery.html"];
+  U.$("#pt-tree").textContent =
+    "site/\n  index.html\n  about.html\n  images/\n    logo.png\n    photo.jpg\n  pages/\n    news.html\n    photos/\n      gallery.html";
+  var f = U.$("#pt-from"), t = U.$("#pt-to");
+  froms.forEach(function (x) { f.add(new Option(x, x)); });
+  files.forEach(function (x) { t.add(new Option(x, x)); });
+  t.value = "images/logo.png"; f.value = "pages/news.html";
+  function dir(p) { var a = p.split("/"); a.pop(); return a; }
+  function calc() {
+    var fd = dir(f.value), to = t.value.split("/"), td = to.slice(0, -1), name = to[to.length - 1];
+    var c = 0; while (c < fd.length && c < td.length && fd[c] === td[c]) c++;
+    var ups = fd.length - c, rest = td.slice(c).concat(name).join("/");
+    var rel = ups === 0 ? "./" + rest : new Array(ups + 1).join("../") + rest;
+    var tag = /\.(png|jpg)$/.test(name) ? '&lt;IMG src="' + rel + '"&gt;' : '&lt;A href="' + rel + '"&gt;link&lt;/A&gt;';
+    var how = [];
+    how.push("The page is in " + (fd.length ? "folder <code>" + fd.join("/") + "</code>" : "the site root") + ".");
+    if (ups > 0) how.push("Go up " + ups + " folder" + (ups > 1 ? "s" : "") + " with <code>" + new Array(ups + 1).join("../") + "</code>.");
+    if (td.length > c) how.push("Then go down into <code>" + td.slice(c).join("/") + "</code>.");
+    if (ups === 0 && td.length === c) how.push("The target is in the same folder, so use <code>./</code>.");
+    U.$("#pt-out").innerHTML = "Relative: <code>" + rel + "</code><br>Code: <code>" + tag + "</code><br>Absolute: <code>https://www.example.com/" + t.value + "</code><p class='small' style='margin:8px 0 0'>" + how.join(" ") + "</p>";
+  }
+  f.addEventListener("input", calc); t.addEventListener("input", calc); calc();
+})();
+
+/* Structures */
+(function () {
+  var svg = U.$("#st-svg"), text = U.$("#st-text"), cur = "hier", busy = false;
+  var S = {
+    hier: {
+      n: { home: [260, 30, "index.html"], a: [110, 100, "A"], b: [260, 100, "B"], c: [410, 100, "C"], a1: [60, 180, "A1"], a2: [160, 180, "A2"], c1: [360, 180, "C1"], c2: [460, 180, "C2"] },
+      e: [["home", "a"], ["home", "b"], ["home", "c"], ["a", "a1"], ["a", "a2"], ["c", "c1"], ["c", "c2"]], dir: false,
+      walk: ["home", "a", "a1", "a", "a2", "a", "home", "c", "c1"],
+      tx: "Hierarchical: from the homepage you drill down to a topic, then back up to choose another."
+    },
+    lin: {
+      n: { p1: [60, 110, "P1"], p2: [160, 110, "P2"], p3: [260, 110, "P3"], p4: [360, 110, "P4"], p5: [460, 110, "P5"] },
+      e: [["p1", "p2"], ["p2", "p3"], ["p3", "p4"], ["p4", "p5"]], dir: true,
+      walk: ["p1", "p2", "p3", "p4", "p5"],
+      tx: "Linear: one path only. The visitor reads P1, then P2, and so on in a fixed order."
+    },
+    cyc: {
+      n: { p1: [260, 30, "P1"], p2: [400, 90, "P2"], p3: [350, 180, "P3"], p4: [170, 180, "P4"], p5: [120, 90, "P5"] },
+      e: [["p1", "p2"], ["p2", "p3"], ["p3", "p4"], ["p4", "p5"], ["p5", "p1"]], dir: true,
+      walk: ["p1", "p2", "p3", "p4", "p5", "p1"],
+      tx: "Cyclic: the last page leads back to the first, so the sequence repeats."
+    },
+    com: {
+      n: { home: [260, 30, "index.html"], a: [110, 120, "A"], b: [260, 120, "B"], c: [410, 120, "C"], b1: [260, 190, "B1"] },
+      e: [["home", "a"], ["home", "b"], ["home", "c"], ["b", "b1"]], dir: false,
+      ring: [["a", "b"], ["b", "c"], ["c", "a"]],
+      walk: ["home", "a", "b", "c", "a", "home", "b", "b1"],
+      tx: "Composite: a hierarchy from the homepage, with a cycle (dashed) among sections A, B and C."
+    }
+  };
+  function draw(k) {
+    cur = k; var d = S[k]; svg.innerHTML = "";
+    var defs = U.svg("defs", {}, svg);
+    var m = U.svg("marker", { id: "arw", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+    U.svg("path", { d: "M0 0 L10 5 L0 10 z", style: "fill:var(--muted)" }, m);
+    function line(a, b, dashed) {
+      var A = d.n[a], B = d.n[b], dx = B[0] - A[0], dy = B[1] - A[1], L = Math.sqrt(dx * dx + dy * dy), r = 24;
+      var x1 = A[0] + dx / L * (d.dir || dashed ? r : 0), y1 = A[1] + dy / L * (d.dir || dashed ? r : 0);
+      var x2 = B[0] - dx / L * (d.dir || dashed ? r + 4 : 0), y2 = B[1] - dy / L * (d.dir || dashed ? r + 4 : 0);
+      var at = { x1: x1, y1: y1, x2: x2, y2: y2, "class": "wire" };
+      if (dashed) at["stroke-dasharray"] = "5 4";
+      if (d.dir || dashed) at["marker-end"] = "url(#arw)";
+      U.svg("line", at, svg);
+    }
+    d.e.forEach(function (p) { line(p[0], p[1], false); });
+    (d.ring || []).forEach(function (p) { line(p[0], p[1], true); });
+    Object.keys(d.n).forEach(function (id) {
+      var n = d.n[id], w = id === "home" ? 88 : 48;
+      var r = U.svg("rect", { x: n[0] - w / 2, y: n[1] - 16, width: w, height: 32, rx: 12, "class": "box", id: "sn-" + id }, svg);
+      var t = U.svg("text", { x: n[0], y: n[1] + 5, "class": "mid" }, svg); t.textContent = n[2];
+    });
+    text.textContent = d.tx;
+  }
+  async function walk() {
+    if (busy) return; busy = true; var k = cur, d = S[k]; draw(k);
+    var dot = U.svg("circle", { r: 7, "class": "pkt" }, svg);
+    var prev = d.n[d.walk[0]];
+    dot.style.transform = "translate(" + prev[0] + "px," + prev[1] + "px)";
+    for (var i = 0; i < d.walk.length; i++) {
+      var id = d.walk[i], n = d.n[id];
+      if (i > 0) await U.move(dot, prev, n, 600);
+      var el = U.$("#sn-" + id); if (el) el.setAttribute("class", "box on");
+      prev = n; await U.sleep(200);
+    }
+    dot.remove(); busy = false;
+  }
+  U.$$("[data-s]").forEach(function (b) {
+    b.onclick = function () { if (busy) return; U.$$("[data-s]").forEach(function (x) { x.setAttribute("aria-pressed", x === b); }); draw(b.dataset.s); };
+  });
+  U.$("#st-walk").onclick = walk;
+  draw("hier");
+})();
+</script>
+</body>
+</html>

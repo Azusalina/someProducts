@@ -8,7 +8,7 @@
     "rightActive": "#bedbea",
     "background": "#111714"
   },
-  "recognition_threads": 0,
+  "recognition_threads": 20,
   "recognition_memory_mb": 4096,
   "default_cache": "9befa9ad83de4b0599de1e079e32f2da",
   "score_overrides": {

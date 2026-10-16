@@ -1,13 +1,13 @@
 {
-  "date": "2026-10-15",
+  "date": "2026-10-16",
   "target": "x86_64-pc-windows-gnullvm",
   "compiler": "rustc 1.99.0",
   "linker": "LLVM-MinGW 20261006 UCRT",
   "binary": "bin/filex.exe",
-  "bytes": 943104,
-  "sha256": "28cfd1d4daa350ae56c60c0d48b9017f00fda93bca6fde64a1eff4a148e7ab89",
+  "bytes": 1065472,
+  "sha256": "14b5901a06be6d492c3a21c14b37e5f89b9ac31bcbc64ea65827412f14ce34f4",
   "passed": {
-    "linux_shared_rust_tests": 29,
+    "linux_shared_rust_tests": 38,
     "windows_release_cross_build": true,
     "windows_test_executable_cross_build": true,
     "powershell_scripts_parse": 5,
@@ -20,5 +20,6 @@
     "Windows test executable",
     "native clipboard and recycle bin",
     "IME and Windows RAM measurement"
-  ]
+  ],
+  "operations_validation": "operation-validation.json"
 }

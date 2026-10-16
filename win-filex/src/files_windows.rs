@@ -93,7 +93,7 @@ pub fn destination(source: &Path, text: &str) -> PathBuf {
         source.parent().unwrap_or(Path::new("/")).join(path)
     }
 }
-fn validate(source: &Path, dest: &Path) -> Result<(), String> {
+pub fn validate(source: &Path, dest: &Path) -> Result<(), String> {
     name_valid(
         dest.file_name()
             .and_then(|s| s.to_str())
@@ -423,6 +423,9 @@ pub fn cli_method<'a>(conf: &'a Config, requested: &'a str) -> Option<&'a str> {
 }
 pub fn open_command(path: &Path, conf: &Config, method: &str) -> Result<(Command, bool), String> {
     let opener = conf.openers.get(method).ok_or("打开程序未定义")?;
+    if !opener.supports(path) {
+        return Err("This opener does not support the selected file extension".into());
+    }
     let root = product_root();
     let toolkit = root.parent().unwrap_or(&root).join("toolkit");
     let mut args = opener

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch18 Services and Applications</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="hero-copy">
+    <p class="kicker">Chapter 18</p>
+    <h1>Services and applications</h1>
+    <p class="lead">Find information, judge it, and use the services built on the Internet.</p>
+  </div>
+  <div class="hero-vis" id="hero-vis" aria-hidden="true"></div>
+</header>
+
+<h2 id="search">Finding information</h2>
+<p>A <strong>search engine</strong> is a set of programs that finds web pages for you. It works in three moves:</p>
+<ol class="steps">
+  <li class="done"><strong>Crawl.</strong> A program called a spider (or bot) follows links across the World Wide Web and visits pages.</li>
+  <li class="done"><strong>Index.</strong> It stores the words of every page it found.</li>
+  <li class="done"><strong>Match.</strong> When you type keywords, it matches them against the stored pages and returns the pages that fit.</li>
+</ol>
+<div class="tbl"><table>
+<tr><th>Type of search engine</th><th>Example</th></tr>
+<tr><td class="k">General</td><td>Google, Yahoo</td></tr>
+<tr><td class="k">General, using natural language (you type a question)</td><td>Ask.com</td></tr>
+<tr><td class="k">Specialised (one subject)</td><td>Bloomberg.com (finance)</td></tr>
+<tr><td class="k">Meta-search (powered by other engines)</td><td>WebCrawler</td></tr>
+</table></div>
+
+<h3>Boolean search</h3>
+<div class="tbl"><table><tr><th>You type</th><th>Meaning</th></tr>
+<tr><td class="k"><code>AND</code></td><td>Both words must appear</td></tr>
+<tr><td class="k"><code>OR</code></td><td>Either word may appear</td></tr>
+<tr><td class="k"><code>NOT</code></td><td>The word after it must not appear</td></tr>
+<tr><td class="k"><code>"a b c"</code></td><td>Search for the whole phrase</td></tr>
+<tr><td class="k"><code>prog*</code></td><td>Wildcard: any ending (program, programming, ...)</td></tr></table></div>
+
+<div class="demo">
+  <h4>Try a search</h4>
+  <p class="hint">Eight pretend web pages. Type a query or click an example. (This tester is simplified: AND, OR and NOT must be capital letters.)</p>
+  <div class="row">
+    <input type="text" id="bs-q" value="hong kong AND tram" style="width:min(100%,320px)" aria-label="Search query">
+  </div>
+  <div class="row">
+    <button class="btn" data-q="hong kong AND tram">hong kong AND tram</button>
+    <button class="btn" data-q="tram OR mtr">tram OR mtr</button>
+    <button class="btn" data-q="python NOT snake">python NOT snake</button>
+    <button class="btn" data-q='"route map"'>"route map"</button>
+    <button class="btn" data-q="prog*">prog*</button>
+  </div>
+  <div class="tbl" style="margin-bottom:0"><table id="bs-res"></table></div>
+</div>
+
+<h3>Is the information any good?</h3>
+<p>Search results can be wrong, old or biased. The notes give six checks. Ask each question about any page you plan to use.</p>
+<div class="tbl"><table>
+<tr><th>Check</th><th>Ask yourself</th></tr>
+<tr><td class="k">Completeness</td><td>Does it cover the whole topic, or only a piece?</td></tr>
+<tr><td class="k">Accuracy</td><td>Are the facts correct? Can another source confirm them?</td></tr>
+<tr><td class="k">Authority</td><td>Who wrote it? Are they credible and qualified?</td></tr>
+<tr><td class="k">Objectivity</td><td>Is it fair, or does it push one side or try to sell something?</td></tr>
+<tr><td class="k">Timeliness</td><td>When was it written or updated? Is it still current?</td></tr>
+<tr><td class="k">Legality</td><td>Am I allowed to use and store it? (copyright)</td></tr>
+</table></div>
+
+
+<div class="demo">
+  <h4>Judge the page</h4>
+  <p class="hint">Each page has one main weakness. Pick the check it fails.</p>
+  <div id="jp-quiz"></div>
+</div>
+
+<h2 id="services">Internet services</h2>
+<p><strong>Web browsing</strong> means navigating, reading and interacting with sites on the World Wide Web. The web uses <strong>HTTP</strong> to move pages between a web server and your browser.</p>
+<div class="callout tip"><b class="t">WWW is not the Internet</b><p>The Internet (a very large WAN) is the network. The World Wide Web is one service that runs on it. E-mail and FTP are other services on the same network.</p></div>
+
+<h3>File types on the web</h3>
+<div class="tbl"><table>
+<tr><th>Kind</th><th>Formats</th><th>Remark</th></tr>
+<tr><td class="k">Bitmap graphics</td><td>JPG, GIF, PNG, BMP</td><td>Made of pixels. BMP is uncompressed (large files).</td></tr>
+<tr><td class="k">Vector graphics</td><td>WMF, SWF, EPS</td><td>Made of shapes described by formulas, so they scale without losing quality.</td></tr>
+<tr><td class="k">Audio (compressed)</td><td>WMA, MP3, AAC</td><td>WMA can also be streamed.</td></tr>
+<tr><td class="k">Video (can be streamed)</td><td>WMV, RM, MOV, MP4</td><td>AVI is not a streaming format.</td></tr>
+</table></div>
+
+<div class="demo">
+  <h4>Bitmap or vector: zoom in</h4>
+  <p class="hint">Both pictures show the same circle. Drag to enlarge them.</p>
+  <div class="row"><label>Size <input type="range" id="bv-size" min="40" max="260" value="60"></label></div>
+  <div class="two" style="align-items:end">
+    <div><canvas id="bv-bit" width="16" height="16" style="image-rendering:pixelated;box-shadow:inset 0 0 0 1px var(--line-strong);border-radius:12px"></canvas><p class="small" style="margin:4px 0 0">Bitmap (16 x 16 pixels): the pixels become visible blocks.</p></div>
+    <div><svg id="bv-vec" viewBox="0 0 16 16" style="box-shadow:inset 0 0 0 1px var(--line-strong);border-radius:12px"><circle cx="8" cy="8" r="6" fill="var(--accent)"/></svg><p class="small" style="margin:4px 0 0">Vector: redrawn from a formula, so the edge stays smooth.</p></div>
+  </div>
+</div>
+
+<h3>Other services</h3>
+<div class="tbl"><table>
+<tr><th>Service</th><th>What it does</th></tr>
+<tr><td class="k">Plug-in</td><td>A small program added to a web browser to give extra functions (for example, play a certain video type). It keeps the browser itself small.</td></tr>
+<tr><td class="k">FTP</td><td>Transfers files between computers. Needs a user name and password, or allows <strong>anonymous FTP</strong> for public files.</td></tr>
+<tr><td class="k">E-mail</td><td>Sends digital documents between computers. Can send plain text (ASCII) or a binary file (attachment). Protocols: SMTP, POP, IMAP.</td></tr>
+<tr><td class="k">Newsgroup</td><td>Read and post text messages (with graphics and hyperlinks) on a topic.</td></tr>
+<tr><td class="k">Discussion forum</td><td>Similar to a newsgroup, on a web page: post messages with text, graphics and hyperlinks.</td></tr>
+<tr><td class="k">Online chat</td><td>1-to-1 or 1-to-many conversations by voice or by messages (text and graphics).</td></tr>
+<tr><td class="k">Remote logon</td><td>Connect to a server through the Internet or a public network. Protocols: Telnet and SSH. SSH is more secure because it <strong>encrypts</strong> the connection.</td></tr>
+</table></div>
+
+<div class="demo">
+  <h4>How an e-mail travels</h4>
+  <p class="hint">Press Next to send the message one hop at a time.</p>
+  <svg class="dia" id="em-svg" viewBox="0 0 520 170" role="img" aria-label="Sender, sender's mail server, receiver's mail server and receiver"></svg>
+  <ol class="steps" id="em-steps"></ol>
+  <div class="row"><button class="btn pri" id="em-next">Next</button><button class="btn" id="em-reset">Restart</button></div>
+  <p class="small" style="margin:8px 0 0">Extra explanation: with POP the receiver's program usually downloads the mail and removes it from the server; with IMAP the mail stays on the server and your devices stay in sync.</p>
+</div>
+
+<h2 id="tech">Streaming and Internet technologies</h2>
+<p><strong>Streaming technology</strong> downloads a small part of an audio or video file and starts playing it at once, while the rest keeps arriving. You do not wait for the whole file.</p>
+<div class="demo">
+  <h4>Download first or stream</h4>
+  <p class="hint">Same file, same speed. A fast animation: 1 second here stands for a longer time in real life.</p>
+  <p class="small" style="margin:0">Download, then play</p>
+  <div style="position:relative;height:14px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:4px 0">
+    <div id="st-a-d" style="position:absolute;inset:0;background:var(--accent-soft);transform-origin:left;transform:scaleX(0)"></div>
+    <div id="st-a-p" style="position:absolute;inset:0;background:var(--accent);transform-origin:left;transform:scaleX(0)"></div>
+  </div>
+  <p class="small" id="st-a-t" style="margin:0 0 12px">Ready</p>
+  <p class="small" style="margin:0">Streaming</p>
+  <div style="position:relative;height:14px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:4px 0">
+    <div id="st-b-d" style="position:absolute;inset:0;background:var(--accent-soft);transform-origin:left;transform:scaleX(0)"></div>
+    <div id="st-b-p" style="position:absolute;inset:0;background:var(--accent);transform-origin:left;transform:scaleX(0)"></div>
+  </div>
+  <p class="small" id="st-b-t" style="margin:0">Ready</p>
+  <div class="row"><button class="btn pri" id="st-go">Start both</button></div>
+  <p class="small" style="margin:0">Light teal = downloaded so far. Dark teal = already played.</p>
+</div>
+<div class="tbl"><table>
+<tr><th>Application of streaming</th><th>What it is</th></tr>
+<tr><td class="k">Webcasting</td><td>Broadcasting multimedia content using streaming</td></tr>
+<tr><td class="k">Voice mail</td><td>Sending voice messages to users who are offline</td></tr>
+<tr><td class="k">Video conferencing</td><td>Real-time video display for interactive communication</td></tr>
+</table></div>
+
+<h2 id="apps">Internet applications</h2>
+<div class="tbl"><table>
+<tr><th>Application</th><th>What it is</th><th>Why it helps / examples</th></tr>
+<tr><td class="k">E-commerce</td><td>Doing business online. <strong>B2C</strong>: business sells to consumer. <strong>B2B</strong>: business sells to business. <strong>C2C</strong>: consumer sells to consumer.</td><td>Payment by <strong>EFT</strong> and orders by <strong>EDI</strong> make work more accurate and lower administration cost. Examples in notes: Taobao, Yahoo.</td></tr>
+<tr><td class="k">E-government</td><td>Government services delivered online.</td><td>Better service quality, faster delivery, more effective. Example: gov.hk.</td></tr>
+<tr><td class="k">E-learning</td><td>Learning through computer and communication technology.</td><td>Flexible, lower cost, up-to-date knowledge and skills. Example: web-based training.</td></tr>
+<tr><td class="k">Online entertainment</td><td>Games, music and video online.</td><td>Flexible, lower cost, relaxing. Some content needs filtering or age rating (the notes say "censored contents").</td></tr>
+</table></div>
+<ul class="small">
+  <li><strong>EFT</strong> (Electronic Funds Transfer): moving money from one bank account to another through a computer network.</li>
+  <li><strong>EDI</strong> (Electronic Data Interchange): agreed standards for sending business documents (orders, invoices) electronically.</li>
+</ul>
+<div class="callout fix"><b class="t">Notes unclear</b><p>The notes' footnote writes "ETF" for Electronic Funds Transfer. The correct abbreviation is EFT.</p></div>
+
+<h3>File format abbreviations</h3>
+<div class="tbl"><table>
+<tr><th>Short</th><th>Full name</th><th>Short</th><th>Full name</th></tr>
+<tr><td class="k">AAC</td><td>Advanced Audio Coding</td><td class="k">PNG</td><td>Portable Network Graphics</td></tr>
+<tr><td class="k">EPS</td><td>Encapsulated PostScript</td><td class="k">SWF</td><td>Shockwave Flash</td></tr>
+<tr><td class="k">FTP</td><td>File Transfer Protocol</td><td class="k">WAV</td><td>Waveform Audio Format</td></tr>
+<tr><td class="k">GIF</td><td>Graphics Interchange Format</td><td class="k">WMA</td><td>Windows Media Audio</td></tr>
+<tr><td class="k">JPEG</td><td>Joint Photographic Experts Group</td><td class="k">WMF</td><td>Windows Metafile</td></tr>
+<tr><td class="k">MP3</td><td>MPEG-1 Audio Layer 3</td><td class="k">WMV</td><td>Windows Media Video</td></tr>
+</table></div>
+
+<h2 id="check">Check yourself</h2>
+<details class="qa"><summary>What does the spider of a search engine do?</summary><div><p>It follows links to find web pages and stores their content so the engine can match your keywords later.</p></div></details>
+<details class="qa"><summary>Write a search that finds pages about "python" but not "snake".</summary><div><p><code>python NOT snake</code></p></div></details>
+<details class="qa"><summary>List the six checks for judging information.</summary><div><p>Completeness, accuracy, authority, objectivity, timeliness, legality.</p></div></details>
+<details class="qa"><summary>Why are vector graphics good for logos that must be printed at many sizes?</summary><div><p>They are stored as shapes and formulas, so they can be scaled up without becoming blocky.</p></div></details>
+<details class="qa"><summary>Why is SSH preferred over Telnet?</summary><div><p>SSH encrypts the data, so a password cannot be read by someone watching the network.</p></div></details>
+<details class="qa"><summary>What is the advantage of streaming?</summary><div><p>Playback starts almost at once; you do not wait for the full file to download.</p></div></details>
+<details class="qa"><summary>Which protocols are used for e-mail?</summary><div><p>SMTP to send; POP or IMAP to receive.</p></div></details>
+<details class="qa"><summary>What do EFT and EDI do for e-commerce?</summary><div><p>EFT moves money between bank accounts. EDI exchanges business documents in a standard format. Together they raise accuracy and cut administration cost.</p></div></details>
+
+</main>
+<script src="assets/app.js"></script>
+<script>
+/* Boolean search tester */
+(function () {
+  var pages = [
+    "Hong Kong tram history, routes and timetable",
+    "Hong Kong MTR fares and route map",
+    "Learn Python programming for beginners",
+    "Python snake care guide for pet owners",
+    "Tram ticket prices in Hong Kong",
+    "Java programming course outline",
+    "Hong Kong weather forecast this week",
+    "Cheap flights from Hong Kong to Tokyo"
+  ];
+  var q = U.$("#bs-q"), res = U.$("#bs-res");
+  function termTest(t, text) {
+    t = t.toLowerCase();
+    if (t.charAt(0) === '"') return text.indexOf(t.replace(/"/g, "")) >= 0;
+    if (t.slice(-1) === "*") return new RegExp("\\b" + t.slice(0, -1).replace(/[^a-z0-9 ]/g, "") + "\\w*").test(text);
+    return new RegExp("\\b" + t.replace(/[^a-z0-9 ]/g, "") + "\\b").test(text);
+  }
+  function parse(s) {
+    var toks = s.match(/"[^"]*"|\S+/g) || [], groups = [[]], neg = false, cur = [];
+    /* merge adjacent plain words into one phrase so "hong kong" works */
+    var merged = [];
+    toks.forEach(function (t) {
+      var op = t === "AND" || t === "OR" || t === "NOT";
+      if (!op && merged.length && merged[merged.length - 1].plain && !/^"/.test(t) && !/^"/.test(merged[merged.length - 1].t)) {
+        merged[merged.length - 1].t += " " + t;
+      } else merged.push({ t: t, plain: !op });
+    });
+    merged.forEach(function (m) {
+      var t = m.t;
+      if (t === "OR") groups.push([]);
+      else if (t === "NOT") neg = true;
+      else if (t === "AND") { /* implied */ }
+      else { groups[groups.length - 1].push({ t: t, neg: neg }); neg = false; }
+    });
+    return groups;
+  }
+  function run() {
+    var groups = parse(q.value);
+    res.innerHTML = pages.map(function (p) {
+      var text = p.toLowerCase();
+      var hit = groups.some(function (g) {
+        var pos = g.filter(function (x) { return !x.neg; });
+        return pos.length > 0 && g.every(function (x) { return x.neg ? !termTest(x.t, text) : termTest(x.t, text); });
+      });
+      return "<tr><td style='width:90px;font-weight:" + (hit ? 700 : 400) + ";color:" + (hit ? "var(--accent)" : "var(--muted)") + "'>" + (hit ? "match" : "no match") + "</td><td style='color:" + (hit ? "var(--text)" : "var(--muted)") + "'>" + U.esc(p) + "</td></tr>";
+    }).join("");
+  }
+  q.addEventListener("input", run);
+  U.$$("[data-q]").forEach(function (b) { b.onclick = function () { q.value = b.dataset.q; run(); }; });
+  run();
+})();
+
+/* Bitmap vs vector */
+(function () {
+  var c = U.$("#bv-bit"), g = c.getContext("2d");
+  var cs = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#0f766e";
+  g.fillStyle = cs;
+  for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+    var dx = x + 0.5 - 8, dy = y + 0.5 - 8;
+    if (dx * dx + dy * dy <= 36) g.fillRect(x, y, 1, 1);
+  }
+  var r = U.$("#bv-size");
+  function set() { var v = r.value + "px"; c.style.width = v; c.style.height = v; var s = U.$("#bv-vec"); s.style.width = v; s.style.height = v; }
+  r.addEventListener("input", set); set();
+})();
+
+/* E-mail path */
+(function () {
+  var svg = U.$("#em-svg"), list = U.$("#em-steps"), i = 0, busy = false;
+  var N = [[62, 95], [194, 95], [326, 95], [458, 95]];
+  var names = [["Sender's", "computer"], ["Sender's", "mail server"], ["Receiver's", "mail server"], ["Receiver's", "computer"]];
+  var links = ["SMTP", "SMTP", "POP3 or IMAP"];
+  var steps = [
+    [0, 1, "You write the message and press Send. Your mail program hands it to your mail server using SMTP."],
+    [1, 2, "Your mail server passes it to the receiver's mail server, again using SMTP."],
+    [2, 2, "The receiver's mail server stores the message in the receiver's mailbox and waits."],
+    [2, 3, "When the receiver opens their mail program, it collects the message using POP3 or IMAP."]
+  ];
+  steps.forEach(function (s) { var li = document.createElement("li"); li.textContent = s[2]; list.appendChild(li); });
+  var env;
+  function build() {
+    svg.innerHTML = "";
+    for (var k = 0; k < 3; k++) {
+      U.svg("line", { x1: N[k][0] + 52, y1: N[k][1], x2: N[k + 1][0] - 52, y2: N[k + 1][1], "class": "wire" }, svg);
+      var t = U.svg("text", { x: (N[k][0] + N[k + 1][0]) / 2, y: N[k][1] - 12, "class": "sm mid" }, svg); t.textContent = links[k];
+    }
+    N.forEach(function (n, k) {
+      U.svg("rect", { x: n[0] - 52, y: n[1] - 28, width: 104, height: 56, rx: 12, "class": "box" }, svg);
+      var a = U.svg("text", { x: n[0], y: n[1] - 3, "class": "mid" }, svg); a.textContent = names[k][0];
+      var b = U.svg("text", { x: n[0], y: n[1] + 14, "class": "mid" }, svg); b.textContent = names[k][1];
+    });
+    env = U.svg("rect", { x: -9, y: -6, width: 18, height: 12, rx: 2, "class": "pkt" }, svg);
+    env.style.transform = "translate(" + N[0][0] + "px," + N[0][1] + "px)";
+  }
+  function draw() { U.$$("li", list).forEach(function (li, k) { li.className = k === i - 1 ? "on" : (k < i - 1 ? "done" : ""); }); U.$("#em-next").disabled = i >= steps.length; }
+  U.$("#em-next").onclick = async function () {
+    if (busy || i >= steps.length) return; busy = true;
+    var s = steps[i]; i++; draw();
+    if (s[0] === s[1]) await U.sleep(900); else await U.move(env, N[s[0]], N[s[1]], 1000);
+    busy = false;
+  };
+  U.$("#em-reset").onclick = function () { if (busy) return; i = 0; build(); draw(); };
+  build(); draw();
+})();
+
+/* Streaming vs download */
+(function () {
+  var go = U.$("#st-go"), raf = null;
+  function set(id, v) { U.$(id).style.transform = "scaleX(" + Math.max(0, Math.min(1, v)) + ")"; }
+  var DL = 4, PLAY = 6, BUF = 0.8; /* seconds on this page */
+  go.onclick = function () {
+    if (raf) cancelAnimationFrame(raf);
+    var t0 = performance.now();
+    function frame(now) {
+      var t = (now - t0) / 1000;
+      var dl = t / DL;
+      set("#st-a-d", dl); set("#st-b-d", dl);
+      var a = (t - DL) / PLAY, b = (t - BUF) / PLAY;
+      set("#st-a-p", a); set("#st-b-p", Math.min(b, dl));
+      U.$("#st-a-t").textContent = t < DL ? "Waiting for the whole file... " + Math.min(100, Math.round(dl * 100)) + "% downloaded" : (a < 1 ? "Playing" : "Finished");
+      U.$("#st-b-t").textContent = t < BUF ? "Buffering a little..." : (b < 1 ? "Playing while it downloads" : "Finished");
+      if (t < DL + PLAY + 0.2) raf = requestAnimationFrame(frame); else raf = null;
+    }
+    raf = requestAnimationFrame(frame);
+  };
+})();
+
+/* Judge the page */
+U.quiz(U.$("#jp-quiz"), [
+  { q: "A page about Wi-Fi speeds was last updated in 2008 and never mentions 802.11n.", a: 4, why: "Out-of-date content fails timeliness." },
+  { q: "A web page states that IPv4 addresses have 64 bits.", a: 1, why: "IPv4 uses 32 bits, so the fact is wrong: accuracy." },
+  { q: "An anonymous post gives detailed exam-rule advice and names no source.", a: 2, why: "Nobody credible stands behind it: authority." },
+  { q: "A shop's review page says its own laptop is the only good one and every rival is rubbish.", a: 3, why: "One-sided and trying to sell: objectivity." },
+  { q: "A site copies a whole chapter of a textbook without permission.", a: 5, why: "You may not use or store it freely: legality." },
+  { q: "An article called 'Network services' explains only e-mail.", a: 0, why: "It leaves most of the topic out: completeness." }
+], ["Completeness", "Accuracy", "Authority", "Objectivity", "Timeliness", "Legality"]);
+</script>
+</body>
+</html>
