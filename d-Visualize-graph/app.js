@@ -6,7 +6,7 @@
   const darkPalette=['#79adff','#ff8b86','#7dc5a2','#c59aed','#e2b66c','#77cbd1'];
   const distributionsSeen=new Set();let autoProbabilityId=null,restoringView=false;
   let nextId=1,toolsOpen=false;
-  const row=text=>({id:nextId++,text,color:palette[(nextId-2)%palette.length],visible:true,min:-10,max:10,step:0.1});
+  const row=text=>({id:nextId++,text,color:palette[(nextId-2)%palette.length],visible:true,customColor:false,min:-10,max:10,step:0.1});
   let state={version:1,rows:[row('')],view:{cx:0,cy:0,scale:65},angle:'rad',grid:true,source:null,tangent:false,tx:1,integral:false,a:0,b:Math.PI,panel:true,theme:'light',areaColor:'#376ca3',intersections:[]};
   let model,history=[],future=[],dirty=false,drawRequest=0,historyTimer,activeId=state.rows[0].id;
   let width=0,height=0,ratio=1,renderRevision=0,implicitRequest=0,hoverRequest=0,cache=new Map(),drag=null,hover=null,notice='',noticeUntil=0;
@@ -26,6 +26,7 @@
     for(const r of s.rows){
       if(!Number.isSafeInteger(r.id)||r.id<1||ids.has(r.id)||typeof r.text!=='string'||r.text.length>600||!/^#[0-9a-f]{6}$/i.test(r.color)||typeof r.visible!=='boolean')throw Error('无效表达式行');
       if(!finite(r.min,-1e12,1e12)||!finite(r.max,-1e12,1e12)||r.min>=r.max||!finite(r.step,1e-9,1e12))throw Error('无效滑块范围');
+      if(r.customColor===undefined)r.customColor=false;if(typeof r.customColor!=='boolean')throw Error('无效自定义颜色');
       ids.add(r.id);
     }
     if(s.intersections===undefined)s.intersections=[];if(!Array.isArray(s.intersections)||s.intersections.length>2016||s.intersections.some(p=>!Array.isArray(p)||p.length!==2||p[0]===p[1]||p.some(id=>!ids.has(id))))throw Error('无效交点选择');
@@ -55,7 +56,7 @@
       const item=make('div','expression');item.dataset.id=r.id;item.classList.toggle('intersection-pick',pendingExpression===r.id);
       item.addEventListener('pointerdown',e=>{if(e.button===0&&e.ctrlKey){e.preventDefault();e.stopPropagation();selectIntersectionExpression(r.id);}},{capture:true});
       const line=make('div','expression-row'),input=make('math-field');
-      item.style.setProperty('--color',displayColor(r.color));item.classList.toggle('hidden-curve',!r.visible);
+      item.style.setProperty('--color',displayColor(r.color,r.customColor));item.classList.toggle('hidden-curve',!r.visible);
       input.setAttribute('aria-label',`表达式 ${state.rows.indexOf(r)+1}`);
       input.onfocus=()=>{activeId=r.id;updateActiveTools();};
       input.oninput=()=>{
@@ -87,10 +88,10 @@
   function focusRow(id){const input=document.querySelector(`.expression[data-id="${id}"] math-field`);if(input){input.focus();input.position=input.lastOffset;activeId=id;}}
   function setTools(open){toolsOpen=open;if(open)state.panel=true;document.body.classList.toggle('tools-open',open);$('tools-toggle').setAttribute('aria-expanded',String(open));document.body.classList.toggle('panel-hidden',!open||!state.panel);if(!open){$('source-options').hidden=true;$('tool-controls').hidden=true;$('controls-toggle').setAttribute('aria-expanded','false');window.mathVirtualKeyboard?.hide({animate:false});canvas.focus({preventScroll:true});}}
   function activeRow(){return state.rows.find(r=>r.id===activeId)||state.rows[0];}
-  function displayColor(color){const i=palette.indexOf(color);return state.theme==='dark'&&i>=0?darkPalette[i]:color;}
+  function displayColor(color,custom=false){const i=palette.indexOf(color);return state.theme==='dark'&&!custom&&i>=0?darkPalette[i]:color;}
   function plotColors(){return state.theme==='dark'?{bg:'#181c21',grid:'#313a43',axis:'#7d8a98',text:'#a8b5c3',cursor:'#aebfce',tangent:'#c1cdd8'}:{bg:'#fff',grid:'#eaeaea',axis:'#a5aaa7',text:'#808583',cursor:'#677788',tangent:'#5f6d7a'};}
-  function applyTheme(){document.documentElement.dataset.theme=state.theme;$('theme-toggle').setAttribute('aria-pressed',String(state.theme==='dark'));for(const r of state.rows)document.querySelector(`.expression[data-id="${r.id}"]`)?.style.setProperty('--color',displayColor(r.color));updateActiveTools();}
-  function updateActiveTools(){const r=activeRow();$('visibility').setAttribute('aria-pressed',String(!!r?.visible));$('cycle-color').style.color=displayColor(r?.color||palette[0]);}
+  function applyTheme(){document.documentElement.dataset.theme=state.theme;$('theme-toggle').setAttribute('aria-pressed',String(state.theme==='dark'));for(const r of state.rows)document.querySelector(`.expression[data-id="${r.id}"]`)?.style.setProperty('--color',displayColor(r.color,r.customColor));updateActiveTools();}
+  function updateActiveTools(){const r=activeRow();$('visibility').setAttribute('aria-pressed',String(!!r?.visible));$('expression-color').value=r?.color||palette[0];$('cycle-color').style.color=displayColor(r?.color||palette[0],r?.customColor);}
   function addRow(text='',index=state.rows.length){
     if(state.rows.length>=64){flash('最多 64 行');return;}
     checkpoint();dirty=false;state.panel=true;setTools(true);syncControls();const r=row(text);state.rows.splice(index,0,r);renderRows();compileRows();persist();focusRow(r.id);
@@ -181,23 +182,23 @@
     ctx.strokeStyle=colors.axis;ctx.beginPath();ctx.moveTo(zx,0);ctx.lineTo(zx,height);ctx.moveTo(0,zy);ctx.lineTo(width,zy);ctx.stroke();if(zx>=0&&zx<width&&zy>=0&&zy<height){ctx.fillStyle=colors.text;ctx.fillText('0',zx+6,zy+17);}
   }
   function drawCurve(e){
-    if(e.complexScalar){const z=C.is(e.value)?e.value:C.make(e.value);if(!C.finite(z))return;const p=toScreen(z.re,z.im);ctx.fillStyle=displayColor(e.color);ctx.beginPath();ctx.arc(...p,4,0,Math.PI*2);ctx.fill();graphLabel('complex-'+e.id,...p,complexTex(z),displayColor(e.color));return;}
+    if(e.complexScalar){const z=C.is(e.value)?e.value:C.make(e.value);if(!C.finite(z))return;const p=toScreen(z.re,z.im);ctx.fillStyle=displayColor(e.color,e.customColor);ctx.beginPath();ctx.arc(...p,4,0,Math.PI*2);ctx.fill();graphLabel('complex-'+e.id,...p,complexTex(z),displayColor(e.color,e.customColor));return;}
     if(e.complex){for(const part of ['re','im']){const fn=x=>{const z=e.fn(x);return C.is(z)?z[part]:part==='re'?z:0;};drawCurve({...e,id:e.id+'-'+part,fn,complex:false,integral:null,componentDash:part==='im',hasIntegral:false});}return;}
     if(e.discrete){
-      let data=cache.get(e.id);if(!data){data=P.sampleDiscrete(sourceFn(e),state.view,width,height,e.distribution?.support);cache.set(e.id,data);}const base=toScreen(0,0)[1],color=displayColor(e.color);ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();for(const p of data.points){ctx.moveTo(p.px,base);ctx.lineTo(p.px,p.py);}ctx.stroke();ctx.fillStyle=color;ctx.beginPath();for(const p of data.points){ctx.moveTo(p.px+3,p.py);ctx.arc(p.px,p.py,3,0,Math.PI*2);}ctx.fill();
+      let data=cache.get(e.id);if(!data){data=P.sampleDiscrete(sourceFn(e),state.view,width,height,e.distribution?.support);cache.set(e.id,data);}const base=toScreen(0,0)[1],color=displayColor(e.color,e.customColor);ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();for(const p of data.points){ctx.moveTo(p.px,base);ctx.lineTo(p.px,p.py);}ctx.stroke();ctx.fillStyle=color;ctx.beginPath();for(const p of data.points){ctx.moveTo(p.px+3,p.py);ctx.arc(p.px,p.py,3,0,Math.PI*2);}ctx.fill();
       if(state.integral&&state.source===e.id&&state.a<=state.b){ctx.fillStyle=state.areaColor+'50';for(const p of data.points)if(p.x>=Math.ceil(state.a)&&p.x<=Math.floor(state.b))ctx.fillRect(p.px-4,Math.min(base,p.py),8,Math.abs(base-p.py));}return;
     }
-    if(e.step){const [left]=fromScreen(0,0),[right]=fromScreen(width,0),stride=Math.max(1,Math.ceil((right-left)/4096));ctx.strokeStyle=displayColor(e.color);ctx.fillStyle=displayColor(e.color);ctx.lineWidth=1.7;for(let k=Math.floor(left);k<=right;k+=stride){const y=sourceFn(e)(k);if(!Number.isFinite(y))continue;const [px,py]=toScreen(k,y),end=toScreen(k+stride,y)[0];ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(end,py);ctx.stroke();ctx.beginPath();ctx.arc(px,py,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(end,py,2.5,0,Math.PI*2);ctx.stroke();}return;
+    if(e.step){const [left]=fromScreen(0,0),[right]=fromScreen(width,0),stride=Math.max(1,Math.ceil((right-left)/4096));ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.fillStyle=displayColor(e.color,e.customColor);ctx.lineWidth=1.7;for(let k=Math.floor(left);k<=right;k+=stride){const y=sourceFn(e)(k);if(!Number.isFinite(y))continue;const [px,py]=toScreen(k,y),end=toScreen(k+stride,y)[0];ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(end,py);ctx.stroke();ctx.beginPath();ctx.arc(px,py,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(end,py,2.5,0,Math.PI*2);ctx.stroke();}return;
     }
     if(e.kind==='vertical'){
-      const x=e.fn(0);if(!Number.isFinite(x))return;const px=toScreen(x,0)[0];ctx.strokeStyle=displayColor(e.color);ctx.lineWidth=2;ctx.beginPath();let pen=false;
+      const x=e.fn(0);if(!Number.isFinite(x))return;const px=toScreen(x,0)[0];ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.lineWidth=2;ctx.beginPath();let pen=false;
       for(let py=0;py<=height;py+=2){const y=fromScreen(px,py)[1];if(e.allowed&&!e.allowed(x,y)){pen=false;continue;}if(pen)ctx.lineTo(px,py);else ctx.moveTo(px,py);pen=true;}ctx.stroke();return;
     }
     if(e.kind==='point'){
-      const [x,y]=e.point;if(![x,y].every(Number.isFinite)||e.allowed&&!e.allowed(x,y))return;const [px,py]=toScreen(x,y);ctx.fillStyle=displayColor(e.color);ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fill();graphLabel('point-'+e.id,px,py,`\\left(${numberTex(x)},${numberTex(y)}\\right)`,displayColor(e.color));return;
+      const [x,y]=e.point;if(![x,y].every(Number.isFinite)||e.allowed&&!e.allowed(x,y))return;const [px,py]=toScreen(x,y);ctx.fillStyle=displayColor(e.color,e.customColor);ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fill();graphLabel('point-'+e.id,px,py,`${e.name?L.identifier(e.name)+'=':''}\\left(${numberTex(x)},${numberTex(y)}\\right)`,displayColor(e.color,e.customColor));return;
     }
     let data=cache.get(e.id);if(!data){data=P.sampleCurve(e.integral?e.fn:sourceFn(e),state.view,width,height,{integral:e.hasIntegral});cache.set(e.id,data);}
-    ctx.strokeStyle=displayColor(e.color);ctx.lineWidth=2;ctx.lineJoin='round';ctx.setLineDash(e.integral||e.componentDash?[5,4]:[]);ctx.beginPath();
+    ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.lineWidth=2;ctx.lineJoin='round';ctx.setLineDash(e.integral||e.componentDash?[5,4]:[]);ctx.beginPath();
     for(const segment of data.segments){if(!segment.length)continue;ctx.moveTo(segment[0].px,segment[0].py);for(let i=1;i<segment.length;i++)ctx.lineTo(segment[i].px,segment[i].py);}ctx.stroke();ctx.setLineDash([]);
   }
   function shadeIntegral(){
@@ -243,14 +244,14 @@
     }
     if(intersectionNotice){notice=coincident?'存在重合部分，交点不是有限集合':total?`${total} 个可见交点`:'未检测到可见交点';noticeUntil=Date.now()+5500;$('status').textContent=notice;intersectionNotice=false;}
   }
-  function drawSegments(){for(const e of model.entries){if(e.error||!e.visible||!e.segment)continue;const a=toScreen(...e.segment[0]),b=toScreen(...e.segment[1]);ctx.strokeStyle=displayColor(e.color);ctx.fillStyle=displayColor(e.color);ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();for(const p of [a,b]){ctx.beginPath();ctx.arc(...p,3,0,Math.PI*2);ctx.fill();}graphLabel('segment-'+e.id,(a[0]+b[0])/2,(a[1]+b[1])/2,L.identifier(e.name||'l'+e.id),displayColor(e.color));}}
+  function drawSegments(){for(const e of model.entries){if(e.error||!e.visible||!e.segment)continue;const a=toScreen(...e.segment[0]),b=toScreen(...e.segment[1]);ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.fillStyle=displayColor(e.color,e.customColor);ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();for(const p of [a,b]){ctx.beginPath();ctx.arc(...p,3,0,Math.PI*2);ctx.fill();}graphLabel('segment-'+e.id,(a[0]+b[0])/2,(a[1]+b[1])/2,L.identifier(e.name||'l'+e.id),displayColor(e.color,e.customColor));}}
   function present(){drawSegments();drawIntersections();screen.drawImage(renderCanvas,0,0,width,height);}
   function flashRelation(){notice='含积分的隐式关系暂不绘制；请使用 y=int(…)';noticeUntil=Date.now()+5000;}
   function drawRelations(entries,revision,done){
     // Small frame slices bound UI blocking; edited expressions cancel stale work.
     const step=drag?12:7,definitions=model.entries.filter(e=>['variable','function'].includes(e.kind)||e.randomVariable).map(e=>[e.text,e.error]),environment=JSON.stringify([state.view,width,height,state.angle,definitions,step]);let ei=0,px=0,py=0,pending=null;
     const keys=new Map(entries.map(e=>[e,JSON.stringify([e.ast,e.restriction])+environment])),key=e=>keys.get(e);
-    function paint(e,data){ctx.fillStyle=displayColor(e.color)+(state.theme==='dark'?'30':'1c');for(const t of data.tiles)ctx.fillRect(...t);ctx.strokeStyle=displayColor(e.color);ctx.setLineDash(e.kind==='inequality'&&['<','>','!='].includes(e.op)?[3,3]:[]);ctx.beginPath();for(const [a,b]of data.lines){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();}
+    function paint(e,data){ctx.fillStyle=displayColor(e.color,e.customColor)+(state.theme==='dark'?'30':'1c');for(const t of data.tiles)ctx.fillRect(...t);ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.setLineDash(e.kind==='inequality'&&['<','>','!='].includes(e.op)?[3,3]:[]);ctx.beginPath();for(const [a,b]of data.lines){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();}
     function chunk(){
       implicitRequest=0;if(revision!==renderRevision)return;const until=performance.now()+6;
       ctx.save();ctx.lineWidth=1.5;
@@ -259,10 +260,10 @@
         try{
           if(e.kind==='inequality'){
             const [x,y]=fromScreen(px+step/2,py+step/2),v=e.fn(x,y),ok=Number.isFinite(v)&&({'<':v<0,'<=':v<=0,'>':v>0,'>=':v>=0,'!=':v!==0}[e.op]);
-            if(ok&&(!e.allowed||e.allowed(x,y))){ctx.fillStyle=displayColor(e.color)+(state.theme==='dark'?'30':'1c');ctx.fillRect(px,py,step,step);pending.tiles.push([px,py,step,step]);}
+            if(ok&&(!e.allowed||e.allowed(x,y))){ctx.fillStyle=displayColor(e.color,e.customColor)+(state.theme==='dark'?'30':'1c');ctx.fillRect(px,py,step,step);pending.tiles.push([px,py,step,step]);}
           }
           if(!e.allowed||e.allowed(p[0]+dx/2,p[1]+dy/2)){
-            const lines=P.contourCell(e.fn,p[0],p[1],dx,dy,toScreen);pending.lines.push(...lines);ctx.strokeStyle=displayColor(e.color);ctx.setLineDash(e.kind==='inequality'&&['<','>','!='].includes(e.op)?[3,3]:[]);
+            const lines=P.contourCell(e.fn,p[0],p[1],dx,dy,toScreen);pending.lines.push(...lines);ctx.strokeStyle=displayColor(e.color,e.customColor);ctx.setLineDash(e.kind==='inequality'&&['<','>','!='].includes(e.op)?[3,3]:[]);
             ctx.beginPath();for(const [a,b]of lines){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();
           }
         }catch{}
@@ -276,7 +277,7 @@
     ox.clearRect(0,0,width,height);if(pendingPoint){const p=toScreen(...pendingPoint);ox.strokeStyle=plotColors().cursor;ox.lineWidth=2;ox.beginPath();ox.arc(...p,6,0,Math.PI*2);ox.stroke();}if(!hover||drag){E.render($('readout'),'');return;}
     const [x,y]=fromScreen(...hover),colors=plotColors();let text=`x=${numberTex(x)},\\quad y=${numberTex(y)}`;
     ox.strokeStyle=colors.cursor;ox.lineWidth=1;ox.setLineDash([3,4]);ox.beginPath();ox.moveTo(hover[0],0);ox.lineTo(hover[0],height);ox.moveTo(0,hover[1]);ox.lineTo(width,hover[1]);ox.stroke();ox.setLineDash([]);
-    const e=source();if(e?.complex){E.render($('readout'),`x=${numberTex(x)},\\quad f(x)=${complexTex(e.fn(x))}`);return;}if(e){const at=e.discrete?Math.round(x):x,v=sourceFn(e)(at);if(Number.isFinite(v)){const p=toScreen(at,v);ox.fillStyle=displayColor(e.color);ox.beginPath();ox.arc(...p,3.5,0,Math.PI*2);ox.fill();text+=e.discrete?`\\\\${e.probability?'p':'f'}(${numberTex(at)})=${numberTex(v)}`:`\\\\f(x)=${numberTex(v)}${e.step?'':`,\\quad f'(x)=${numberTex(sourceDf(e,x))}`}`;}}
+    const e=source();if(e?.complex){E.render($('readout'),`x=${numberTex(x)},\\quad f(x)=${complexTex(e.fn(x))}`);return;}if(e){const at=e.discrete?Math.round(x):x,v=sourceFn(e)(at);if(Number.isFinite(v)){const p=toScreen(at,v);ox.fillStyle=displayColor(e.color,e.customColor);ox.beginPath();ox.arc(...p,3.5,0,Math.PI*2);ox.fill();text+=e.discrete?`\\\\${e.probability?'p':'f'}(${numberTex(at)})=${numberTex(v)}`:`\\\\f(x)=${numberTex(v)}${e.step?'':`,\\quad f'(x)=${numberTex(sourceDf(e,x))}`}`;}}
     E.render($('readout'),`\\begin{gathered}${text}\\end{gathered}`);
   }
   function position(e){const r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
@@ -335,6 +336,8 @@ canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type=
     if(e.key==='+'||e.key==='=')zoom(1.25);else if(e.key==='-')zoom(0.8);else if(e.key==='Home')resetView();
     else if(e.key.startsWith('Arrow')){autoProbabilityId=null;const delta=60/state.view.scale,dy=60/(state.view.yScale||state.view.scale);if(e.key==='ArrowLeft')state.view.cx-=delta;if(e.key==='ArrowRight')state.view.cx+=delta;if(e.key==='ArrowUp')state.view.cy+=dy;if(e.key==='ArrowDown')state.view.cy-=dy;changed(false);updateCalculus();}
   };
+  function zoomAxis(axis,factor){checkpoint();autoProbabilityId=null;const oldY=state.view.yScale||state.view.scale,clamp=n=>Math.max(1e-6,Math.min(1e8,n));if(axis==='x'){state.view.yScale=oldY;state.view.scale=clamp(state.view.scale*factor);}else state.view.yScale=clamp(oldY*factor);updateCalculus();changed(false);}
+  function resetEqualView(){checkpoint();autoProbabilityId=null;state.view={cx:0,cy:0,scale:65};updateCalculus();changed(false);}
   function resetView(){if(source()?.distribution){fitProbability(source());changed(false);updateCalculus();return;}autoProbabilityId=null;state.view={cx:0,cy:0,scale:Math.max(12,Math.min(width/20,height/12))};changed(false);updateCalculus();}
   function fitProbability(e){
     autoProbabilityId=e.id;if(!width||!height)return false;
@@ -357,7 +360,7 @@ canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type=
     if(implicitRequest){flash('关系绘制中');return;}
     const copy=canvas.cloneNode(false),c=copy.getContext('2d');c.setTransform(ratio,0,0,ratio,0,0);c.drawImage(canvas,0,0,width,height);
     c.font='12px KaTeX_Main, serif';
-    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('intersection-'))text=label.dataset.latex||text;if(text.startsWith('segment-'))text=model.entries.find(e=>e.id===Number(text.slice(8)))?.name||text;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const point=model.entries.find(e=>e.id===Number(text.slice(6)))?.point;if(!point)continue;text=`(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
+    for(const label of $('graph-labels').children){let text=label.dataset.key;if(text.startsWith('intersection-'))text=label.dataset.latex||text;if(text.startsWith('segment-'))text=model.entries.find(e=>e.id===Number(text.slice(8)))?.name||text;if(text.startsWith('complex-')){const z=model.entries.find(e=>e.id===Number(text.slice(8)))?.value;if(!z)continue;text=C.is(z)?`${P.format(z.re)}${z.im<0?'-':'+'}${P.format(Math.abs(z.im))}i`:P.format(z);}if(text.startsWith('point-')){const entry=model.entries.find(e=>e.id===Number(text.slice(6))),point=entry?.point;if(!point)continue;text=`${entry.name?entry.name+'=':''}(${P.format(point[0])}, ${P.format(point[1])})`;}c.fillStyle=label.style.color;c.fillText(text,parseFloat(label.style.left),parseFloat(label.style.top)+13);}
     copy.toBlob(blob=>{if(blob)download(blob,'graphVis.png');else flash('无法导出图像');},'image/png');
   };
   $('undo').onclick=()=>undo();$('redo').onclick=()=>undo(true);$('add').onclick=()=>addRow();
@@ -366,13 +369,15 @@ canvas.focus();checkpoint();dirty=false;const p=position(e),f=source();let type=
   $('controls-toggle').onclick=()=>{const controls=$('tool-controls');controls.hidden=!controls.hidden;$('controls-toggle').setAttribute('aria-expanded',String(!controls.hidden));};
   $('delete-expression').onclick=()=>deleteRow(activeRow().id);
   $('visibility').onclick=()=>{const r=activeRow();checkpoint();r.visible=!r.visible;document.querySelector(`.expression[data-id="${r.id}"]`).classList.toggle('hidden-curve',!r.visible);changed();};
-  $('cycle-color').onclick=()=>{const r=activeRow();checkpoint();r.color=palette[(palette.indexOf(r.color)+1)%palette.length];document.querySelector(`.expression[data-id="${r.id}"]`).style.setProperty('--color',displayColor(r.color));changed();};
+  $('cycle-color').onclick=()=>{const r=activeRow();checkpoint();r.customColor=false;r.color=palette[(palette.indexOf(r.color)+1)%palette.length];document.querySelector(`.expression[data-id="${r.id}"]`).style.setProperty('--color',displayColor(r.color,r.customColor));changed();};
+  $('expression-color').onfocus=()=>{checkpoint();dirty=false;};$('expression-color').oninput=()=>{beforeChange();const r=activeRow();r.color=$('expression-color').value;r.customColor=true;document.querySelector(`.expression[data-id="${r.id}"]`).style.setProperty('--color',r.color);changed();};$('expression-color').onchange=()=>{dirty=false;};
   $('keyboard-toggle').onclick=()=>{const input=document.querySelector(`.expression[data-id="${activeId}"] math-field`)||document.querySelector('math-field');input?.focus();const keyboard=window.mathVirtualKeyboard;if(keyboard.visible)keyboard.hide({animate:false});else keyboard.show({animate:false});};
   function keyboardState(){const keyboard=window.mathVirtualKeyboard;$('keyboard-toggle').setAttribute('aria-expanded',String(keyboard.visible));document.documentElement.style.setProperty('--keyboard-height',keyboard.visible?keyboard.boundingRect.height+'px':'0px');}
   window.mathVirtualKeyboard.addEventListener('virtual-keyboard-toggle',keyboardState);
   window.mathVirtualKeyboard.addEventListener('geometrychange',keyboardState);
   $('source-toggle').onclick=()=>{const options=$('source-options');options.hidden=!options.hidden;$('source-toggle').setAttribute('aria-expanded',String(!options.hidden));};
   $('zoom-in').onclick=()=>{checkpoint();zoom(1.25);};$('zoom-out').onclick=()=>{checkpoint();zoom(0.8);};$('reset-view').onclick=()=>{checkpoint();resetView();};$('fit-view').onclick=fitView;
+  $('reset-equal-view').onclick=resetEqualView;for(const axis of ['x','y']){ $('zoom-'+axis+'-in').onclick=()=>zoomAxis(axis,1.25);$('zoom-'+axis+'-out').onclick=()=>zoomAxis(axis,.8);}
   $('source').onchange=()=>{checkpoint();state.source=Number($('source').value);E.render($('source-value'),source()?L.toLatex(source().text):'');updateCalculus();changed(false);};
   $('add-derivative').onclick=()=>{const e=source();if(e)addRow(e.kind==='function'?`${e.name}'(x)`:`diff(${sourceExpression(e)})${M.normalize(e.text).match(/\{[^{}]+\}\s*$/)?.[0]||''}`);};
   $('add-integral').onclick=()=>{const e=source();if(e)addRow(e.discrete?`cdf(${M.normalize(distributionExpression(e))},x)`:`int(${sourceExpression(e)},${P.format(state.a,12)},x)`);};

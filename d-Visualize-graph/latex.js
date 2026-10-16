@@ -95,7 +95,7 @@
       const e=root.GraphMath.classify(source);let tex=astTex(e.ast);
       if(e.kind==='distribution'&&e.randomVariable)tex=identifier(e.randomVariable)+'\\sim '+tex;
       if(e.kind==='function')tex=identifier(e.name)+'\\left('+identifier(e.parameter)+'\\right)='+tex;
-      if(e.kind==='segment'&&e.name)tex=identifier(e.name)+'='+tex;
+      if(['segment','point'].includes(e.kind)&&e.name)tex=identifier(e.name)+'='+tex;
       if(e.kind==='variable')tex=identifier(e.name)+'='+tex;
       if(e.kind==='vertical')tex='x='+tex;
       if(e.kind==='curve'&&/^\s*y\s*=/.test(toPlain(source)))tex='y='+tex;

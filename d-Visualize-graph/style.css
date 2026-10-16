@@ -22,3 +22,5 @@ aside{display:flex;flex-direction:column;overflow:hidden;bottom:calc(8px + var(-
 #refresh-confirm{border:1px solid var(--line);border-radius:4px;padding:20px;color:inherit;background:#fff}#refresh-confirm::backdrop{background:#0005}#refresh-confirm>div{display:flex;justify-content:flex-end;gap:8px}[data-theme=dark] #refresh-confirm{background:#20262e}
 
 .expression.intersection-pick{outline:2px solid var(--color);outline-offset:-2px}
+
+#expression-color{flex-shrink:0;width:30px;height:30px;padding:2px;border:1px solid var(--line);border-radius:3px;background:transparent;cursor:pointer}.axis-zoom{display:grid;grid-template-columns:1fr 1fr;gap:4px}.axis-zoom button{padding:6px;min-width:36px}

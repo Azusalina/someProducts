@@ -81,3 +81,9 @@ test('contours interpolate a circle and reject a pole',()=>{
   const vertex=P.contourCell((x,y)=>x*x+y*y-1,.6,.7,.1,.1,(x,y)=>[x,y]);assert.equal(vertex.length,1,'circle crossing an exact grid vertex remains connected');
   const pole=P.contourCell(x=>1/x,-.1,0,.2,.2,(x,y)=>[x,y]);assert.equal(pole.length,0);
 });
+test('named points accept numeric and parameter coordinates and round-trip through LaTeX',()=>{
+ const L=require('../latex.js');const m=build('t=2','a=(t,t^2)');assert.equal(m.entries[1].error,undefined);assert.equal(m.entries[1].name,'a');assert.deepEqual(m.entries[1].point,[2,4]);const tex=L.toLatex('a=(1,2)');const e=last(tex);assert.equal(e.kind,'point');assert.equal(e.name,'a');assert.deepEqual(e.point,[1,2]);assert.deepEqual(last('a=(sin(pi/2),2)').point,[1,2]);
+});
+test('point definitions reject duplicate names and nonfinite or unbound coordinates',()=>{
+ assert.match(last('a=(1,2)','a=3').error,/已经定义/);assert.match(last('a=3','a=(1,2)').error,/已经定义/);assert.match(last('a=(1/0,2)').error,/有限/);assert.match(last('a=(x,y)').error,/参数/);
+});

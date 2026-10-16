@@ -1,11 +1,13 @@
 {
   "name": "graphvis",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Offline function and calculus visualization",
   "scripts": {
     "test": "node tests/intersections.test.cjs && node tests/sum.test.cjs && node tests/complex.test.cjs && node tests/stats.test.cjs && node tests/math.test.cjs && node tests/latex.test.cjs && node tests/ui.test.cjs",
     "bench": "node tests/benchmark.cjs"
   },
-  "devDependencies": { "jsdom": "27.0.1" }
+  "devDependencies": {
+    "jsdom": "27.0.1"
+  }
 }

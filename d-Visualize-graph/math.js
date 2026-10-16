@@ -283,6 +283,7 @@
       if (restriction && !def[2]) throw Error('常量不能带定义域限制');
       if (def[2] && (Object.hasOwn(constants,def[2]) || reserved.has(def[2]) && def[2]!=='x')) throw Error('函数参数建议用 x 或 t');
       const ast=parse(def[3]);
+      if(!def[2]&&ast.type==='point')return {kind:'point',name:def[1],ast,restriction,text};
       if(!def[2]&&ast.type==='call'&&ast.name==='segment'&&ast.args.length===4)return {kind:'segment',name:def[1],ast,restriction,text};
       return {kind:def[2]?'function':'variable',name:def[1],parameter:def[2],ast,restriction,text};
     }
@@ -306,7 +307,8 @@
     const scope={vars:Object.create(null),functions:Object.create(null),randomVariables:Object.create(null),angle}, entries=rows.map(row=>{
       try {return {...row,...(row.text.trim()?classify(row.text):{kind:'empty'}),text:row.text};} catch(e){return {...row,kind:'error',error:e.message};}
     }), definitions=new Map();
-    for (const entry of entries) if (['function','variable'].includes(entry.kind)||entry.kind==='distribution'&&entry.randomVariable) {
+    const names=new Set();for(const entry of entries){const name=entry.name||entry.randomVariable;if(!name)continue;if(names.has(name))entry.error=`${name} 已经定义`;else names.add(name);}
+    for (const entry of entries) if (!entry.error&&(['function','variable'].includes(entry.kind)||entry.kind==='distribution'&&entry.randomVariable)) {
       if(entry.randomVariable)entry.name=entry.randomVariable;
       if (definitions.has(entry.name)) {entry.error=`${entry.name} 已经定义`;continue;}
       definitions.set(entry.name,entry);if(entry.kind!=='distribution')scope[entry.kind==='variable'?'vars':'functions'][entry.name]=NaN;
@@ -355,7 +357,7 @@
         }
         else if(entry.kind==='function') {if(!entry.compiled)throw Error('函数定义无效');entry.fn=x=>entry.compiled.v(x,0);entry.df=x=>entry.compiled.d(x,0);}
         else if(entry.kind==='segment'){const values=entry.ast.args.map(n=>compile(n,scope).v(0,0));if(!values.every(Number.isFinite))throw Error('线段端点必须为有限实数');entry.segment=[values.slice(0,2),values.slice(2,4)];}
-        else if(entry.kind==='point')entry.point=entry.ast.args.map(n=>compile(n,scope).v(0,0));
+        else if(entry.kind==='point'){entry.step=false;entry.discrete=false;let free=false;walk(entry.ast,n=>{if(n.type==='id'&&['x','y'].includes(n.name))free=true;});if(free)throw Error('点坐标使用数值或已定义参数');entry.point=entry.ast.args.map(n=>compile(n,scope).v(0,0));if(!entry.point.every(Number.isFinite))throw Error('点坐标必须为有限实数');}
         else if(['implicit','inequality'].includes(entry.kind)) {
           const a=compile(entry.ast.args[0],scope),b=compile(entry.ast.args[1],scope);
           entry.fn=(x,y)=>a.v(x,y)-b.v(x,y);entry.op=entry.ast.ops[0];
