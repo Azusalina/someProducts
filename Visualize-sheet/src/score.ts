@@ -69,7 +69,7 @@ export function expandMeasures(measures: RawMeasure[]): number[] {
   return output;
 }
 
-export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
+export function musicXMLToScore(xml: string, filename = '钢琴乐谱', options: {trimMeasurePadding?:boolean} = {}): Score {
   const doc = parseXML(xml);
   if (doc.documentElement.localName !== 'score-partwise') throw new Error('目前支持 score-partwise MusicXML；请先用乐谱软件重新导出。');
   const warnings = new Set<string>();
@@ -154,9 +154,10 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
     const pickup = raw.length === 0 && extent > 0 && extent < beatsPerMeasure;
     // A cropped score often has no inherited signature. Inventing 4/4 here
     // inserts a silent tail into every shorter measure and misaligns playback.
-    m.duration = implicit || pickup || !beatsPerMeasure ? extent || beatsPerMeasure || 4 : Math.max(extent, beatsPerMeasure);
+    m.duration = implicit || pickup || !beatsPerMeasure || (options.trimMeasurePadding && extent > 0) ? extent || beatsPerMeasure || 4 : Math.max(extent, beatsPerMeasure);
+    if(options.trimMeasurePadding && beatsPerMeasure && !implicit && !pickup && extent>0 && extent<beatsPerMeasure-1e-5)warnings.add('已省略识别不足小节末尾由拍号补齐的空拍；写出的休止符、延长音和内部空隙仍保留。');
     if (!beatsPerMeasure) warnings.add('乐谱片段缺少拍号，按导出音符的实际时值连接小节，未假定 4/4；原有节奏识别错误仍需核对。');
-    if (beatsPerMeasure && !implicit && !pickup && extent > 0 && Math.abs(extent - beatsPerMeasure) > 1e-5) warnings.add('部分小节的音符时值与拍号不一致；不足的部分保留为静默，超出的部分按实际时值播放。');
+    if (beatsPerMeasure && !implicit && !pickup && extent > 0 && Math.abs(extent - beatsPerMeasure) > 1e-5) warnings.add(options.trimMeasurePadding?'部分小节时值与拍号不一致，按导出音符与写出休止符的实际时值连接，未额外补齐。':'部分小节的音符时值与拍号不一致；不足的部分保留为静默，超出的部分按实际时值播放。');
     sourceBeat += m.duration;
     raw.push(m);
   }
@@ -180,20 +181,37 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   }
   incompleteOctaves += octaveSpans.size;
   if (incompleteOctaves) warnings.add(`${incompleteOctaves} 处八度线缺少配对起点或终点，作用范围需核对原 PDF；播放使用导出的实际音高，不推测移调。`);
-  const slurStarts = new Map<string, {at:number; voice:string}>();
-  const slurRanges: { id: string; start: number; end: number; voices:string[] }[] = [];
-  const marked = raw.flatMap(m => m.notes.map(n => ({n, at:m.sourceBeat+n.beat}))).sort((a,b) => a.at-b.at);
-  for (const {n, at} of marked) for (const mark of [...n.slurs].sort((a,b) => Number(b.type === 'stop')-Number(a.type === 'stop'))) {
-    if (mark.type === 'stop') {
-      const start = slurStarts.get(mark.number);
-      if (start !== undefined) { slurRanges.push({id:`${mark.number}:${start.at}`, start:start.at, end:at, voices:[start.voice,n.voice]}); slurStarts.delete(mark.number); }
-      else warnings.add('部分连奏线缺少起点，未推测其作用范围。');
-    } else if (mark.type === 'start') {
-      if (slurStarts.has(mark.number)) warnings.add('部分连奏线起点重复，范围可能不完整，需核对原谱。');
-      slurStarts.set(mark.number, {at,voice:n.voice});
+  type Anchor={n:RawNote;at:number};
+  const slurStarts = new Map<string,Anchor>(), pendingStops=new Map<string,Anchor>();
+  const slurRanges:{id:string;start:number;end:number;first:RawNote;last:RawNote}[]=[];
+  const addSlur=(number:string,first:Anchor,last:Anchor)=>{
+    if(last.at<first.at-1e-7){warnings.add('部分连奏线端点的时间顺序异常，未连接。');return;}
+    slurRanges.push({id:`${number}:${first.n.source}:${last.n.source}`,start:first.at,end:last.at,first:first.n,last:last.n});
+  };
+  // Slur numbers distinguish overlap in XML document order. Sorting all voices
+  // by time first incorrectly pairs independent phrases that reuse a number.
+  for(const m of raw)for(const n of m.notes){
+    const anchor={n,at:m.sourceBeat+n.beat};
+    for(const mark of n.slurs){
+      if(mark.type==='stop'){
+        const first=slurStarts.get(mark.number);
+        if(first){addSlur(mark.number,first,anchor);slurStarts.delete(mark.number);}
+        else pendingStops.set(mark.number,anchor);
+      }else if(mark.type==='start'){
+        const last=pendingStops.get(mark.number);
+        if(last && last.at>=anchor.at){addSlur(mark.number,anchor,last);pendingStops.delete(mark.number);}
+        else {
+          const previous=slurStarts.get(mark.number);
+          if(previous && !(previous.at===anchor.at && previous.n.voice===n.voice && previous.n.staff===n.staff))warnings.add('部分连奏线起点重复，需核对其编号或范围。');
+          slurStarts.set(mark.number,anchor);
+        }
+      }else if(mark.type==='continue' && !slurStarts.has(mark.number)){
+        warnings.add('部分跨行连奏线只有延续标记，缺少可靠起点，未推测完整范围。');
+      }
     }
   }
-  if (slurStarts.size) warnings.add('部分连奏线缺少终点，未推测其作用范围。');
+  if(pendingStops.size)warnings.add('部分连奏线缺少起点，未推测其作用范围。');
+  if(slurStarts.size)warnings.add('部分连奏线缺少终点，未推测其作用范围。');
   const order = expandMeasures(raw);
   const tempos: { beat: number; bpm: number }[] = [{ beat: 0, bpm: 120 }];
   const pedals: { beat: number; down: boolean }[] = [];
@@ -217,7 +235,8 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   const notes: NoteEvent[] = [], measures: MeasureEvent[] = [];
   const ties = new Map<string, { note: NoteEvent; endBeat: number }>();
   const beatEnds = new Map<NoteEvent, number>();
-  const articulation = new Map<NoteEvent, {voice:string; sourceOnset:number; slurs:string[]}>();
+  const articulation = new Map<NoteEvent, {voice:string; staff:number; sourceOnset:number; slurs:string[]}>();
+  const slursFor=(n:RawNote,sourceOnset:number)=>slurRanges.filter(r => sourceOnset>=r.start-1e-7 && sourceOnset<=r.end+1e-7 && (n.source===r.first.source || n.source===r.last.source || (n.voice===r.first.voice && (n.staff===r.first.staff || (r.first.voice===r.last.voice && n.staff===r.last.staff))) || (Math.abs(sourceOnset-r.end)<1e-7 && n.voice===r.last.voice && n.staff===r.last.staff))).map(r=>r.id);
   for (const { m, source, beat } of expanded) {
     measures.push({ number: m.number, index: source, start: secondsAt(beat), duration: secondsAt(beat + m.duration) - secondsAt(beat), sourceBeat: m.sourceBeat });
     for (const n of m.notes) {
@@ -225,7 +244,9 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
       const key = `${n.staff}:${n.voice}:${n.midi}`;
       let previousKey = key, previous = ties.get(key);
       if (n.tieStop && (!previous || Math.abs(previous.endBeat-onset) >= 1e-5)) {
-        const candidates = [...ties].filter(([k,t]) => k.split(':').slice(1).join(':') === `${n.voice}:${n.midi}` && Math.abs(t.endBeat-onset) < 1e-5);
+        const compatible=[...ties].filter(([k,t])=>Number(k.split(':').at(-1))===n.midi && Math.abs(t.endBeat-onset)<1e-5);
+        const sameVoice=compatible.filter(([k])=>k.split(':')[1]===n.voice);
+        const candidates=sameVoice.length?sameVoice:compatible;
         // Cross-staff ties are valid; simultaneous unisons remain ambiguous.
         if (candidates.length === 1) [previousKey,previous] = candidates[0];
       }
@@ -234,6 +255,7 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
         previous.note.duration = secondsAt(endBeat) - previous.note.start;
         previous.note.soundDuration = previous.note.duration;
         previous.endBeat = endBeat; beatEnds.set(previous.note, endBeat);
+        const art=articulation.get(previous.note);if(art){art.slurs=[...new Set([...art.slurs,...slursFor(n,m.sourceBeat+n.beat)])];art.sourceOnset=m.sourceBeat+n.beat;}
         ties.delete(previousKey);
         if (n.tieStart) ties.set(key, previous);
         continue;
@@ -242,25 +264,11 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
       const note: NoteEvent = { id: String(notes.length), midi: n.midi, start: secondsAt(onset), duration: secondsAt(endBeat) - secondsAt(onset), soundDuration: secondsAt(endBeat) - secondsAt(onset), velocity: n.velocity, hand: n.staff >= 2 ? 'left' : 'right', measure: measures.length - 1, sources: [{ id:n.source, start:secondsAt(onset), duration:secondsAt(endBeat)-secondsAt(onset) }] };
       notes.push(note); beatEnds.set(note, endBeat);
       const sourceOnset = m.sourceBeat + n.beat;
-      articulation.set(note, {voice:n.voice, sourceOnset, slurs:slurRanges.filter(r => r.voices.includes(n.voice) && sourceOnset >= r.start-1e-7 && sourceOnset <= r.end+1e-7).map(r => r.id)});
+      articulation.set(note, {voice:n.voice, staff:n.staff, sourceOnset, slurs:slursFor(n,sourceOnset)});
       if (n.tieStart) ties.set(key, { note, endBeat }); else ties.delete(key);
     }
   }
   notes.sort((a, b) => a.start - b.start || a.midi - b.midi);
-  // A slur connects attacks, never merges them. Keep silence and repeats intact;
-  // the small overlap is a playback interpretation, not an extra written value.
-  for (const note of notes) {
-    const current = articulation.get(note)!;
-    if (!current.slurs.length) continue;
-    const next = notes.find(n => n.start > note.start+1e-6 && articulation.get(n)?.voice === current.voice);
-    if (!next) continue;
-    const following = articulation.get(next)!;
-    if (!following.slurs.some(id => current.slurs.includes(id))) continue;
-    if (Math.abs(next.start-note.start-note.duration) > 1e-5) continue;
-    if (following.sourceOnset <= current.sourceOnset) continue;
-    const retrigger = notes.find(n => n.midi === note.midi && n.start > note.start+1e-6);
-    note.soundDuration = Math.max(note.duration, Math.min(next.start+Math.min(.03,next.duration*.1), retrigger?.start ?? Infinity)-note.start);
-  }
   pedals.sort((a, b) => a.beat - b.beat);
   for (const note of notes) {
     const end = beatEnds.get(note)!;
@@ -274,6 +282,27 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱'): Score {
   realizeArpeggios(part, notes, measures, warnings);
   realizeOrnaments(part, notes, measures, warnings);
   notes.sort((a, b) => a.start - b.start || a.midi - b.midi);
+  const bySource=new Map<string,{voice:string;staff:number;sourceOnset:number;slurs:string[]}>();
+  for(const [n,art]of articulation)for(const source of n.sources??[])bySource.set(`${n.measure}:${source.id}`,art);
+  for(const n of notes)if(!articulation.has(n)){
+    const art=(n.sources??[]).map(source=>bySource.get(`${n.measure}:${source.id}`)).find(Boolean);
+    if(art)articulation.set(n,art);
+  }
+  // A slur connects attacks, never merges them. Keep silence and repeats intact;
+  // the small overlap is a playback interpretation, not an extra written value.
+  for (const note of notes) {
+    const current = articulation.get(note)!;
+    if (!current?.slurs.length) continue;
+    const next = notes.find(n => n.start > note.start+1e-6 && articulation.get(n)?.slurs.some(id=>current.slurs.includes(id)));
+    if (!next) continue;
+    const following = articulation.get(next)!;
+    if(current.voice!==following.voice && current.staff===following.staff)continue;
+    if (!following.slurs.some(id => current.slurs.includes(id))) continue;
+    if (Math.abs(next.start-note.start-note.duration) > 1e-5) continue;
+    if (following.sourceOnset <= current.sourceOnset) continue;
+    const retrigger = notes.find(n => n.midi === note.midi && n.start > note.start+1e-6);
+    note.soundDuration = Math.max(note.duration, Math.min(next.start+Math.min(.03,next.duration*.1), retrigger?.start ?? Infinity)-note.start);
+  }
   if (!notes.length) throw new Error('没有识别到可播放的音符，请换一份清晰乐谱或导入 MusicXML／MIDI。');
   const title = doc.querySelector('work-title')?.textContent?.trim() || doc.querySelector('movement-title')?.textContent?.trim() || filename.replace(/\.[^.]+$/, '');
   return { title, notes, measures, duration: Math.max(secondsAt(cursor), ...notes.map(n => n.start + n.soundDuration)), bpm: tempos.filter(t => t.beat === 0).at(-1)?.bpm ?? 120, warnings: [...warnings], xml };

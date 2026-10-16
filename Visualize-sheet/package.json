@@ -12,7 +12,8 @@
     "test:browser": "node tests/browser.mjs",
     "test:pdf": "node tests/pdf.mjs && python tests/compare-omr.py",
     "test:pdf-filter": "node tests/pdf-filter.mjs",
-    "test:chopin": "node tests/chopin.mjs"
+    "test:chopin": "node tests/chopin.mjs",
+    "test:scan": "node tests/scan-regression.mjs"
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",

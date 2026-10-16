@@ -1,12 +1,15 @@
 import { chromium, expect } from '@playwright/test';
 import { spawn } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import midiPackage from '@tonejs/midi';
 import { zipSync, strToU8 } from 'fflate';
 const { Midi } = midiPackage;
 
 await mkdir('test-results', { recursive: true });
-const server = spawn('python', ['server.py', '--port', '4281'], { stdio: 'ignore' });
+const jobsDirectory=await mkdtemp(join(tmpdir(),'sheetvis-browser-'));
+const server = spawn('python', ['server.py', '--port', '4281'], { stdio: 'ignore',env:{...process.env,SHEETVIS_JOBS_DIR:jobsDirectory} });
 const url = 'http://127.0.0.1:4281';
 let browser;
 try {
@@ -177,11 +180,11 @@ try {
   await expect(page.locator('#download')).toBeDisabled();
   await page.locator('#demo').click();
   await expect(page.locator('#piece-meta')).toContainText('56 个音符');
-  const id = 'f'.repeat(32); let polls = 0, recognizeCalls=0;
+  const id = 'f'.repeat(32); let polls = 0, recognizeCalls=0, holdCached=false, sourceReads=0;
   await page.route('**/api/recognize', r => {recognizeCalls++;return r.fulfill({ json: { id }, status: 202 });});
   await page.route(`**/api/jobs/${id}`, r => {
-    const state = ++polls < 3 ? 'running' : 'done';
-    return r.fulfill({ json: { id, state, message: state === 'done' ? '识别完成' : '识别中', total_pages: 2, skipped_pages: [2], phase: polls === 1 ? 'scan' : 'recognize', progress: polls === 1 ? 14 : polls === 2 ? 55 : 100, included_pages: [1], current_page:1,current_system:2,current_measure:3,stage:'RHYTHMS', quality: { rhythm_issues: [{ page: 1, system: 1, stack: 2 }], missing_offsets: 2, accuracy: null }, results: [{ name: 'result-0.mxl', url: `/api/jobs/${id}/result-0.mxl`, mapping:`/api/jobs/${id}/result-0.map.json` }] } });
+    const state = ++polls < 3 || holdCached ? 'running' : 'done';
+    return r.fulfill({ json: { id, state, upgrade_available:true, message: state === 'done' ? '识别完成' : '识别中', total_pages: 2, skipped_pages: [2], phase: polls === 1 ? 'scan' : 'recognize', progress: polls === 1 ? 14 : polls === 2 ? 55 : 100, included_pages: [1], current_page:1,current_system:2,current_measure:3,stage:'RHYTHMS', quality: { rhythm_issues: [{ page: 1, system: 1, stack: 2 }], missing_offsets: 2, accuracy: null }, results: [{ name: 'result-0.mxl', url: `/api/jobs/${id}/result-0.mxl`, mapping:`/api/jobs/${id}/result-0.map.json` }] } });
   });
   await page.route(`**/api/jobs/${id}/result-0.map.json`,r=>r.fulfill({json:{version:4,mapped:2,total:56,positions:{'P1:0:0':{page:1,x:.15,y:.18,w:.02,h:.01,head:'1',grade:1},'P1:0:2':{page:1,x:.25,y:.18,w:.02,h:.01,head:'2',grade:1}}}}));
   await page.route(`**/api/jobs/${id}/result-0.mxl`, r => r.fulfill({ body: Buffer.from(mxl), contentType: 'application/vnd.recordare.musicxml' }));
@@ -195,7 +198,7 @@ try {
   await expect(page.locator('#pdf-view .pdf-page')).toBeVisible();
   await expect(page.locator('#pdf-view canvas')).toHaveAttribute('aria-label','原 PDF 第 1 页');
   await page.setViewportSize({width:1000,height:800});
-  await expect.poll(async()=>page.locator('#pdf-view canvas').evaluate(c=>Math.abs(c.getBoundingClientRect().width-(c.closest('.pdf-scroll').clientWidth-20)))).toBeLessThan(2);
+  await expect.poll(async()=>page.locator('#pdf-view canvas').evaluate(c=>{const pane=c.closest('.pdf-scroll');return pane?Math.abs(c.getBoundingClientRect().width-(pane.clientWidth-20)):Infinity;})).toBeLessThan(2);
   await page.setViewportSize({width:1440,height:1040});
   await expect(page.locator('#pdf-view')).toHaveAttribute('aria-busy','false');
   await page.screenshot({path:'test-results/pdf-display.png',fullPage:true});
@@ -220,7 +223,7 @@ try {
   await page.route(`**/api/cache/${id}/default`,r=>{selectedDefault=true;return r.fulfill({json:{default_score:{name:'cached-score.pdf',available:true,url:`/api/jobs/${id}/score.pdf`,job_id:id}}});});
   await page.route(`**/api/jobs/${'a'.repeat(32)}/cancel`,r=>{runningState='cancelled';return r.fulfill({json:{id:'a'.repeat(32),state:'cancelled',results:[]}});});
   await page.route(`**/api/cache/${id}`,r=>{cacheDeleted=true;selectedDefault=false;return r.fulfill({json:{deleted:id}});});
-  await page.route(`**/api/jobs/${id}/score.pdf`,async r=>r.fulfill({body:await readFile('tests/fixtures/demo-score.pdf'),contentType:'application/pdf'}));
+  await page.route(`**/api/jobs/${id}/score.pdf`,async r=>{sourceReads++;return r.fulfill({body:await readFile('tests/fixtures/demo-score.pdf'),contentType:'application/pdf'});});
   await page.locator('#cache-open').click();
   const cached=page.locator('#cache-list li').filter({hasText:'cached-score.pdf'});
   await expect(cached.locator('a').filter({hasText:'八度训练包'})).toHaveAttribute('href',`/api/jobs/${id}/octave-training.zip`);
@@ -231,7 +234,9 @@ try {
   await expect(page.locator('#cache-list li').filter({hasText:'running.pdf'}).getByRole('button',{name:'继续识别'})).toBeEnabled();
   await cached.getByRole('button',{name:'打开'}).click();
   await expect(page.locator('#piece-title')).toHaveText('cached-score');expect(recognizeCalls).toBe(1);
-  await page.goto(url);
+  const reads=sourceReads;await page.locator('#cache-open').click();await cached.getByRole('button',{name:'打开',exact:true}).click();expect(sourceReads).toBe(reads);
+  holdCached=true;const previousPolls=polls;await page.goto(url);
+  await expect.poll(()=>polls).toBeGreaterThan(previousPolls+1);expect(recognizeCalls).toBe(1);holdCached=false;
   await expect(page.locator('#piece-title')).toHaveText('cached-score');
   await expect(page.locator('#piece-meta')).toContainText('56 个音符');expect(recognizeCalls).toBe(1);
   await page.locator('#toolbar-toggle').click();
@@ -266,8 +271,9 @@ try {
   await expect(page.locator('#import')).toBeHidden();
   await page.locator('#toolbar-toggle').click(); await expect(page.locator('#import')).toBeVisible();
   expect(errors).toEqual([]); expect(external).toEqual([]);
-  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'recognition quality and reading feedback', 'saved color settings and reload', 'Zen layout and Esc exit', 'score render', 'within-measure staff cursor and backward seek', 'PDF resize and rendered-page state', 'top transport placement', 'PDF and staff note click seek and resume', 'waterfall wheel paused and playing', 'resource settings and live page/measure status', 'cache reopen without recognition', 'cache delete and running protection', 'cancel queued/running UI', 'default cache selection and startup without recognition', 'arpeggio rendering and interpretation', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', '8va and inline clef rendering', 'tie and slur notation feedback', 'triplet and quintuplet import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
+  await writeFile('test-results/browser.json', JSON.stringify({ amplitude, errors, external, tests: ['hidden vertical toolbar', 'Tab and Escape', 'piano key audition while muted', 'keyboard height drag and persistence', 'recognition percentages', 'recognition quality and reading feedback', 'saved color settings and reload', 'Zen layout and Esc exit', 'score render', 'within-measure staff cursor and backward seek', 'PDF resize and rendered-page state', 'top transport placement', 'PDF and staff note click seek and resume', 'waterfall wheel paused and playing', 'resource settings and live page/measure status', 'cache reopen without recognition', 'page reload watches active job without a recognition POST', 'repeat cache open reuses PDF read', 'cache delete and running protection', 'cancel queued/running UI', 'default cache selection and startup without recognition', 'arpeggio rendering and interpretation', 'actual audio signal', 'pause', 'BPM', 'speed', 'seek', 'hand controls', 'MXL import', '8va and inline clef rendering', 'tie and slur notation feedback', 'triplet and quintuplet import', 'MusicXML download', 'MIDI import', 'mobile overflow', 'offline requests'] }, null, 2));
   console.log('Browser checks passed; audio peak:', amplitude, '; no external requests.');
 } finally {
   if (browser) await browser.close(); server.kill();
+  await new Promise(resolve=>server.exitCode!==null ? resolve() : server.once('exit',resolve));await rm(jobsDirectory,{recursive:true,force:true});
 }

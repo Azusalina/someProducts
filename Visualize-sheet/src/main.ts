@@ -7,7 +7,7 @@ import { PianoPlayer } from './audio';
 import { extractMusicXML, midiToScore, musicXMLToScore, parseXML, type Score } from './score';
 import { Waterfall, defaultColors, validColors, type WaterfallColors } from './waterfall';
 import { qualityFeedback, type RecognitionJob } from './quality';
-import { PDFView, type SourceMap } from './pdf-view';
+import { PDFView, type MeasureRegion, type SourceMap } from './pdf-view';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="topbar"><a class="brand" href="/">sheetVis</a><span id="piece-title"></span><span id="piece-meta"></span><span id="time">00:00 / 00:00</span></header>
@@ -16,8 +16,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="toolbar-heading"><span>工具</span><button id="toolbar-close" aria-label="关闭工具栏">×</button></div>
     <button id="import">导入</button><button id="default-score" hidden>默认乐谱</button><button id="demo">示例</button><button id="cache-open">乐谱缓存</button><button id="zen">Zen</button><input id="file" type="file" accept=".pdf,.xml,.musicxml,.mxl,.mid,.midi" hidden>
     <div class="toolbar-group"><button id="play" class="primary" aria-label="播放">播放</button><button id="rewind" aria-label="回退 5 秒">−5s</button><button id="forward" aria-label="快进 5 秒">+5s</button><button id="reset">重置</button></div>
-    <div class="toolbar-group"><label for="speed">速度 <output id="speed-value">1.00×</output></label><input id="speed" type="range" min="25" max="200" value="100" step="5"><label for="bpm">BPM</label><input id="bpm" type="number" min="20" max="300" step="1" value="96" aria-label="参考 BPM"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="60"><label for="lookahead">预览</label><select id="lookahead"><option value="4">4s</option><option value="7" selected>7s</option><option value="12">12s</option></select><label class="check"><input id="left-hand" type="checkbox" checked>左手</label><label class="check"><input id="right-hand" type="checkbox" checked>右手</label><label class="check"><input id="autoplay" type="checkbox" checked>自动播放</label></div>
-    <div class="toolbar-group"><select id="movement" aria-label="乐章" hidden></select><button id="score-tab" class="selected">五线谱</button><button id="original-tab" hidden>PDF</button><button id="download" disabled>下载 MusicXML</button><a id="log" hidden download="识别日志.txt">日志</a><div id="measure-list" class="measure-list" aria-label="小节"></div><details id="warnings" hidden><summary id="warnings-summary">记录</summary><ul id="warnings-list"></ul></details></div>
+    <div class="toolbar-group"><label for="speed">速度 <output id="speed-value">1.00×</output></label><input id="speed" type="range" min="25" max="200" value="100" step="5"><label for="bpm">BPM</label><input id="bpm" type="number" min="20" max="300" step="1" value="96" aria-label="参考 BPM"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="60"><label for="lookahead">预览</label><select id="lookahead"><option value="4">4s</option><option value="7" selected>7s</option><option value="12">12s</option></select><label class="check"><input id="left-hand" type="checkbox" checked>左手</label><label class="check"><input id="right-hand" type="checkbox" checked>右手</label><label class="check"><input id="autoplay" type="checkbox" checked>自动播放</label><label class="check"><input id="compact-measures" type="checkbox" checked>省略小节补齐空拍</label></div>
+    <div class="toolbar-group"><select id="movement" aria-label="乐章" hidden></select><button id="score-tab" class="selected">五线谱</button><button id="original-tab" hidden>PDF</button><button id="region-select" hidden>框选重识别</button><button id="region-review" hidden>检查局部候选</button><button id="download" disabled>下载 MusicXML</button><a id="log" hidden download="识别日志.txt">日志</a><a id="symbol-report" hidden download="符号复核.json">符号复核</a><div id="measure-list" class="measure-list" aria-label="小节"></div><details id="warnings" hidden><summary id="warnings-summary">记录</summary><ul id="warnings-list"></ul></details></div>
     <div class="toolbar-group"><details id="quality-report" hidden><summary>读入与识别反馈</summary><ul id="read-facts"></ul><ul id="quality-issues"></ul><p id="quality-limit"></p></details><details id="color-settings"><summary>瀑布配色</summary>${Object.entries({left:'左手',right:'右手',leftActive:'左手触键',rightActive:'右手触键',background:'背景'}).map(([key,label]) => `<label for="color-${key}">${label}<input id="color-${key}" data-color="${key}" type="color" value="${defaultColors[key as keyof WaterfallColors]}"></label>`).join('')}<button id="colors-reset">恢复配置配色</button><output id="colors-status" aria-live="polite"></output></details></div>
     <div class="toolbar-group"><details id="recognition-settings"><summary>识别资源</summary><label for="recognition-threads">CPU 核心（0 自动）</label><input id="recognition-threads" type="number" min="0" max="64" value="0"><label for="recognition-memory">Java 内存上限 MB</label><input id="recognition-memory" type="number" min="512" max="16384" step="256" value="4096"><button id="recognition-save">保存</button><output id="recognition-resource-status"></output></details></div>
     <div class="toolbar-group toolbar-meta"><span id="piece-kind"></span><span id="engine-status"></span><a href="/credits.html" target="_blank" rel="noopener">来源与许可</a></div>
@@ -30,7 +30,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="split-view"><section class="score-section"><div id="pdf-view" aria-label="原 PDF" hidden></div><div id="score-view" class="score-view"></div></section>
     <section id="drop-zone" class="workspace" aria-label="钢琴"><div class="canvas-scroll"><div class="canvas-wrap"><canvas id="waterfall" aria-label="钢琴音符瀑布"></canvas><div id="keyboard-grip" class="keyboard-grip" role="separator" aria-label="琴键高度" aria-orientation="horizontal" aria-valuemin="40" aria-valuemax="260" aria-valuenow="90" tabindex="0"></div></div></div></section></div>
 
-  </main><dialog id="cache-dialog" aria-labelledby="cache-title"><div class="cache-heading"><h2 id="cache-title">乐谱缓存</h2><button id="cache-refresh">刷新</button><button id="cache-close" aria-label="关闭缓存管理">×</button></div><p id="cache-status" role="status"></p><ul id="cache-list"></ul></dialog>`;
+  </main><dialog id="region-dialog" aria-labelledby="region-title"><h2 id="region-title">局部重识别</h2><p id="region-range"></p><label>分辨率<select id="region-dpi"><option value="400">400 DPI</option><option value="600" selected>600 DPI</option></select></label><label><input id="region-tuplets" type="checkbox">省略数字的连音分析</label><p>保留整行双谱表、谱号和调号作为上下文，仅替换选中小节。</p><progress id="region-progress" max="100" value="0"></progress><p id="region-status" role="status"></p><div id="region-comparison"></div><div class="region-actions"><button id="region-start">重新识别</button><button id="region-original" hidden>试听原结果</button><button id="region-preview" hidden>试听候选</button><button id="region-accept" hidden>采用候选副本</button><button id="region-cancel" hidden>中断识别</button><button id="region-close">关闭</button></div></dialog><dialog id="cache-dialog" aria-labelledby="cache-title"><div class="cache-heading"><h2 id="cache-title">乐谱缓存</h2><button id="cache-refresh">刷新</button><button id="cache-close" aria-label="关闭缓存管理">×</button></div><p id="cache-status" role="status"></p><ul id="cache-list"></ul></dialog>`;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const player = new PianoPlayer();
@@ -156,6 +156,11 @@ function readSummary(state: string, job = currentJob) {
   $('read-summary').textContent = `${readFilename} · ${(readBytes / 1024).toFixed(0)} KB${pages} · ${state}`;
 }
 function reflect(next: Score) {
+  const symbolReport=$<HTMLAnchorElement>('symbol-report');
+  symbolReport.hidden=!currentJob?.symbol_audit;
+  $('region-select').hidden=!currentJob||currentJob.state!=='done'||!!currentJob.pending_region;
+  $('region-review').hidden=!currentJob?.pending_region;
+  if(currentJob?.symbol_audit)symbolReport.href=`/api/jobs/${currentJob.id}/symbol-audit.json`;
   const report = qualityFeedback(next, currentJob);
   const facts = [`文件：${readFilename} · ${readBytes} 字节`, ...report.facts];
   if (currentJob?.total_pages) facts.unshift(`PDF ${currentJob.total_pages} 页；五线谱 ${currentJob.included_pages?.length ?? 0} 页；跳过 ${currentJob.skipped_pages?.join('、') || '无'}。`);
@@ -324,14 +329,14 @@ function switchTab(original: boolean) {
   staffFollowKey = '';
   $('score-view').hidden = original; $('pdf-view').hidden = !original;
   $('original-tab').classList.toggle('selected', original); $('score-tab').classList.toggle('selected', !original);
-  if (original) void pdfView.showPage(pdfView.page, true);
+  if (original) void pdfView.showPage(pdfView.page);
 }
 async function recognizedScore(result: { name: string; url: string; mapping?: string }, token: number) {
   const response = await fetch(result.url);
   if (!response.ok) throw new Error('无法读取识别结果。');
   const buffer = await response.arrayBuffer();
   const xml = result.name.endsWith('.mxl') ? extractMusicXML(buffer) : new TextDecoder().decode(buffer);
-  const parsed = musicXMLToScore(xml, recognizedFilename);
+  const parsed = musicXMLToScore(xml, recognizedFilename,{trimMeasurePadding:$<HTMLInputElement>('compact-measures').checked});
   noteMapping = null;
   if (result.mapping) {
     try {
@@ -352,11 +357,14 @@ async function recognize(file: File, token: number) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error ?? 'PDF 识别服务不可用。');
   if (token !== revision) return;
-  currentJob={id:data.id,state:'queued',results:[]};readSummary('等待本地识别');
-  const log = $<HTMLAnchorElement>('log'); log.href = `/api/jobs/${data.id}/engine.log`; log.hidden = false;
+  await watchRecognition(data.id,file.name,token);
+}
+async function watchRecognition(identifier:string,filename:string,token:number) {
+  currentJob={id:identifier,state:'queued',results:[]};readSummary('等待本地识别');
+  const log = $<HTMLAnchorElement>('log'); log.href = `/api/jobs/${identifier}/engine.log`; log.hidden = false;
   const started = Date.now();
   while (token === revision && Date.now() - started < 7_800_000) {
-    const statusResponse = await fetch(`/api/jobs/${data.id}`);
+    const statusResponse = await fetch(`/api/jobs/${identifier}`);
     if (!statusResponse.ok) throw new Error('无法查询识别任务。');
     const job = await statusResponse.json();
     if (token !== revision) return;
@@ -364,7 +372,7 @@ async function recognize(file: File, token: number) {
     readSummary(job.message ?? job.state, job);
     // Older running services can finish their in-flight jobs without being interrupted by an upgrade.
     if (job.progress === undefined && job.state === 'running') {
-      const logResponse = await fetch(`/api/jobs/${data.id}/engine.log`);
+      const logResponse = await fetch(`/api/jobs/${identifier}/engine.log`);
       if (logResponse.ok) {
         const log = await logResponse.text();
         const pages = Number(log.match(/\b(\d+) sheets? in /)?.[1]) || 1;
@@ -381,7 +389,7 @@ async function recognize(file: File, token: number) {
     }
     if (job.state === 'error') throw new Error(job.message);
     if (job.state === 'done') {
-      await showRecognition(job, file.name, token);
+      await showRecognition(job, filename, token);
       return;
     }
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -435,12 +443,13 @@ async function loadFile(file: File, startup = false, cached?: RecognitionJob) {
       pdfUrl = URL.createObjectURL(file); $('original-tab').hidden = false; switchTab(true);
       await pdfView.load(await file.arrayBuffer());
       if (token !== revision) return;
-      if (cached) await showRecognition(cached, file.name, token);
+      if (cached?.state==='done') await showRecognition(cached, file.name, token);
+      else if(cached && ['queued','running','cancelling'].includes(cached.state))await watchRecognition(cached.id,file.name,token);
       else await recognize(file, token);
     } else {
       const buffer = await file.arrayBuffer();
       if (token !== revision) return;
-      const parsed = ['mid', 'midi'].includes(extension ?? '') ? midiToScore(buffer, file.name) : musicXMLToScore(extension === 'mxl' ? extractMusicXML(buffer) : new TextDecoder().decode(buffer), file.name);
+      const parsed = ['mid', 'midi'].includes(extension ?? '') ? midiToScore(buffer, file.name) : musicXMLToScore(extension === 'mxl' ? extractMusicXML(buffer) : new TextDecoder().decode(buffer), file.name,{trimMeasurePadding:$<HTMLInputElement>('compact-measures').checked});
       await setScore(parsed, token, ['mid', 'midi'].includes(extension ?? '') ? 'MIDI / LOCAL FILE' : 'MUSICXML / LOCAL FILE');
       if (token === revision) notice('');
     }
@@ -459,7 +468,16 @@ async function refreshDefault() {
   configuredDefault=(await response.json()).default_score;
   $('default-score').hidden=!configuredDefault;
 }
-async function openCached(id:string,filename:string,startup=false) {
+const cacheReads=new Map<string,Promise<void>>();
+let openedCacheId:string|null=null;
+function openCached(id:string,filename:string,startup=false,upgrade=false):Promise<void> {
+  const key=`${id}:${upgrade}`;
+  const pending=cacheReads.get(key);if(pending)return pending;
+  if(!upgrade&&openedCacheId===id&&currentJob?.id===id&&score&&!busy)return Promise.resolve();
+  const action=readCached(id,filename,startup,upgrade).finally(()=>{if(cacheReads.get(key)===action)cacheReads.delete(key);});
+  cacheReads.set(key,action);return action;
+}
+async function readCached(id:string,filename:string,startup=false,upgrade=false) {
   const token=++revision; ++navigationRevision;stopWheel();player.pause();busy=true;updateButtons();
   if(!startup)void player.ready().catch(()=>{});
   try {
@@ -468,14 +486,14 @@ async function openCached(id:string,filename:string,startup=false) {
     if(!source.ok||!status.ok)throw new Error('缓存文件已不存在。');
     const job=await status.json() as RecognitionJob, data=await source.blob();
     if(token!==revision)return;
-    if(job.state!=='done' && !['cancelled','error'].includes(job.state))throw new Error('此缓存仍在识别中。');
-    await loadFile(new File([data],filename,{type:'application/pdf'}),startup,job.state==='done' && !job.upgrade_available ? job : undefined);
+    await loadFile(new File([data],job.filename||filename||'乐谱.pdf',{type:'application/pdf'}),startup,!['cancelled','error'].includes(job.state) && !upgrade ? job : undefined);
+    if(currentJob?.id===id&&score)openedCacheId=id;
   }catch(error){if(token===revision)notice(String(error),'error');}
   finally{if(token===revision){busy=false;updateButtons();}}
 }
 let cacheTimer:ReturnType<typeof setTimeout>|undefined;
 
-type CacheEntry = {is_default?:boolean;id:string; filename:string; state:string; created:number; bytes:number; pages?:number; results:number};
+type CacheEntry = {pending_region?:boolean;is_default?:boolean;upgrade_available?:boolean;id:string; filename:string; state:string; created:number; bytes:number; pages?:number; results:number};
 async function refreshCache() {
   clearTimeout(cacheTimer);
   $('cache-status').textContent = '读取中';
@@ -485,15 +503,17 @@ async function refreshCache() {
     const {entries} = await response.json() as {entries:CacheEntry[]};
     $('cache-list').replaceChildren(...entries.map(entry => {
       const row=document.createElement('li'), name=document.createElement('span'), meta=document.createElement('small');
-      name.textContent=entry.filename;
+      name.textContent=entry.filename+(entry.pending_region?' · 局部候选':'');
       const states:Record<string,string>={done:'已完成',error:'未完成',queued:'排队',running:'识别中',cancelling:'正在中断',cancelled:'已中断'};
       meta.textContent=`${states[entry.state] ?? entry.state} · ${(entry.bytes/1048576).toFixed(1)} MB${entry.pages ? ` · ${entry.pages} 页` : ''} · ${new Date(entry.created*1000).toLocaleString()}`;
-      const open=document.createElement('button');open.textContent=['cancelled','error'].includes(entry.state) ? '继续识别' : '打开';open.disabled=!['done','cancelled','error'].includes(entry.state);
+      const open=document.createElement('button');open.textContent=entry.pending_region?'检查选区':['cancelled','error'].includes(entry.state) ? '继续识别' : '打开';open.disabled=!['done','cancelled','error'].includes(entry.state);
       open.addEventListener('click',async()=>{
-        $<HTMLDialogElement>('cache-dialog').close();await openCached(entry.id,entry.filename);
+        $<HTMLDialogElement>('cache-dialog').close();if(entry.pending_region)await reviewRegion(entry.id);else await openCached(entry.id,entry.filename);
       });
+      const upgrade=document.createElement('button');upgrade.textContent='更新识别';upgrade.setAttribute('aria-label',`更新识别 ${entry.filename}`);
+      upgrade.addEventListener('click',async()=>{$<HTMLDialogElement>('cache-dialog').close();await openCached(entry.id,entry.filename,false,true);});
       const setDefault=document.createElement('button');setDefault.textContent=entry.is_default ? '默认' : '设为默认';
-      setDefault.disabled=entry.state!=='done'||!!entry.is_default;
+      setDefault.disabled=entry.state!=='done'||!!entry.is_default||!!entry.pending_region;
       setDefault.addEventListener('click',async()=>{
         setDefault.disabled=true;
         try {
@@ -521,12 +541,88 @@ async function refreshCache() {
       });
       const project=document.createElement('a');project.textContent='OMR 工程';project.href=`/api/jobs/${entry.id}/project.omr`;project.download=`${entry.filename.replace(/\.pdf$/i,'')}.omr`;
       const training=document.createElement('a');training.textContent='八度训练包';training.href=`/api/jobs/${entry.id}/octave-training.zip`;training.download=`${entry.filename.replace(/\.pdf$/i,'')}-octaves.zip`;
-      row.append(name,meta,open,setDefault,remove);if(['queued','running','cancelling'].includes(entry.state))row.append(cancel);if(entry.state==='done') row.append(project,training);return row;
+      row.append(name,meta,open,setDefault,remove);if(entry.state==='done'&&entry.upgrade_available)row.append(upgrade);if(['queued','running','cancelling'].includes(entry.state))row.append(cancel);if(entry.state==='done') row.append(project,training);return row;
     }));
     if(entries.some(e=>e.state==='cancelling'))cacheTimer=setTimeout(()=>{if($<HTMLDialogElement>('cache-dialog').open)void refreshCache();},1200);
     $('cache-status').textContent=entries.length ? `${entries.length} 份 · ${(entries.reduce((sum,e)=>sum+e.bytes,0)/1048576).toFixed(1)} MB` : '暂无缓存';
   } catch(error) {$('cache-status').textContent=String(error);}
 }
+let regionJob:RecognitionJob|null=null,regionParent='',regionSelected:MeasureRegion[]=[],regionPoll=0;
+const regionDialog=$<HTMLDialogElement>('region-dialog');
+function regionActions(job:RecognitionJob|null){
+  const active=!!job&&['running','queued','cancelling'].includes(job.state),done=job?.state==='done';
+  $<HTMLButtonElement>('region-start').disabled=active||!regionSelected.length;
+  $('region-cancel').hidden=!active;
+  for(const id of ['region-original','region-preview','region-accept'])$(id).hidden=!done;
+  $('region-range').textContent=regionSelected.length?`PDF 第 ${regionSelected[0].page} 页 · 小节 ${regionSelected.map(r=>r.number).join('、')}`:'';
+  const c=job?.region_comparison;
+  $('region-comparison').textContent=c?`音符 ${c.before.notes} → ${c.after.notes}
+起奏组 ${c.before.chords} → ${c.after.chords}
+谱号标记 ${c.before.clefs} → ${c.after.clefs}
+局部节奏异常 ${c.local_quality.rhythm_issues.length} · 未导出符头 ${c.unexported_heads}
+${c.warnings.join('\n')}`:'';
+}
+async function reviewRegion(id:string){
+  const token=++regionPoll;regionDialog.showModal();$('region-status').textContent='读取局部识别记录';
+  try{
+    while(token===regionPoll){
+      const response=await fetch(`/api/jobs/${id}`),job=await response.json() as RecognitionJob;
+      if(token!==regionPoll)return;
+      if(!response.ok)throw new Error('局部识别记录不存在。');
+      regionJob=job;regionParent=job.region?.parent??regionParent;regionSelected=job.region?.measures??regionSelected;
+      regionActions(job);$('region-status').textContent=job.message??job.state;$<HTMLProgressElement>('region-progress').value=job.progress??0;
+      if(['done','error','cancelled'].includes(job.state))break;
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+  }catch(error){$('region-status').textContent=String(error);}
+}
+pdfView.onRegionSelect=measures=>{
+  if(!measures.length){notice('选区没有可定位的小节。');return;}
+  ++regionPoll;
+  regionSelected=measures;regionJob=null;regionParent=currentJob?.id??'';regionActions(null);
+  $('region-status').textContent='';$<HTMLProgressElement>('region-progress').value=0;regionDialog.showModal();
+};
+$('region-select').addEventListener('click',async()=>{
+  if(!currentJob)return;
+  player.pause();updateButtons();switchTab(true);
+  try{
+    const response=await fetch(`/api/jobs/${currentJob.id}/regions`),result=await response.json();
+    if(!response.ok)throw new Error(result.error??'无法定位小节');
+    pdfView.selectRegions(result.measures);toolbar(false);notice('在 PDF 上点选或拖选需要重识别的小节。');
+  }catch(error){notice(String(error),'error');}
+});
+$('region-review').addEventListener('click',()=>{if(currentJob)void reviewRegion(currentJob.id);});
+$('region-start').addEventListener('click',async()=>{
+  try{
+    $<HTMLButtonElement>('region-start').disabled=true;
+    const response=await fetch(`/api/jobs/${regionParent}/regions`,{method:'POST',headers:{'Content-Type':'application/json','X-SheetVis':'local'},body:JSON.stringify({start:regionSelected[0]?.index,end:regionSelected.at(-1)?.index,dpi:Number($<HTMLSelectElement>('region-dpi').value),implicit_tuplets:$<HTMLInputElement>('region-tuplets').checked})}),result=await response.json();
+    if(!response.ok)throw new Error(result.error??'局部识别启动失败');
+    regionDialog.close();await reviewRegion(result.id);
+  }catch(error){$('region-status').textContent=String(error);$<HTMLButtonElement>('region-start').disabled=false;}
+});
+$('region-cancel').addEventListener('click',async()=>{if(regionJob)await cancelJob(regionJob.id);});
+$('region-close').addEventListener('click',()=>regionDialog.close());
+regionDialog.addEventListener('keydown',e=>e.stopPropagation());
+async function previewRegion(id:string){
+  regionDialog.close();const autoplay=$<HTMLInputElement>('autoplay'),saved=autoplay.checked;autoplay.checked=false;
+  try{await openCached(id,readFilename);const time=score?.measures.find(m=>m.index===regionSelected[0]?.index)?.start??0;await seek(time);await togglePlay();}
+  finally{autoplay.checked=saved;}
+}
+$('region-original').addEventListener('click',()=>void previewRegion(regionParent));
+$('region-preview').addEventListener('click',()=>{if(regionJob)void previewRegion(regionJob.id);});
+$('region-accept').addEventListener('click',async()=>{
+  if(!regionJob)return;
+  try{const response=await fetch(`/api/jobs/${regionJob.id}/accept-region`,{method:'POST',headers:{'X-SheetVis':'local'}}),result=await response.json();if(!response.ok)throw new Error(result.error??'采用失败');regionJob=result;if(currentJob?.id===result.id){currentJob=result;if(score)reflect(score);}
+    regionDialog.close();await openCached(regionJob!.id,readFilename);notice('已采用局部识别副本；原缓存保留。');}
+  catch(error){$('region-status').textContent=String(error);}
+});
+try{$<HTMLInputElement>('compact-measures').checked=localStorage.getItem('sheetvis.compact-measures')!=='false';}catch{}
+$('compact-measures').addEventListener('change',async()=>{
+  const compact=$<HTMLInputElement>('compact-measures').checked;try{localStorage.setItem('sheetvis.compact-measures',String(compact));}catch{}
+  if(!score?.xml)return;
+  const xml=score.xml,position=player.position,source=score.notes.flatMap(n=>n.sources??[]).find(s=>s.start<=position&&s.start+s.duration>position)?.id;
+  const token=++revision;player.pause();const next=musicXMLToScore(xml,readFilename,{trimMeasurePadding:compact});await setScore(next,token,currentJob?'PDF / LOCAL OMR':'MUSICXML / LOCAL FILE');await seek(source?sourceTime(next,source,position)??position:position);
+});
 $('cache-open').addEventListener('click',()=>{$<HTMLDialogElement>('cache-dialog').showModal();void refreshCache();});
 $('cache-refresh').addEventListener('click',()=>void refreshCache());
 $('cache-close').addEventListener('click',()=>$<HTMLDialogElement>('cache-dialog').close());
@@ -606,8 +702,9 @@ $('score-tab').addEventListener('click', async () => {
     const current = score, token = revision;
     busy = true; updateButtons();
     const target = document.createElement('div'); $('score-view').replaceChildren(target);
+    target.style.minWidth='640px';
     switchTab(false);
-    const renderer = new OpenSheetMusicDisplay(target, {autoResize:false, backend:'svg', drawTitle:false, drawComposer:false, darkMode:true});
+    const renderer = new OpenSheetMusicDisplay(target, {autoResize:false, backend:'svg', drawTitle:false, drawComposer:false, drawPartNames:false, drawingParameters:'compacttight', newSystemFromXML:false, darkMode:true});
     try {
       const xml = parseXML(current.xml!);
       if (!xml.querySelector('repeat[direction="backward"]')) xml.querySelectorAll('ending').forEach(e=>e.remove());
@@ -711,7 +808,12 @@ async function initialize() {
     configuredDefault = config.default_score;
     $('default-score').hidden = !configuredDefault;
     if (token !== revision) return;
-    if (configuredDefault && !new URLSearchParams(location.search).has('demo')) await loadDefault(true);
+    const params=new URLSearchParams(location.search), cache=params.get('cache');
+    if(cache!==null){
+      if(!/^[a-f0-9]{32}$/.test(cache))throw new Error('缓存链接无效。');
+      await openCached(cache,'',true);
+    }
+    else if (configuredDefault && !params.has('demo')) await loadDefault(true);
     else await loadDemo();
   } catch (error) { if (token === revision) notice(String(error), 'error'); }
 }

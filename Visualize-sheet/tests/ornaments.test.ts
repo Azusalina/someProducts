@@ -79,3 +79,10 @@ test('fixture includes all supported ornament families and positive finite playb
   expect(score.notes.every(n => Number.isFinite(n.start+n.midi+n.duration) && n.start >= 0 && n.duration > 0)).toBe(true);
   expect(qualityFeedback(score).facts.join(' ')).toContain('倚音 3 · 颤音 1 · 波音 2 · 回音 3');
 });
+
+test('long mordents alternate with the correct lower neighbor and finish on the principal',()=>{
+  const score=musicXMLToScore(wrap(ornament('<mordent long="yes"/>')));
+  expect(score.notes.length).toBeGreaterThanOrEqual(5);
+  expect(new Set(score.notes.map(n=>n.midi))).toEqual(new Set([60,59]));
+  expect(score.notes.at(-1)!.midi).toBe(60);expect(score.duration).toBe(.5);
+});

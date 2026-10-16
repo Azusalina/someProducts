@@ -117,7 +117,11 @@ export function realizeOrnaments(part: Element, notes: NoteEvent[], measures: Me
         const first = mark.getAttribute('start-note');
         pattern = Array.from({ length: count }, (_, i) => first === 'lower' ? (i % 2 ? main : lower) : (i % 2 === (first === 'upper' ? 0 : 1) ? upper : main));
       } else if (kind.includes('mordent')) {
-        pattern = [main, kind === 'mordent' ? lower : upper, main]; span = Math.min(duration * .45, .24);
+        const neighbour=kind === 'mordent' ? lower : upper;
+        const long=mark.getAttribute('long')==='yes';
+        const count=long ? Math.min(15,Math.max(5,2*Math.floor(duration*5)+1)) : 3;
+        pattern = Array.from({length:count},(_,i)=>i%2 ? neighbour : main);
+        span = Math.min(duration * (long ? .65 : .45),long ? .5 : .24);
       } else {
         pattern = kind.includes('inverted') ? [lower, main, upper, main] : [upper, main, lower, main];
         if (delayed) { offset = duration / 2; span = duration / 2; }

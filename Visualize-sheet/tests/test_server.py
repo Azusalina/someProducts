@@ -227,12 +227,15 @@ class LocalServerTests(unittest.TestCase):
             self.assertEqual(command[command.index('-sheets')+1], '2')
             with zipfile.ZipFile(out / 'score.omr', 'w') as z:
                 z.writestr('book.xml', '<book><sheet number="1"/><sheet number="2"><steps>GRID PAGE</steps></sheet></book>')
-            (out / 'score.mxl').write_bytes(b'fixture result')
+            with zipfile.ZipFile(out/'score.mxl','w') as z:
+                z.writestr('META-INF/container.xml','<container><rootfiles><rootfile full-path="score.xml"/></rootfiles></container>')
+                z.writestr('score.xml','<score-partwise><part id="P1"><measure><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note></measure></part></score-partwise>')
             return 0
         with patch.object(store, 'execute', side_effect=run), patch('server.configuration', return_value={'recognition_threads':4}), patch('server.os.sched_getaffinity', return_value=set(range(8))):
             store.run(identifier)
         self.assertEqual(store.get(identifier)['state'], 'done')
-        self.assertEqual((directory / 'result-0.mxl').read_bytes(), b'fixture result')
+        self.assertEqual((directory / 'result-0.mxl').read_bytes(), (directory/'output/score/score.mxl').read_bytes())
+        self.assertEqual(store.get(identifier)['exported_notes'],1)
         self.assertTrue((directory / 'engine.log').exists())
         self.assertEqual(store.get(identifier)['included_pages'], [2])
         self.assertEqual(store.get(identifier)['skipped_pages'], [1])
@@ -250,13 +253,17 @@ class LocalServerTests(unittest.TestCase):
         with patch.object(store.executor, 'submit'):
             identifier = store.create(payload)
         self.assertEqual(store.jobs[identifier]['resumed_from'], previous)
+        steps = []
         def engine(command, env, log):
-            self.assertEqual(command[command.index('-step')+1], 'PAGE')
-            (store.directory / identifier / 'output/partial.mxl').write_bytes(b'partial')
+            step = command[command.index('-step')+1]
+            steps.append(step)
+            if step == 'PAGE':
+                (store.directory / identifier / 'output/partial.mxl').write_bytes(b'partial')
             return 0
         with patch.object(store, 'execute', side_effect=engine) as execute:
             store.run(identifier)
-        self.assertEqual(execute.call_count, 1)
+        self.assertEqual(execute.call_count, 2)
+        self.assertEqual(steps, ['LINKS', 'PAGE'])
         self.assertEqual(store.get(identifier)['state'], 'error')
         self.assertIn('未完成识别', store.get(identifier)['message'])
         self.assertFalse((store.directory / identifier / 'result-0.mxl').exists())

@@ -45,8 +45,10 @@ def components(image):
 
 
 def dotted_lines(boxes, interline):
-    dots = [b for b in boxes if .07*interline <= b[2]-b[0] <= .7*interline
-            and .07*interline <= b[3]-b[1] <= .48*interline]
+    # Printed ottava lines include short dashes as well as round dots. The last
+    # dash can share a component with part of the ending hook.
+    dots = [b for b in boxes if .07*interline <= b[2]-b[0] <= 1.5*interline
+            and .055*interline <= b[3]-b[1] <= .55*interline]
     groups = []
     for box in sorted(dots, key=lambda b:b[0]):
         x, y = (box[0]+box[2])/2, (box[1]+box[3])/2
@@ -55,8 +57,37 @@ def dotted_lines(boxes, interline):
                    and abs(g[0][1]-y) < .8*interline]
         if matches: max(matches,key=lambda g:g[-1][0]).append((x,y,box))
         else: groups.append([(x,y,box)])
-    return [g for g in groups if len(g) >= 5 and g[-1][0]-g[0][0] >= 2*interline
-            and median(b[0]-a[0] for a,b in zip(g,g[1:])) < 1.1*interline]
+    regular=[]
+    for group in groups:
+        if len(group)<5:continue
+        step=median(b[0]-a[0]for a,b in zip(group,group[1:]));segments=[[]]
+        for p in group:
+            if segments[-1]and p[0]-segments[-1][-1][0]>2.8*step:segments.append([])
+            segments[-1].append(p)
+        regular.extend(g for g in segments if len(g)>=5 and g[-1][0]-g[0][0]>=2*interline and median(b[0]-a[0]for a,b in zip(g,g[1:]))<2.6*interline)
+    return regular
+
+
+def eight_shape(image, bounds):
+    """Bootstrap an unclassified 8 only from two enclosed, aligned counters.
+
+    This is shape evidence, not a trained classifier or an inferred register.
+    A complete nearby dashed span and a unique staff are still required.
+    """
+    try:
+        import numpy as np
+        from scipy import ndimage
+    except ImportError:
+        return False
+    ink=np.asarray(image.crop(bounds[:4]).convert('L'))<128
+    ink=np.pad(ink,1);holes=ndimage.binary_fill_holes(ink)&~ink
+    labels,count=ndimage.label(holes);regions=[]
+    for n in range(1,count+1):
+        ys,xs=np.where(labels==n)
+        if len(xs)>=max(2,ink.size*.008):regions.append((float(xs.mean()),float(ys.mean()),len(xs)))
+    if len(regions)!=2:return False
+    a,b=sorted(regions,key=lambda r:r[1]);h,w=ink.shape
+    return b[1]-a[1]>.25*h and abs(a[0]-b[0])<.3*w and max(a[2],b[2])<4*min(a[2],b[2])
 
 
 def _box(element):
@@ -84,14 +115,16 @@ def image_spans(sheet, image, templates):
             heads = [(head, _box(head), chord) for chord, hs in chord_heads.items()
                      for head in hs if head.get('staff') == staff.get('id') and _box(head)]
             staves.append((system,staff,min(ys),max(ys),heads))
-    result = []
+    result = []; unlabelled=[]
     for chain in dotted_lines(boxes,interline):
-        x0, y0 = chain[0][:2]; x1, y1 = chain[-1][:2]
-        known = [(mark,b) for mark,b in marks if b and 0 < x0-(b[0]+b[2])/2 < 3*interline
+        x0, _ = chain[0][:2]; x1, _ = chain[-1][:2]
+        y0=median(p[1]for p in chain[:max(3,len(chain)//3)]);y1=median(p[1]for p in chain[-max(3,len(chain)//3):])
+        # The suffix in "8va"/"8vb" lies between the digit and the line.
+        known = [(mark,b) for mark,b in marks if b and 0 < x0-(b[0]+b[2])/2 < 6*interline
                  and abs((b[1]+b[3])/2-y0) < interline]
         label = min(known,key=lambda t:abs(t[1][2]-x0))[1] if known else None
         if label is None:
-            candidates = [b for b in boxes if 0 < x0-b[2] < 2*interline
+            candidates = [b for b in boxes if 0 < x0-b[2] < 5*interline
                           and abs((b[1]+b[3])/2-y0) < interline
                           and .7*interline < b[2]-b[0] < 2.3*interline
                           and 1.2*interline < b[3]-b[1] < 3*interline]
@@ -99,10 +132,9 @@ def image_spans(sheet, image, templates):
             for b in candidates:
                 glyph = image.crop(b[:4]).convert('L').resize((20,28))
                 error = min((ImageStat.Stat(ImageChops.difference(glyph,t)).mean[0]/255 for t in templates),default=1)
-                if error < .23: matches.append((error,b))
+                if error < .23 or eight_shape(image,b): matches.append((error if error<.23 else .22,b))
             if matches: label = min(matches,key=lambda t:t[0])[1][:4]
-        if label is None: continue
-        start = (label[0]+label[2])/2
+        start = (label[0]+label[2])/2 if label is not None else x0
         options = []
         for system,staff,top,bottom,heads in staves:
             if top <= y0 <= bottom: continue
@@ -119,9 +151,9 @@ def image_spans(sheet, image, templates):
         _,system,staff,kind,heads = options[0]
         # Match the printed hook, when present. A clipped line is accepted only
         # at the actual right edge of this system, never extended across a gap.
-        end_boxes = [b for b in boxes if abs((b[0]+b[2])/2-x1) < .7*interline
-                     and (0 < b[1]-y1 < 1.5*interline if kind=='ALTA' else 0 < y1-b[3] < 1.5*interline)
-                     and b[2]-b[0] < .7*interline and b[3]-b[1] < .8*interline]
+        end_boxes = [b for b in boxes if abs((b[0]+b[2])/2-x1) < 1.1*interline
+                     and (y1-.25*interline<=b[1]<y1+1.5*interline and b[3]>y1+.3*interline if kind=='ALTA' else y1-1.5*interline<b[3]<=y1+.25*interline and b[1]<y1-.3*interline)
+                     and b[2]-b[0] < .7*interline and .25*interline < b[3]-b[1] < 2*interline]
         right = max(float(stack.get('right')) for stack in system.findall('stack'))
         reaches_edge = abs(x1-right) < 1.5*interline
         if not end_boxes and not reaches_edge: continue
@@ -129,9 +161,29 @@ def image_spans(sheet, image, templates):
             x1 = max(x1,max((b[0]+b[2])/2 for b in end_boxes))
         first = min(heads,key=lambda item:(item[1][0],item[1][1]))[2]
         last = max(heads,key=lambda item:(item[1][0],-item[1][1]))[2]
-        result.append({'system':system,'staff':staff.get('id'),'kind':kind,'label':label,
+        span={'system':system,'staff':staff.get('id'),'kind':kind,'label':label,
                        'x0':start,'y0':y0,'x1':x1,'y1':y1,'first':first,'last':last,
-                       'dots':len(chain),'edge':reaches_edge})
+                       'dots':len(chain),'edge':reaches_edge and not end_boxes}
+        (result if label is not None else unlabelled).append(span)
+    # A line without a new value is eligible only as the unique continuation of
+    # a confirmed value at the preceding system's right edge, on the same part
+    # and staff ordinal. No free-standing dashed expression line is promoted.
+    systems=sheet.findall('page/system');identity={}
+    for system in systems:
+        for part in system.findall('part'):
+            for index,staff in enumerate(part.findall('staff')):identity[staff.get('id')]=(part.get('id'),index)
+    for first in list(result):
+        current=first
+        while current['edge']:
+            si=systems.index(current['system'])
+            if si+1>=len(systems):break
+            following=systems[si+1]
+            left=min(float(s.get('left'))for s in following.findall('stack'))
+            matches=[s for s in unlabelled if s['system']is following and s['kind']==current['kind']and identity.get(s['staff'])==identity.get(current['staff'])and abs(s['x0']-left)<6*interline]
+            if len(matches)!=1:break
+            span=matches[0];unlabelled.remove(span);span['previous']=current
+            b=first['label'];span['label']=(span['x0'],span['y0']-(b[3]-b[1])/2,span['x0']+b[2]-b[0],span['y0']+(b[3]-b[1])/2)
+            result.append(span);current=span
     return result
 
 
@@ -152,7 +204,6 @@ def repair_octaves(project):
                     b = _box(mark)
                     if mark.get('shape') == 'OTTAVA' and b:
                         templates.append(image.crop(b).convert('L').resize((20,28)))
-        if not templates: return {'repairs':[],'available':True}
         for name in names:
             sheet = ET.fromstring(archive.read(name)); png = name.rsplit('/',1)[0]+'/BINARY.png'
             if png not in archive.namelist() or sheet.find('scale/interline') is None: continue
@@ -175,7 +226,10 @@ def repair_octaves(project):
                 identifier = str(int(sheet.get('last-persistent-id','0'))+1)
                 sheet.set('last-persistent-id',identifier)
                 mark = ET.SubElement(system.find('sig/inters'),'octave-shift',
-                    {'id':identifier,'shape':'OTTAVA','kind':span['kind'],'staff':span['staff'],'grade':'1','ctx-grade':'1'})
+                    {'id':identifier,'shape':'OTTAVA','kind':span['kind'],'staff':span['staff'],'grade':'1','ctx-grade':'1','manual':'true','frozen':'true'})
+                span['created']=mark
+                if 'previous'in span:
+                    previous=span['previous']['created'];previous.set('right-extension',identifier);mark.set('left-extension',previous.get('id'))
                 ET.SubElement(mark,'bounds',{'x':str(round(label[0])),'y':str(round(label[1])),
                     'w':str(round(label[2]-label[0])),'h':str(round(label[3]-label[1]))})
                 line = ET.SubElement(mark,'line')
@@ -189,7 +243,8 @@ def repair_octaves(project):
                     ET.SubElement(relation,'octave-shift-chord',{'side':side,'grade':'1'})
                 repairs.append({'page':int(name.split('#')[1].split('/')[0]),'system':system.get('id'),
                                 'staff':span['staff'],'kind':span['kind'],'dots':span['dots'],
-                                'source':'binary dotted line and matching 8 glyph','replaced':replaced})
+                                'x_start':round(span['x0']),'x_end':round(span['x1']),'first_chord':span['first'],'last_chord':span['last'],
+                                'source':'binary dotted/dashed line with verified 8 geometry and bounded staff association','replaced':replaced})
             changed[name] = ET.tostring(sheet,encoding='utf-8',xml_declaration=True)
         if changed:
             temp = Path(project).with_suffix('.omr.part')

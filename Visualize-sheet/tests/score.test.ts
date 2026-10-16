@@ -172,3 +172,50 @@ describe('musical timing and structure', () => {
     expect(s.notes).toHaveLength(1); expect(s.notes[0].start).toBeCloseTo(1); expect(s.bpm).toBeCloseTo(90);
   });
 });
+
+test('chromatic pitches, cancellation and inline clefs do not stop either backed-up voice', () => {
+  const n=(step:string,octave:number,alter:number,sign='')=>`<note><pitch><step>${step}</step>${alter?`<alter>${alter}</alter>`:''}<octave>${octave}</octave></pitch><duration>4</duration><voice>1</voice><staff>1</staff>${sign?`<accidental>${sign}</accidental>`:''}</note>`;
+  const clef=(sign:string,line:number)=>`<attributes><clef number="1"><sign>${sign}</sign><line>${line}</line></clef></attributes>`;
+  const xml=wrap(measure('<attributes><key><fifths>1</fifths></key></attributes>'+n('F',4,1,'sharp')+n('F',4,1)+n('F',4,0,'natural')+clef('F',4)+n('B',2,-1,'flat')+'<backup><duration>16</duration></backup>'+n('C',3,0).replace('<voice>1','<voice>2').replace('<staff>1','<staff>2'))+measure(clef('G',2)+n('F',4,1)+n('C',5,2,'double-sharp')+n('B',4,-2,'flat-flat'),2));
+  const s=musicXMLToScore(xml);
+  expect(s.notes.filter(n=>n.hand==='right').map(n=>n.midi)).toEqual([66,66,65,46,66,74,69]);
+  expect(s.notes.find(n=>n.hand==='left')?.start).toBe(0);expect(s.notes.at(-1)?.start).toBe(3);
+});
+
+test('compact OMR bars remove only invented meter padding and retain written rests',()=>{
+  const m=(body:string,n:number)=>`<measure number="${n}">${n===1?attrs:''}${body}</measure>`;
+  const xml=wrap(m(note('C',16),1)+m(note('D',4)+'<note><rest/><duration>4</duration></note>',2)+m(note('E',16),3));
+  const strict=musicXMLToScore(xml),compact=musicXMLToScore(xml,'test',{trimMeasurePadding:true});
+  expect(strict.notes.at(-1)?.start).toBe(4);expect(compact.notes.at(-1)?.start).toBe(3);
+  expect(compact.measures[1].duration).toBe(1);expect(compact.warnings.join(' ')).toContain('已省略');
+});
+
+test('independent backed-up voices may reuse a slur number in document order',()=>{
+  const slur=(type:string)=>`<notations><slur number="1" type="${type}"/></notations>`;
+  const upper=note('C',4,slur('start'))+note('D',4,slur('stop'));
+  const lower=(note('E',4,slur('start'))+note('F',4,slur('stop'))).replaceAll('<voice>1','<voice>2').replaceAll('<staff>1','<staff>2');
+  const s=musicXMLToScore(wrap(measure(upper+'<backup><duration>8</duration></backup>'+lower)));
+  expect(s.notes.filter(n=>n.start===0).every(n=>n.soundDuration>n.duration)).toBe(true);
+  expect(s.warnings.join(' ')).not.toMatch(/起点重复|缺少起点|缺少终点/);
+});
+
+test('continued cross-system slurs connect chord tones without merging attacks',()=>{
+  const mark=(type:string)=>`<notations><slur number="1" type="${type}"/></notations>`;
+  const xml=wrap(measure(note('C',4,mark('start'))+note('E',4,'<chord/>'))+measure(note('D',4,mark('continue')),2)+measure(note('F',4,mark('stop')),3));
+  const s=musicXMLToScore(xml);expect(s.notes).toHaveLength(4);
+  expect(s.notes.slice(0,3).every(n=>n.soundDuration>n.duration)).toBe(true);
+  expect(s.notes.every(n=>n.sources?.length===1)).toBe(true);
+});
+
+test('a unique explicit tie can survive an exported voice change at the barline',()=>{
+  const s=musicXMLToScore(wrap(measure(note('C',4,'<tie type="start"/>'))+measure(note('C',4,'<tie type="stop"/>').replace('<voice>1','<voice>2'),2)));
+  expect(s.notes).toHaveLength(1);expect(s.notes[0].sources).toHaveLength(2);expect(s.notes[0].duration).toBe(1);
+});
+
+test('ornament release retains its principal slur and the next source mapping',()=>{
+  const start='<notations><slur number="1" type="start"/><ornaments><mordent/></ornaments></notations>',stop='<notations><slur number="1" type="stop"/></notations>';
+  const s=musicXMLToScore(wrap(measure(note('C',4,start)+note('D',4,stop))));
+  const ornament=s.notes.filter(n=>n.decoration==='ornament').at(-1)!;
+  expect(ornament.soundDuration).toBeGreaterThan(ornament.duration);
+  expect(ornament.sources?.[0].id).toBe('P1:0:0');expect(s.notes.at(-1)?.sources?.[0].id).toBe('P1:0:1');
+});

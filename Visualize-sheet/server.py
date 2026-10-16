@@ -17,16 +17,20 @@ from urllib.parse import unquote, urlsplit
 import uuid
 import xml.etree.ElementTree as ET
 import zipfile
-from omr_support import repair_meters, repair_dynamics, source_map
+from omr_support import repair_meters, repair_dynamics, source_map, repair_initial_meter, INITIAL_METERS, read_musicxml
 from octave_support import audit_octaves, training_bundle
 from octave_repair import repair_octaves
+from native_ornaments import recover_ornaments, small_music_font
+from symbol_repair import repair_symbols, audit_export
+from region_support import measure_regions, selection, context_at, merge_region
+from rhythm_repair import repair_beam_links, repair_repeated_tuplets, audit_rhythm
 
 ROOT = Path(__file__).resolve().parent
 MAX_UPLOAD = 40 * 1024 * 1024
 MAX_JOBS = 8
 TIMEOUT = 3600
 CONFIG_LOCK = threading.Lock()
-PIPELINE = 'image-octaves-source-map-v4'
+PIPELINE = 'image-octave-tuplet-v8'
 OMR_STEPS = ('LOAD', 'BINARY', 'SCALE', 'GRID', 'HEADERS', 'STEM_SEEDS', 'BEAMS', 'LEDGERS', 'HEADS', 'STEMS', 'REDUCTION', 'CUE_BEAMS', 'TEXTS', 'MEASURES', 'CHORDS', 'CURVES', 'SYMBOLS', 'LINKS', 'RHYTHMS', 'PAGE')
 
 
@@ -98,6 +102,49 @@ def copy_project(project, target, pdf):
         temp.replace(target)
     finally:
         temp.unlink(missing_ok=True)
+
+
+def score_override(digest):
+    overrides=configuration().get('score_overrides',{})
+    if not isinstance(overrides,dict): raise ValueError('score_overrides 必须为 JSON 对象。')
+    settings=overrides.get(digest,{})
+    if not isinstance(settings,dict): raise ValueError('单份乐谱配置必须为 JSON 对象。')
+    return settings
+
+
+def initial_meter_for(digest):
+    """Context is explicitly configured per file hash, never inferred by title."""
+    settings=score_override(digest)
+    meter=settings.get('initial_meter')
+    if meter is None: return None
+    if not isinstance(meter,str) or meter not in {f'{n}/{d}' for n,d in INITIAL_METERS}:
+        raise ValueError('score_overrides 的 initial_meter 无效。')
+    return meter
+
+
+def implicit_tuplets_for(digest):
+    value=score_override(digest).get('implicit_tuplets',False)
+    if not isinstance(value,bool): raise ValueError('implicit_tuplets 必须为 true 或 false。')
+    return value
+
+
+def small_notes_for(digest):
+    value=score_override(digest).get('small_notes',False)
+    if not isinstance(value,bool): raise ValueError('small_notes 必须为 true 或 false。')
+    return value
+
+
+def input_dpi_for(digest):
+    value=score_override(digest).get('input_dpi',300)
+    if not isinstance(value,int) or isinstance(value,bool) or value not in (300,400,600): raise ValueError('input_dpi 必须为 300、400 或 600。')
+    return value
+
+
+def validate_export_notes(files,baseline=0):
+    count=sum(len(read_musicxml(path).findall('.//note/pitch')) for path in files)
+    if baseline and count < baseline*.97:
+        raise RuntimeError(f'重新识别仅导出 {count} 个音符，少于原缓存的 {baseline} 个；未采用可能严重漏音的结果，原缓存保留。')
+    return count
 
 
 class RecognitionCancelled(Exception):
@@ -217,6 +264,7 @@ class JobStore:
         self.futures = {}
         self.stopping = False
         self.deadline = None
+        self.default_file_hash = None
         self.executor = ThreadPoolExecutor(max_workers=1)
 
     def create(self, data, filename=""):
@@ -224,10 +272,14 @@ class JobStore:
             if self.stopping:
                 raise ValueError("服务正在停止。")
             digest = hashlib.sha256(data).hexdigest()
-            matches = [j for j in self.jobs.values() if j.get('sha256') == digest]
+            initial_meter = initial_meter_for(digest)
+            implicit_tuplets = implicit_tuplets_for(digest)
+            input_dpi = input_dpi_for(digest)
+            small_notes = small_notes_for(digest)
+            matches = [j for j in self.jobs.values() if j.get('sha256') == digest and not j.get('pending_region')]
             for cached in sorted(matches, key=lambda j: j.get('created', 0), reverse=True):
-                if cached.get('pipeline') != PIPELINE:
-                    continue
+                if cached.get('pipeline') != PIPELINE:continue
+                if not cached.get('region') and (cached.get('initial_meter') != initial_meter or cached.get('implicit_tuplets',False) != implicit_tuplets or cached.get('input_dpi',300)!=input_dpi or cached.get('small_notes',False)!=small_notes):continue
                 available = cached['state'] in ('queued', 'running') or (cached['state'] == 'done' and all((self.directory / cached['id'] / r['name']).is_file() for r in cached.get('results', [])) and cached.get('results'))
                 if available:
                     if filename and not cached.get('filename'):
@@ -240,8 +292,24 @@ class JobStore:
             directory.mkdir()
             (directory / "score.pdf").write_bytes(data)
             job = {"id": identifier, "state": "queued", "created": time.time(), "message": "等待本地识别", "sha256": digest, "pipeline": PIPELINE, "results": [], "filename": Path(filename).name[:200]}
+            if initial_meter: job['initial_meter']=initial_meter
+            if implicit_tuplets: job['implicit_tuplets']=True
+            if small_music_font(directory/'score.pdf'): job['small_notes_font']=True
+            if small_notes:job['small_notes']=True
+            job['input_dpi']=input_dpi
+            for previous in sorted(matches,key=lambda j:j.get('created',0),reverse=True):
+                if previous['state']=='done' and previous.get('results'):
+                    try:
+                        job['baseline_notes']=sum(len(read_musicxml(self.directory/previous['id']/r['name']).findall('.//note/pitch')) for r in previous['results'])
+                        job['compared_with']=previous['id'];break
+                    except (OSError,zipfile.BadZipFile,ET.ParseError,KeyError,StopIteration): pass
             # Resume saved OMR stages for the identical PDF after a failed run.
             for previous in sorted(matches, key=lambda j: j.get('created', 0), reverse=True):
+                if previous.get('region'):continue
+                if previous.get('small_notes',False)!=small_notes: continue
+                if previous.get('initial_meter') not in (None,initial_meter): continue
+                if previous.get('implicit_tuplets') and not implicit_tuplets: continue
+                if previous.get('input_dpi',300)!=input_dpi: continue
                 if previous['state'] not in ('error','done','cancelled') or previous.get('phase') != 'recognize':
                     continue
                 projects = sorted((self.directory / previous['id'] / 'output').rglob('*.omr'))
@@ -258,6 +326,13 @@ class JobStore:
                         if old_log.exists(): shutil.copyfile(old_log, directory/'previous.log')
                         job['resumed_from'] = previous['id']
                         job['upgraded_from_complete'] = previous['state'] == 'done'
+                        if previous['state']=='done':
+                            for bi,result in enumerate(previous.get('results',[])):
+                                old=self.directory/previous['id']/result['name']
+                                if old.exists():shutil.copyfile(old,directory/f'baseline-{bi}{old.suffix}')
+                        else:
+                            for old in (self.directory/previous['id']).glob('baseline-*'):
+                                if old.is_file():shutil.copyfile(old,directory/old.name)
                         job['inherited_rhythm_quality'] = previous.get('quality') if previous['state'] == 'done' else None
                         restored = True;break
                     except (OSError,zipfile.BadZipFile,ET.ParseError,KeyError): continue
@@ -267,11 +342,58 @@ class JobStore:
             self.futures[identifier] = self.executor.submit(self.run, identifier)
         return identifier
 
+    def regions(self,identifier,index=0):
+        job=self.get(identifier)
+        if not job or job['state']!='done' or index!=0 or len(job.get('results',[]))!=1:raise ValueError('请选择已完成、单乐章的钢琴乐谱。')
+        directory=self.directory/identifier
+        project=directory/'base-project.omr' if job.get('region') else next((directory/'output').rglob('*.omr'),None)
+        if project is None or not project.is_file():raise ValueError('原识别工程不存在。')
+        return measure_regions(project,directory/job['results'][0]['name'])
+
+    def create_region(self,parent_id,start,end,dpi=400,implicit_tuplets=False):
+        if type(dpi)is not int or dpi not in (400,600) or type(implicit_tuplets)is not bool:raise ValueError('局部识别分辨率限 400／600 DPI。')
+        parent=self.get(parent_id)
+        if not parent or parent.get('pending_region'):raise ValueError('请选择已采用的完整乐谱缓存。')
+        regions=self.regions(parent_id);region=selection(regions,start,end)
+        parent_mapping=json.loads(self.mapping(parent_id,'result-0.map.json'))
+        with self.mapping_lock,self.lock:
+            if self.stopping:raise ValueError('服务正在停止。')
+            for existing in sorted(self.jobs.values(),key=lambda j:j.get('created',0),reverse=True):
+                chosen=existing.get('region',{})
+                if existing.get('pending_region')and existing['state']in('queued','running','done')and chosen.get('parent')==parent_id and chosen.get('start')==start and chosen.get('end')==end and existing.get('input_dpi')==dpi and existing.get('implicit_tuplets',False)==implicit_tuplets:return existing['id']
+            if parent_id not in self.jobs:raise ValueError('原缓存已删除。')
+            if sum(j['state']in('queued','running','cancelling')for j in self.jobs.values())>=MAX_JOBS:raise ValueError('识别队列已满。')
+            identifier=uuid.uuid4().hex;directory=self.directory/identifier;directory.mkdir()
+            source=self.directory/parent_id
+            project=source/'base-project.omr' if parent.get('region') else next((source/'output').rglob('*.omr'))
+            shutil.copyfile(source/'score.pdf',directory/'score.pdf');shutil.copyfile(source/parent['results'][0]['name'],directory/'parent.mxl')
+            copy_project(project,directory/'base-project.omr',directory/'score.pdf')
+            (directory/'parent.map.json').write_text(json.dumps(parent_mapping))
+            xml=read_musicxml(directory/'parent.mxl');part=xml.find('part')
+            first=min(r['index']for r in regions if r['page']==region['page'] and r['crop_y']>=region['crop']['y']-1e-7 and r['crop_y']<region['crop']['y']+region['crop']['h'])
+            attrs=context_at(part,first+1);time_element=attrs.find('time')
+            meter=(time_element.findtext('beats')+'/'+time_element.findtext('beat-type'))if time_element is not None else score_override(parent.get('sha256','')).get('verified_initial_meter')
+            job={'id':identifier,'state':'queued','created':time.time(),'sha256':parent.get('sha256'),'pipeline':PIPELINE,'filename':parent.get('filename','乐谱.pdf'),'results':[],'message':'等待局部识别','input_dpi':dpi,'implicit_tuplets':implicit_tuplets,'pending_region':True,'region':{**region,'parent':parent_id},'parent_quality':parent.get('quality'),'parent_pages':{k:parent.get(k)for k in ('total_pages','included_pages','skipped_pages')}}
+            if meter:job['initial_meter']=meter
+            self.jobs[identifier]=job;self.persist(identifier);self.futures[identifier]=self.executor.submit(self.run,identifier)
+        return identifier
+
+    def accept_region(self,identifier):
+        with self.lock:
+            job=self.jobs.get(identifier)
+            if not job:raise KeyError(identifier)
+            if job['state']!='done' or not job.get('region'):raise ValueError('局部识别尚未完成。')
+            job['pending_region']=False;self.persist(identifier)
+        return self.get(identifier)
+
     def get(self, identifier):
         with self.lock:
             job = dict(self.jobs[identifier]) if identifier in self.jobs else None
         if job is not None:
-            job['upgrade_available'] = job.get('pipeline') != PIPELINE
+            job['upgrade_available'] = job.get('pipeline') != PIPELINE or job.get('initial_meter') != initial_meter_for(job.get('sha256','')) or job.get('implicit_tuplets',False) != implicit_tuplets_for(job.get('sha256',''))
+            job['upgrade_available'] |= job.get('input_dpi',300)!=input_dpi_for(job.get('sha256',''))
+            job['upgrade_available'] |= job.get('small_notes',False)!=small_notes_for(job.get('sha256',''))
+        if job is not None and job.get('region'):job['upgrade_available']=False
         if job is None:
             return None
         path = self.directory / identifier / 'engine.log'
@@ -281,7 +403,7 @@ class JobStore:
             log = ''
         job.update(recognition_progress(log, job['state'], job.get('phase', 'scan'), job.get('page_count'), job.get('remaining_steps')))
         if job['state'] == 'done':
-            job['quality'] = quality_report(log,job.get('inherited_rhythm_quality'))
+            job['quality'] = job.get('parent_quality') if job.get('region') else quality_report(log,job.get('inherited_rhythm_quality'))
             job['results'] = [{**r, 'mapping':f'/api/jobs/{identifier}/{Path(r["name"]).stem}.map.json'} for r in job.get('results', [])]
         return job
 
@@ -300,8 +422,11 @@ class JobStore:
                     except OSError: pass
                 entries.append({'id':job['id'], 'filename':job.get('filename') or f"乐谱 {job['id'][:8]}.pdf",
                     'state':job['state'], 'created':job.get('created',0), 'bytes':size,
-                    'pages':job.get('total_pages'), 'results':len(job.get('results',[])), 'is_default':job['id']==default_id})
-            return entries
+                    'pages':job.get('total_pages'), 'results':len(job.get('results',[])), 'is_default':job['id']==default_id,
+                    'pending_region':job.get('pending_region',False),'upgrade_available':job.get('pipeline')!=PIPELINE or job.get('initial_meter')!=initial_meter_for(job.get('sha256','')) or job.get('implicit_tuplets',False)!=implicit_tuplets_for(job.get('sha256','')) or job.get('input_dpi',300)!=input_dpi_for(job.get('sha256','')) or job.get('small_notes',False)!=small_notes_for(job.get('sha256',''))})
+            for entry in entries:
+                if self.jobs[entry['id']].get('region'):entry['upgrade_available']=False
+        return entries
 
     def delete_cache(self, identifier):
         with self.mapping_lock, self.lock:
@@ -315,21 +440,46 @@ class JobStore:
             del self.jobs[identifier]
 
     def default_selection(self):
-        if os.environ.get('SHEETVIS_DEFAULT_SCORE') is not None: return None
-        identifier=configuration().get('default_cache')
-        if not isinstance(identifier,str) or not re.fullmatch(r'[a-f0-9]{32}',identifier): return None
-        with self.lock:
-            job=self.jobs.get(identifier)
-            if not job or job['state']!='done' or not job.get('results'): return None
-            directory=self.directory/identifier
-            if not (directory/'score.pdf').is_file() or not all((directory/r['name']).is_file() for r in job['results']): return None
+        def descriptor(job,active=False):
+            if not job or job.get('pending_region'): return None
+            if active:
+                if job['state'] not in ('queued','running','cancelling'): return None
+            elif job['state']!='done' or not job.get('results'): return None
+            identifier=job['id'];directory=self.directory/identifier
+            if not (directory/'score.pdf').is_file() or not all((directory/r['name']).is_file() for r in job.get('results',[])): return None
             return {'job_id':identifier,'name':job.get('filename') or f'乐谱 {identifier[:8]}.pdf','available':True,'url':f'/api/jobs/{identifier}/score.pdf'}
+        identifier=configuration().get('default_cache') if os.environ.get('SHEETVIS_DEFAULT_SCORE') is None else None
+        with self.lock:
+            if isinstance(identifier,str) and re.fullmatch(r'[a-f0-9]{32}',identifier):
+                selected=descriptor(self.jobs.get(identifier))
+                if selected: return selected
+        # The external default PDF may already have a completed cache. Resolve
+        # it before startup, instead of uploading/recognising it on every reload.
+        source=default_score()
+        try:
+            if source is None or not source.is_file() or source.stat().st_size>MAX_UPLOAD: return None
+            stat=source.stat();key=(str(source.resolve()),stat.st_mtime_ns,stat.st_ctime_ns,stat.st_size)
+            cached=self.default_file_hash
+            digest=cached[1] if cached and cached[0]==key else hashlib.sha256(source.read_bytes()).hexdigest()
+            self.default_file_hash=(key,digest)
+        except OSError: return None
+        with self.lock:
+            for job in sorted(self.jobs.values(),key=lambda j:j.get('created',0),reverse=True):
+                if job.get('sha256')==digest:
+                    selected=descriptor(job)
+                    if selected: return {**selected,'name':source.name}
+            for job in sorted(self.jobs.values(),key=lambda j:j.get('created',0),reverse=True):
+                if job.get('sha256')==digest:
+                    selected=descriptor(job,active=True)
+                    if selected:return {**selected,'name':source.name}
+        return None
 
     def set_default(self,identifier):
         with self.lock:
             job=self.jobs.get(identifier)
             if not job: raise KeyError(identifier)
             directory=self.directory/identifier
+            if job.get('pending_region'):raise ValueError('请先检查并采用局部识别候选。')
             if job['state']!='done' or not job.get('results') or not (directory/'score.pdf').is_file() or not all((directory/r['name']).is_file() for r in job['results']):
                 raise ValueError('只有完整的已完成缓存可设为默认。')
             save_configuration({'default_cache':identifier})
@@ -490,14 +640,30 @@ class JobStore:
         env['OMP_THREAD_LIMIT'] = '1'
         env['OMP_NUM_THREADS'] = '1'
         base = engine_options(engine, resources)
+        base += ['-constant',f"org.audiveris.omr.image.ImageLoading.pdfResolution={self.jobs[identifier].get('input_dpi',300)}"]
+        if self.jobs[identifier].get('implicit_tuplets'):
+            base += ['-constant','org.audiveris.omr.sheet.ProcessingSwitches.implicitTuplets=true']
+        if self.jobs[identifier].get('small_notes'):
+            base += ['-constant','org.audiveris.omr.sheet.ProcessingSwitches.smallHeads=true',
+                     '-constant','org.audiveris.omr.sheet.ProcessingSwitches.smallBeams=true']
         command = [*base, "-step", "GRID", "-save", "-output", str(output), "--", str(directory / "score.pdf")]
+        region=self.jobs[identifier].get('region')
         try:
             with (directory / "engine.log").open("wb") as log:
                 log.write(f"SHEETVIS_RESOURCES threads={resources['threads']} heap_mb={resources['memory_mb']} parallel={resources['parallel']}\n".encode()); log.flush()
                 previous = directory / 'previous.log'
                 if previous.exists() and not self.jobs[identifier].get('upgraded_from_complete'):
                     log.write(previous.read_bytes()); log.write(b'\nSHEETVIS_RESUME\n'); log.flush()
-                if not (output / 'score.omr').exists():
+                if region and not (directory/'region.png').exists():
+                    self.update(identifier,message=f"裁取 PDF 第 {region['page']} 页的双谱表上下文")
+                    self.execute(['pdftoppm','-f',str(region['page']),'-l',str(region['page']),'-singlefile','-r',str(self.jobs[identifier]['input_dpi']),'-png',str(directory/'score.pdf'),str(directory/'page')],env,log)
+                    from PIL import Image
+                    with Image.open(directory/'page.png')as image:
+                        c=region['crop'];left=round(c['x']*image.width);top=round(c['y']*image.height);right=round((c['x']+c['w'])*image.width);bottom=round((c['y']+c['h'])*image.height)
+                        image.crop((left,top,right,bottom)).save(directory/'region.png')
+                    (directory/'page.png').unlink()
+                if region:command[-1]=str(directory/'region.png')
+                if not (output / ('region.omr' if region else 'score.omr')).exists():
                     self.execute(command, env, log)
                 projects = sorted(output.rglob('*.omr'))
                 if not projects:
@@ -505,7 +671,24 @@ class JobStore:
                 total, selected = staff_pages(projects[0])
                 if not selected:
                     raise RuntimeError('未检测到五线谱页面。')
-                meter_repairs = repair_meters(projects[0], directory/'score.pdf') if config.get('repair_native_meter', True) else []
+                meter_repairs = repair_meters(projects[0], directory/'score.pdf') if not region and config.get('repair_native_meter', True) else []
+                baseline_heads=set()
+                for bi,old in enumerate(sorted(directory.glob('baseline-*.mxl'))+sorted(directory.glob('baseline-*.musicxml'))):
+                    mapping=source_map(projects[0],old,bi)
+                    baseline_heads.update((p['page'],p['head'])for p in mapping['positions'].values())
+                self.execute([*base,'-step','LINKS','-save','-output',str(output),'-sheets',*map(str,selected),'--',str(projects[0])],env,log)
+                beam_repairs=repair_beam_links(projects[0]);self.update(identifier,beam_repairs=beam_repairs)
+                tuplet_repairs=repair_repeated_tuplets(projects[0]);self.update(identifier,tuplet_repairs=tuplet_repairs)
+                if tuplet_repairs:
+                    inherited=dict(self.jobs[identifier].get('inherited_rhythm_quality')or{})
+                    corrected={(r['page'],int(r['system']),int(r['stack']))for r in tuplet_repairs}
+                    inherited['rhythm_issues']=[r for r in inherited.get('rhythm_issues',[])if(r['page'],r['system'],r['stack'])not in corrected]
+                    self.update(identifier,inherited_rhythm_quality=inherited)
+                initial_meter = self.jobs[identifier].get('initial_meter')
+                if initial_meter:
+                    # A fresh GRID checkpoint has no measures or chords yet.
+                    self.update(identifier,phase='recognize',message='恢复片段起始拍号',included_pages=selected,page_count=len(selected),total_pages=total)
+                    meter_repairs += repair_initial_meter(projects[0],initial_meter)
                 if meter_repairs:
                     self.update(identifier,inherited_rhythm_quality=None)
                     # Recompute all affected rhythms; old diagnostics are retained
@@ -523,8 +706,14 @@ class JobStore:
                 if incomplete:
                     raise RuntimeError(f'乐谱第 {"、".join(map(str, incomplete))} 页未完成识别；已保存进度，重新导入可继续。')
                 self.checkpoint(identifier,projects[0])
+                def symbol_progress(page):
+                    self.check_cancelled(identifier)
+                    if time.monotonic() > self.deadline: raise subprocess.TimeoutExpired('symbol image checks',timeout)
+                    self.update(identifier,message=f'符号复核 · 第 {page} 页',current_page=page)
+                symbol_recovery = repair_symbols(projects[0],symbol_progress,directory/'base-project.omr' if region else None)
+                self.update(identifier,symbol_recovery=symbol_recovery)
                 octave_recovery = repair_octaves(projects[0])
-                octave_audit = audit_octaves(projects[0], directory/'score.pdf')
+                octave_audit = audit_octaves(projects[0], directory/('region.png' if region else 'score.pdf'))
                 dynamics_repairs = repair_dynamics(projects[0])
                 self.update(identifier, octave_audit=octave_audit, octave_recovery=octave_recovery, dynamics_repairs=dynamics_repairs, message='导出与校验')
                 log.write(b'\nSHEETVIS_EXPORT\n'); log.flush()
@@ -536,14 +725,47 @@ class JobStore:
                     raise RuntimeError("本地识别引擎执行失败；可下载日志查看原因。")
                 raise RuntimeError("未生成可播放乐谱，请尝试更清晰的 PDF，或导入 MusicXML／MIDI。")
             results = []
+            symbol_audit=audit_export(projects[0],files)
+            self.update(identifier,symbol_audit=symbol_audit)
+            (directory/'symbol-audit.json').write_text(json.dumps({'recovery':self.jobs[identifier].get('symbol_recovery'), 'export':symbol_audit},ensure_ascii=False,indent=2))
+            recovered=[recover_ornaments(projects[0],directory/'score.pdf',path,index) for index,path in enumerate(files)] if not region else []
+            self.update(identifier,ornament_recovery={'native_marks':sum(r['native_marks'] for r in recovered),
+                        'recovered':[mark for r in recovered for mark in r['recovered']],
+                        'findings':[mark for r in recovered for mark in r['findings']]})
+            if region:
+                if len(files)!=1:raise RuntimeError('局部识别产生多个乐章，未替换原结果。')
+                candidate=files[0];candidate_mapping=source_map(projects[0],candidate)
+                parent_map=json.loads((directory/'parent.map.json').read_text())
+                merged=directory/'merged.mxl'
+                mapping,comparison=merge_region(directory/'parent.mxl',parent_map,candidate,candidate_mapping,measure_regions(projects[0],candidate),region,merged)
+                comparison['local_quality']=quality_report((directory/'engine.log').read_text(errors='replace'))
+                comparison['unexported_heads']=len(symbol_audit['unexported_heads'])
+                (directory/'result-0.map.json').write_text(json.dumps(mapping,ensure_ascii=False))
+                for field in ('symbol_recovery','symbol_audit'):
+                    audit=self.jobs[identifier].get(field,{})
+                    for key in ('repairs','findings','unexported_heads','ambiguous_accidentals'):
+                        for item in audit.get(key,[]):item['page']=region['page']
+                (directory/'symbol-audit.json').write_text(json.dumps({'recovery':self.jobs[identifier].get('symbol_recovery'),'export':symbol_audit},ensure_ascii=False,indent=2))
+                self.update(identifier,region_comparison=comparison,**self.jobs[identifier]['parent_pages'])
+                files=[merged]
+            baseline=self.jobs[identifier].get('baseline_notes',0)
+            exported_notes=validate_export_notes(files,baseline)
+            if baseline_heads and not region:
+                mapped=set()
+                for bi,path in enumerate(files):mapped.update((p['page'],p['head'])for p in source_map(projects[0],path,bi)['positions'].values())
+                removed={(r['page'],r['head'])for r in symbol_recovery['repairs']if r['kind']=='clef-loop-head'}
+                lost=baseline_heads-mapped-removed
+                if lost:raise RuntimeError(f'重新计算后有 {len(lost)} 个原有符头未能保留，已拒绝采用；原缓存不变，可改用局部重识别比较。')
+            audit_meter=self.jobs[identifier].get('initial_meter')or score_override(self.jobs[identifier].get('sha256','')).get('verified_initial_meter')
+            self.update(identifier,exported_notes=exported_notes,rhythm_audit=audit_rhythm(files,audit_meter))
             for index, path in enumerate(files):
                 name = f"result-{index}{path.suffix}"
                 shutil.copyfile(path, directory / name)
                 results.append({"name": name, "url": f"/api/jobs/{identifier}/{name}"})
-            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code, quality=quality_report((directory / 'engine.log').read_text(errors='replace'),self.jobs[identifier].get('inherited_rhythm_quality')))
+            self.update(identifier, state="done", message="识别完成", results=results, exit_code=exit_code, quality=self.jobs[identifier].get('parent_quality') if region else quality_report((directory / 'engine.log').read_text(errors='replace'),self.jobs[identifier].get('inherited_rhythm_quality')))
         except subprocess.TimeoutExpired:
             self.update(identifier, state="error", message=f"识别超过 {timeout / 60:g} 分钟；已保存进度，重新导入可继续。")
-        except (OSError, RuntimeError, zipfile.BadZipFile, ET.ParseError) as exc:
+        except (OSError, RuntimeError, ValueError, zipfile.BadZipFile, ET.ParseError) as exc:
             self.update(identifier, state="error", message=str(exc))
 
 
@@ -589,7 +811,7 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(urlsplit(self.path).path)
         if path == "/api/health":
             engine = engine_path()
-            return self.json_response(200, {"app": "sheetVis", "api_revision": 5, "omr": engine.is_file() and os.access(engine, os.X_OK), "samples": (ROOT / "public/samples/manifest.json").is_file(), "engine": "Audiveris", "version": "5.11.0", "local": True})
+            return self.json_response(200, {"app": "sheetVis", "api_revision": 6, "omr": engine.is_file() and os.access(engine, os.X_OK), "samples": (ROOT / "public/samples/manifest.json").is_file(), "engine": "Audiveris", "version": "5.11.0", "local": True})
         if path == '/api/cache':
             return self.json_response(200, {'entries':self.server.jobs.cache_entries()})
         if path == '/api/config':
@@ -609,7 +831,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_bytes(200, source.read_bytes(), 'application/pdf')
             except (OSError, ValueError) as exc:
                 return self.json_response(500, {'error': f'默认乐谱读取失败：{exc}'})
-        match = re.fullmatch(r"/api/jobs/([a-f0-9]{32})(?:/(result-\d+\.(?:mxl|musicxml)|result-\d+\.map\.json|engine\.log|score\.pdf|project\.omr|octave-audit\.json|octave-training\.zip))?", path)
+        region_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/regions',path)
+        if region_match:
+            try:return self.json_response(200,{'measures':self.server.jobs.regions(region_match.group(1))})
+            except (OSError,ValueError,KeyError,zipfile.BadZipFile,ET.ParseError)as exc:return self.json_response(422,{'error':str(exc)})
+        match = re.fullmatch(r"/api/jobs/([a-f0-9]{32})(?:/(result-\d+\.(?:mxl|musicxml)|result-\d+\.map\.json|engine\.log|score\.pdf|project\.omr|symbol-audit\.json|octave-audit\.json|octave-training\.zip))?", path)
         if match:
             identifier, name = match.groups()
             job = self.server.jobs.get(identifier)
@@ -667,6 +893,19 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed(mutation=True):
             return
+        region_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/(regions|accept-region)',urlsplit(self.path).path)
+        if region_match:
+            try:
+                parent_id,action=region_match.groups()
+                if action=='accept-region':return self.json_response(200,self.server.jobs.accept_region(parent_id))
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=2048:raise ValueError('选区请求大小无效。')
+                self.connection.settimeout(10);values=json.loads(self.rfile.read(length))
+                if not isinstance(values,dict)or not {'start','end'}<=set(values)or set(values)-{'start','end','dpi','implicit_tuplets'}:raise ValueError('选区参数无效。')
+                identifier=self.server.jobs.create_region(parent_id,values['start'],values['end'],values.get('dpi',400),values.get('implicit_tuplets',False))
+                return self.json_response(202,{'id':identifier})
+            except KeyError:return self.json_response(404,{'error':'识别记录不存在。'})
+            except (OSError,ValueError,TypeError,zipfile.BadZipFile,ET.ParseError)as exc:return self.json_response(422,{'error':str(exc)})
         match=re.fullmatch(r'/api/(?:jobs/([a-f0-9]{32})/cancel|cache/([a-f0-9]{32})/default)',urlsplit(self.path).path)
         if match:
             try:
@@ -720,7 +959,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def make_server(port=4280, directory=None):
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    server.jobs = JobStore(directory or ROOT / ".data/jobs")
+    server.jobs = JobStore(directory or os.environ.get('SHEETVIS_JOBS_DIR') or ROOT / ".data/jobs")
     return server
 
 

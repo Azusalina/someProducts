@@ -44,3 +44,16 @@ describe('read feedback', () => {
     expect(validColors({ left: 'url(https://external)' })).toEqual({});
   });
 });
+
+it('reports source symbol repairs and lost heads without claiming accuracy', () => {
+  const job:RecognitionJob={id:'a',state:'done',results:[],symbol_recovery:{available:true,repairs:[{page:1,kind:'TREBLE'},{page:1,kind:'NATURAL'},{page:1,kind:'clef-loop-head'}],findings:[{page:1,reason:'missing chord'}]},symbol_audit:{physical_heads:5,mapped_heads:4,unexported_heads:[{page:3,system:'1',stack:'2',head:'3'}]}};
+  const r=qualityFeedback(score,job);
+  expect(r.facts.join(' ')).toContain('补入谱号 1 · 临时升降／还原号 1 · 排除谱号圆环假符头 1');
+  expect(r.issues.join(' ')).toContain('1 个已识别符头');expect(r.issues.join(' ')).toContain('第 3 页');
+  expect(r.limit).toContain('准确率未知');
+});
+
+it('flags a natural versus sounding-pitch conflict without rewriting the pitch', () => {
+  const xml='<score-partwise><part><measure number="12"><note><pitch><step>F</step><alter>1</alter><octave>4</octave></pitch><accidental>natural</accidental></note></measure></part></score-partwise>';
+  const r=qualityFeedback({...score,xml});expect(r.issues.join(' ')).toContain('1 个临时升降／还原号');expect(r.issues.join(' ')).toContain('小节 12');
+});

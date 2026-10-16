@@ -303,3 +303,70 @@ def repair_dynamics(project):
             for name,content in entries.items():output.writestr(name,content)
         temp.replace(project)
     return repairs
+
+
+INITIAL_METERS = {(2,2):'TIME_TWO_TWO',(2,4):'TIME_TWO_FOUR',(3,4):'TIME_THREE_FOUR',
+                  (4,4):'TIME_FOUR_FOUR',(6,4):'TIME_SIX_FOUR',(3,8):'TIME_THREE_EIGHT',
+                  (6,8):'TIME_SIX_EIGHT',(12,8):'TIME_TWELVE_EIGHT'}
+
+
+def repair_initial_meter(project, meter):
+    """Supply independently verified context for a cropped score, never guess.
+
+    Only fills a missing signature in the first music measure. Existing printed
+    signatures and later changes are authoritative. RHYTHMS/PAGE are recomputed.
+    """
+    match = re.fullmatch(r'(\d{1,2})/(\d{1,2})',meter)
+    key = tuple(map(int,match.groups())) if match else None
+    if key not in INITIAL_METERS: raise ValueError('不支持的起始拍号。')
+    repairs = []; changed = {}
+    with zipfile.ZipFile(project) as archive:
+        book = ET.fromstring(archive.read('book.xml'))
+        for name in sorted(archive.namelist(),key=lambda n:int(n.split('#')[1].split('/')[0]) if re.fullmatch(r'sheet#(\d+)/sheet#\1\.xml',n) else 0):
+            m = re.fullmatch(r'sheet#(\d+)/sheet#\1\.xml',name)
+            if not m: continue
+            sheet = ET.fromstring(archive.read(name)); scale = sheet.find('scale/interline')
+            if scale is None: continue
+            system = sheet.find('page/system')
+            if system is None: continue
+            part = next((p for p in system.findall('part') if p.findall('measure') and p.findall('staff')),None)
+            if part is None: continue
+            measure = part.find('measure')
+            # An explicit score signature must never be overwritten by context.
+            if measure.findtext('times','').strip(): return []
+            stack = next((s for s in system.findall('stack') if s.get('id')==measure.get('id')),None)
+            if stack is None: return []
+            interline = float(scale.get('main')); ids = []
+            for staff in part.findall('staff'):
+                lines = [float(p.get('y')) for p in staff.findall('lines/line/point')]
+                if len(staff.findall('lines/line'))!=5 or not lines: continue
+                identifier = str(int(sheet.get('last-persistent-id','0'))+1)
+                sheet.set('last-persistent-id',identifier);ids.append(identifier)
+                mark = ET.SubElement(system.find('sig/inters'),'time-whole',{'id':identifier,'staff':staff.get('id'),
+                    'time-rational':meter,'shape':INITIAL_METERS[key],'grade':'1','ctx-grade':'1','manual':'true','frozen':'true'})
+                ET.SubElement(mark,'bounds',{'x':str(round(float(stack.get('left'))+interline)),
+                    'y':str(round(min(lines))),'w':str(round(interline*1.8)),'h':str(round(max(lines)-min(lines)))})
+            if not ids: return []
+            ET.SubElement(measure,'times').text=' '.join(ids)
+            changed[name]=ET.tostring(sheet,encoding='utf-8',xml_declaration=True)
+            repairs.append({'page':int(m.group(1)),'stack':measure.get('id'),'meter':meter,'source':'configured initial meter from verified score context'})
+            break
+        if not repairs: return []
+        for stub in book.findall('sheet'):
+            steps=stub.find('steps')
+            if steps is not None:steps.text=' '.join(s for s in (steps.text or '').split() if s not in ('RHYTHMS','PAGE'))
+            for page in stub.findall('page'):
+                for old in page.findall('last-time-rational'):page.remove(old)
+        changed['book.xml']=ET.tostring(book,encoding='utf-8',xml_declaration=True)
+        temp=Path(project).with_suffix('.omr.part')
+        try:
+            import shutil
+            with zipfile.ZipFile(temp,'w',zipfile.ZIP_DEFLATED) as output:
+                for entry in archive.infolist():
+                    if entry.filename in changed:output.writestr(entry,changed[entry.filename])
+                    else:
+                        with archive.open(entry) as source,output.open(entry,'w') as target:shutil.copyfileobj(source,target)
+        except BaseException:
+            temp.unlink(missing_ok=True);raise
+    temp.replace(project)
+    return repairs

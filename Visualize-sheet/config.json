@@ -10,5 +10,18 @@
   },
   "recognition_threads": 0,
   "recognition_memory_mb": 4096,
-  "default_cache": "bae8e291e7c349a68c7b89c3cfb40e6d"
+  "default_cache": "9befa9ad83de4b0599de1e079e32f2da",
+  "score_overrides": {
+    "506ee45cf5e69b006983a6fdc4aa0e62becfe6334b171904d14d2c8f71350afc": {
+      "source": "User identified Chopin Ballade No.4 Op.52 coda excerpt; 6/8 verified in local complete score /home/a/Documents/materials/PianoSheets/ballade4.pdf, first page.",
+      "verified_initial_meter": "6/8",
+      "rejected_experiment": {
+        "initial_meter": "6/8",
+        "implicit_tuplets": true,
+        "input_dpi": 400,
+        "exported_notes": 1808,
+        "baseline_notes": 1882
+      }
+    }
+  }
 }

@@ -5,11 +5,16 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 
-def native_octaves(pdf):
+def native_octaves(pdf, diagnostics=None):
     try:
         data=subprocess.run(['pdftotext','-bbox',str(pdf),'-'],capture_output=True,timeout=30,check=True).stdout
+        # Some music fonts emit XML-illegal control bytes. Keep ordinary text
+        # readable instead of silently abandoning every page at the first one.
+        data=re.sub(rb'[\x00-\x08\x0b\x0c\x0e-\x1f]',b'',data)
         root=ET.fromstring(data)
-    except (OSError,subprocess.SubprocessError,ET.ParseError): return []
+    except (OSError,subprocess.SubprocessError,ET.ParseError)as error:
+        if diagnostics is not None:diagnostics.append(str(error))
+        return []
     result=[]
     for number,page in enumerate((e for e in root.iter() if e.tag.endswith('}page')),1):
         words=[e for e in page.iter() if e.tag.endswith('}word') and e.text]
@@ -23,7 +28,7 @@ def native_octaves(pdf):
 
 
 def audit_octaves(project, pdf=None):
-    findings=[]; observed=[]
+    findings=[]; observed=[];verified=0
     with zipfile.ZipFile(project) as archive:
         for name in archive.namelist():
             match=re.fullmatch(r'sheet#(\d+)/sheet#\1\.xml',name)
@@ -39,10 +44,12 @@ def audit_octaves(project, pdf=None):
                     observed.append({'page':page,'id':mark.get('id'),'kind':kind,'x':float(bounds.get('x'))/width,'y':float(bounds.get('y'))/height})
                     reason=None
                     if p1 is None or p2 is None: reason='missing_line'
+                    elif mark.find('hook')is None and not mark.get('right-extension'):reason='unresolved_continuation'
                     elif abs(float(p2.get('x'))-float(p1.get('x'))) <= interline*3.1:
                         sides={r.find('octave-shift-chord').get('side') for r in system.findall('sig/relations/relation')
                                if r.get('source')==mark.get('id') and r.find('octave-shift-chord') is not None}
-                        if not {'LEFT','RIGHT'} <= sides: reason='short_or_fallback_line'
+                        targets={r.get('target')for r in system.findall('sig/relations/relation')if r.get('source')==mark.get('id')and r.find('octave-shift-chord')is not None}
+                        if not {'LEFT','RIGHT'} <= sides or len(targets)<2 or mark.get('manual')!='true': reason='short_or_fallback_line'
                     staff=next((s for s in system.findall('part/staff') if s.get('id')==mark.get('staff')),None)
                     if staff is not None and p1 is not None:
                         ys=[float(p.get('y')) for p in staff.findall('lines/line/point')]
@@ -50,12 +57,13 @@ def audit_octaves(project, pdf=None):
                             y=float(p1.get('y'))
                             if (kind=='ALTA' and y>=min(ys)) or (kind=='BASSA' and y<=max(ys)):reason='staff_side_conflict'
                     if reason:findings.append({'page':page,'id':mark.get('id'),'kind':kind,'reason':reason})
-    native=native_octaves(pdf) if pdf else []
+                    elif mark.get('manual')=='true':verified+=1
+    diagnostics=[];native=native_octaves(pdf,diagnostics) if pdf else []
     for candidate in native:
         nearby=[o for o in observed if o['page']==candidate['page'] and abs(o['x']-candidate['x'])<.025 and abs(o['y']-candidate['y'])<.035]
         if not nearby:findings.append({**candidate,'reason':'native_label_without_omr_match'})
     return {'upper':sum(o['kind']=='ALTA' for o in observed),'lower':sum(o['kind']=='BASSA' for o in observed),
-            'native_labels':len(native),'findings':findings,'pitch_corrected':False}
+            'native_labels':len(native),'native_available':not diagnostics,'native_errors':diagnostics,'verified_ranges':verified,'findings':findings,'pitch_corrected':False}
 
 
 def training_bundle(project):
