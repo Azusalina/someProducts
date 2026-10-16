@@ -6,6 +6,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
+  <script type="module" src="/pdf-pages.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -13,20 +14,52 @@
     <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
   </aside>
   <main>
-    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1>Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
+    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
+    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
       <p id="path-help">Save changes in your editor to update the preview.</p>
     </section>
     <div id="message" role="status" aria-live="polite" hidden></div>
-    <section class="workspace">
+    <section class="workspace" id="markdown-workspace">
       <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><button id="zen-button" aria-pressed="false" aria-controls="preview" title="Show only the document. Press Esc to exit." disabled>Zen mode</button><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
       <div class="document-meta"><span id="filename">No file open</span><span id="updated">Waiting for your document</span></div>
       <div class="preview-area" id="preview-area">
         <div class="empty-state" id="empty"><p>Open a Markdown file to preview it.</p><button id="example-button">Open example</button></div>
         <iframe id="preview" title="Formatted Markdown preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" hidden></iframe>
         <pre id="source" tabindex="0" aria-label="Saved Markdown source" hidden></pre>
+      </div>
+    </section>
+    <section id="pdf-pages-workspace" aria-label="PDF page editor" hidden>
+      <label for="pdf-file">Open PDF</label>
+      <input id="pdf-file" type="file" accept=".pdf,application/pdf" aria-describedby="pdf-file-help">
+      <p id="pdf-file-help">Choose a local PDF. Page numbers below refer to the original file.</p>
+      <p id="pdf-status" role="status" aria-live="polite">Open a PDF to edit its pages.</p>
+      <div class="pdf-edit-layout">
+        <div class="pdf-page-controls">
+          <fieldset id="pdf-editor-controls" disabled>
+            <legend>Pages</legend>
+            <label for="pdf-range">Page numbers / order</label>
+            <input id="pdf-range" placeholder="1-3, 7, 5" autocomplete="off">
+            <div class="pdf-range-controls">
+              <label class="sr-only" for="pdf-range-action">Page range action</label>
+              <select id="pdf-range-action"><option value="keep">Keep / reorder these pages</option><option value="delete">Delete these pages</option></select>
+              <button id="pdf-apply-range" type="button">Apply</button>
+              <button id="pdf-reset" type="button">Restore all pages</button>
+            </div>
+            <p id="pdf-selection-count" role="status">No PDF open</p>
+            <ol id="pdf-page-list" aria-label="Output page order"></ol>
+            <label for="pdf-output-name">New PDF filename</label>
+            <input id="pdf-output-name" value="edited.pdf" autocomplete="off">
+          </fieldset>
+          <div class="pdf-save-controls"><button id="pdf-preview-result" disabled>Preview result</button><button id="pdf-save" disabled>Save as new PDF</button></div>
+        </div>
+        <section class="pdf-result-preview" aria-label="PDF document preview">
+          <h2 id="pdf-preview-label">PDF preview</h2>
+          <a id="pdf-open-preview" target="_blank" rel="noopener" hidden>Open preview in new tab</a>
+          <iframe id="pdf-native-preview" title="PDF document preview" hidden></iframe>
+        </section>
       </div>
     </section>
   </main>

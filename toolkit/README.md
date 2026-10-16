@@ -1,6 +1,6 @@
 # What is it?
 
-A local, modular file-rendering toolkit. Its first module previews Markdown in your browser, follows changes whenever you save the original file in your editor, and exports a formatted PDF on demand. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
+A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, or extract, delete and reorder pages from an existing PDF into a new file. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
 
 # How to use
 
@@ -17,6 +17,17 @@ Open **http://127.0.0.1:4177** (or the local address printed in the terminal if 
 Open the same local address in additional tabs or windows to work on different Markdown files. Each page keeps its own path, outline, preview, file watching, and export settings. Changing a path in one page does not affect another. Refreshing or duplicating an active page starts an independent view of its selected file.
 
 Click **Zen mode** to fill the window with only the rendered document. Press **Esc** to return to the controls, including when the document has keyboard focus. Saved-file changes continue to update while reading. Your previous Preview/Source view and sidebar state return when you exit.
+
+For an existing PDF, click **PDF pages** and **Open PDF** to choose a local file.
+Enter original page numbers such as `1-3, 7, 5`, choose **Keep / reorder these
+pages** or **Delete these pages**, then click **Apply**. The page list also has
+earlier/later and delete buttons; **Restore all pages** resets it. Use **Preview
+result**, choose a new filename and click **Save as new PDF**. The browser downloads
+a separate PDF; the original stays unchanged. Editing runs in the current browser
+page without uploading the PDF. Each tab has its own PDF selection. The preview
+uses your browser's PDF viewer; **Open preview in new tab** is available if it
+cannot display embedded PDFs. Page editing also works without Chromium installed
+on the server. Password-protected PDFs and interactive forms are not supported.
 
 Select **A4** or **Letter** and **White paper**, **Yellow paper**, or **Black paper**, then click **Export PDF** to download the current saved version. PDF background defaults to white and is independent of the dark preview. A heading and its content up to the next heading move together to the next page when they do not fit; sections longer than a full page can span pages. No PDF is generated automatically. Your browser controls the download location.
 

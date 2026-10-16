@@ -12,6 +12,47 @@ Every page load creates a fresh server-side view. Browser history stores only an
 
 A file supplied to the CLI is the initial default for newly opened pages. It does not force already open pages back to that file. Separate toolkit processes and ports remain available, but are no longer needed for independent documents.
 
+## PDF page editor
+
+The PDF pages tool runs locally in the browser using the installed
+[PDF-LIB](https://pdf-lib.js.org/) library, served by the toolkit without a CDN.
+It accepts one PDF through the browser file picker and keeps it in page-local
+memory. PDF bytes never enter the server API or browser storage. Loading is
+explicit rather than watched: reopen a PDF to read subsequent disk changes.
+Switching back to Markdown preserves both tools' state; reloading clears the
+PDF selection. Limits are 100 MB and 5000 original pages per PDF.
+
+Ranges use one-based original page numbers, inclusive endpoints, comma
+separators, and either ascending or descending order. For example `5-3, 1`
+produces pages 5, 4, 3, 1. Duplicate, nonnumeric and out-of-range entries are
+rejected without replacing the existing selection. Keep/reorder replaces the
+selection; delete removes those original pages from the current selection.
+Individual up/down/delete controls operate on output order. At least one page
+must remain to preview or save. A result preview is updated only when requested;
+the heading and status distinguish it from the original or pending edits.
+
+Saving copies the selected PDF page objects into a new PDF, preserving their
+content, dimensions and rotation rather than rasterizing them. The output has a
+separate filename (an identical source filename receives an `-edited` suffix).
+Downloads use browser-managed save behavior; the application never writes or
+overwrites the selected file. Preview uses a memory-only blob URL in the native
+browser PDF viewer, with an open-in-new-tab link for browsers that cannot embed
+PDFs. Blob frame URLs are allowed by the outer CSP; Markdown's
+script-free iframe policy is unchanged. Preview support depends on the browser.
+
+This is whole-page editing, not text editing, redaction, or rectangular cropping
+within a page. Encrypted files and interactive forms are rejected. Document-level
+bookmarks, signatures, metadata, attachments and cross-page link destinations are
+not guaranteed to survive page extraction. Export does not preserve signatures.
+Only ordinary visual PDF page content is in scope.
+
+Validation: `npm test` includes range parsing, geometry/rotation and source
+immutability checks. `npm run test:pdf-pages` exercises real browser imports,
+ordered extraction and deletion, preview/download, empty selections, invalid
+input recovery, independent tabs, and mobile width. Poppler text extraction and
+rendered pages verify actual output order and appearance. The original Markdown,
+Zen, Mermaid and PDF download workflow is covered by `npm run test:browser`.
+
 ## Markdown module
 
 Supports headings with unique anchors and an outline, paragraphs, emphasis, links, ordered and unordered lists, task checkboxes, tables, blockquotes, rules, fenced code with syntax highlighting, Mermaid diagrams, and local raster images. English and Chinese content use installed system fonts. A4 and US Letter PDF output share the preview's document stylesheet and use print-specific margins and typography.
@@ -120,3 +161,12 @@ checks verified desktop/mobile viewport coverage, saved-file updates while in
 Zen, restored Source/sidebar choices and focus, and existing PDF/Mermaid export
 workflows. All 13 core/diagram tests passed. Screenshots were inspected at
 `/tmp/toolkit-validation/zen-desktop.png` and `zen-mobile.png`.
+
+
+2026-10-16: added browser-local PDF page extraction, removal and reordering,
+explicit result previews and save-as downloads. All 15 core/diagram/page tests
+and the existing Markdown/Zen browser workflow passed. PDF editor browser checks
+verified page ranges, downloads, text order, geometry and rotation, original file
+immutability, invalid-file recovery, mobile width and independent tabs without
+PDF uploads. Exported pages and the desktop preview were visually inspected in
+`/tmp/toolkit-validation/pdf-pages`.
