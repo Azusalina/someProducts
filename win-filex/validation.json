@@ -4,10 +4,10 @@
   "compiler": "rustc 1.99.0",
   "linker": "LLVM-MinGW 20261006 UCRT",
   "binary": "bin/filex.exe",
-  "bytes": 1065472,
-  "sha256": "14b5901a06be6d492c3a21c14b37e5f89b9ac31bcbc64ea65827412f14ce34f4",
+  "bytes": 1084928,
+  "sha256": "29b5b07c5a7c16d12b90378424356530d6cf5a1e8eac3a0243559ab2b2967031",
   "passed": {
-    "linux_shared_rust_tests": 38,
+    "linux_shared_rust_tests": 43,
     "windows_release_cross_build": true,
     "windows_test_executable_cross_build": true,
     "powershell_scripts_parse": 5,

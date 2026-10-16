@@ -17,6 +17,7 @@ mod input;
 #[cfg(windows)]
 #[path = "input_windows.rs"]
 mod input;
+mod jobs;
 mod links;
 mod model;
 mod platform;

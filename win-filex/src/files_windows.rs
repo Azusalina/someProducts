@@ -43,6 +43,21 @@ pub fn rename(source: &Path, dest: &Path) -> Result<(), String> {
     )?;
     rename_io(source, dest).map_err(err)
 }
+pub fn replace_staged(source: &Path, dest: &Path) -> Result<(), String> {
+    use windows_sys::Win32::Storage::FileSystem::MOVEFILE_REPLACE_EXISTING;
+    if unsafe {
+        MoveFileExW(
+            wide(source).as_ptr(),
+            wide(dest).as_ptr(),
+            MOVEFILE_REPLACE_EXISTING,
+        )
+    } == 0
+    {
+        Err(io::Error::last_os_error().to_string())
+    } else {
+        Ok(())
+    }
+}
 pub fn name_valid(name: &str) -> Result<(), String> {
     let stem = name
         .split('.')

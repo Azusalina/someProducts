@@ -32,7 +32,7 @@ Windows 接口、限制和验证记录见 [description.md](description.md)。
 Git Bash 在 Windows Terminal 中直接运行；传统 mintty 优先自动使用随 Git for Windows 提供的 `winpty`。WSL Bash 请使用 `../fileX` 的 Linux 版本。直接执行 `.exe` 也能浏览，但 `x` 会进入子 CMD；使用对应 shell 包装脚本，`x` 才能切换原终端目录。
 
 - `↑/↓` 同层选择并首尾循环；`→` 展开／进入子级，`←` 返回父级；保持其他分支展开。`Enter` 展开目录或为文件选择打开方式。
-- `v` 开关镜像双栏，`Tab` 切换侧；右侧左右键反转。`Space` 标记多个文件／目录，显示亮洋红方框；`c/m` 后方向键选目标目录、Enter 执行，双栏自动切到另一侧。展开目录末尾的 `+` 可选中按 Enter 新建目标目录，或直接按 `+`；创建后再 Enter 执行。Esc 取消待执行操作，再按一次清空标记。目标已存在或整批重名则拒绝覆盖。
+- `v` 开关镜像双栏，`Tab` 切换侧；右侧左右键反转。`Space` 标记多个文件／目录，显示亮洋红方框；`c/m` 后方向键选目标目录、Enter 执行，双栏自动切到另一侧。展开目录末尾的 `+` 可选中按 Enter 新建目标目录，或直接按 `+`；创建后再 Enter 执行。Esc 取消待执行操作，再按一次清空标记。已有普通文件需再次 Enter 确认替换；目录／链接冲突或整批重名则拒绝操作。
 - `Ctrl+F` 或 `/` 搜索；`.` 显示点文件及 Windows Hidden 属性项目。`h` 收起当前目录，`E/C` 展开／收起全部，`f` 当前目录设为根。
 - `Ctrl+N`／`a` 新建文件，`Ctrl+Shift+N`／`A` 新建目录；`r` 重命名当前项目；输入框支持左右/Home/End 移动、在光标处插入与 Backspace/Delete。Windows Terminal 若拦截组合键，使用 `a/A` 或修改终端绑定。
 - `Delete/D` 将当前项目或 Space 标记的整批项目移到 Windows 回收站，再按 `Enter` 确认，`Esc` 取消。`q` 信息面板，`[/]` 调整宽度；显示文件前几行、UTC 创建／修改时间、大小与链接信息。
@@ -60,7 +60,7 @@ bottom = ["node_modules", "__pycache__"]
 
 [directory_order."~/Documents/site"]
 top = ["index.html", "package.json"]
-bottom = ["node_modules"]
+bottom = ["<other-folders>", "node_modules"]
 ```
 
 `directory_order` 可用实际绝对目录路径（Windows 使用 TOML 单引号，例如 `[directory_order.'C:\work\site']`），或用目录名匹配所有同名目录；绝对路径规则优先，只作用于该目录直接子项。省略字段继承全局，显式 `[]` 清空继承。修改后按 `,` 重读配置。
@@ -68,3 +68,11 @@ bottom = ["node_modules"]
 Git 仓库展开后，树节点箭头附加状态标记并着色：`?` 未跟踪、`M` 未暂存修改、`S` 已暂存、`!` 冲突、`C` 已跟踪且干净但未配置上游、`P` 干净且与本地记录的上游一致、`↑/↓/↕` 分别为领先／落后／分叉（TTY 用 `^/v/D`）。文件名颜色保留，目录汇总子项状态，底部说明当前项目状态。颜色用于提示，字符标记在无色模式也保留。
 
 Git 后台只读扫描，不自动 commit/push/fetch；`P` 不代表已实时查询服务器。F5／Ctrl+F5 更新本地快照；没有 Git 或查询失败时保持普通箭头。`[git] enabled = false` 可关闭，`max_entries` 默认 4000，每个窗口至多缓存 4 个已展开仓库；超出扫描范围不猜测状态。
+
+排序列表中的 `"<other-folders>"` 匹配未在当前有效 top/bottom 中点名的所有直接子目录（不含目录软链接）。上述示例将 index.html、package.json 置顶，普通文件居中，其余子目录沉底，node_modules 最后；也可把该标记放入 top。显式名称优先，同组目录沿用 sort，隐藏目录需开启显示。
+
+复制／移动：按 `c`／`m` 后可用光标选目标目录，或直接选目标文件进行替换；按 `t` 可输入目标地址，Enter 提交。单项支持目录或完整的新文件路径，多选要求已有目标目录；相对路径以源所在目录为基准，支持 `~`。已有普通文件会逐一提示，再按 Enter 确认覆盖，Esc 返回选择状态；全部覆盖确认完成后才开始本批操作。目录／链接冲突不覆盖。`g`／Ctrl+L 仍可输入目录并切换视图，再 Enter 执行。
+
+选中文件夹后按 `!`，输入 `npm start` 等命令并 Enter，即以该目录为工作目录后台运行；Esc 取消输入。启动后显示 PID 和日志路径，关闭 filex 不停止命令。`[keys] run_background = "!"` 可改键。Linux 使用 `$SHELL -c`（默认 `/bin/sh`），日志在 `$XDG_STATE_HOME/filex/jobs` 或 `~/.local/state/filex/jobs`；Windows 使用 CMD，日志在 `%LOCALAPPDATA%\win-filex\jobs`。标准输入关闭，适用于不需要交互输入的命令；退出后仍可从日志看输出，依赖与 PATH 沿用启动 filex 的环境。
+
+Linux 后台任务可用 `kill -- -PID` 停止对应进程组（PID 使用 filex 启动提示中的值）。日志需自行清理；服务能否启动仍取决于该项目依赖和命令自身。
