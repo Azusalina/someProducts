@@ -124,6 +124,14 @@
     if (Math.abs(right-left) > 0.01 * (1+Math.abs(right)+Math.abs(left))) return NaN;
     return (-fpp+8*fp-8*fm+fmm)/(12*h);
   }
+  // Integer arithmetic prevents intermediate factorial overflow and rounding drift.
+  function combinatoric(n,r,permutation=false){
+    if(!Number.isSafeInteger(n)||!Number.isSafeInteger(r)||n<0||r<0||r>n)return NaN;
+    const count=permutation?r:Math.min(r,n-r),N=BigInt(n),limit=1n<<1024n;let total=1n;
+    for(let i=0;i<count;i++){total=total*(N-BigInt(i))/(permutation?1n:BigInt(i+1));if(total>=limit)return Infinity;}
+    return Number(total);
+  }
+  const distributionNode=n=>n.type==='call'&&n.name==='n'?{...n,name:'normal'}:n;
   const zero = () => 0;
   function compile(node,scope,variable='x') {
     function make(n) {
@@ -178,6 +186,10 @@
           let self=false;walk(event.args[1],p=>{if(p.type==='id'&&p.name===name)self=true;});if(self)throw Error('概率右侧不能引用同一随机变量');
           const at=make(event.args[1]);return {v:(x,y)=>{const k=at.v(x,y);return Number.isFinite(k)?d.discrete?d.pmf(k):0:NaN;},d:()=>NaN};
         }
+        if((n.name==='n'||n.name==='p')&&n.args.length===2){
+          if(n.order)throw Error('组合与排列不支持导数');const [a,b]=n.args.map(make);
+          return {v:(x,y)=>combinatoric(a.v(x,y),b.v(x,y),n.name==='p'),d:(x,y)=>a.d(x,y)===0&&b.d(x,y)===0?0:NaN};
+        }
         if(S.canonical(n.name)){
           if(n.order)throw Error('分布构造不能带导数');const args=n.args.map(make);let values=[],cached;
           const v=(x,y)=>{const next=args.map(a=>a.v(x,y));if(!cached||next.some((a,i)=>a!==values[i])){cached=S.create(n.name,next);values=next;}return cached;};
@@ -185,7 +197,7 @@
           return {v,d:()=>NaN,distribution:varying?undefined:()=>v(0,0)};
         }
         if(['pdf','pmf','cdf'].includes(n.name)){
-          if(n.order||n.args.length!==2)throw Error('概率函数需要分布和横坐标');const dist=make(n.args[0]),at=make(n.args[1]);
+          if(n.order||n.args.length!==2)throw Error('概率函数需要分布和横坐标');const dist=make(distributionNode(n.args[0])),at=make(n.args[1]);
           const get=(x,y)=>{const d=dist.v(x,y);if(!S.isDistribution(d))throw Error('第一个参数必须为概率分布');return d;};
           const initial=get(0,0);if(n.name==='pmf'&&!initial.discrete)throw Error('连续分布使用 pdf');
           let coordinates=false;walk(n.args[1],p=>{if(p.type==='id'&&[variable,'y'].includes(p.name))coordinates=true;});
@@ -278,7 +290,7 @@
     const match=text.match(/\{([^{}]+)\}\s*$/);
     if (match) {restriction=parse(match[1]);text=text.slice(0,match.index).trim();}
     const distribution=text.match(/^([A-Za-z][A-Za-z0-9_]*)\s*~\s*(.+)$/);
-    if(distribution)return {kind:'distribution',randomVariable:distribution[1],ast:parse(distribution[2]),restriction,text};
+    if(distribution)return {kind:'distribution',randomVariable:distribution[1],ast:distributionNode(parse(distribution[2])),restriction,text};
     const def=text.match(/^([A-Za-z][A-Za-z0-9_]*)(?:\s*\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\))?\s*=(?!=)(.*)$/);
     if (def && !['x','y'].includes(def[1])) {
       if (reserved.has(def[1])||S.canonical(def[1])&&(def[1]!=='n'||def[2])) throw Error(`${def[1]} 是保留名称`);
@@ -378,7 +390,7 @@
         entry.hasIntegral=entry.hasIntegral||false;walk(entry.ast,n=>{if(n.type==='call'&&['int','integral'].includes(n.name))entry.hasIntegral=true;if(definitions.get(n.name)?.hasIntegral)entry.hasIntegral=true;});
       }catch(e){entry.error=e.message;}
     }
-    const parameterHints=Object.create(null);for(const e of entries)if(e.ast)walk(e.ast,n=>{if(n.type==='call'&&S.canonical(n.name)){const hints=S.hints[S.canonical(n.name)];n.args.forEach((a,i)=>{if(a.type==='id'&&hints[i])parameterHints[a.name]={...parameterHints[a.name],...hints[i]};});}});
+    const parameterHints=Object.create(null);for(const e of entries)if(e.ast)walk(e.ast,n=>{if(n.type==='call'&&n.name!=='n'&&S.canonical(n.name)){const hints=S.hints[S.canonical(n.name)];n.args.forEach((a,i)=>{if(a.type==='id'&&hints[i])parameterHints[a.name]={...parameterHints[a.name],...hints[i]};});}});
     C.enrich(entries,scope,{walk,constants});
     return {scope,entries,parameterHints};
   }

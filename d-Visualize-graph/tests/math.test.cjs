@@ -87,3 +87,14 @@ test('named points accept numeric and parameter coordinates and round-trip throu
 test('point definitions reject duplicate names and nonfinite or unbound coordinates',()=>{
  assert.match(last('a=(1,2)','a=3').error,/已经定义/);assert.match(last('a=3','a=(1,2)').error,/已经定义/);assert.match(last('a=(1/0,2)').error,/有限/);assert.match(last('a=(x,y)').error,/参数/);
 });
+
+test('n(n,r) and p(n,r) compute combinations and permutations with exact integer intermediates',()=>{
+ for(const [text,value]of [['n(5,2)',10],['p(5,2)',20],['n(0,0)',1],['p(0,0)',1],['n(20,20)',1],['p(10,10)',3628800],['n(1000,2)',499500],['n(52,5)',2598960],['n(1000,998)',499500]]){const e=last(text);assert.equal(e.error,undefined,text);assert.equal(e.value,value,text);}
+ assert.equal(last('n=8','r=3','n(n,r)').value,56);assert.equal(last('n=8','r=3','p(n,r)').value,336);assert.equal(last('n(5,2)+p(5,2)').value,30);assert.equal(last('n(5,2)*x').fn(3),30);
+ for(const text of ['n(-1,0)','p(5,-1)','n(3,4)','p(4,1.5)','n(9007199254740992,1)'])assert.ok(Number.isNaN(last(text).value),text);
+ assert.equal(last('n(2000,1000)').value,Infinity);assert.equal(last('p(1000,999)').value,Infinity);
+});
+test('combinatoric calls coexist with normal distribution aliases and lowercase event probability',()=>{
+ const m=build('X~n(0,1)','p(X=2)','n(5,2)','p(5,2)','pdf(n(0,1),0)');m.entries.forEach(e=>assert.equal(e.error,undefined));assert.equal(m.entries[0].distribution.family,'normal');assert.equal(m.entries[1].value,0);assert.equal(m.entries[2].value,10);assert.equal(m.entries[3].value,20);close(m.entries[4].value,1/Math.sqrt(2*Math.PI));
+ const hints=build('n=5','r=2','n(n,r)').parameterHints;assert.equal(hints.r,undefined);
+});

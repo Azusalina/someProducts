@@ -131,3 +131,7 @@ test('defined points sharing x create a vertical full line; repeated point is ig
 test('ordinary input clicks move the caret to the end and preserve selected ranges',()=>{
  const t=boot();seed(t,'x^2+1');const f=t.texts()[0];f.position=0;f.dispatchEvent(new t.w.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(f.position,f.lastOffset);f.selection={ranges:[[0,2]],direction:'forward'};f.dispatchEvent(new t.w.MouseEvent('click',{bubbles:true,detail:1}));assert.deepEqual(Array.from(f.selection.ranges[0]),[0,2]);f.position=0;f.dispatchEvent(new t.w.MouseEvent('click',{bubbles:true,detail:1,shiftKey:true}));assert.equal(f.position,0);t.dom.window.close();
 });
+
+test('combination and permutation inputs render results and update with parameter sliders',()=>{
+ const t=boot();seed(t,'n=5','r=2','n(n,r)','p(n,r)');assert.equal(t.get('panel').querySelector('.error'),null);let results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/10/);assert.match(results[3].dataset.latex,/20/);const slider=t.get('panel').querySelector('input[aria-label="参数 n"]');t.input(slider,'6');t.flush();results=t.get('panel').querySelectorAll('.row-result');assert.match(results[2].dataset.latex,/15/);assert.match(results[3].dataset.latex,/30/);t.dom.window.close();
+});
