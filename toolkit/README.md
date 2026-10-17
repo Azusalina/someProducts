@@ -38,6 +38,15 @@ orientation and fit the whole image without cropping; Fit photo has no margins.
 Photo processing stays in the current browser tab and leaves the originals
 unchanged. No uploads or server-side Chromium are needed for this tool.
 
+For scanned scores, Python 3, Poppler (`pdfinfo`, `pdfimages`, `pdftoppm`),
+Pillow and NumPy are also needed. Click **OMR scan**, choose a PDF page, and compare the
+source-resolution render with **Preserve pixels**, **Contrast normalization**,
+or a small **Manual deskew** rotation. Save the selected page as a separate
+candidate PDF to try in an OMR engine; save the JSON report to keep its source
+hash and processing details. The original stays unchanged. This tool does not
+recognize notes or establish that a candidate is more accurate. See
+[description.md](description.md) for the local processing and limitations.
+
 Select **A4** or **Letter** and **White paper**, **Yellow paper**, or **Black paper**, then click **Export PDF** to download the current saved version. PDF background defaults to white and is independent of the dark preview. A heading and its content up to the next heading move together to the next page when they do not fit; sections longer than a full page can span pages. No PDF is generated automatically. Your browser controls the download location.
 
 Use a fenced `mermaid` block for diagrams in both preview and PDF:

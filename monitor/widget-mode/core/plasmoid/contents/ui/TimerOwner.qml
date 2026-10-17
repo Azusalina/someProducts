@@ -10,6 +10,17 @@ Item {
     property var timeEdits: ({})
     property bool completionAcknowledged: false
     property bool countdownEditing: false
+    property bool focusOpen: false
+    readonly property var focusWindow: focusLoader.item
+    function openFocus() {
+        if (active && session) focusOpen = true
+    }
+    Loader {
+        id: focusLoader
+        readonly property var timerOwner: owner
+        active: owner.focusOpen && owner.active
+        sourceComponent: Component { CountdownFocus { owner: focusLoader.timerOwner } }
+    }
     readonly property bool countdownFinished: readings.countdown.finished === true
     onCountdownFinishedChanged: if (!countdownFinished) completionAcknowledged = false
     property var request: null
@@ -79,6 +90,6 @@ Item {
     }
     Timer { interval: owner.error ? 2000 : 250; running: owner.active; repeat: true; onTriggered: owner.poll() }
     Timer { id: timeout; interval: 6000; onTriggered: { const xhr = owner.request; owner.request = null; if (xhr) xhr.abort(); owner.error = "Timer bridge timed out" } }
-    onActiveChanged: { if (active) Qt.callLater(poll); else close() }
+    onActiveChanged: { if (active) Qt.callLater(poll); else { focusOpen = false; close() } }
     Component.onDestruction: { if (request) request.abort(); close() }
 }

@@ -1,7 +1,11 @@
 import http from 'node:http';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { ModuleRegistry } from './core/registry.js';
 import { DocumentSession } from './core/document-session.js';
 import { readSource, documentStyle } from './core/files.js';
@@ -14,7 +18,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const views = new Map();
   const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
   if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
-  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
+  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
   const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
   // Retain disconnected views briefly for reload/duplicate, then release memory
   // and watchers. No page IDs, paths or document data are written to disk.
@@ -70,9 +74,10 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
       }
       const viewId = req.headers['x-toolkit-view'];
       const view = views.get(viewId);
+      const omrRequest = req.method === 'POST' && url.pathname === '/api/omr/prepare';
       if (req.method === 'GET' && url.pathname === '/api/info' && !viewId) return json(res, details());
-      if (!view) return json(res, { error: 'This page session has expired. Refresh the page to reopen it.' }, 410);
-      if (!view.clients.size) scheduleExpiry(viewId, view);
+      if (!view && !omrRequest) return json(res, { error: 'This page session has expired. Refresh the page to reopen it.' }, 410);
+      if (view && !view.clients.size) scheduleExpiry(viewId, view);
       if (req.method === 'GET' && url.pathname === '/api/info') return json(res, details(view, viewId));
       if (req.method === 'GET' && url.pathname === '/api/events') {
         res.writeHead(200, { 'Content-Type': 'text/event-stream', Connection: 'keep-alive' });
@@ -87,6 +92,27 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/open') return json(res, await view.openFile((await body(req)).path));
+      if (req.method === 'POST' && url.pathname === '/api/omr/prepare') {
+        const page = Number(url.searchParams.get('page') || 1), rotation = Number(url.searchParams.get('rotation') || 0);
+        const profile = url.searchParams.get('profile') || 'preserve', download = url.searchParams.get('download') === '1';
+        if (!Number.isInteger(page) || page < 1 || !Number.isFinite(rotation) || rotation < -5 || rotation > 5 || !['preserve','contrast','deskew'].includes(profile)) throw new Error('Choose a valid page, profile and rotation between -5° and 5°.');
+        const chunks=[];let size=0;
+        for await (const chunk of req) { size+=chunk.length; if(size>100*1024*1024) throw new Error('Choose a PDF smaller than 100 MB.'); chunks.push(chunk); }
+        if (!size || (req.headers['content-type']||'').split(';')[0] !== 'application/pdf') throw new Error('Send one local PDF file.');
+        const work=await mkdtemp(path.join(tmpdir(),'toolkit-omr-'));
+        try {
+          const input=path.join(work,'source.pdf'), output=path.join(work,'candidate.pdf');
+          await writeFile(input,Buffer.concat(chunks));
+          let sourceName='score.pdf';try{sourceName=decodeURIComponent(req.headers['x-source-name']||sourceName);}catch{}
+          const script=fileURLToPath(new URL('./omr/enhance.py',import.meta.url));
+          const args=[script,input,'--page',String(page),'--profile',profile,'--rotation',String(rotation),'--preview-only'];
+          if(download) args.push('--pdf-output',output);
+          const result=await new Promise((resolve,reject)=>{const child=spawn(process.env.PYTHON||'python3',args,{stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',x=>stdout+=x);child.stderr.on('data',x=>stderr+=x);child.on('error',reject);child.on('close',code=>code===0?resolve(stdout):reject(new Error(stderr.slice(-2000)||`OMR image preparation failed (${code}).`)));});
+          const data=JSON.parse(result);data.report.source_name=path.basename(sourceName);
+          if(download){res.writeHead(200,{'Content-Type':'application/pdf','Content-Disposition':`attachment; filename="candidate-page-${page}.pdf"`});return res.end(await readFile(output));}
+          return json(res,data);
+        } finally {await rm(work,{recursive:true,force:true});}
+      }
       if (req.method === 'POST' && url.pathname === '/api/export/pdf') {
         const options = await body(req);
         if (!['A4', 'Letter'].includes(options.paper)) throw new Error('Choose A4 or Letter paper.');

@@ -3,6 +3,7 @@ import { parseXML, type Score } from './score';
 export interface RecognitionJob {
   id: string; state: string; filename?:string; message?:string; results: { name: string; url: string }[];
   upgrade_available?:boolean;progress?:number;
+  assistance?:{state:string;message?:string;completed_pages:number;total_pages:number;comparable_pages:number;differing_measures:number;pages:{page:number;job_id?:string;state:string;comparable?:boolean}[]};
   pending_region?:boolean;
   region?:{parent:string;start:number;end:number;page:number;measures:import('./pdf-view').MeasureRegion[]};
   region_comparison?:{before:{notes:number;chords:number;clefs:number};after:{notes:number;chords:number;clefs:number};warnings:string[];unexported_heads:number;local_quality:{rhythm_issues:unknown[]}};
@@ -23,6 +24,7 @@ export interface RecognitionJob {
   beam_repairs?:{page:number;heads:number}[];
   tuplet_repairs?:{page:number;system:string;stack:string;ratio:string}[];
   rhythm_audit?:{overfull_measures:{measure:string;expected_beats:number;actual_beats:number}[];silent_gaps:{measure:string;written_rest:boolean;forward:boolean}[];missing_meter_measures?:unknown[]};
+  curve_recovery?:{repairs:{page:number;end_page:number;kind:string}[];findings:{page:number;reason:string}[]};
   dynamics_repairs?: {page:number;wedge:string;reason:string}[];
 }
 
@@ -30,6 +32,18 @@ export function qualityFeedback(score: Score, job?: RecognitionJob) {
   const issues: string[] = [];
   const facts = [`${score.notes.length} 个播放音符 · ${score.measures.length} 个播放小节`,
     `左手 ${score.notes.filter(n => n.hand === 'left').length} · 右手 ${score.notes.filter(n => n.hand === 'right').length}`];
+  if(job?.assistance){
+    const a=job.assistance;
+    facts.push(`双引擎逐页核查 ${a.completed_pages??0}/${a.total_pages??0} 页 · ${a.differing_measures??0} 个可对齐小节有分歧；原播放结果保留。`);
+    if(a.message)issues.push(a.message);
+    if(a.differing_measures)issues.push('两引擎对音高／起奏／时值存在分歧，应对照原谱；结果一致也不等于准确。');
+    if(a.pages.some(p=>p.state==='done'&&p.comparable===false))issues.push('部分页面的小节切分不同，未强行逐音比较。');
+    if(a.state==='stopped')issues.push('自动协同已停止；保留已完成报告，重新打开不会自动重跑。');
+  }
+  if(job?.curve_recovery){
+    facts.push(`跨行弧线恢复 ${job.curve_recovery.repairs.length} 处（延音／连奏分别处理，不改音高与时值）。`);
+    if(job.curve_recovery.findings.length)issues.push(`${job.curve_recovery.findings.length} 处跨行弧线端点存在歧义或音高／时间冲突，未强行连接。`);
+  }
   if(job?.beam_repairs?.length)facts.push(`依据同谱表的音梁与符干位置恢复 ${job.beam_repairs.length} 处短断裂连接，再计算节奏；不新增符头。`);
   if(job?.tuplet_repairs?.length)facts.push(`依据已印出的六连音上下文、完整音梁分组与拍号，恢复 ${job.tuplet_repairs.length} 组省略标记的六连音并重新计算声部；保留原有音符。`);
   if(job?.rhythm_audit){

@@ -182,36 +182,45 @@ export function musicXMLToScore(xml: string, filename = '钢琴乐谱', options:
   incompleteOctaves += octaveSpans.size;
   if (incompleteOctaves) warnings.add(`${incompleteOctaves} 处八度线缺少配对起点或终点，作用范围需核对原 PDF；播放使用导出的实际音高，不推测移调。`);
   type Anchor={n:RawNote;at:number};
-  const slurStarts = new Map<string,Anchor>(), pendingStops=new Map<string,Anchor>();
+  const slurStarts = new Map<string,Anchor[]>(), pendingStops=new Map<string,Anchor[]>();
   const slurRanges:{id:string;start:number;end:number;first:RawNote;last:RawNote}[]=[];
   const addSlur=(number:string,first:Anchor,last:Anchor)=>{
     if(last.at<first.at-1e-7){warnings.add('部分连奏线端点的时间顺序异常，未连接。');return;}
     slurRanges.push({id:`${number}:${first.n.source}:${last.n.source}`,start:first.at,end:last.at,first:first.n,last:last.n});
   };
-  // Slur numbers distinguish overlap in XML document order. Sorting all voices
-  // by time first incorrectly pairs independent phrases that reuse a number.
+  // Keep simultaneous open phrases separate across system/page breaks. Some
+  // exporters reuse the same slur number independently in the two piano hands.
+  const put=(map:Map<string,Anchor[]>,number:string,a:Anchor)=>map.set(number,[...(map.get(number)??[]),a]);
+  const take=(map:Map<string,Anchor[]>,number:string,a:Anchor,future=false)=>{
+    const all=map.get(number)??[],valid=all.filter(x=>future?x.at>=a.at-1e-7:x.at<=a.at+1e-7);
+    const exact=valid.filter(x=>x.n.voice===a.n.voice&&x.n.staff===a.n.staff);
+    const voice=valid.filter(x=>x.n.voice===a.n.voice);
+    const choices=exact.length?exact:voice.length?voice:valid;
+    if(choices.length!==1)return undefined;
+    const match=choices[0];map.set(number,all.filter(x=>x!==match));return match;
+  };
   for(const m of raw)for(const n of m.notes){
     const anchor={n,at:m.sourceBeat+n.beat};
     for(const mark of n.slurs){
       if(mark.type==='stop'){
-        const first=slurStarts.get(mark.number);
-        if(first){addSlur(mark.number,first,anchor);slurStarts.delete(mark.number);}
-        else pendingStops.set(mark.number,anchor);
+        const first=take(slurStarts,mark.number,anchor);
+        if(first)addSlur(mark.number,first,anchor);else put(pendingStops,mark.number,anchor);
       }else if(mark.type==='start'){
-        const last=pendingStops.get(mark.number);
-        if(last && last.at>=anchor.at){addSlur(mark.number,anchor,last);pendingStops.delete(mark.number);}
+        const last=take(pendingStops,mark.number,anchor,true);
+        if(last)addSlur(mark.number,anchor,last);
         else {
-          const previous=slurStarts.get(mark.number);
-          if(previous && !(previous.at===anchor.at && previous.n.voice===n.voice && previous.n.staff===n.staff))warnings.add('部分连奏线起点重复，需核对其编号或范围。');
-          slurStarts.set(mark.number,anchor);
+          const previous=(slurStarts.get(mark.number)??[]).filter(x=>x.n.voice===n.voice&&x.n.staff===n.staff);
+          if(previous.some(x=>x.at===anchor.at))continue; // duplicated chord endpoint
+          if(previous.length)warnings.add('部分连奏线起点重复，需核对其编号或范围。');
+          put(slurStarts,mark.number,anchor);
         }
-      }else if(mark.type==='continue' && !slurStarts.has(mark.number)){
+      }else if(mark.type==='continue'&&!(slurStarts.get(mark.number)?.length)){
         warnings.add('部分跨行连奏线只有延续标记，缺少可靠起点，未推测完整范围。');
       }
     }
   }
-  if(pendingStops.size)warnings.add('部分连奏线缺少起点，未推测其作用范围。');
-  if(slurStarts.size)warnings.add('部分连奏线缺少终点，未推测其作用范围。');
+  if([...pendingStops.values()].some(a=>a.length))warnings.add('部分连奏线缺少起点或端点有歧义，未推测其作用范围。');
+  if([...slurStarts.values()].some(a=>a.length))warnings.add('部分连奏线缺少终点或端点有歧义，未推测其作用范围。');
   const order = expandMeasures(raw);
   const tempos: { beat: number; bpm: number }[] = [{ beat: 0, bpm: 120 }];
   const pedals: { beat: number; down: boolean }[] = [];

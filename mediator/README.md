@@ -59,6 +59,8 @@ This removes only the units managed by this installer and preserves the project 
 
 Run `npm run dev` from `mediator` to start the preview on port 8787. Use search and All/Web/Other filters to find a service, Open to visit a web service, Copy port to copy its number, and Details to inspect its process and connection information. The list updates every 10 seconds; Refresh performs a new scan immediately.
 
+The search field receives focus when the page opens. Use Pin under a port number to keep that service at the top; Unpin restores its normal position. Several services can be pinned, and the selections persist in this browser for the current address. TCP and UDP entries are pinned separately. A stopped service keeps its pin and returns to the top when it starts again.
+
 Use Terminate to review the owning processes and any other ports they share, then confirm to run `fuser -k -TERM -n tcp PORT` (or `udp`). This stops the whole process, including its other listeners. Only processes owned by the account running Mediator can be terminated; Mediator itself is protected. A supervised service may restart automatically, and the page reports when the port remains in use. Cancel closes the confirmation without sending a signal.
 
 See [description.md](description.md) for background and technical details.

@@ -11,6 +11,7 @@ mod files;
 #[cfg(windows)]
 #[path = "files_windows.rs"]
 mod files;
+mod git_actions;
 mod git_status;
 #[cfg(not(windows))]
 mod input;

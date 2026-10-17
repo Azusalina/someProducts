@@ -16,8 +16,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="toolbar-heading"><span>工具</span><button id="toolbar-close" aria-label="关闭工具栏">×</button></div>
     <button id="import">导入</button><button id="default-score" hidden>默认乐谱</button><button id="demo">示例</button><button id="cache-open">乐谱缓存</button><button id="zen">Zen</button><input id="file" type="file" accept=".pdf,.xml,.musicxml,.mxl,.mid,.midi" hidden>
     <div class="toolbar-group"><button id="play" class="primary" aria-label="播放">播放</button><button id="rewind" aria-label="回退 5 秒">−5s</button><button id="forward" aria-label="快进 5 秒">+5s</button><button id="reset">重置</button></div>
-    <div class="toolbar-group"><label for="speed">速度 <output id="speed-value">1.00×</output></label><input id="speed" type="range" min="25" max="200" value="100" step="5"><label for="bpm">BPM</label><input id="bpm" type="number" min="20" max="300" step="1" value="96" aria-label="参考 BPM"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="60"><label for="lookahead">预览</label><select id="lookahead"><option value="4">4s</option><option value="7" selected>7s</option><option value="12">12s</option></select><label class="check"><input id="left-hand" type="checkbox" checked>左手</label><label class="check"><input id="right-hand" type="checkbox" checked>右手</label><label class="check"><input id="autoplay" type="checkbox" checked>自动播放</label><label class="check"><input id="compact-measures" type="checkbox" checked>省略小节补齐空拍</label></div>
-    <div class="toolbar-group"><select id="movement" aria-label="乐章" hidden></select><button id="score-tab" class="selected">五线谱</button><button id="original-tab" hidden>PDF</button><button id="region-select" hidden>框选重识别</button><button id="region-review" hidden>检查局部候选</button><button id="download" disabled>下载 MusicXML</button><a id="log" hidden download="识别日志.txt">日志</a><a id="symbol-report" hidden download="符号复核.json">符号复核</a><div id="measure-list" class="measure-list" aria-label="小节"></div><details id="warnings" hidden><summary id="warnings-summary">记录</summary><ul id="warnings-list"></ul></details></div>
+    <div class="toolbar-group"><label for="speed">速度 <output id="speed-value">1.00×</output></label><input id="speed" type="range" min="25" max="200" value="100" step="5"><label for="bpm">BPM</label><input id="bpm" type="number" min="20" max="300" step="1" value="96" aria-label="参考 BPM"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="60"><label for="lookahead">预览</label><select id="lookahead"><option value="4">4s</option><option value="7" selected>7s</option><option value="12">12s</option></select><label for="hand-mode">播放声部</label><select id="hand-mode"><option value="both">双手</option><option value="left">仅左手</option><option value="right">仅右手</option><option value="silent">静音</option></select><label class="check"><input id="autoplay" type="checkbox" checked>自动播放</label><label class="check"><input id="compact-measures" type="checkbox" checked>省略小节补齐空拍</label></div>
+    <div class="toolbar-group"><select id="movement" aria-label="乐章" hidden></select><button id="score-tab" class="selected">五线谱</button><button id="original-tab" hidden>PDF</button><button id="region-select" hidden>框选重识别</button><button id="region-review" hidden>检查局部候选</button><button id="engine-compare" hidden>多引擎核查</button><button id="download" disabled>下载 MusicXML</button><a id="log" hidden download="识别日志.txt">日志</a><a id="symbol-report" hidden download="符号复核.json">符号复核</a><div id="measure-list" class="measure-list" aria-label="小节"></div><details id="warnings" hidden><summary id="warnings-summary">记录</summary><ul id="warnings-list"></ul></details></div>
     <div class="toolbar-group"><details id="quality-report" hidden><summary>读入与识别反馈</summary><ul id="read-facts"></ul><ul id="quality-issues"></ul><p id="quality-limit"></p></details><details id="color-settings"><summary>瀑布配色</summary>${Object.entries({left:'左手',right:'右手',leftActive:'左手触键',rightActive:'右手触键',background:'背景'}).map(([key,label]) => `<label for="color-${key}">${label}<input id="color-${key}" data-color="${key}" type="color" value="${defaultColors[key as keyof WaterfallColors]}"></label>`).join('')}<button id="colors-reset">恢复配置配色</button><output id="colors-status" aria-live="polite"></output></details></div>
     <div class="toolbar-group"><details id="recognition-settings"><summary>识别资源</summary><label for="recognition-threads">CPU 核心（0 自动）</label><input id="recognition-threads" type="number" min="0" max="64" value="0"><label for="recognition-memory">Java 内存上限 MB</label><input id="recognition-memory" type="number" min="512" max="16384" step="256" value="4096"><button id="recognition-save">保存</button><output id="recognition-resource-status"></output></details></div>
     <div class="toolbar-group toolbar-meta"><span id="piece-kind"></span><span id="engine-status"></span><a href="/credits.html" target="_blank" rel="noopener">来源与许可</a></div>
@@ -30,7 +30,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="split-view"><section class="score-section"><div id="pdf-view" aria-label="原 PDF" hidden></div><div id="score-view" class="score-view"></div></section>
     <section id="drop-zone" class="workspace" aria-label="钢琴"><div class="canvas-scroll"><div class="canvas-wrap"><canvas id="waterfall" aria-label="钢琴音符瀑布"></canvas><div id="keyboard-grip" class="keyboard-grip" role="separator" aria-label="琴键高度" aria-orientation="horizontal" aria-valuemin="40" aria-valuemax="260" aria-valuenow="90" tabindex="0"></div></div></div></section></div>
 
-  </main><dialog id="region-dialog" aria-labelledby="region-title"><h2 id="region-title">局部重识别</h2><p id="region-range"></p><label>分辨率<select id="region-dpi"><option value="400">400 DPI</option><option value="600" selected>600 DPI</option></select></label><label><input id="region-tuplets" type="checkbox">省略数字的连音分析</label><p>保留整行双谱表、谱号和调号作为上下文，仅替换选中小节。</p><progress id="region-progress" max="100" value="0"></progress><p id="region-status" role="status"></p><div id="region-comparison"></div><div class="region-actions"><button id="region-start">重新识别</button><button id="region-original" hidden>试听原结果</button><button id="region-preview" hidden>试听候选</button><button id="region-accept" hidden>采用候选副本</button><button id="region-cancel" hidden>中断识别</button><button id="region-close">关闭</button></div></dialog><dialog id="cache-dialog" aria-labelledby="cache-title"><div class="cache-heading"><h2 id="cache-title">乐谱缓存</h2><button id="cache-refresh">刷新</button><button id="cache-close" aria-label="关闭缓存管理">×</button></div><p id="cache-status" role="status"></p><ul id="cache-list"></ul></dialog>`;
+  </main><dialog id="region-dialog" aria-labelledby="region-title"><h2 id="region-title">局部重识别</h2><p id="region-range"></p><label>分辨率<select id="region-dpi"><option value="400">400 DPI</option><option value="600" selected>600 DPI</option></select></label><label><input id="region-tuplets" type="checkbox">省略数字的连音分析</label><p>保留整行双谱表、谱号和调号作为上下文，仅替换选中小节。</p><progress id="region-progress" max="100" value="0"></progress><p id="region-status" role="status"></p><div id="region-comparison"></div><div class="region-actions"><button id="region-start">重新识别</button><button id="region-original" hidden>试听原结果</button><button id="region-preview" hidden>试听候选</button><button id="region-accept" hidden>采用候选副本</button><button id="region-cancel" hidden>中断识别</button><button id="region-close">关闭</button></div></dialog><dialog id="cache-dialog" aria-labelledby="cache-title"><div class="cache-heading"><h2 id="cache-title">乐谱缓存</h2><button id="cache-refresh">刷新</button><button id="cache-close" aria-label="关闭缓存管理">×</button></div><p id="cache-status" role="status"></p><ul id="cache-list"></ul></dialog><dialog id="ensemble-dialog" aria-labelledby="ensemble-title"><h2 id="ensemble-title">多引擎核查</h2><label>引擎名称<input id="ensemble-name" value="homr" maxlength="80"></label><label>第二引擎 MusicXML<input id="ensemble-file" type="file" accept=".musicxml,.xml,.mxl"></label><label>原结果起始小节序号（从 1 起）<input id="ensemble-start" type="number" min="1" value="1"></label><label>结束小节序号<input id="ensemble-end" type="number" min="1"></label><p>第二份结果须覆盖同一原谱范围。比较音高、起奏与时值；一致率不是准确率，原结果保持不变。</p><label>PDF 起始页<input id="ensemble-first" type="number" min="1" value="1"></label><label>PDF 结束页<input id="ensemble-last" type="number" min="1" value="1"></label><button id="ensemble-local">运行本机 homr</button><button id="ensemble-cancel" hidden>中断核查</button><a id="ensemble-log" hidden target="_blank" rel="noopener">核查日志</a><button id="ensemble-run">比较导入文件</button><button id="ensemble-download" disabled>下载核查报告</button><button id="ensemble-close">关闭</button><p id="ensemble-status" role="status"></p><div id="ensemble-pages"></div><ul id="ensemble-differences"></ul></dialog>`;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const player = new PianoPlayer();
@@ -158,6 +158,7 @@ function readSummary(state: string, job = currentJob) {
 function reflect(next: Score) {
   const symbolReport=$<HTMLAnchorElement>('symbol-report');
   symbolReport.hidden=!currentJob?.symbol_audit;
+  $('engine-compare').hidden=!currentJob||currentJob.state!=='done';
   $('region-select').hidden=!currentJob||currentJob.state!=='done'||!!currentJob.pending_region;
   $('region-review').hidden=!currentJob?.pending_region;
   if(currentJob?.symbol_audit)symbolReport.href=`/api/jobs/${currentJob.id}/symbol-audit.json`;
@@ -484,7 +485,9 @@ async function readCached(id:string,filename:string,startup=false,upgrade=false)
     const [source,status]=await Promise.all([fetch(`/api/jobs/${id}/score.pdf`),fetch(`/api/jobs/${id}`)]);
     if(token!==revision)return;
     if(!source.ok||!status.ok)throw new Error('缓存文件已不存在。');
-    const job=await status.json() as RecognitionJob, data=await source.blob();
+    const job=await status.json() as RecognitionJob & {second_engine?:unknown};
+    if(job.second_engine){await reviewEnsemble(id);return;}
+    const data=await source.blob();
     if(token!==revision)return;
     await loadFile(new File([data],job.filename||filename||'乐谱.pdf',{type:'application/pdf'}),startup,!['cancelled','error'].includes(job.state) && !upgrade ? job : undefined);
     if(currentJob?.id===id&&score)openedCacheId=id;
@@ -493,7 +496,7 @@ async function readCached(id:string,filename:string,startup=false,upgrade=false)
 }
 let cacheTimer:ReturnType<typeof setTimeout>|undefined;
 
-type CacheEntry = {pending_region?:boolean;is_default?:boolean;upgrade_available?:boolean;id:string; filename:string; state:string; created:number; bytes:number; pages?:number; results:number};
+type CacheEntry = {second_engine?:boolean;pending_region?:boolean;is_default?:boolean;upgrade_available?:boolean;id:string; filename:string; state:string; created:number; bytes:number; pages?:number; results:number};
 async function refreshCache() {
   clearTimeout(cacheTimer);
   $('cache-status').textContent = '读取中';
@@ -506,14 +509,14 @@ async function refreshCache() {
       name.textContent=entry.filename+(entry.pending_region?' · 局部候选':'');
       const states:Record<string,string>={done:'已完成',error:'未完成',queued:'排队',running:'识别中',cancelling:'正在中断',cancelled:'已中断'};
       meta.textContent=`${states[entry.state] ?? entry.state} · ${(entry.bytes/1048576).toFixed(1)} MB${entry.pages ? ` · ${entry.pages} 页` : ''} · ${new Date(entry.created*1000).toLocaleString()}`;
-      const open=document.createElement('button');open.textContent=entry.pending_region?'检查选区':['cancelled','error'].includes(entry.state) ? '继续识别' : '打开';open.disabled=!['done','cancelled','error'].includes(entry.state);
+      const open=document.createElement('button');open.textContent=entry.second_engine?'查看核查':entry.pending_region?'检查选区':['cancelled','error'].includes(entry.state) ? '继续识别' : '打开';open.disabled=!entry.second_engine&&!['done','cancelled','error'].includes(entry.state);
       open.addEventListener('click',async()=>{
-        $<HTMLDialogElement>('cache-dialog').close();if(entry.pending_region)await reviewRegion(entry.id);else await openCached(entry.id,entry.filename);
+        $<HTMLDialogElement>('cache-dialog').close();if(entry.second_engine){await reviewEnsemble(entry.id);return;}if(entry.pending_region)await reviewRegion(entry.id);else await openCached(entry.id,entry.filename);
       });
       const upgrade=document.createElement('button');upgrade.textContent='更新识别';upgrade.setAttribute('aria-label',`更新识别 ${entry.filename}`);
       upgrade.addEventListener('click',async()=>{$<HTMLDialogElement>('cache-dialog').close();await openCached(entry.id,entry.filename,false,true);});
       const setDefault=document.createElement('button');setDefault.textContent=entry.is_default ? '默认' : '设为默认';
-      setDefault.disabled=entry.state!=='done'||!!entry.is_default||!!entry.pending_region;
+      setDefault.disabled=entry.state!=='done'||!!entry.is_default||!!entry.pending_region||!!entry.second_engine;
       setDefault.addEventListener('click',async()=>{
         setDefault.disabled=true;
         try {
@@ -541,7 +544,7 @@ async function refreshCache() {
       });
       const project=document.createElement('a');project.textContent='OMR 工程';project.href=`/api/jobs/${entry.id}/project.omr`;project.download=`${entry.filename.replace(/\.pdf$/i,'')}.omr`;
       const training=document.createElement('a');training.textContent='八度训练包';training.href=`/api/jobs/${entry.id}/octave-training.zip`;training.download=`${entry.filename.replace(/\.pdf$/i,'')}-octaves.zip`;
-      row.append(name,meta,open,setDefault,remove);if(entry.state==='done'&&entry.upgrade_available)row.append(upgrade);if(['queued','running','cancelling'].includes(entry.state))row.append(cancel);if(entry.state==='done') row.append(project,training);return row;
+      row.append(name,meta,open,setDefault,remove);if(entry.state==='done'&&entry.upgrade_available)row.append(upgrade);if(['queued','running','cancelling'].includes(entry.state))row.append(cancel);if(entry.state==='done'&&!entry.second_engine) row.append(project,training);return row;
     }));
     if(entries.some(e=>e.state==='cancelling'))cacheTimer=setTimeout(()=>{if($<HTMLDialogElement>('cache-dialog').open)void refreshCache();},1200);
     $('cache-status').textContent=entries.length ? `${entries.length} 份 · ${(entries.reduce((sum,e)=>sum+e.bytes,0)/1048576).toFixed(1)} MB` : '暂无缓存';
@@ -695,7 +698,23 @@ $('bpm').addEventListener('change', e => {
   input.value = String(referenceBpm); updateMeta(); void applySpeed();
 });
 $('volume').addEventListener('input', e => player.setVolume(Number((e.target as HTMLInputElement).value) / 100));
-for (const hand of ['left', 'right'] as const) $(`${hand}-hand`).addEventListener('change', e => void player.setHand(hand, (e.target as HTMLInputElement).checked));
+const handMode=$<HTMLSelectElement>('hand-mode');
+const handChoices={both:{left:true,right:true},left:{left:true,right:false},right:{left:false,right:true},silent:{left:false,right:false}};
+type HandMode=keyof typeof handChoices;
+try{
+  const saved=localStorage.getItem('sheetvis.hand-mode');
+  if(saved&&Object.hasOwn(handChoices,saved)){handMode.value=saved;player.hands={...handChoices[saved as HandMode]};}
+}catch{}
+handMode.addEventListener('change',async()=>{
+  const mode=handMode.value as HandMode;
+  if(!Object.hasOwn(handChoices,mode))return;
+  handMode.disabled=true;
+  try{
+    await player.setHands(handChoices[mode]);
+    try{localStorage.setItem('sheetvis.hand-mode',mode);}catch{}
+  }catch(error){notice(String(error),'error');}
+  finally{handMode.disabled=false;updateButtons();}
+});
 $('lookahead').addEventListener('change', e => { waterfall.lookAhead = Number((e.target as HTMLSelectElement).value); });
 $('score-tab').addEventListener('click', async () => {
   if (score?.xml && pdfUrl && !display && !busy) {
@@ -822,3 +841,95 @@ fetch('/api/health').then(r => r.json()).then(h => {
   $('engine-status').textContent = h.omr && h.samples ? 'OMR · 就绪' : '资源缺失';
   $('engine-status').classList.toggle('ready', h.omr && h.samples);
 }).catch(() => { $('engine-status').textContent = 'OMR · 离线'; });
+
+// Cross-engine comparison never adopts or mutates a playable score.
+let ensembleReport:Record<string,unknown>|null=null;
+const ensembleDialog=$<HTMLDialogElement>('ensemble-dialog');
+$('engine-compare').addEventListener('click',()=>{
+  ++ensemblePoll;ensembleJob='';$('ensemble-cancel').hidden=true;$('ensemble-log').hidden=true;$<HTMLButtonElement>('ensemble-local').disabled=false;
+  ensembleReport=null;$<HTMLButtonElement>('ensemble-download').disabled=true;
+  $<HTMLInputElement>('ensemble-start').value='1';
+  $<HTMLInputElement>('ensemble-end').value=String(score?.xml?parseXML(score.xml).querySelector('part')?.querySelectorAll(':scope > measure').length??0:0);
+  const first=currentJob?.included_pages?.[0]??1,last=Math.min(first+15,currentJob?.total_pages??first);
+  $<HTMLInputElement>('ensemble-first').value=String(first);$<HTMLInputElement>('ensemble-last').value=String(last);
+  const indices=Object.entries(noteMapping?.positions??{}).filter(([,p])=>p.page>=first&&p.page<=last).map(([id])=>Number(id.split(':')[1])).filter(Number.isFinite);
+  if(indices.length){$<HTMLInputElement>('ensemble-start').value=String(Math.min(...indices)+1);$<HTMLInputElement>('ensemble-end').value=String(Math.max(...indices)+1);}
+  $('ensemble-pages').replaceChildren();
+  for(const item of currentJob?.assistance?.pages??[]){
+    if(!item.job_id)continue;
+    const button=document.createElement('button');button.textContent=`第 ${item.page} 页 · ${item.state}`;
+    button.addEventListener('click',()=>void reviewEnsemble(item.job_id!));$('ensemble-pages').append(button);
+  }
+  $('ensemble-status').textContent='';$('ensemble-differences').replaceChildren();ensembleDialog.showModal();
+});
+$('ensemble-close').addEventListener('click',()=>ensembleDialog.close());
+ensembleDialog.addEventListener('keydown',e=>e.stopPropagation());
+$('ensemble-run').addEventListener('click',async()=>{
+  const job=currentJob,token=revision,file=$<HTMLInputElement>('ensemble-file').files?.[0];
+  if(!job||!file){$('ensemble-status').textContent='请选择第二引擎导出的 MusicXML。';return;}
+  const button=$<HTMLButtonElement>('ensemble-run');button.disabled=true;
+  ensembleReport=null;$<HTMLButtonElement>('ensemble-download').disabled=true;$('ensemble-differences').replaceChildren();
+  try{
+    if(file.size>8*1024*1024)throw new Error('文件必须小于 8 MB。');
+    const buffer=await file.arrayBuffer();
+    const xml=file.name.toLowerCase().endsWith('.mxl')?extractMusicXML(buffer):new TextDecoder().decode(buffer);
+    const result=Math.max(0,Number($<HTMLSelectElement>('movement').value)||0);
+    const response=await fetch(`/api/jobs/${job.id}/compare`,{method:'POST',headers:{'X-SheetVis':'local','Content-Type':'application/json'},body:JSON.stringify({xml,engine:$<HTMLInputElement>('ensemble-name').value,result,start:Number($<HTMLInputElement>('ensemble-start').value)-1,end:Number($<HTMLInputElement>('ensemble-end').value)-1})});
+    const report=await response.json();if(!response.ok)throw new Error(report.error??'核查失败');
+    if(token!==revision||currentJob?.id!==job.id)return;
+    displayEnsemble(report,token);
+  }catch(error){$('ensemble-status').textContent=String(error);}finally{button.disabled=false;}
+});
+$('ensemble-download').addEventListener('click',()=>{
+  if(!ensembleReport)return;
+  const url=URL.createObjectURL(new Blob([JSON.stringify(ensembleReport,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='engine-comparison.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+type EnsembleReport={pitch_content_agreement?:number;rhythm_event_agreement?:number;comparable:boolean;reason?:string;agreement:number|null;differing_measures:number;measures:{index:number;number:string;baseline_only:{count:number}[];candidate_only:{count:number}[];extent_matches:boolean}[]};
+function displayEnsemble(report:EnsembleReport,token:number){
+    ensembleReport=report as unknown as Record<string,unknown>;$<HTMLButtonElement>('ensemble-download').disabled=false;
+    $('ensemble-status').textContent=report.comparable?`音符事件一致率 ${report.agreement===null?'无音符':(report.agreement*100).toFixed(1)+'%'} · ${report.differing_measures} 个小节存在分歧；准确率未知。`:report.reason??'无法比较。';
+    if(report.comparable&&report.pitch_content_agreement!==undefined&&report.rhythm_event_agreement!==undefined)$('ensemble-status').textContent+=` 音高内容一致 ${(report.pitch_content_agreement*100).toFixed(1)}% · 节奏事件一致 ${(report.rhythm_event_agreement*100).toFixed(1)}%（均非准确率）。`;
+    for(const m of report.measures??[]){
+      if(!m.baseline_only.length&&!m.candidate_only.length&&m.extent_matches)continue;
+      const li=document.createElement('li'),seekButton=document.createElement('button');
+      seekButton.textContent=`第 ${m.index+1} 小节（印刷编号 ${m.number}）`;seekButton.addEventListener('click',()=>{if(token===revision){ensembleDialog.close();void seek(score?.measures.find(x=>x.index===m.index)?.start??0);}});
+      li.append(seekButton,document.createTextNode(` 原结果独有 ${m.baseline_only.reduce((n:number,x:{count:number})=>n+x.count,0)} · 对照独有 ${m.candidate_only.reduce((n:number,x:{count:number})=>n+x.count,0)}${m.extent_matches?'':' · 小节时长不同'}`));$('ensemble-differences').append(li);
+    }
+}
+let ensembleJob='',ensemblePoll=0;
+async function reviewEnsemble(id:string,requestedParent?:string){
+  const token=revision,poll=++ensemblePoll;ensembleJob=id;
+  ensembleReport=null;$<HTMLButtonElement>('ensemble-download').disabled=true;$('ensemble-differences').replaceChildren();
+  if(!ensembleDialog.open)ensembleDialog.showModal();
+  const log=$<HTMLAnchorElement>('ensemble-log');log.hidden=false;log.href=`/api/jobs/${id}/engine.log`;
+  try{
+    while(poll===ensemblePoll){
+      const response=await fetch(`/api/jobs/${id}`),job=await response.json();
+      if(!response.ok)throw new Error(job.error??'核查记录读取失败');
+      if(poll!==ensemblePoll)return;
+      $('ensemble-status').textContent=job.message??job.state;
+      const active=['queued','running','cancelling'].includes(job.state);
+      $('ensemble-cancel').hidden=!active;$<HTMLButtonElement>('ensemble-local').disabled=active;
+      if(job.state==='done'){
+        const parent=job.second_engine?.parent;
+        // Navigation links are valid only while showing the matching original.
+        displayEnsemble(job.comparison,currentJob?.id===(requestedParent??parent)?token:-1);return;
+      }
+      if(!active)return;
+      await new Promise(resolve=>setTimeout(resolve,1200));
+    }
+  }catch(error){$('ensemble-status').textContent=String(error);}
+}
+$('ensemble-local').addEventListener('click',async()=>{
+  if(!currentJob)return;
+  const requestedParent=currentJob.id,requestedRevision=revision;
+  const button=$<HTMLButtonElement>('ensemble-local');button.disabled=true;$('ensemble-status').textContent='提交本机核查';
+  try{
+    const response=await fetch(`/api/jobs/${currentJob.id}/second-engine`,{method:'POST',headers:{'X-SheetVis':'local','Content-Type':'application/json'},body:JSON.stringify({result:Number($<HTMLSelectElement>('movement').value)||0,first:Number($<HTMLInputElement>('ensemble-first').value),last:Number($<HTMLInputElement>('ensemble-last').value),start:Number($<HTMLInputElement>('ensemble-start').value)-1,end:Number($<HTMLInputElement>('ensemble-end').value)-1})});
+    const job=await response.json();if(!response.ok)throw new Error(job.error??'启动失败');if(revision===requestedRevision)await reviewEnsemble(job.id,requestedParent);
+  }catch(error){$('ensemble-status').textContent=String(error);button.disabled=false;}
+});
+$('ensemble-cancel').addEventListener('click',()=>{if(ensembleJob)void cancelJob(ensembleJob);});
+ensembleDialog.addEventListener('close',()=>{++ensemblePoll;$<HTMLButtonElement>('ensemble-local').disabled=false;});

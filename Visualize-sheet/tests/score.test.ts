@@ -219,3 +219,16 @@ test('ornament release retains its principal slur and the next source mapping',(
   expect(ornament.soundDuration).toBeGreaterThan(ornament.duration);
   expect(ornament.sources?.[0].id).toBe('P1:0:0');expect(s.notes.at(-1)?.sources?.[0].id).toBe('P1:0:1');
 });
+
+test('two hands reuse slur numbers across multiple system and page breaks',()=>{
+  const mark=(type:string)=>`<notations><slur number="1" type="${type}"/></notations>`;
+  const lower=(s:string)=>s.replaceAll('<voice>1','<voice>2').replaceAll('<staff>1','<staff>2');
+  const row=(upper:string,bass:string)=>upper+'<backup><duration>4</duration></backup>'+lower(bass);
+  const xml=wrap(measure(row(note('C',4,mark('start')),note('E',4,mark('start'))))+
+    measure('<print new-system="yes"/>'+row(note('D',4,mark('continue')),note('F',4,mark('continue'))),2)+
+    measure('<print new-page="yes"/>'+row(note('E',4,mark('stop')),note('G',4,mark('stop'))),3));
+  const s=musicXMLToScore(xml);
+  expect(s.notes).toHaveLength(6);
+  expect(s.notes.filter(n=>n.measure<2).every(n=>n.soundDuration>n.duration)).toBe(true);
+  expect(s.warnings.join(' ')).not.toMatch(/起点重复|缺少起点|缺少终点/);
+});

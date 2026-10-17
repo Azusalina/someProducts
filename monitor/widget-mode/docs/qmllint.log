@@ -1,0 +1,3 @@
+Warning: plasmoid/contents/ui/main.qml:16:89: Member "settingsProfile" not found on type "KConfigPropertyMap" [missing-property]
+    SettingsFile { preferences: Plasmoid.configuration; profile: Plasmoid.configuration.settingsProfile }
+                                                                                        ^^^^^^^^^^^^^^^

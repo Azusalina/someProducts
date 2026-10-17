@@ -8,6 +8,7 @@
   <script type="module" src="/app.js"></script>
   <script type="module" src="/pdf-pages.js"></script>
   <script type="module" src="/photos.js"></script>
+  <script type="module" src="/omr.js"></script>
   <script type="module" src="/tools.js"></script>
 </head>
 <body>
@@ -17,7 +18,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -78,6 +79,21 @@
         <input id="photos-name" value="photos.pdf" autocomplete="off">
       </fieldset>
       <div class="pdf-save-controls"><button id="photos-save" disabled>Save photos as PDF</button><button id="photos-clear" disabled>Clear photos</button></div>
+    </section>
+    <section id="omr-workspace" aria-label="OMR scan preparation" hidden>
+      <label for="omr-file">Local score PDF</label>
+      <input id="omr-file" type="file" accept="application/pdf,.pdf">
+      <p id="omr-status" role="status" aria-live="polite">Choose a scanned score to inspect one page at a time.</p>
+      <fieldset id="omr-options" disabled>
+        <legend>Page preparation</legend>
+        <label for="omr-page">Page</label><input id="omr-page" type="number" min="1" value="1">
+        <label for="omr-profile">Operation</label><select id="omr-profile"><option value="preserve">Preserve pixels</option><option value="contrast">Contrast normalization</option><option value="deskew">Manual deskew</option></select>
+        <label for="omr-rotation">Rotation (degrees, −5 to 5)</label><input id="omr-rotation" type="number" min="-5" max="5" step="0.05" value="0">
+        <button id="omr-preview" type="button" disabled>Prepare comparison</button>
+      </fieldset>
+      <p id="omr-report" aria-live="polite"></p>
+      <div class="omr-comparison"><figure><figcaption>Original render</figcaption><img id="omr-before" alt="Original PDF page preview"></figure><figure><figcaption>Candidate</figcaption><img id="omr-after" alt="Prepared PDF page preview"></figure></div>
+      <div class="pdf-save-controls"><button id="omr-download" disabled>Save page as candidate PDF</button><button id="omr-report-download" disabled>Save processing report</button></div>
     </section>
   </main>
 </body>

@@ -10,13 +10,15 @@ Item {
     property var reading: owner.readings[kind] || ({})
     property color ink: "#f5f5f4"
     property string style: "minimal"
+    property bool focusPresentation: false
     readonly property real seconds: reading.seconds || 0
     readonly property bool ring: style === "ring"
     property bool editing: false
     property string editError: ""
     readonly property bool blinking: kind === "countdown" && owner.countdownFinished && !owner.completionAcknowledged && !editing
     activeFocusOnTab: true
-    Binding { target: face.owner; property: "countdownEditing"; value: face.editing; when: face.kind === "countdown" }
+    onEditingChanged: if (kind === "countdown") owner.countdownEditing = editing
+    Component.onDestruction: if (kind === "countdown" && editing) owner.countdownEditing = false
     Keys.onPressed: event => {
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && face.kind === "countdown" && face.owner.acknowledgeCountdown()) {
             event.accepted = true
@@ -60,20 +62,36 @@ Item {
     }
     implicitHeight: contents.implicitHeight
     signal borderResizeRequested(string edge, real delta)
-    BorderGrip { anchors.fill: parent; z: 20; edges: ["top","bottom"]; ink: face.ink; onFinished: (edge,delta) => face.borderResizeRequested(edge,delta) }
+    BorderGrip { anchors.fill: parent; visible: !face.focusPresentation; z: 20; edges: ["top","bottom"]; ink: face.ink; onFinished: (edge,delta) => face.borderResizeRequested(edge,delta) }
     ColumnLayout {
         id: contents
         anchors.fill: parent
         spacing: 2
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 0
     Text { Layout.fillWidth: true; text: face.kind === "countdown" ? "COUNTDOWN" : "STOPWATCH"; color: face.ink; opacity: 0.5; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter; font.letterSpacing: 0.7 }
+        SmallButton {
+            objectName: "countdownFocus"
+            visible: face.kind === "countdown" && !face.focusPresentation
+            implicitWidth: 22; implicitHeight: 24
+            text: "⛶"; ink: face.ink
+            enabled: face.owner.session.length > 0 && !face.editing
+            Accessible.name: "Open countdown in fullscreen Focus Mode"
+            ToolTip.visible: hovered
+            ToolTip.text: "Focus Mode"
+            onClicked: face.owner.openFocus()
+        }
+    }
     Item {
         Layout.fillWidth: true
-        implicitHeight: face.ring ? 76 : 34
+        implicitHeight: face.focusPresentation ? 300 : face.ring ? 76 : 34
         Item {
             id: arc
             objectName: face.kind + "Arc"
             anchors.centerIn: parent
             width: 74; height: 74
+            scale: face.focusPresentation ? 3.8 : 1
             visible: face.ring
             readonly property real amount: face.kind === "countdown" ? face.seconds / Math.max(1, face.reading.initial || 1) : (face.seconds % 60) / 60
             Rectangle {
@@ -101,7 +119,7 @@ Item {
             visible: !face.editing
             text: face.timeText(face.seconds)
             color: face.ink
-            font.pixelSize: face.ring ? 14 : 20
+            font.pixelSize: face.focusPresentation ? (face.ring ? 48 : 110) : face.ring ? 14 : 20
             font.family: face.style === "digital" ? "monospace" : ""
             font.weight: face.style === "digital" ? Font.Medium : Font.Light
             horizontalAlignment: Text.AlignHCenter
@@ -113,11 +131,11 @@ Item {
             objectName: face.kind + "TimeInput"
             anchors.centerIn: parent
             width: parent.width
-            height: 30
+            height: face.focusPresentation ? 100 : 30
             visible: face.editing
             color: face.ink
             font.family: "monospace"
-            font.pixelSize: Math.min(16, Math.max(10, width / 5.5))
+            font.pixelSize: face.focusPresentation ? Math.min(80, width / 5.5) : Math.min(16, Math.max(10, width / 5.5))
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
             maximumLength: 8
@@ -136,7 +154,7 @@ Item {
         spacing: 2
         SmallButton {
             objectName: face.kind + "Toggle"
-            implicitWidth: 34; implicitHeight: 24
+            implicitWidth: face.focusPresentation ? 64 : 34; implicitHeight: face.focusPresentation ? 40 : 24
             text: face.reading.running ? "Ⅱ" : "▶"
             ink: face.ink
             enabled: face.owner.session.length > 0 && !face.owner.busy && !face.editing && !face.reading.finished
@@ -145,7 +163,7 @@ Item {
         }
         SmallButton {
             objectName: face.kind + "Reset"
-            implicitWidth: 34; implicitHeight: 24
+            implicitWidth: face.focusPresentation ? 64 : 34; implicitHeight: face.focusPresentation ? 40 : 24
             text: "↺"; ink: face.ink
             enabled: face.owner.session.length > 0 && !face.owner.busy && !face.editing
             Accessible.name: "Reset " + face.kind
@@ -154,6 +172,7 @@ Item {
                 face.forceActiveFocus()
             }
         }
+
     }
     Text { Layout.fillWidth: true; text: face.reading.finished ? "Done" : face.reading.running ? "Running" : "Paused"; color: face.ink; opacity: 0.55; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter }
     }

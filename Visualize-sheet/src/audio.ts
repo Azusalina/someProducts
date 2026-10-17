@@ -105,10 +105,15 @@ export class PianoPlayer {
     if (resume) await this.play();
   }
 
+  async setHands(hands: {left:boolean;right:boolean}) {
+    if(this.hands.left===hands.left&&this.hands.right===hands.right)return;
+    const resume=this.playing;
+    this.pause();this.hands={...hands};
+    if(resume)await this.play();
+  }
+
   async setHand(hand: 'left' | 'right', enabled: boolean) {
-    const resume = this.playing;
-    this.pause(); this.hands[hand] = enabled;
-    if (resume) await this.play();
+    await this.setHands({...this.hands,[hand]:enabled});
   }
 
   setVolume(volume: number) {

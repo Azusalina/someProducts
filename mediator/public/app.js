@@ -9,6 +9,17 @@ const expanded = new Set();
 const dialog = $('#terminate-dialog');
 let pendingTermination = null;
 let terminationBusy = false;
+const pinsKey = 'mediator:pinned-ports:v1';
+
+function parsePins(value) {
+  try {
+    const saved = JSON.parse(value);
+    return new Set(Array.isArray(saved) ? saved.filter(id => typeof id === 'string' && /^(tcp|udp):[1-9]\d{0,4}$/.test(id) && Number(id.split(':')[1]) <= 65535) : []);
+  } catch { return new Set(); }
+}
+
+let pinned = new Set();
+try { pinned = parsePins(localStorage.getItem(pinsKey)); } catch {}
 
 function actionStatus(message, error = false) {
   $('#action-status').hidden = !message;
@@ -83,12 +94,24 @@ function render() {
   const visible = services.filter(service => {
     const matching = filter === 'all' || (filter === 'web' ? isWeb(service) : !isWeb(service));
     return matching && [service.port, service.name, service.description, service.protocol, ...service.processes.map(p => `${p.name} ${p.project || ''}`)].join(' ').toLowerCase().includes(query);
-  });
+  }).sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id)));
   const fragment = document.createDocumentFragment();
   for (const service of visible) {
     const row = template.content.firstElementChild.cloneNode(true);
+    row.dataset.serviceId = service.id;
     row.querySelector('.port-number').textContent = service.port;
     row.querySelector('.protocol').textContent = service.protocol.toUpperCase();
+    const pin = row.querySelector('.pin-button');
+    const isPinned = pinned.has(service.id);
+    pin.textContent = isPinned ? 'Unpin' : 'Pin';
+    pin.setAttribute('aria-pressed', String(isPinned));
+    pin.setAttribute('aria-label', `${isPinned ? 'Unpin' : 'Pin'} ${service.protocol.toUpperCase()} port ${service.port}`);
+    pin.addEventListener('click', () => {
+      pinned.has(service.id) ? pinned.delete(service.id) : pinned.add(service.id);
+      try { localStorage.setItem(pinsKey, JSON.stringify([...pinned])); }
+      catch { actionStatus('Browser storage is unavailable. Pins will last for this visit only.', true); }
+      render();
+    });
     row.querySelector('h3').textContent = service.name;
     row.querySelector('.description').textContent = service.description;
     const badge = row.querySelector('.connection-badge');
@@ -145,11 +168,11 @@ function render() {
   }
   // Avoid replacing a focused control during background refreshes.
   const active = container.contains(document.activeElement) ? document.activeElement : null;
-  const focusedService = active?.closest('.service')?.querySelector('.port-number')?.textContent;
+  const focusedService = active?.closest('.service')?.dataset.serviceId;
   const focusedClass = active?.className;
   container.replaceChildren(fragment);
   if (focusedService && focusedClass) {
-    const replacement = [...container.querySelectorAll('.service')].find(row => row.querySelector('.port-number').textContent === focusedService)?.getElementsByClassName(focusedClass)?.[0];
+    const replacement = [...container.querySelectorAll('.service')].find(row => row.dataset.serviceId === focusedService)?.getElementsByClassName(focusedClass)?.[0];
     replacement?.focus({ preventScroll: true });
   }
   container.setAttribute('aria-busy', 'false');
@@ -194,5 +217,11 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && document.activeElement === $('#search')) { $('#search').value = ''; render(); $('#search').blur(); }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !dialog.open && !terminationBusy) refresh(); });
+window.addEventListener('storage', event => {
+  if (event.key === pinsKey || event.key === null) {
+    pinned = parsePins(event.newValue);
+    render();
+  }
+});
 setInterval(() => { if (!document.hidden && !dialog.open && !terminationBusy) refresh(); }, 10000);
 refresh();

@@ -25,3 +25,10 @@ Note controls (1.11.0): NoteCard has a bounded bottom-edge resize handle, a scro
 Two-column to-dos (1.12.0): NoteBoard composes the existing NoteCard and appended TodoCard. TodoColumn displays tasks with reversible done buttons; TodoTools validates and reconciles stable task IDs. Native and preview ConfigTodos pages stage content/appearance settings. Task text/completion and appearance persist in JSON profiles. Detailed validation is in [../docs/description.md](../docs/description.md).
 
 1.13.0 adds inline to-do creation/edit/delete and bounded rectangular border resizing. ResizeTools, BorderGrip and SplitGrip preserve grid/column constraints and profile-backed internal dimensions; native outer sizing uses Plasma's existing layout container. See [../docs/description.md](../docs/description.md) for verification.
+
+
+### Version 1.14 — countdown Focus Mode
+
+The countdown header opens a dedicated fullscreen Qt Quick window. TimerOwner lazily owns CountdownFocus and shares its existing backend session with the desktop clock; opening, closing, Escape and native window close do not configure/reset the timer. The fullscreen ClockFace retains configured color/style, optional-colon time editing, pause/reset and completion blinking with Enter acknowledgement. Its dark background is local to the focus window; the desktop remains transparent. Closing the module or destroying its owner releases the window. Focus Mode does not change the power profile or acquire sleep inhibition; use the existing Battery control if needed.
+
+`tests/focus_mode.py` uses an isolated timer session and actual Qt window/key events to verify fullscreen visibility, shared progress, pause, edit, Escape/native close, completion Enter and module cleanup. It runs offscreen and does not establish physical Wayland compositor behavior. Evidence and deployment results are recorded in [../docs/focus-mode-validation.md](../docs/focus-mode-validation.md).

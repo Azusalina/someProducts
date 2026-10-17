@@ -79,6 +79,39 @@ bookmarks, signatures, metadata, attachments and cross-page link destinations ar
 not guaranteed to survive page extraction. Export does not preserve signatures.
 Only ordinary visual PDF page content is in scope.
 
+## OMR scan preparation
+
+The OMR scan view sends a locally selected PDF to the toolkit's loopback server
+for one-page-at-a-time raster inspection. The server renders at the embedded
+image's native sampling (clamped to 300–900 DPI), or 400 DPI when the page is
+vector-only. Processing is limited to 40 megapixels per page and 100 MB per
+source PDF. The source PDF is held in a temporary directory for the request and
+removed when it completes; no score bytes are written into toolkit storage.
+The browser receives two downscaled previews, an explicit provenance report,
+and can request a separate one-page candidate PDF. A candidate is rasterized;
+it is not a replacement for the original or a lossless edit. It includes the
+selected page's source hash, page and profile in its PDF metadata. The JSON
+report includes the same SHA-256, image dimensions, native/render DPI, action,
+warnings and candidate-image hash.
+
+Profiles are conservative. Preserve pixels keeps the rendered page unchanged.
+Contrast normalization adjusts grayscale range but has little or no effect on
+already-binary scans. Manual deskew rotates by a user-specified angle from -5°
+to +5°, uses bicubic resampling, and may blur fine notation; always compare the
+result. The CLI prototype also has an experimental beam-gap function requiring
+an explicit region, but it is intentionally not exposed in the interface: beam
+changes can alter rhythmic meaning and must not run automatically. The UI does
+not guess an angle, erase staff lines, despeckle, sharpen, split systems, or
+modify note symbols. Such transformations need a ground-truthed score and
+recognition evaluation before they can be recommended. Output does not measure
+OMR accuracy.
+
+The server needs Python 3, Poppler (`pdfinfo`, `pdfimages`, `pdftoppm`), Pillow
+and NumPy for this module. The original and candidate previews are transient in
+page memory. The source PDF never leaves the machine. The selected candidate
+page can be sent to another local workflow through the browser download; the
+tool does not train or run an OMR model.
+
 Validation: `npm test` includes range parsing, geometry/rotation and source
 immutability checks. `npm run test:pdf-pages` exercises real browser imports,
 ordered extraction and deletion, preview/download, empty selections, invalid

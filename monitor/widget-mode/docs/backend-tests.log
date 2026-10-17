@@ -60,6 +60,6 @@ test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_c
 test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 60 tests in 5.248s
+Ran 60 tests in 5.054s
 
 OK

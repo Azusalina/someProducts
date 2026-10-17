@@ -13,7 +13,7 @@
   <main aria-label="Port directory">
     <section class="directory" aria-label="Listening services">
       <div class="toolbar">
-        <input id="search" type="search" placeholder="Search ports or services" aria-label="Search ports and services">
+        <input id="search" type="search" placeholder="Search ports or services" aria-label="Search ports and services" autofocus>
         <div class="refresh-controls"><span id="scan-status" role="status">Scanning…</span><button id="refresh" type="button">Refresh</button></div>
       </div>
       <div class="filter-line">
@@ -34,7 +34,7 @@
   <template id="service-template">
     <article class="service">
       <div class="service-main">
-        <div class="port-cell"><strong class="port-number"></strong><span class="protocol"></span></div>
+        <div class="port-cell"><strong class="port-number"></strong><span class="protocol"></span><button class="pin-button" type="button" aria-pressed="false">Pin</button></div>
         <div class="task-cell"><h3></h3><p class="description"></p><button class="details-toggle" type="button" aria-expanded="false">Details</button></div>
         <div class="connection-cell"><span class="connection-badge"></span><span class="connection-description"></span></div>
         <div class="action-cell"><a class="open-button" target="_blank" rel="noopener noreferrer">Open</a><button class="copy-button" type="button">Copy port</button><button class="terminate-button" type="button">Terminate</button></div>

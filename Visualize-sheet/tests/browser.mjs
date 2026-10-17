@@ -75,7 +75,7 @@ try {
   await page.locator('#recognition-threads').fill(String(cores));await page.locator('#recognition-memory').fill('4096');
   await page.locator('#recognition-save').click();await expect(page.locator('#recognition-resource-status')).toContainText('下次新识别生效');
 
-  await page.locator('#left-hand').uncheck(); await page.locator('#right-hand').uncheck();
+  await page.locator('#hand-mode').selectOption('silent');
   await page.keyboard.press('Escape');
   await expect(page.locator('#toolbar')).toBeHidden();
   const canvasBox = await page.locator('#waterfall').boundingBox();
@@ -93,7 +93,7 @@ try {
   await expect(page.locator('#keyboard-grip')).toHaveAttribute('aria-valuenow', '140');
   expect(await page.evaluate(() => localStorage.getItem('sheetvis.keyboard-height'))).toBe('140');
   await page.locator('#toolbar-toggle').click();
-  await page.locator('#left-hand').check(); await page.locator('#right-hand').check();
+  await page.locator('#hand-mode').selectOption('both');
   await page.locator('#color-settings summary').click();
   await page.locator('#color-background').fill('#151822'); await page.locator('#color-background').dispatchEvent('input');
   await page.locator('#color-left').fill('#d08090'); await page.locator('#color-left').dispatchEvent('input');
@@ -139,8 +139,8 @@ try {
   await page.locator('#speed').fill('50'); await page.locator('#speed').dispatchEvent('input');
   await expect(page.locator('#speed-value')).toHaveText('0.50×');
   await page.locator('#measure-list button').nth(3).click();
-  expect(Number(await page.locator('#progress').inputValue())).toBeCloseTo(7.5, 1);
-  await page.locator('#right-hand').uncheck(); await page.locator('#right-hand').check();
+  await expect.poll(async()=>Number(await page.locator('#progress').inputValue())).toBeCloseTo(7.5, 1);
+  await page.locator('#hand-mode').selectOption('left'); await page.locator('#hand-mode').selectOption('both');
   await page.locator('#reset').click();
   await page.locator('#play').click(); await page.waitForTimeout(700); await page.locator('#play').click();
   expect(Number(await page.locator('#progress').inputValue())).toBeLessThan(.5);

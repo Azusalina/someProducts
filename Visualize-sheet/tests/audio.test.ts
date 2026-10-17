@@ -62,6 +62,30 @@ describe('audio transport correctness', () => {
     const player = new PianoPlayer(); player.load(score); await player.setHand('right', false); await player.seek(1); await player.play();
     expect(Context.instance.sources).toHaveLength(0); player.pause();
   });
+  test('single-hand mode suppresses simultaneous notes regardless of their pitch range',async()=>{
+    const player=new PianoPlayer();
+    player.load({...score,notes:[{...score.notes[0],hand:'left',midi:72},{...score.notes[0],id:'other',hand:'right',midi:48}]});
+    await player.setHands({left:true,right:false});await player.play();
+    expect(Context.instance.sources).toHaveLength(1);
+    expect(Context.instance.sources[0].playbackRate.value).toBe(2);
+    player.pause();
+    await player.setHands({left:false,right:true});await player.seek(0);await player.play();
+    expect(Context.instance.sources).toHaveLength(2);
+    expect(Context.instance.sources.at(-1)!.playbackRate.value).toBe(.5);player.pause();
+  });
+  test('switching both hands atomically stops old voices and restores only the selected held note',async()=>{
+    const player=new PianoPlayer();
+    player.load({...score,notes:[score.notes[0],{...score.notes[0],id:'left',hand:'left',midi:48}]});
+    await player.play();Context.instance.currentTime=1;
+    const position=player.position,old=[...Context.instance.sources];
+    await player.setHands({left:true,right:false});
+    expect(player.position).toBeCloseTo(position);expect(player.playing).toBe(true);
+    expect(old.every(source=>source.stop.mock.lastCall?.[0]===1.03)).toBe(true);
+    expect(Context.instance.sources).toHaveLength(3);
+    expect(Context.instance.sources.at(-1)!.playbackRate.value).toBe(.5);
+    player.pause();await player.setHands({left:false,right:true});
+    expect(player.playing).toBe(false);expect(player.position).toBeCloseTo(position);
+  });
   test('audition plays the selected pitch even with both hands muted, without starting transport', async () => {
     const player = new PianoPlayer(); player.load(score); player.hands = { left: false, right: false };
     await player.audition(69);

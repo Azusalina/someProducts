@@ -11,6 +11,7 @@ import re
 import signal
 import shutil
 import subprocess
+import sys
 import threading
 import time
 from urllib.parse import unquote, urlsplit
@@ -23,6 +24,9 @@ from octave_repair import repair_octaves
 from native_ornaments import recover_ornaments, small_music_font
 from symbol_repair import repair_symbols, audit_export
 from region_support import measure_regions, selection, context_at, merge_region
+from curve_repair import recover_curves
+from ensemble import compare_scores, events
+from assist_support import progress as assistance_progress
 from rhythm_repair import repair_beam_links, repair_repeated_tuplets, audit_rhythm
 
 ROOT = Path(__file__).resolve().parent
@@ -30,7 +34,7 @@ MAX_UPLOAD = 40 * 1024 * 1024
 MAX_JOBS = 8
 TIMEOUT = 3600
 CONFIG_LOCK = threading.Lock()
-PIPELINE = 'image-octave-tuplet-v8'
+PIPELINE = 'image-octave-tuplet-curves-v9'
 OMR_STEPS = ('LOAD', 'BINARY', 'SCALE', 'GRID', 'HEADERS', 'STEM_SEEDS', 'BEAMS', 'LEDGERS', 'HEADS', 'STEMS', 'REDUCTION', 'CUE_BEAMS', 'TEXTS', 'MEASURES', 'CHORDS', 'CURVES', 'SYMBOLS', 'LINKS', 'RHYTHMS', 'PAGE')
 
 
@@ -241,6 +245,13 @@ def engine_path():
     return Path(installed) if installed else ROOT / ".runtime/audiveris/opt/audiveris/bin/Audiveris"
 
 
+def comparison_identity(pdf, baseline, first, last, start, end):
+    xml=ET.canonicalize(ET.tostring(read_musicxml(baseline),encoding='unicode'),strip_text=True)
+    value={'pdf':hashlib.sha256(pdf.read_bytes()).hexdigest(),'xml':hashlib.sha256(xml.encode()).hexdigest(),
+           'pages':[first,last],'range':[start,end],'engine':'homr-0.7.0','comparison_version':2}
+    return hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()
+
+
 class JobStore:
     def __init__(self, directory):
         self.directory = Path(directory)
@@ -250,12 +261,17 @@ class JobStore:
         self.jobs = {}
         for path in self.directory.glob('*/job.json'):
             try:
-                job = json.loads(path.read_text())
+                job = json.loads(path.read_text());original=json.dumps(job,sort_keys=True)
                 if re.fullmatch(r'[a-f0-9]{32}', path.parent.name) and job.get('id') == path.parent.name:
+                    if job.get('second_engine') and job.get('requested_by')!='user' and job.get('state')in ('queued','running','cancelling'):
+                        job.update(state='cancelled',message='自动 homr 已停用；仅接受手动启动。')
+                    if job.get('assistance'):
+                        job['assistance'].update(state='stopped',message='自动 homr 已停用；已有报告保留。')
                     if job.get('state') == 'cancelling': job.update(state='cancelled',message='识别已中断。')
                     if job.get('state') in ('queued', 'running'):
                         job.update(state='error', message='服务重启，识别任务已中断。')
                     self.jobs[job['id']] = job
+                    if json.dumps(job,sort_keys=True)!=original:self.persist(job['id'])
             except (OSError, ValueError):
                 pass
         self.process = None
@@ -342,6 +358,85 @@ class JobStore:
             self.futures[identifier] = self.executor.submit(self.run, identifier)
         return identifier
 
+    def ensure_assistance(self, identifier):
+        """Compatibility for old tabs: reading this endpoint never starts work."""
+        with self.lock:
+            job=self.jobs.get(identifier)
+            if job is None:raise KeyError(identifier)
+            plan=job.get('assistance')
+            if not plan:return {'state':'disabled','pages':[],'manual_only':True}
+            result=assistance_progress(plan,self.jobs)
+            if result['state']in ('pending','running'):result['state']='stopped'
+            return {**result,'manual_only':True,'message':'自动 homr 已停用；已有报告保留。'}
+
+    def schedule_assistance(self, identifier):
+        """Legacy continuation hook intentionally cannot enqueue homr work."""
+        return
+
+    def create_second_engine(self, parent_id, result=0, first=1, last=1, start=0, end=None, *, manual=False):
+        if not manual:raise ValueError('homr 核查需要手动点击启动。')
+        with self.lock:
+            if self.stopping:raise ValueError('服务正在停止。')
+            parent=self.jobs.get(parent_id)
+            if not parent or parent['state']!='done' or parent.get('second_engine'):raise ValueError('需要已完成的原识别缓存。')
+            if any(isinstance(v,bool)or not isinstance(v,int)for v in (result,first,last,start))or (end is not None and (isinstance(end,bool)or not isinstance(end,int))):raise ValueError('页码和小节序号必须为整数。')
+            if not 0<=result<len(parent['results'])or not 1<=first<=last or last-first>=16:raise ValueError('请选择 1–16 个连续 PDF 页面和有效乐章。')
+            if parent.get('total_pages')and last>parent['total_pages']:raise ValueError('页码超出 PDF。')
+            from ensemble import events
+            count=len(events(read_musicxml(self.directory/parent_id/parent['results'][result]['name'])))
+            if not 0<=start< count or (end is not None and not start<=end<count):raise ValueError('小节范围超出原结果。')
+            end=count-1 if end is None else end
+            request={'parent':parent_id,'result':result,'first':first,'last':last,'start':start,'end':end}
+            source=self.directory/parent_id;baseline=source/parent['results'][result]['name']
+            identity=comparison_identity(source/'score.pdf',baseline,first,last,start,end)
+            for job in self.jobs.values():
+                if not job.get('second_engine')or job['state']not in ('queued','running','done'):continue
+                if job['state']in ('queued','running')and job.get('requested_by')!='user':continue
+                if job['state']=='done'and not isinstance(job.get('comparison'),dict):continue
+                previous=job['second_engine'];key=job.get('comparison_identity')
+                if key is None:
+                    try:
+                        previous_dir=self.directory/job['id'];old=next(previous_dir.glob('baseline.*'))
+                        count_old=len(events(read_musicxml(old)))
+                        key=comparison_identity(previous_dir/'score.pdf',old,previous['first'],previous['last'],previous['start'],previous.get('end')if previous.get('end')is not None else count_old-1)
+                    except (OSError,ValueError,KeyError,StopIteration,ET.ParseError,zipfile.BadZipFile):continue
+                if key==identity:return job['id']
+            executable=ROOT/'.runtime/bin/homr'
+            if not executable.is_file():raise ValueError('本机尚未安装 homr，参见 README 的安装步骤。')
+            if sum(j['state']in ('queued','running','cancelling')for j in self.jobs.values())>=MAX_JOBS:raise ValueError('识别队列已满。')
+            identifier=uuid.uuid4().hex;directory=self.directory/identifier;directory.mkdir()
+            try:
+                source=self.directory/parent_id
+                shutil.copyfile(source/'score.pdf',directory/'score.pdf')
+                baseline=source/parent['results'][result]['name'];shutil.copyfile(baseline,directory/('baseline'+baseline.suffix))
+                job={'id':identifier,'state':'queued','created':time.time(),'filename':parent.get('filename','乐谱.pdf')+' · homr 核查','results':[],
+                     'message':'等待本地 homr 核查','pipeline':PIPELINE,'second_engine':request,'requested_by':'user','comparison_identity':identity}
+                self.jobs[identifier]=job;self.persist(identifier);self.futures[identifier]=self.executor.submit(self.run,identifier)
+            except Exception:
+                self.jobs.pop(identifier,None);shutil.rmtree(directory);raise
+            return identifier
+
+    def run_second_engine(self, identifier):
+        job=self.jobs[identifier]
+        if job.get('requested_by')!='user':
+            self.update(identifier,state='cancelled',message='自动 homr 已停用；仅接受手动启动。');return
+        request=job['second_engine'];directory=self.directory/identifier
+        self.deadline=time.monotonic()+TIMEOUT
+        self.update(identifier,state='running',message=f"homr 核查 PDF 第 {request['first']}–{request['last']} 页",phase='compare')
+        # A cancelled run is kept for inspection; a retry creates a new job.
+        command=[sys.executable,str(ROOT/'scripts/second_engine.py'),'--pdf',str(directory/'score.pdf'),
+                 '--baseline',str(next(directory.glob('baseline.*'))),'--output',str(directory/'second-engine'),
+                 '--pages',str(request['first']),str(request['last']),'--start',str(request['start'])]
+        if request['end']is not None:command+=['--end',str(request['end'])]
+        try:
+            with(directory/'engine.log').open('wb')as log:
+                code=self.execute(command,dict(os.environ),log)
+            if code:raise RuntimeError('homr 核查未完成，请查看日志；原识别结果保留。')
+            report=json.loads((directory/'second-engine/comparison.json').read_text())
+            self.update(identifier,state='done',message='多引擎核查完成，原结果保持不变。',comparison=report)
+        except (OSError,ValueError,RuntimeError,subprocess.SubprocessError,StopIteration)as exc:
+            self.update(identifier,state='error',message=str(exc))
+
     def regions(self,identifier,index=0):
         job=self.get(identifier)
         if not job or job['state']!='done' or index!=0 or len(job.get('results',[]))!=1:raise ValueError('请选择已完成、单乐章的钢琴乐谱。')
@@ -393,9 +488,11 @@ class JobStore:
             job['upgrade_available'] = job.get('pipeline') != PIPELINE or job.get('initial_meter') != initial_meter_for(job.get('sha256','')) or job.get('implicit_tuplets',False) != implicit_tuplets_for(job.get('sha256',''))
             job['upgrade_available'] |= job.get('input_dpi',300)!=input_dpi_for(job.get('sha256',''))
             job['upgrade_available'] |= job.get('small_notes',False)!=small_notes_for(job.get('sha256',''))
-        if job is not None and job.get('region'):job['upgrade_available']=False
+        if job is not None and (job.get('region')or job.get('second_engine')):job['upgrade_available']=False
         if job is None:
             return None
+        if job.get('assistance'):
+            job['assistance']=self.ensure_assistance(identifier)
         path = self.directory / identifier / 'engine.log'
         try:
             log = path.read_text(errors='replace') if path.exists() else ''
@@ -423,9 +520,9 @@ class JobStore:
                 entries.append({'id':job['id'], 'filename':job.get('filename') or f"乐谱 {job['id'][:8]}.pdf",
                     'state':job['state'], 'created':job.get('created',0), 'bytes':size,
                     'pages':job.get('total_pages'), 'results':len(job.get('results',[])), 'is_default':job['id']==default_id,
-                    'pending_region':job.get('pending_region',False),'upgrade_available':job.get('pipeline')!=PIPELINE or job.get('initial_meter')!=initial_meter_for(job.get('sha256','')) or job.get('implicit_tuplets',False)!=implicit_tuplets_for(job.get('sha256','')) or job.get('input_dpi',300)!=input_dpi_for(job.get('sha256','')) or job.get('small_notes',False)!=small_notes_for(job.get('sha256',''))})
+                    'second_engine':bool(job.get('second_engine')),'pending_region':job.get('pending_region',False),'upgrade_available':job.get('pipeline')!=PIPELINE or job.get('initial_meter')!=initial_meter_for(job.get('sha256','')) or job.get('implicit_tuplets',False)!=implicit_tuplets_for(job.get('sha256','')) or job.get('input_dpi',300)!=input_dpi_for(job.get('sha256','')) or job.get('small_notes',False)!=small_notes_for(job.get('sha256',''))})
             for entry in entries:
-                if self.jobs[entry['id']].get('region'):entry['upgrade_available']=False
+                if self.jobs[entry['id']].get('region')or self.jobs[entry['id']].get('second_engine'):entry['upgrade_available']=False
         return entries
 
     def delete_cache(self, identifier):
@@ -600,7 +697,10 @@ class JobStore:
             if not job or job['state']!='queued': return
             self.active_id=identifier
         try:
-            self._run(identifier)
+            if job.get('second_engine'):
+                if job.get('requested_by')=='user':self.run_second_engine(identifier)
+                else:self.update(identifier,state='cancelled',message='自动 homr 已停用；仅接受手动启动。')
+            else:self._run(identifier)
         except RecognitionCancelled:
             pass
         finally:
@@ -725,6 +825,8 @@ class JobStore:
                     raise RuntimeError("本地识别引擎执行失败；可下载日志查看原因。")
                 raise RuntimeError("未生成可播放乐谱，请尝试更清晰的 PDF，或导入 MusicXML／MIDI。")
             results = []
+            curves=[recover_curves(projects[0],path,index)for index,path in enumerate(files)]
+            self.update(identifier,curve_recovery={'repairs':[r for c in curves for r in c['repairs']],'findings':[r for c in curves for r in c['findings']]})
             symbol_audit=audit_export(projects[0],files)
             self.update(identifier,symbol_audit=symbol_audit)
             (directory/'symbol-audit.json').write_text(json.dumps({'recovery':self.jobs[identifier].get('symbol_recovery'), 'export':symbol_audit},ensure_ascii=False,indent=2))
@@ -817,7 +919,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/config':
             try:
                 config = configuration(); source = default_score()
-                return self.json_response(200, {'colors': config.get('colors', {}), 'recognition': {'threads':config.get('recognition_threads',0), 'memory_mb':config.get('recognition_memory_mb',2048), 'available_cpus':len(os.sched_getaffinity(0)) if hasattr(os,'sched_getaffinity') else (os.cpu_count() or 1), 'effective':recognition_resources(config)}, 'default_score': self.server.jobs.default_selection() or ({'name': source.name, 'available': source.is_file(), 'url': '/api/default-score'} if source else None)})
+                return self.json_response(200, {'colors': config.get('colors', {}), 'recognition': {'auto_assist':False,'threads':config.get('recognition_threads',0), 'memory_mb':config.get('recognition_memory_mb',2048), 'available_cpus':len(os.sched_getaffinity(0)) if hasattr(os,'sched_getaffinity') else (os.cpu_count() or 1), 'effective':recognition_resources(config)}, 'default_score': self.server.jobs.default_selection() or ({'name': source.name, 'available': source.is_file(), 'url': '/api/default-score'} if source else None)})
             except (OSError, ValueError) as exc:
                 return self.json_response(500, {'error': f'配置读取失败：{exc}'})
         if path == '/api/default-score':
@@ -893,6 +995,41 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed(mutation=True):
             return
+        assist_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/assist',urlsplit(self.path).path)
+        if assist_match:
+            try:return self.json_response(200,self.server.jobs.ensure_assistance(assist_match.group(1)))
+            except (OSError,ValueError,KeyError)as exc:return self.json_response(422,{'error':str(exc)})
+        second_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/second-engine',urlsplit(self.path).path)
+        if second_match:
+            try:
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=2048:raise ValueError('请求大小无效。')
+                self.connection.settimeout(10);values=json.loads(self.rfile.read(length))
+                if not isinstance(values,dict)or set(values)-{'result','first','last','start','end'}:raise ValueError('核查参数无效。')
+                identifier=self.server.jobs.create_second_engine(second_match.group(1),manual=True,**values)
+                return self.json_response(202,{'id':identifier})
+            except (OSError,ValueError,TypeError,KeyError)as exc:return self.json_response(422,{'error':str(exc)})
+        compare_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/compare',urlsplit(self.path).path)
+        if compare_match:
+            try:
+                identifier=compare_match.group(1);job=self.server.jobs.get(identifier)
+                if not job or job['state']!='done':raise ValueError('需要已完成的识别缓存。')
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=8*1024*1024:raise ValueError('对照请求必须小于 8 MB。')
+                self.connection.settimeout(15);values=json.loads(self.rfile.read(length))
+                if not isinstance(values,dict)or set(values)-{'xml','engine','result','start','end'}:raise ValueError('对照参数无效。')
+                xml=values.get('xml');engine=values.get('engine','external');index=values.get('result',0)
+                if not isinstance(xml,str)or not isinstance(engine,str)or isinstance(index,bool)or not isinstance(index,int)or not 0<=index<len(job['results']):raise ValueError('对照文件或乐章无效。')
+                if '<!ENTITY' in xml.upper():raise ValueError('不支持自定义实体。')
+                directory=self.server.jobs.directory/identifier
+                # Temporary input is never placed among playable result files.
+                import tempfile
+                with tempfile.TemporaryDirectory(dir=directory,prefix='compare-')as work:
+                    candidate=Path(work)/'candidate.musicxml';candidate.write_text(xml)
+                    report=compare_scores(directory/job['results'][index]['name'],candidate,engine,values.get('start',0),values.get('end'))
+                return self.json_response(200,report)
+            except (OSError,ValueError,TypeError,KeyError,ET.ParseError,zipfile.BadZipFile,StopIteration)as exc:
+                return self.json_response(422,{'error':str(exc)})
         region_match=re.fullmatch(r'/api/jobs/([a-f0-9]{32})/(regions|accept-region)',urlsplit(self.path).path)
         if region_match:
             try:
@@ -922,12 +1059,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not 0 < length <= 2048: raise ValueError('配置请求大小无效。')
                 self.connection.settimeout(10)
                 values = json.loads(self.rfile.read(length))
-                if not isinstance(values,dict) or set(values) != {'threads','memory_mb'}: raise ValueError('需要 threads 和 memory_mb。')
+                if not isinstance(values,dict) or not {'threads','memory_mb'}<=set(values) or set(values)-{'threads','memory_mb','auto_assist'}:raise ValueError('需要 threads 和 memory_mb。')
+                if 'auto_assist'in values and values['auto_assist']is not False:raise ValueError('homr 核查仅允许手动启动，请刷新页面。')
                 with CONFIG_LOCK:
                     path = ROOT/'config.json'
                     config = json.loads(path.read_text()) if path.exists() else {}
                     if not isinstance(config,dict): raise ValueError('config.json 必须是 JSON 对象。')
                     config.update(recognition_threads=values['threads'],recognition_memory_mb=values['memory_mb'])
+                    config['auto_assist']=False
                     effective = recognition_resources(config)
                     temp = path.with_suffix('.json.part');temp.write_text(json.dumps(config,ensure_ascii=False,indent=2)+'\n');temp.replace(path)
                 return self.json_response(200,{'saved':True,'effective':effective})

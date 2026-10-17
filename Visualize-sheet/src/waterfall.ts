@@ -83,6 +83,7 @@ export class Waterfall {
     }
     const active = new Map<number, 'left' | 'right'>();
     for (const note of this.score?.notes ?? []) {
+      if(!hands[note.hand])continue;
       const end = note.start + note.duration;
       if (note.start > position + (this.lookAhead + 1) * timeScale || end < position - .5 * timeScale) continue;
       const key = this.keys.find(k => k.midi === Math.round(note.midi));
@@ -91,7 +92,7 @@ export class Waterfall {
       const top = line - (end - position) * pps;
       const playing = note.start <= position && end > position;
       if (playing && hands[note.hand]) active.set(key.midi, note.hand);
-      c.globalAlpha = hands[note.hand] ? 1 : .18;
+      c.globalAlpha = 1;
       c.fillStyle = note.hand === 'left' ? (playing ? this.colors.leftActive : this.colors.left) : (playing ? this.colors.rightActive : this.colors.right);
       c.beginPath(); c.roundRect(key.x + 1.5, top, Math.max(2, key.width - 3), Math.max(4, bottom - top - 1), 3); c.fill();
       if (key.width > 19 && bottom - top > 19) {

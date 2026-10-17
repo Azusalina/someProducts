@@ -36,6 +36,14 @@ SIGTERM allows orderly shutdown; it does not force-kill an unresponsive service 
 
 After execution, the page requests a fresh listener scan instead of reusing the short snapshot cache. A canceled dialog sends no signal. Backend confirmation entries are bounded and expire; an expired, changed, or consumed confirmation must be reviewed again.
 
+## Search focus and pinned ports
+
+The search input uses native autofocus on page opening. Refreshing the listener list preserves the current control focus rather than returning it to search.
+
+Pin/Unpin is a text control under each port. Pins use protocol/port IDs (for example, `tcp:3000`) and are saved in browser local storage under `mediator:pinned-ports:v1`. Multiple entries can be pinned; pinned matches appear before unpinned matches while retaining the discovery order within each group. Search and Web/Other filters still apply. Saved IDs survive a service stopping, so its row returns to the pinned group when it starts again.
+
+The browser validates stored IDs and tolerates malformed or unavailable storage. When saving is blocked, pins work for the current visit and a message explains that they could not be saved. Same-origin tabs synchronize changes through storage events. Storage is scoped to the browser profile and origin: `localhost`, `127.0.0.1`, and the development port each have their own saved pins. Pinning does not change a service's lifecycle or termination permissions.
+
 ## Initial theme validation — 2026-10-06
 
 - All five existing `npm test` checks passed.
@@ -57,3 +65,10 @@ The first gold/red theme used a constructivist hero, bold uppercase headline, di
 - Browser checks also passed for search and its shortcut, filters, details surviving refresh, copying a port, opening a service, the protected Mediator row, and `http://127.0.0.1/`. No JavaScript errors occurred.
 - Search is at the top of the page; branding, slogans, hero elements, icons, visible page headings, and local badges are absent. Layouts at 320, 390, 620, 768, and 1024 pixels have no horizontal overflow. Desktop, 320-pixel, and confirmation screenshots were visually inspected.
 - Live Mediator was restarted to load the new endpoints and stayed active as the normal user. Termination tests affected only disposable fixtures; existing user services were not terminated.
+
+## Search focus and pin validation — 2026-10-16
+
+- All nine existing automated tests passed.
+- Chromium checks verified search autofocus on opening and reload, multiple pins surviving reload, separate TCP/UDP pins for the same port number, correct control focus after pinning and background refresh, search/filter ordering, and retained pins after a service disappears and returns.
+- Same-origin tabs synchronized an Unpin change. Malformed stored data did not break the list; blocked storage allowed temporary pins and displayed the persistence limitation. Both localhost hostnames loaded without JavaScript errors.
+- Desktop and 320-pixel screenshots were visually inspected. Layout checks at 320, 390, and 768 pixels passed without horizontal overflow. Browser checks used an isolated browser profile and controlled listener fixtures.
