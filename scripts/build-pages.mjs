@@ -12,7 +12,8 @@ const sites = {
   jupasanalysis: ['index.html', 'favicon.svg', 'app.js', 'data.js', 'model.mjs', 'style.css'],
   la: ['index.html', 'notes.html', 'playground.html', 'styles.css', 'assets', 'js', 'vendor', 'examples', 'ref'],
   'Visualize-graph': ['index.html', 'style.css', 'app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js', 'vendor'],
-  todos: ['product1']
+  todos: ['product1'],
+  'yupi-econ': ['claude-product/study-site']
 };
 
 function run(cwd, args) {
@@ -25,7 +26,9 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const [name, files] of Object.entries(sites)) {
   const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : name);
-  if (name === 'Visualize-graph') {
+  if (name === 'yupi-econ') {
+    run(root, ['scripts/check-yupi-econ.mjs', source]);
+  } else if (name === 'Visualize-graph') {
     for (const file of ['app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js']) run(source, ['--check', file]);
     for (const file of ['math', 'stats', 'complex', 'latex', 'sum', 'intersections']) run(source, [`tests/${file}.test.cjs`]);
   } else if (name === 'todos') {
@@ -42,7 +45,8 @@ for (const [name, files] of Object.entries(sites)) {
   }
   const target = path.join(output, name);
   await mkdir(target, { recursive: true });
-  if (name === 'todos') await cp(path.join(source, 'product1'), target, { recursive: true });
+  if (name === 'yupi-econ') await cp(path.join(source, 'claude-product/study-site'), target, { recursive: true });
+  else if (name === 'todos') await cp(path.join(source, 'product1'), target, { recursive: true });
   else if (name === 'gitpop') await cp(path.join(source, 'dist'), target, { recursive: true });
   else for (const file of files) await cp(path.join(source, file), path.join(target, file), { recursive: true });
   console.log(`Packaged ${path.basename(source)} → /${name}/`);

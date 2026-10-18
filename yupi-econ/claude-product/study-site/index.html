@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>yupi econ | HKDSE Economics study path</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="home">
+ <aside>
+  <h1>Economics, one chapter at a time.</h1>
+  <p class="intro">Notes, worked examples and past-paper practice taken from your own scans. Micro first, then macro. Every point links back to the page it came from.</p>
+  <div class="meter" aria-live="polite">
+   <div class="big" id="pct">0%</div>
+   <small id="pctText">Nothing started yet</small>
+   <div class="bar" style="margin-top:10px"><i id="pbar"></i></div>
+  </div>
+  <div class="row themebtn">
+   <button class="btn sec sm" id="themeBtn"><i data-ic="moon"></i><span>Light or dark</span></button>
+   <button class="btn sec sm" id="resetAll"><i data-ic="arrow-counter-clockwise"></i><span>Reset all progress</span></button>
+  </div>
+ </aside>
+ <div class="path" id="path"></div>
+</div>
+<script src="js/icons.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/manifest.js"></script>
+<script>
+(function(){
+ const Y=window.Yupi,M=Y.manifest;
+ Y.hydrateIcons();
+ const sum=id=>{try{return JSON.parse(localStorage.getItem("yupi."+id+".sum"))}catch(e){return null}};
+ const groups=[["micro","Microeconomics","Markets, firms and efficiency. Start with demand and supply, then work through the tools that build on it."],
+               ["macro","Macroeconomics","The whole economy: output, prices, policy and the outside world."]];
+ let n=0;
+ document.getElementById("path").innerHTML=groups.map(g=>`<section><h2>${g[1]}</h2><p class="stage">${g[2]}</p>`+
+  M.filter(c=>c.group===g[0]).map(c=>{n++;const s=sum(c.id);const pill=!c.ready?"soon":(s&&s.total?Math.round(100*s.done/s.total)+"%":"new");
+   return `<a class="card chcard${c.ready?"":" soon"}" href="chapter.html?c=${c.id}"><span class="no">${String(n).padStart(2,"0")}</span><span><span class="t">${c.title}</span><br><span class="s">${c.sum}</span></span><span class="pill">${pill}</span></a>`}).join("")+`</section>`).join("");
+ let done=0,total=0,ready=0;
+ M.forEach(c=>{if(!c.ready)return;ready++;const s=sum(c.id);if(s&&s.total){done+=s.done;total+=s.total}});
+ const pct=total?Math.round(100*done/total):0;
+ document.getElementById("pct").textContent=pct+"%";
+ document.getElementById("pbar").style.width=pct+"%";
+ document.getElementById("pctText").textContent=total?`${done} of ${total} items finished in the chapters you have opened (${ready} chapters available)`:`${ready} chapters available`;
+ document.getElementById("themeBtn").onclick=Y.toggleTheme;
+ document.getElementById("resetAll").onclick=()=>{if(confirm("Delete all saved progress on this device?")){Object.keys(localStorage).filter(k=>k.startsWith("yupi.")&&k!=="yupi.theme").forEach(k=>localStorage.removeItem(k));location.reload()}};
+ Y.reveal();
+})();
+</script>
+</body>
+</html>

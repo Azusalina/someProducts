@@ -23,8 +23,8 @@ git push
 ```
 
 `git commit` records changes locally. `git push` publishes the committed changes
-to the hub and automatically synchronizes the five registered product repositories:
-`fileX`, `mediator`, `monitor`, `toolkit`, and `track`.
+to the hub and automatically synchronizes the six registered product repositories:
+`fileX`, `win-filex`, `mediator`, `monitor`, `toolkit`, and `track`.
 
 The pre-push hook synchronizes changed products to their registered
 repositories before pushing `master` to `origin`. The root `.git` owns all
@@ -41,8 +41,8 @@ python3 scripts/product-sync.py install
 
 Configure product folders, historical names, and remote destinations in
 [products.json](products.json). A new product needs an empty GitHub repository
-and a registry entry before its first push. `crawlers/` and `yupi-econ/` remain
-ignored and are outside this registry.
+and a registry entry before its first push. `crawlers/` and the original Yupi
+reference files remain ignored. Deployed websites stay in the parent repository.
 
 ```sh
 python3 scripts/product-sync.py plan          # Inspect product commits locally

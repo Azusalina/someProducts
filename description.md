@@ -15,6 +15,7 @@ and are excluded from independent publication:
 | Folder / repository | Historical folder names |
 | --- | --- |
 | fileX | — |
+| win-filex | — |
 | mediator | — |
 | monitor | — |
 | toolkit | — |
@@ -22,11 +23,11 @@ and are excluded from independent publication:
 
 Workspace infrastructure such as `pages`, `scripts`, `.github`, `AGENTS.md`,
 and the root documentation remains in the hub. Ignored folders `crawlers` and
-`yupi-econ`, generated `.pages-dist`, and tool metadata are excluded.
+the original Yupi reference files, generated `.pages-dist`, and tool metadata are excluded.
 
 ## Setup status
 
-All five registered products (`fileX`, `mediator`, `monitor`, `toolkit`, and
+All six registered products (`fileX`, `win-filex`, `mediator`, `monitor`, `toolkit`, and
 `track`) have public GitHub repositories and publish their product histories to
 `master`. Monitor contains both `widget-mode`
 and `cli-mode`; the previous `monitor-cli` destination is archived after merging
@@ -188,6 +189,13 @@ including files already tracked in that source.
 - [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
 ## History
+
+2026-10-18: Added `win-filex` as the sixth independent product destination,
+retaining its existing folder history. The root pre-push hook detects committed
+changes and publishes only changed product tips. Existing staged Windows feature
+work is kept separate from this registry/deployment change. Added Yupi Economics
+to the shared Pages build with a stable `/someProducts/yupi-econ/` public path;
+raw Yupi references remain local.
 
 2026-10-15: Created the two destinations previously blocked by GitHub rate
 limits and enabled the root pre-push hook. Added destination checks during hook

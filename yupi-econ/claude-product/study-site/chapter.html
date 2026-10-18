@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter | yupi econ</title>
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="site">
+ <div class="wrap hd">
+  <div class="crumbs">
+   <a href="index.html"><i data-ic="arrow-left"></i><span>All chapters</span></a>
+   <div class="tools">
+    <button class="iconbtn" id="zhBtn" aria-pressed="false" aria-label="Show Chinese hints" title="Chinese hints"><i data-ic="translate"></i></button>
+    <button class="iconbtn" id="themeBtn" aria-label="Toggle light and dark theme" title="Light / dark"><i data-ic="moon"></i></button>
+   </div>
+  </div>
+  <h1 class="title" id="title">Loading</h1>
+  <p class="sub" id="sub"></p>
+  <div class="stats" id="stats"></div>
+  <nav class="tabs" role="tablist" id="nav" aria-label="Chapter sections">
+   <button role="tab" data-t="learn" aria-selected="true"><i data-ic="book-open"></i><span>Learn</span></button>
+   <button role="tab" data-t="ex"><i data-ic="lightbulb"></i><span>Examples</span></button>
+   <button role="tab" data-t="prac"><i data-ic="list-checks"></i><span>Practice</span></button>
+   <button role="tab" data-t="long"><i data-ic="pencil-simple"></i><span>Long questions</span></button>
+   <button role="tab" data-t="cs"><i data-ic="clipboard-text"></i><span>Cheat sheet</span></button>
+   <button role="tab" data-t="rev"><i data-ic="target"></i><span>Review</span></button>
+  </nav>
+ </div>
+</header>
+<main>
+<section class="tab on" id="t-learn">
+ <p class="lead" id="learnLead">Open each card, read it, then tick Got it. Every card names the scan it came from. Tap the badge to see the original page.</p>
+ <div id="learnList"></div>
+ <div id="learnWidgets"></div>
+</section>
+<section class="tab" id="t-ex">
+ <p class="lead">Worked examples. Think first, commit to an answer, then reveal the working.</p>
+ <div id="exList"></div>
+ <div id="exWidgets"></div>
+</section>
+<section class="tab" id="t-prac">
+ <p class="lead" id="qLead">Multiple-choice past questions. Answers were re-derived from the data and checked against the printed key.</p>
+ <div class="card q"><div class="bar"><i id="pbar"></i></div><div class="lead" style="margin:0" id="pstats"></div>
+  <div class="row" id="chips"></div>
+  <div class="row"><button class="btn sec sm" id="resetP"><i data-ic="arrow-counter-clockwise"></i><span>Reset practice</span></button></div></div>
+ <div id="qList"></div>
+</section>
+<section class="tab" id="t-long">
+ <p class="lead">Write your own answer first, then reveal the model answer and grade yourself honestly. Your text is saved in this browser only.</p>
+ <div id="longList"></div>
+</section>
+<section class="tab" id="t-cs">
+ <p class="lead" id="csLead">Rules of thumb and common mistakes from the cheat sheet (bilingual original, English summary here).</p>
+ <div id="csList"></div>
+</section>
+<section class="tab" id="t-rev">
+ <h2 class="sec" style="margin-top:0">Wrong answers <span class="zh">錯題本</span></h2>
+ <div id="wrongList"></div>
+ <div id="verifyBox"><h2 class="sec">Notes on the source material</h2><div id="verifyList"></div></div>
+</section>
+</main>
+<footer class="site">Progress is stored in this browser. Source badges open scans from <code>assets/pages/</code>; the text works without them. Formulas are rendered with KaTeX.</footer>
+
+<div id="lb" role="dialog" aria-modal="true" aria-label="Original scan">
+ <div class="bar2"><span id="lbt"></span><button id="lbm" aria-label="Zoom out"><i data-ic="magnifying-glass-minus"></i></button><button id="lbp" aria-label="Zoom in"><i data-ic="magnifying-glass-plus"></i></button><button id="lbf">Fit</button><button id="lbx"><i data-ic="x"></i><span>Close</span></button></div>
+ <div id="lbs"></div>
+</div>
+
+<script src="vendor/katex/katex.min.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/w-sd.js"></script>
+<script src="js/w-misc.js"></script>
+<script src="js/w-fx.js"></script>
+<script src="js/w-trade.js"></script>
+<script src="js/w-money.js"></script>
+<script src="js/w-deposit.js"></script>
+<script src="js/w-tax.js"></script>
+<script src="js/w-asad.js"></script>
+<script src="js/w-triangle.js"></script>
+<script src="js/w-firm.js"></script>
+<script src="js/manifest.js"></script>
+<script>
+(function(){
+ Yupi.hydrateIcons();
+ const id=(new URLSearchParams(location.search).get("c")||"").replace(/[^a-z0-9_]/gi,"");
+ const m=Yupi.manifest.find(c=>c.id===id);
+ const t=document.getElementById("title"),s=document.getElementById("sub");
+ if(!m){t.textContent="Unknown chapter";return}
+ document.title=m.title+" | yupi econ";
+ const sc=document.createElement("script");sc.src="data/"+id+".js";
+ sc.onerror=()=>{t.textContent=m.title;s.textContent="This chapter has not been built yet."};
+ document.body.appendChild(sc);
+})();
+</script>
+</body>
+</html>
