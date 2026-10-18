@@ -11,7 +11,7 @@ The public landing page is https://azusalina.github.io/someProducts/.
 | `d-la/` | `/someProducts/la/` |
 | `d-todos/` | `/someProducts/todos/` |
 | `d-Visualize-graph/` | `/someProducts/Visualize-graph/` |
-| `yupi-econ/` (then `d-yupi-econ/`) | `/someProducts/yupi-econ/` |
+| `d-yupi-econ/` | `/someProducts/yupi-econ/` |
 
 `node scripts/build-pages.mjs` runs the existing checks and produces `.pages-dist/` using explicit runtime file lists. Little Algebra includes its reference PDFs and downloadable examples. Development servers, tests, node_modules, and the monitor/mediator tools are not included in the website artifact.
 
