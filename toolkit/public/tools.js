@@ -2,6 +2,7 @@ const tools = [
   ['markdown-tab', 'Markdown to PDF', 'markdown'],
   ['pdf-pages-tab', 'PDF pages', 'pdf'],
   ['photos-tab', 'Photos to PDF', 'photos'],
+  ['media-tab', 'URL audio', 'media'],
   ['omr-tab', 'OMR scan', 'omr'],
 ];
 for (const [id, title, mode] of tools) {
@@ -14,5 +15,7 @@ for (const [id, title, mode] of tools) {
     for (const [button] of tools) document.getElementById(button).setAttribute('aria-pressed', String(button === id));
     document.getElementById('tool-title').textContent = title;
     document.body.classList.toggle('omr-mode',mode==='omr');
+    document.body.classList.toggle('media-mode',mode==='media');
+    document.getElementById('media-workspace').hidden = mode !== 'media';
   });
 }

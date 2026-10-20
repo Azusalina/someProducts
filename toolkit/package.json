@@ -14,7 +14,9 @@
     "test:pdf": "node tests/pdf.js",
     "test:tabs": "node tests/tabs.js",
     "test:pdf-pages": "node tests/pdf-pages-browser.js",
-    "test:photos": "node tests/photos-browser.js"
+    "test:photos": "node tests/photos-browser.js",
+    "media:setup": "python3 scripts/setup-media.py",
+    "test:media": ".venv-media/bin/python tests/test_media.py && node tests/media-browser.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",

@@ -12,6 +12,67 @@ Every page load creates a fresh server-side view. Browser history stores only an
 
 A file supplied to the CLI is the initial default for newly opened pages. It does not force already open pages back to that file. Separate toolkit processes and ports remain available, but are no longer needed for independent documents.
 
+## URL media and audio conversion
+
+The URL audio tool uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for public media
+and playlist discovery/download, and FFmpeg for audio-only extraction and local
+conversion. `npm run media:setup` creates `.venv-media` and installs/updates yt-dlp
+there; the environment is ignored by Git. Python 3 and FFmpeg/ffprobe are optional
+media dependencies, independent of ordinary Markdown/photo/PDF page tools.
+`TOOLKIT_MEDIA_PYTHON` can select a Python with yt-dlp installed;
+`TOOLKIT_FFMPEG` can select the FFmpeg executable. No browser cookies, account
+credentials or third-party relays are imported. Sites that require login,
+unsupported extractors, DRM, georestrictions, or current anti-bot checks can fail;
+errors remain visible, and no restriction-bypass workflow is included.
+
+Scanning is explicit and returns selectable media titles, type and duration where
+available. Generic HTML audio/video entries retain their individual resource URLs;
+HTML links to common audio/video extensions are also detected. Relative URLs use
+the fetched page's location. Alternate encodings of one video are not separate
+tracks. A scan is capped at 100 items, HTML fallback at 2 MB. A failed scan retains
+the prior results; their source URL stays visible. Results are stored in memory
+per page view, with independent browser selections. The server accepts only IDs
+from that page's scan, rather than arbitrary client-supplied download URLs.
+
+Downloads select the best available audio-only format where supported, otherwise
+extract audio from a muxed video. Output choices are MP3 (`libmp3lame` quality 0
+VBR), FLAC (lossless encoding of decoded source audio), or source audio without
+re-encoding where the source codec permits extraction/remuxing. Lossless output
+does not upgrade a lossy source. A single selection downloads one audio file;
+2–20 selections become one ZIP containing separate numbered audio files. If a
+selected item fails, the batch fails rather than silently omitting that item.
+Local conversion accepts a file up to 100 MB and produces a new MP3 or FLAC from
+its first audio stream; its source remains unchanged.
+
+Requests retain cookie, Host/Origin and per-view checks. Worker URLs allow only
+HTTP(S) without embedded credentials. Python sockets validate actual destination
+IPs at connect time, blocking loopback/private/link-local destinations including
+redirects and DNS rebinding. Private-network media and private proxy endpoints are
+not supported. Only native HTTP/HLS/DASH download protocols are selected. FFmpeg
+post-processing reads local files, with protocol and local-conversion demuxer
+allowlists; browser-provided paths or shell commands are never executed.
+
+Each view runs one operation at a time, with two concurrent operations across the
+process. Scan timeout is 90 seconds; download/conversion timeout is 10 minutes.
+Temporary per-request work directories are capped at 250 MB, including sources,
+intermediate audio and ZIP data. A periodic quota check aborts oversized work.
+Binary results stream to the browser and temporary files are removed on success,
+failure or cancellation. Temporary media exists on disk while processing (unlike
+in-memory PDF/photo previews). Input local audio is sent only to the loopback
+server; remote media requests originate from this computer. No media library,
+persistent download cache, or browser storage is maintained. Ctrl+C/shutdown
+aborts active media subprocesses, including FFmpeg children.
+
+Implementation: `public/media.js`, shared `public/tools.js`, `src/media/service.js`
+and `src/media/worker.py`; optional dependency setup is `scripts/setup-media.py`.
+Run `npm test` for request/auth/conversion/process/temporary-file cleanup checks and
+`npm run test:media` for real local-HTML yt-dlp fixtures plus browser interaction.
+The browser test stubs external metadata/download responses, while the Python
+fixture verifies actual multi-item discovery, extraction and ZIP contents with
+FFmpeg/ffprobe. Separate live smoke checks confirmed scanning/downloading a
+public MP3 and extracting audio-only MP3 from a public MP4 at W3Schools. Website
+support beyond these fixtures/live samples is not implied.
+
 ## Photos to PDF
 
 The browser-local Photos to PDF tool appends multiple JPEG, PNG, WebP or AVIF

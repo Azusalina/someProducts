@@ -10,6 +10,7 @@ import { ModuleRegistry } from './core/registry.js';
 import { DocumentSession } from './core/document-session.js';
 import { readSource, documentStyle } from './core/files.js';
 import { exportPdf } from './core/pdf.js';
+import { scanMedia, withMediaWork, downloadMedia, convertMedia, sendMedia, mediaFormat, abortMedia } from './media/service.js';
 
 export async function createToolkit({ port = 4177, filename, interval = 300, baseDir = process.cwd() } = {}) {
   const registry = new ModuleRegistry();
@@ -18,7 +19,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const views = new Map();
   const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
   if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
-  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
+  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
   const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
   // Retain disconnected views briefly for reload/duplicate, then release memory
   // and watchers. No page IDs, paths or document data are written to disk.
@@ -91,6 +92,36 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         });
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/api/media/scan') {
+        const options = await body(req);
+        const controller = new AbortController();
+        const cancel = () => { if (!res.writableEnded) controller.abort(); };
+        res.on('close', cancel);
+        try { return json(res, { items: await scanMedia(view, options.url, controller.signal) }); }
+        finally { res.off('close', cancel); }
+      }
+      if (req.method === 'POST' && url.pathname === '/api/media/audio') {
+        const options = await body(req);
+        return await withMediaWork(view, res, async (folder, signal) => {
+          const filename = await downloadMedia(view, options, folder, signal);
+          await sendMedia(res, folder, filename);
+        });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/media/convert') {
+        const format = mediaFormat(url.searchParams.get('format'), false);
+        return await withMediaWork(view, res, async (folder, signal) => {
+          const chunks = []; let size = 0;
+          for await (const chunk of req) {
+            size += chunk.length;
+            if (size > 100 * 1024 * 1024) throw new Error('Choose an audio file up to 100 MB.');
+            chunks.push(chunk);
+          }
+          if (!size) throw new Error('Choose an audio file.');
+          await writeFile(path.join(folder, 'input'), Buffer.concat(chunks));
+          const filename = await convertMedia(folder, format, signal);
+          await sendMedia(res, folder, filename);
+        });
+      }
       if (req.method === 'POST' && url.pathname === '/api/open') return json(res, await view.openFile((await body(req)).path));
       if (req.method === 'POST' && url.pathname === '/api/omr/prepare') {
         const page = Number(url.searchParams.get('page') || 1), rotation = Number(url.searchParams.get('rotation') || 0);
@@ -141,7 +172,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   const url = `http://127.0.0.1:${server.address().port}/`;
   const close = async () => {
-    for (const view of views.values()) view.close();
+    for (const view of views.values()) { abortMedia(view); view.close(); }
     views.clear();
     server.closeIdleConnections();
     await new Promise(resolve => server.close(resolve));

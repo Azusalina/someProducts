@@ -1,6 +1,6 @@
 # What is it?
 
-A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, combine photos into one PDF, or extract, delete and reorder pages from an existing PDF into a new file. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
+A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, combine photos into one PDF, extract/delete/reorder PDF pages, or download audio from a URL and convert audio formats. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
 
 # How to use
 
@@ -46,6 +46,27 @@ candidate PDF to try in an OMR engine; save the JSON report to keep its source
 hash and processing details. The original stays unchanged. This tool does not
 recognize notes or establish that a candidate is more accurate. See
 [description.md](description.md) for the local processing and limitations.
+
+For URL audio downloads and local audio conversion, install the optional media
+support once (Python 3 with venv support, plus FFmpeg on PATH):
+
+```bash
+npm run media:setup
+```
+
+Open **URL audio**, paste a public video/audio/page/playlist URL, then click **Find
+media**. Select one or more listed items, choose **MP3**, **FLAC** or **Original
+audio**, and click **Download selected audio**. One item downloads as an audio
+file; multiple items download together as a ZIP. Videos are reduced to their
+soundtrack. The scanner lists at most 100 items; download up to 20 at a time.
+Supported websites depend on yt-dlp; login-only or protected media may fail.
+
+Use **Convert local audio** to convert an existing file to MP3 or FLAC. FLAC keeps
+lossless encoding of the decoded source; it cannot restore details missing from
+a compressed original. Conversion uses the local toolkit server and preserves
+the input file. **Cancel** stops processing. URL requests happen only after an
+explicit scan/download; audio work uses temporary files which are removed after
+completion, cancellation or errors. Re-run `npm run media:setup` to update yt-dlp.
 
 Select **A4** or **Letter** and **White paper**, **Yellow paper**, or **Black paper**, then click **Export PDF** to download the current saved version. PDF background defaults to white and is independent of the dark preview. A heading and its content up to the next heading move together to the next page when they do not fit; sections longer than a full page can span pages. No PDF is generated automatically. Your browser controls the download location.
 

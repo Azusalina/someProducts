@@ -10,6 +10,7 @@
   <script type="module" src="/photos.js"></script>
   <script type="module" src="/omr.js"></script>
   <script type="module" src="/tools.js"></script>
+  <script type="module" src="/media.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -18,7 +19,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -94,6 +95,30 @@
       <p id="omr-report" aria-live="polite"></p>
       <div class="omr-comparison"><figure><figcaption>Original render</figcaption><img id="omr-before" alt="Original PDF page preview"></figure><figure><figcaption>Candidate</figcaption><img id="omr-after" alt="Prepared PDF page preview"></figure></div>
       <div class="pdf-save-controls"><button id="omr-download" disabled>Save page as candidate PDF</button><button id="omr-report-download" disabled>Save processing report</button></div>
+    </section>
+    <section id="media-workspace" aria-label="URL audio extraction" hidden>
+      <form id="media-scan-form">
+        <label for="media-url">Video, audio or playlist URL</label>
+        <div class="media-url-row"><input id="media-url" type="url" required placeholder="https://…" autocomplete="off"><button id="media-scan">Find media</button></div>
+      </form>
+      <p id="media-status" role="status" aria-live="polite">Enter a public URL to list its audio or video items.</p>
+      <fieldset id="media-options">
+        <legend>Audio download</legend>
+        <label for="media-format">Audio format</label>
+        <select id="media-format"><option value="mp3">MP3 · high quality VBR</option><option value="flac">FLAC · lossless encoding</option><option value="original">Original audio · no re-encoding</option></select>
+        <p class="media-help">FLAC preserves decoded source quality; it cannot restore detail missing from the source. Multiple items download as one ZIP of audio files.</p>
+        <div class="pdf-save-controls"><button id="media-select-all" type="button" disabled>Select all</button><button id="media-select-none" type="button" disabled>Select none</button></div>
+        <p id="media-list-source" class="media-help"></p>
+        <ul id="media-list" aria-label="Discovered media"></ul>
+        <button id="media-download" type="button" disabled>Download selected audio</button>
+      </fieldset>
+      <fieldset id="media-local">
+        <legend>Convert local audio</legend>
+        <label for="media-local-file">Audio file</label><input id="media-local-file" type="file" accept="audio/*,.m4a,.mp3,.flac,.wav,.ogg,.opus,.aac">
+        <label for="media-local-format">Convert to</label><select id="media-local-format"><option value="mp3">MP3 · high quality VBR</option><option value="flac">FLAC · lossless encoding</option></select>
+        <button id="media-convert" type="button" disabled>Convert and download</button>
+      </fieldset>
+      <button id="media-cancel" type="button" hidden>Cancel</button>
     </section>
   </main>
 </body>
