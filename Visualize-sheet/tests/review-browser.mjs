@@ -1,0 +1,40 @@
+import {chromium,expect} from '@playwright/test';
+import {readFile,mkdir} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+
+const directory=resolve(process.argv[2]??'test-results/ballde4-2-review/final');
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+try {
+ const context=await browser.newContext({viewport:{width:1440,height:1050},acceptDownloads:true}),page=await context.newPage(),errors=[],external=[];
+ page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(/^https?:/.test(request.url()))external.push(request.url());});
+ await page.goto(pathToFileURL(resolve(directory,'index.html')).href);
+ await expect(page.locator('#measure option')).toHaveCount(239);
+ await expect(page.locator('#summary')).toContainText('30 项音高校正候选');
+ await expect(page.locator('#coverage')).toContainText('0/239');
+ await page.locator('#measure').selectOption('223');
+ await expect(page.locator('#measure-title')).toContainText('第 224 小节 · PDF 19 页');
+ await expect.poll(()=>page.locator('#page').evaluate(image=>image.complete&&image.naturalWidth>1000)).toBe(true);
+ const proposal=page.locator('#issues button').filter({hasText:'高八度'}).first();
+ await proposal.click();await expect(page.locator('#issue-detail')).toContainText('候选：A6');
+ await page.locator('#verdict').selectOption('accept');await page.locator('#issue-note').fill('Synthetic browser test only; not a human annotation.');
+ await page.locator('aside details summary').click();
+ for(const check of await page.locator('#checks input').all())await check.check();
+ await expect(page.locator('#coverage')).toContainText('1/239');
+ await page.reload();await expect(page.locator('#coverage')).toContainText('1/239');
+ await page.locator('#measure').selectOption('223');await page.locator('#issues button').filter({hasText:'高八度'}).first().click();
+ await expect(page.locator('#verdict')).toHaveValue('accept');
+ const pending=page.waitForEvent('download');await page.locator('#download').click();const download=await pending;
+ const labels=JSON.parse(await readFile(await download.path(),'utf8'));
+ expect(labels.trained).toBe(false);expect(labels.source_sha256).toBe('273c50d587612469274c2a9e72daa1ab1727eb1eec00cef3a956e6925755b5b1');
+ expect(Object.values(labels.issues).filter(i=>i.verdict==='accept')).toHaveLength(1);
+ await page.locator('#import').setInputFiles({name:'wrong.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...labels,source_sha256:'wrong'}))});
+ await expect(page.locator('#status')).toContainText('哈希不匹配');await expect(page.locator('#verdict')).toHaveValue('accept');
+ await page.setViewportSize({width:800,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(800);
+ expect(errors).toEqual([]);expect(external).toEqual([]);
+ await page.setViewportSize({width:1440,height:1050});
+ await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#measure').selectOption('223');await page.locator('#issues button').filter({hasText:'高八度'}).first().click();
+ await expect(page.locator('#coverage')).toContainText('0/239');
+ await mkdir('test-results/ballde4-2-review/validation',{recursive:true});await page.screenshot({path:'test-results/ballde4-2-review/validation/review.png'});
+ console.log('PASS: actual 239-measure review package works with file://, native octave selection, manual labels, reload persistence, export, mismatched-source rejection, mobile width and zero network requests. Test labels remain in an isolated browser context.');
+} finally {await browser.close();}

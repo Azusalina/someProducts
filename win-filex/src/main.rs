@@ -21,6 +21,7 @@ mod input;
 mod jobs;
 mod links;
 mod model;
+mod ordering;
 mod platform;
 #[cfg(not(windows))]
 mod terminal_host;
@@ -65,7 +66,7 @@ fn run() -> Result<(), String> {
             }
             "--help" | "-h" => {
                 println!(
-                    "filex\nfilex [DIRECTORY] [--config PATH] [--tty] [--ascii] [--print-tree] [--init-config]\nCurrent directory by default. Windows Terminal / CMD / PowerShell / Git Bash: terminal openers, a/A create, y copy path, Ctrl+V paste path.\nq dashboard / Q quit / Ctrl+F search / Enter folder expand / file open with / w menu / r rename / v dual panes.\nPipes and TERM=dumb automatically print a tree. --tty forces console compatibility."
+                    "filex\nfilex [DIRECTORY] [--config PATH] [--tty] [--ascii] [--print-tree] [--init-config]\nCurrent directory by default. Windows Terminal / CMD / PowerShell / Git Bash: terminal openers, a/A create, y copy path, Ctrl+V paste path.\nq dashboard / Q quit / Ctrl+F search / Enter folder expand / file open with / w menu / r rename / v grouped tree / O order / z hide / Z restore.\nPipes and TERM=dumb automatically print a tree. --tty forces console compatibility."
                 );
                 return Ok(());
             }

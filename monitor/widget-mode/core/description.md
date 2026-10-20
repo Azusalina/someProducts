@@ -32,3 +32,15 @@ Two-column to-dos (1.12.0): NoteBoard composes the existing NoteCard and appende
 The countdown header opens a dedicated fullscreen Qt Quick window. TimerOwner lazily owns CountdownFocus and shares its existing backend session with the desktop clock; opening, closing, Escape and native window close do not configure/reset the timer. The fullscreen ClockFace retains configured color/style, optional-colon time editing, pause/reset and completion blinking with Enter acknowledgement. Its dark background is local to the focus window; the desktop remains transparent. Closing the module or destroying its owner releases the window. Focus Mode does not change the power profile or acquire sleep inhibition; use the existing Battery control if needed.
 
 `tests/focus_mode.py` uses an isolated timer session and actual Qt window/key events to verify fullscreen visibility, shared progress, pause, edit, Escape/native close, completion Enter and module cleanup. It runs offscreen and does not establish physical Wayland compositor behavior. Evidence and deployment results are recorded in [../docs/focus-mode-validation.md](../docs/focus-mode-validation.md).
+
+
+1.14.1: Fullscreen Focus Mode accepts Space to start/pause, without auto-repeat. The shortcut consumes Space outside the time editor and checks session/busy/finished state before controlling the countdown; time editing retains normal key handling. Focus status text uses 28px semibold at full opacity; desktop status remains compact. The focus integration test covers Space pause/resume, editor isolation, completion protection and status presentation.
+
+
+### Version 1.15 — stopwatch Focus Mode and milliseconds
+
+Both clocks now have a fullscreen header action. The existing CountdownFocus component selects TimerOwner.focusKind, including its title, controls, configured color/style and large status. A single lazily owned window uses the existing timer session; Space operates only the selected clock and is disabled during time editing.
+
+Desktop and fullscreen displays use HH:MM:SS.mmm. A local 16ms display timer interpolates between existing 250ms bridge samples; pause freezes at the backend fractional value, and countdown clamps at zero. Interpolation is capped at one second and stops on bridge errors. The backend remains the authoritative monotonic timer, including completion; the three digits describe display precision, not a guarantee of one-millisecond refresh/accuracy. Input and persisted presets remain whole seconds. Small ring typography is adjusted to fit the additional digits.
+
+Validation: expanded real-window offscreen integration tests cover stopwatch Space start/pause, independent countdown state, frozen fractional time, reopening, editing and reset, alongside the countdown completion/keyboard regressions. Nine power/timer QML checks passed. See [../docs/focus-mode-validation.md](../docs/focus-mode-validation.md) for deployment and limits.

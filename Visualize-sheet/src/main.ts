@@ -1,3 +1,4 @@
+import {TeachingMode} from './teaching-mode';
 import {sourceTime,wheelSeconds} from './navigation';
 import {bindStaffNotes} from './staff-click';
 import {staffAnchors, currentStaffAnchor, followStaff} from './staff-follow';
@@ -19,6 +20,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="toolbar-group"><label for="speed">速度 <output id="speed-value">1.00×</output></label><input id="speed" type="range" min="25" max="200" value="100" step="5"><label for="bpm">BPM</label><input id="bpm" type="number" min="20" max="300" step="1" value="96" aria-label="参考 BPM"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="60"><label for="lookahead">预览</label><select id="lookahead"><option value="4">4s</option><option value="7" selected>7s</option><option value="12">12s</option></select><label for="hand-mode">播放声部</label><select id="hand-mode"><option value="both">双手</option><option value="left">仅左手</option><option value="right">仅右手</option><option value="silent">静音</option></select><label class="check"><input id="autoplay" type="checkbox" checked>自动播放</label><label class="check"><input id="compact-measures" type="checkbox" checked>省略小节补齐空拍</label></div>
     <div class="toolbar-group"><select id="movement" aria-label="乐章" hidden></select><button id="score-tab" class="selected">五线谱</button><button id="original-tab" hidden>PDF</button><button id="region-select" hidden>框选重识别</button><button id="region-review" hidden>检查局部候选</button><button id="engine-compare" hidden>多引擎核查</button><button id="download" disabled>下载 MusicXML</button><a id="log" hidden download="识别日志.txt">日志</a><a id="symbol-report" hidden download="符号复核.json">符号复核</a><div id="measure-list" class="measure-list" aria-label="小节"></div><details id="warnings" hidden><summary id="warnings-summary">记录</summary><ul id="warnings-list"></ul></details></div>
     <div class="toolbar-group"><details id="quality-report" hidden><summary>读入与识别反馈</summary><ul id="read-facts"></ul><ul id="quality-issues"></ul><p id="quality-limit"></p></details><details id="color-settings"><summary>瀑布配色</summary>${Object.entries({left:'左手',right:'右手',leftActive:'左手触键',rightActive:'右手触键',background:'背景'}).map(([key,label]) => `<label for="color-${key}">${label}<input id="color-${key}" data-color="${key}" type="color" value="${defaultColors[key as keyof WaterfallColors]}"></label>`).join('')}<button id="colors-reset">恢复配置配色</button><output id="colors-status" aria-live="polite"></output></details></div>
+    <div class="toolbar-group"><details id="teaching-settings"><summary>教学模式</summary><button id="teaching-start" aria-pressed="false" disabled>开始教学 · 麦克风</button><label for="teaching-hold">稳定时长 ms</label><input id="teaching-hold" type="number" min="100" max="600" step="20" value="140"><label for="teaching-floor">最低输入音量 dBFS</label><input id="teaching-floor" type="number" min="-60" max="-20" step="2" value="-42"><p>单音音高判定。和弦、装饰音手动跳过；同音重弹需先松键、消音。练习时关闭外放与延音踏板。</p><output id="teaching-summary"></output><label class="check"><input id="tuning-before" type="checkbox" checked>教学前校准音阶</label><details id="tuning-settings"><summary>实琴音准</summary><output id="tuning-profile"></output><label for="tuning-octave">音阶范围</label><select id="tuning-octave">${[2,3,4,5,6].map(o => `<option value="${o}" ${o === 4 ? 'selected' : ''}>C${o}–C${o+1}</option>`).join('')}</select><p>A4 → C D E F G A B C，按提示单独弹奏，每音保持约 1.2 秒。关闭外放并松开延音踏板。</p><button id="tuning-start">采集音阶 · 麦克风</button><progress id="tuning-progress" max="100" value="0" aria-label="音阶校准进度"></progress><output id="tuning-status" role="status"></output><button id="tuning-accept" hidden>采用校准</button><label for="tuning-a4">A4 基准 Hz</label><input id="tuning-a4" type="number" min="420" max="460" step="0.1" value="440"><button id="tuning-manual">设置基准</button><ul id="tuning-notes" aria-label="已校准琴键"></ul><button id="tuning-reset">恢复标准音准 · 清除校准</button></details></details></div>
     <div class="toolbar-group"><details id="recognition-settings"><summary>识别资源</summary><label for="recognition-threads">CPU 核心（0 自动）</label><input id="recognition-threads" type="number" min="0" max="64" value="0"><label for="recognition-memory">Java 内存上限 MB</label><input id="recognition-memory" type="number" min="512" max="16384" step="256" value="4096"><button id="recognition-save">保存</button><output id="recognition-resource-status"></output></details></div>
     <div class="toolbar-group toolbar-meta"><span id="piece-kind"></span><span id="engine-status"></span><a href="/credits.html" target="_blank" rel="noopener">来源与许可</a></div>
   </aside>
@@ -28,12 +30,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div id="read-feedback" class="read-feedback" role="status" aria-live="polite" hidden><span id="read-summary"></span><span id="audio-status"></span><button id="feedback-open" hidden>反馈</button></div>
     <div class="transport"><button id="transport-play" aria-label="播放">播放</button><input id="progress" type="range" min="0" max="100" value="0" step=".01" aria-label="播放位置"><output id="seek-time">00:00 / 00:00</output></div>
     <div class="split-view"><section class="score-section"><div id="pdf-view" aria-label="原 PDF" hidden></div><div id="score-view" class="score-view"></div></section>
-    <section id="drop-zone" class="workspace" aria-label="钢琴"><div class="canvas-scroll"><div class="canvas-wrap"><canvas id="waterfall" aria-label="钢琴音符瀑布"></canvas><div id="keyboard-grip" class="keyboard-grip" role="separator" aria-label="琴键高度" aria-orientation="horizontal" aria-valuemin="40" aria-valuemax="260" aria-valuenow="90" tabindex="0"></div></div></div></section></div>
+    <section id="drop-zone" class="workspace" aria-label="钢琴"><div class="canvas-scroll"><div class="canvas-wrap"><canvas id="waterfall" aria-label="钢琴音符瀑布"></canvas><section id="teaching-panel" class="teaching-panel" aria-label="教学状态" hidden><div><span id="teaching-status"></span><button id="teaching-stop">停止 · 关闭麦克风</button></div><strong id="teaching-target" aria-live="polite"></strong><span>听到 <output id="teaching-heard">—</output> · <output id="teaching-level">−∞ dBFS</output></span><span id="teaching-result"></span><div><output id="teaching-count"></output><button id="teaching-skip">跳过</button></div></section><section id="tuning-result-panel" class="teaching-panel" aria-label="音阶校准结果" hidden><strong>音阶采集完成 · 麦克风已关闭</strong><output id="tuning-result-summary"></output><div><button id="tuning-panel-accept">采用校准</button><button id="tuning-discard">取消</button></div></section><div id="keyboard-grip" class="keyboard-grip" role="separator" aria-label="琴键高度" aria-orientation="horizontal" aria-valuemin="40" aria-valuemax="260" aria-valuenow="90" tabindex="0"></div></div></div></section></div>
 
   </main><dialog id="region-dialog" aria-labelledby="region-title"><h2 id="region-title">局部重识别</h2><p id="region-range"></p><label>分辨率<select id="region-dpi"><option value="400">400 DPI</option><option value="600" selected>600 DPI</option></select></label><label><input id="region-tuplets" type="checkbox">省略数字的连音分析</label><p>保留整行双谱表、谱号和调号作为上下文，仅替换选中小节。</p><progress id="region-progress" max="100" value="0"></progress><p id="region-status" role="status"></p><div id="region-comparison"></div><div class="region-actions"><button id="region-start">重新识别</button><button id="region-original" hidden>试听原结果</button><button id="region-preview" hidden>试听候选</button><button id="region-accept" hidden>采用候选副本</button><button id="region-cancel" hidden>中断识别</button><button id="region-close">关闭</button></div></dialog><dialog id="cache-dialog" aria-labelledby="cache-title"><div class="cache-heading"><h2 id="cache-title">乐谱缓存</h2><button id="cache-refresh">刷新</button><button id="cache-close" aria-label="关闭缓存管理">×</button></div><p id="cache-status" role="status"></p><ul id="cache-list"></ul></dialog><dialog id="ensemble-dialog" aria-labelledby="ensemble-title"><h2 id="ensemble-title">多引擎核查</h2><label>引擎名称<input id="ensemble-name" value="homr" maxlength="80"></label><label>第二引擎 MusicXML<input id="ensemble-file" type="file" accept=".musicxml,.xml,.mxl"></label><label>原结果起始小节序号（从 1 起）<input id="ensemble-start" type="number" min="1" value="1"></label><label>结束小节序号<input id="ensemble-end" type="number" min="1"></label><p>第二份结果须覆盖同一原谱范围。比较音高、起奏与时值；一致率不是准确率，原结果保持不变。</p><label>PDF 起始页<input id="ensemble-first" type="number" min="1" value="1"></label><label>PDF 结束页<input id="ensemble-last" type="number" min="1" value="1"></label><button id="ensemble-local">运行本机 homr</button><button id="ensemble-cancel" hidden>中断核查</button><a id="ensemble-log" hidden target="_blank" rel="noopener">核查日志</a><button id="ensemble-run">比较导入文件</button><button id="ensemble-download" disabled>下载核查报告</button><button id="ensemble-close">关闭</button><p id="ensemble-status" role="status"></p><div id="ensemble-pages"></div><ul id="ensemble-differences"></ul></dialog>`;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const player = new PianoPlayer();
+const teaching = new TeachingMode(player, () => updateButtons(), (message, error) => notice(message, error ? 'error' : 'info'));
 const waterfall = new Waterfall($<HTMLCanvasElement>('waterfall'));
 const pdfView = new PDFView($('pdf-view'));
 pdfView.onError = message => notice(message, 'error');
@@ -130,6 +133,7 @@ $('keyboard-grip').addEventListener('keydown', e => {
   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); keyboardHeight(waterfall.keyboardHeight + (e.key === 'ArrowUp' ? 5 : -5), true); }
 });
 $('waterfall').addEventListener('click', e => {
+  if (teaching.active) return;
   const midi = waterfall.noteAt(e.clientX, e.clientY);
   if (midi === null) return;
   waterfall.flashNote(midi);
@@ -187,15 +191,18 @@ async function applySpeed() {
   updateButtons();
 }
 function updateButtons() {
-  $('play').textContent = audioBusy ? '载入音色…' : player.playing ? '暂停' : '播放';
-  $('play').setAttribute('aria-label', player.playing ? '暂停' : '播放');
+  teaching.refresh(!score || busy || audioBusy, busy || audioBusy);
+  $('play').textContent = teaching.active ? (teaching.calibrating ? '停止校准' : '停止教学') : audioBusy ? '载入音色…' : player.playing ? '暂停' : '播放';
+  $('play').setAttribute('aria-label', $('play').textContent!);
   $<HTMLButtonElement>('play').disabled = !score || busy || audioBusy;
   $('transport-play').textContent = $('play').textContent;
-  $('transport-play').setAttribute('aria-label', player.playing ? '暂停' : '播放');
+  $('transport-play').setAttribute('aria-label', $('play').textContent!);
   $<HTMLButtonElement>('transport-play').disabled = !score || busy || audioBusy;
-  $<HTMLInputElement>('progress').disabled = !score || busy;
+  $<HTMLInputElement>('progress').disabled = !score || busy || teaching.calibrating;
+  if (!scrubbing) $<HTMLInputElement>('progress').value = String(player.position);
 }
 async function togglePlay() {
+  if (teaching.active) {teaching.stop(); return;}
   ++navigationRevision;stopWheel();
   if (busy || audioBusy || !score) return;
   if (player.playing) { player.pause(); updateButtons(); return; }
@@ -212,6 +219,7 @@ function showWarnings(warnings: string[]) {
 }
 async function setScore(next: Score, token: number, kind: string) {
   if (token !== revision) return;
+  teaching.stop();
   score = next; player.load(next); waterfall.score = next; currentMeasure = -1;
   staffPositions = next.xml ? staffAnchors(next.xml) : new Map();
   referenceBpm = next.bpm; $<HTMLInputElement>('bpm').value = String(Number(next.bpm.toFixed(2))); await applySpeed();
@@ -287,9 +295,13 @@ let navigationRevision=0, wheelTimer:ReturnType<typeof setTimeout>|undefined, wh
 function stopWheel() {
   clearTimeout(wheelTimer);wheelTimer=undefined;wheelResume=false;
 }
+for (const id of ['teaching-start','tuning-start','tuning-accept','tuning-panel-accept']) $(id).addEventListener('click', () => {
+  ++navigationRevision;stopWheel();player.pause();
+}, {capture:true});
 async function jumpToSource(id:string) {
   if(!score || busy)return;
   const time=sourceTime(score,id,player.position);if(time===undefined)return;
+  if(teaching.active){await seek(time);return;}
   stopWheel();const navigation=++navigationRevision, token=revision;
   const ready=player.ready();player.pause();
   try {
@@ -309,7 +321,9 @@ $('score-view').addEventListener('keydown',e=>{
 });
 $('waterfall').addEventListener('wheel',e=>{
   if(!score || busy || e.ctrlKey || !e.deltaY)return;
-  e.preventDefault();++navigationRevision;
+  e.preventDefault();
+  if(teaching.active){void seek(player.position+wheelSeconds(e.deltaY,e.deltaMode,$('waterfall').clientHeight)*referenceRatio());return;}
+  ++navigationRevision;
   if(wheelTimer===undefined){wheelResume=player.playing;player.pause();}
   clearTimeout(wheelTimer);
   void player.seek(player.position+wheelSeconds(e.deltaY,e.deltaMode,$('waterfall').clientHeight)*referenceRatio());
@@ -324,7 +338,9 @@ $('waterfall').addEventListener('wheel',e=>{
 async function seek(position: number) {
   ++navigationRevision;stopWheel();
   if (!score || busy) return;
-  await player.seek(position); updateButtons();
+  if(teaching.active) teaching.reposition(position);
+  else await player.seek(position);
+  updateButtons();
 }
 function switchTab(original: boolean) {
   staffFollowKey = '';
@@ -421,6 +437,7 @@ async function showRecognition(job: RecognitionJob, filename: string, token: num
 }
 
 async function loadFile(file: File, startup = false, cached?: RecognitionJob) {
+  teaching.stop();
   const token = ++revision;
   ++navigationRevision;stopWheel();
   player.pause(); busy = true; updateButtons();
@@ -479,6 +496,7 @@ function openCached(id:string,filename:string,startup=false,upgrade=false):Promi
   cacheReads.set(key,action);return action;
 }
 async function readCached(id:string,filename:string,startup=false,upgrade=false) {
+  teaching.stop();
   const token=++revision; ++navigationRevision;stopWheel();player.pause();busy=true;updateButtons();
   if(!startup)void player.ready().catch(()=>{});
   try {
@@ -633,6 +651,7 @@ $('cache-dialog').addEventListener('close',()=>clearTimeout(cacheTimer));
 $('cache-dialog').addEventListener('keydown',e=>e.stopPropagation());
 
 async function loadDemo() {
+  teaching.stop();
   const token = ++revision; ++navigationRevision;stopWheel();player.pause(); busy = true; updateButtons();
   currentJob = undefined; readFilename = 'demo.musicxml'; readBytes = 0; $('audio-status').textContent = '';
   $('recognition').hidden = true;
@@ -650,6 +669,7 @@ async function loadDemo() {
 }
 
 async function loadDefault(startup = false) {
+  teaching.stop();
   if (!configuredDefault) return;
   if(configuredDefault.job_id){await openCached(configuredDefault.job_id,configuredDefault.name,startup);return;}
   const token = ++revision;
@@ -706,6 +726,7 @@ try{
   if(saved&&Object.hasOwn(handChoices,saved)){handMode.value=saved;player.hands={...handChoices[saved as HandMode]};}
 }catch{}
 handMode.addEventListener('change',async()=>{
+  teaching.stop();
   const mode=handMode.value as HandMode;
   if(!Object.hasOwn(handChoices,mode))return;
   handMode.disabled=true;
@@ -751,6 +772,7 @@ $('score-tab').addEventListener('click', async () => {
 $('original-tab').addEventListener('click', () => switchTab(true));
 $('download').addEventListener('click', () => { if (scoreUrl && score) { const a = document.createElement('a'); a.href = scoreUrl; a.download = `${score.title}.musicxml`; a.click(); } });
 $('movement').addEventListener('change', async e => {
+  teaching.stop();
   if (recognitionRevision !== revision) return;
   const result = recognitionResults[Number((e.target as HTMLSelectElement).value)];
   if (!result) return;
@@ -759,6 +781,8 @@ $('movement').addEventListener('change', async e => {
   finally { busy = false; updateButtons(); }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && (teaching.active || teaching.awaitingCalibration)) {e.preventDefault(); teaching.stop(); if(zen)setZen(false); return;}
+
   if (e.key === 'Escape' && zen) { e.preventDefault(); setZen(false); return; }
   if (e.key === 'Escape' && !$('toolbar').hidden) { e.preventDefault(); toolbar(false, true); return; }
   if (e.key === 'Tab' && zen) { e.preventDefault(); return; }
@@ -787,7 +811,7 @@ function frame(now: number) {
   $('time').textContent = `${formatTime(position / referenceRatio())} / ${formatTime((score?.duration ?? 0) / referenceRatio())}`;
   if (!scrubbing) $<HTMLInputElement>('progress').value = String(position);
   $('seek-time').textContent = $('time').textContent;
-  if (pdfUrl && !$('pdf-view').hidden && !zen) pdfView.update(position, player.hands, player.playing);
+  if (pdfUrl && !$('pdf-view').hidden && !zen) pdfView.update(position, player.hands, player.playing || teaching.active);
   if (score) {
     const index = Math.max(0, score.measures.findLastIndex(m => m.start <= position));
     if (index !== currentMeasure) {

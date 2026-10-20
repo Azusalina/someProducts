@@ -1,0 +1,10 @@
+{
+  "name": "balldeiv-waterfall",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server 4310 --directory web",
+    "test": "node tests/browser.mjs"
+  },
+  "devDependencies": { "playwright-core": "^1.50.0" }
+}

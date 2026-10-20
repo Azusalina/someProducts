@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ballade IV Waterfall</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="bar">
+  <div class="brand"><b>Ballade No. 4</b><span>Chopin · Op. 52 · coda</span></div>
+
+  <div class="seg" id="modeSeg" role="radiogroup" aria-label="Mode">
+    <button data-v="display" class="on" role="radio" aria-checked="true">Display</button>
+    <button data-v="learn" role="radio" aria-checked="false">Learn</button>
+  </div>
+
+  <div class="seg" id="handSeg" role="radiogroup" aria-label="Hands">
+    <button data-v="L" role="radio" aria-checked="false">Left</button>
+    <button data-v="B" class="on" role="radio" aria-checked="true">Both</button>
+    <button data-v="R" role="radio" aria-checked="false">Right</button>
+  </div>
+
+  <div class="transport">
+    <button id="btnRestart" title="Back to start of section (Home)">⏮</button>
+    <button id="btnPlay" class="primary" title="Play / pause (Space)">▶</button>
+    <label class="inl">Measure
+      <select id="selMeasure"></select>
+    </label>
+  </div>
+
+  <label class="inl tempo">Tempo <input id="rngTempo" type="range" min="20" max="220" value="84"><output id="outTempo">84</output></label>
+
+  <button id="btnSound" class="toggle on" title="Sound on/off">🔊</button>
+  <button id="btnMic" class="toggle" title="Microphone / calibration">🎤 <span id="micState">Mic off</span></button>
+  <button id="btnSettings" title="Settings">⚙</button>
+</header>
+
+<section id="settings" hidden>
+  <label>Right-hand colour <input type="color" id="colR" value="#ff8a3d"></label>
+  <label>Left-hand colour <input type="color" id="colL" value="#2fc9b0"></label>
+  <label>Keyboard height <input type="range" id="rngKb" min="50" max="320" value="130"><output id="outKb">130</output></label>
+  <label>Waterfall zoom <input type="range" id="rngZoom" min="40" max="320" value="110"><output id="outZoom">110</output></label>
+  <label>Keys shown
+    <select id="selRange"><option value="fit">Fit this section</option><option value="full">Full 88 keys</option></select>
+  </label>
+  <label>Learn strictness
+    <select id="selStrict">
+      <option value="1">Every note of the step</option>
+      <option value="0.75" selected>At least 75%</option>
+      <option value="0.5">At least half</option>
+    </select>
+  </label>
+  <label>Sheet pages
+    <select id="selPages"><option value="coda">Coda only (p.12–21)</option><option value="all">Whole piece</option></select>
+  </label>
+  <button id="btnReset">Reset settings</button>
+</section>
+
+<main id="split">
+  <section id="sheet" aria-label="Sheet music">
+    <div id="pages"></div>
+  </section>
+  <div id="gutter" role="separator" aria-orientation="vertical" tabindex="0"></div>
+  <section id="stage" aria-label="Waterfall">
+    <canvas id="cv"></canvas>
+    <div id="learnHud" hidden>
+      <div class="want"><span id="wantLabel">Play</span><b id="wantNotes">—</b><i id="wantMeasure"></i></div>
+      <div class="meter"><div id="meterFill"></div></div>
+      <div class="hudbtns"><button id="btnPrev">◀ Back</button><button id="btnSkip">Skip ▶</button><button id="btnCal">Calibrate</button></div>
+    </div>
+    <div id="toast" hidden></div>
+  </section>
+</main>
+
+<dialog id="calDlg">
+  <form method="dialog">
+    <h2>Calibrate your piano</h2>
+    <p>Allow the microphone, then play the scale shown below <b>one note at a time</b>, holding each note about a second.
+       The app learns your piano's tone and tuning so it can recognise your notes accurately.</p>
+    <div class="calwrap"><div id="calKeys"></div></div>
+    <p id="calStatus">Waiting for the microphone…</p>
+    <div class="meter big"><div id="calMeter"></div></div>
+    <menu>
+      <label class="inl">Scale
+        <select id="selScale"><option value="2">C major · 2 octaves (C3–C5)</option><option value="3">C major · 3 octaves (C2–C5)</option><option value="5">C major · 5 octaves (C2–C7)</option><option value="6" selected>C major · 6 octaves (C1–C7, whole coda)</option></select>
+      </label>
+      <button value="cancel" id="calCancel">Close</button>
+      <button id="calStart" class="primary" value="x">Start scale</button>
+    </menu>
+  </form>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

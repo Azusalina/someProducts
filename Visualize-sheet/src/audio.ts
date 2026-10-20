@@ -122,7 +122,9 @@ export class PianoPlayer {
   }
 
   async audition(midi: number) {
+    const generation = this.generation;
     await this.ready();
+    if (generation !== this.generation) return;
     this.trigger({ id: 'preview', midi, start: 0, duration: .8, soundDuration: .8, velocity: .8, hand: 'right', measure: 0 }, this.context!.currentTime + .005, .8, 0, true);
   }
 

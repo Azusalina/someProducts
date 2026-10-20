@@ -19,7 +19,8 @@
     "@tonejs/midi": "^2.0.28",
     "fflate": "^0.8.2",
     "opensheetmusicdisplay": "^1.9.7",
-    "pdfjs-dist": "^6.4.299"
+    "pdfjs-dist": "^6.4.299",
+    "pitchy": "4.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

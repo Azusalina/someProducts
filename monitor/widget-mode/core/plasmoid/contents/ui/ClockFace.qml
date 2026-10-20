@@ -11,7 +11,16 @@ Item {
     property color ink: "#f5f5f4"
     property string style: "minimal"
     property bool focusPresentation: false
-    readonly property real seconds: reading.seconds || 0
+    property real sampledAt: Date.now()
+    property real animationNow: sampledAt
+    onReadingChanged: { sampledAt = Date.now(); animationNow = sampledAt }
+    readonly property real elapsed: reading.running && !owner.error ? Math.max(0, Math.min(1, (animationNow - sampledAt) / 1000)) : 0
+    readonly property real seconds: Math.max(0, (reading.seconds || 0) + (kind === "countdown" ? -elapsed : elapsed))
+    Timer {
+        interval: 16; repeat: true
+        running: face.visible && face.reading.running === true
+        onTriggered: face.animationNow = Date.now()
+    }
     readonly property bool ring: style === "ring"
     property bool editing: false
     property string editError: ""
@@ -55,7 +64,12 @@ Item {
         editing = false
         editError = ""
     }
-    function timeText(value) {
+    function timeText(value, milliseconds = false) {
+        if (milliseconds) {
+            const ms = Math.max(0, Math.floor(value * 1000))
+            const whole = Math.floor(ms / 1000)
+            return String(Math.floor(whole / 3600)).padStart(2, "0") + ":" + String(Math.floor(whole / 60) % 60).padStart(2, "0") + ":" + String(whole % 60).padStart(2, "0") + "." + String(ms % 1000).padStart(3, "0")
+        }
         const seconds = Math.max(0, kind === "countdown" ? Math.ceil(value) : Math.floor(value))
         const hours = Math.floor(seconds / 3600)
         return (String(hours).padStart(2, "0") + ":") + String(Math.floor(seconds / 60) % 60).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0")
@@ -72,15 +86,15 @@ Item {
         spacing: 0
     Text { Layout.fillWidth: true; text: face.kind === "countdown" ? "COUNTDOWN" : "STOPWATCH"; color: face.ink; opacity: 0.5; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter; font.letterSpacing: 0.7 }
         SmallButton {
-            objectName: "countdownFocus"
-            visible: face.kind === "countdown" && !face.focusPresentation
+            objectName: face.kind + "Focus"
+            visible: !face.focusPresentation
             implicitWidth: 22; implicitHeight: 24
             text: "⛶"; ink: face.ink
             enabled: face.owner.session.length > 0 && !face.editing
-            Accessible.name: "Open countdown in fullscreen Focus Mode"
+            Accessible.name: "Open " + face.kind + " in fullscreen Focus Mode"
             ToolTip.visible: hovered
             ToolTip.text: "Focus Mode"
-            onClicked: face.owner.openFocus()
+            onClicked: face.owner.openFocus(face.kind)
         }
     }
     Item {
@@ -117,13 +131,13 @@ Item {
             anchors.centerIn: parent
             width: parent.width
             visible: !face.editing
-            text: face.timeText(face.seconds)
+            text: face.timeText(face.seconds, true)
             color: face.ink
-            font.pixelSize: face.focusPresentation ? (face.ring ? 48 : 110) : face.ring ? 14 : 20
+            font.pixelSize: face.focusPresentation ? (face.ring ? 30 : 110) : face.ring ? 10 : 20
             font.family: face.style === "digital" ? "monospace" : ""
             font.weight: face.style === "digital" ? Font.Medium : Font.Light
             horizontalAlignment: Text.AlignHCenter
-            fontSizeMode: Text.Fit; minimumPixelSize: 10
+            fontSizeMode: Text.Fit; minimumPixelSize: face.focusPresentation ? 10 : 8
             MouseArea { anchors.fill: parent; cursorShape: Qt.IBeamCursor; onClicked: face.beginEdit() }
         }
         TextField {
@@ -174,6 +188,16 @@ Item {
         }
 
     }
-    Text { Layout.fillWidth: true; text: face.reading.finished ? "Done" : face.reading.running ? "Running" : "Paused"; color: face.ink; opacity: 0.55; font.pixelSize: 8; horizontalAlignment: Text.AlignHCenter }
+    Text {
+        objectName: face.kind + "Status"
+        Layout.fillWidth: true
+        Layout.topMargin: face.focusPresentation ? 12 : 0
+        text: face.reading.finished ? "Done" : face.reading.running ? "Running" : "Paused"
+        color: face.ink
+        opacity: face.focusPresentation ? 1 : 0.55
+        font.pixelSize: face.focusPresentation ? 28 : 8
+        font.weight: face.focusPresentation ? Font.DemiBold : Font.Normal
+        horizontalAlignment: Text.AlignHCenter
+    }
     }
 }

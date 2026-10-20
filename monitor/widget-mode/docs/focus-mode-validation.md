@@ -38,3 +38,46 @@ Fullscreen/key behavior was tested using Qt's offscreen platform. Physical
 Wayland compositor placement, multi-monitor selection and mouse operation still
 need desktop confirmation. Opening or closing Focus preserves progress; a Plasma
 shell/bridge restart still ends the existing in-memory timer session.
+
+## 1.14.1 — Space control and prominent status
+
+Validated and installed on 2026-10-17. Fullscreen Space starts/pauses the shared
+countdown. Auto-repeat is disabled; busy/finished states are guarded. The time
+editor retains normal key handling. Focus status is now 28px semibold at full
+opacity. Desktop status remains 8px at its existing opacity.
+
+The updated focus integration test passed with actual Space key events for
+pause/resume, editor isolation and completion protection, plus assertions for
+status text, font size and opacity. The 9 existing power/timer QML checks passed;
+the two changed QML files have zero lint diagnostics. The updated fullscreen
+render was inspected. Physical Wayland input remains a manual check.
+
+Installed source matches version 1.14.1; widget 163 retained all settings and
+geometry across refresh. Both bridge and Plasma services are active. No Git
+actions were performed. Logs: [focus](focus-mode-test.log),
+[timer regression](focus-mode-power-regression.log),
+[lint](focus-mode-qmllint.log).
+
+## 1.15.0 — stopwatch fullscreen and milliseconds
+
+Validated and installed on 2026-10-18. Both desktop clocks display HH:MM:SS.mmm
+and have fullscreen actions. Focus Mode chooses the corresponding shared clock,
+color/style and controls; Space starts/pauses that clock. Editing keeps the
+existing whole-second format and optional-colon countdown shortcuts.
+
+The 16ms local display update interpolates backend fractional samples without
+increasing HTTP polling. It clamps countdown at zero, freezes paused values,
+caps extrapolation at one second and stops extrapolating on bridge errors.
+Actual completion remains backend-controlled; millisecond digits indicate
+display precision rather than a one-millisecond update/accuracy guarantee.
+
+The expanded focus integration test passed: both fullscreen clocks, Space,
+independent countdown/stopwatch state, three-digit fractions, paused stability,
+exit/reopen, stopwatch editing/reset, and countdown completion/Enter regression.
+No QML warnings. Nine existing power/timer QML checks passed. Three modified
+QML files have zero lint diagnostics. The stopwatch fullscreen screenshot was
+visually inspected: [render](preview-stopwatch-focus.png).
+
+Installed files match source; widget 163 retained all settings and geometry.
+Bridge and Plasma services are active. No Git actions were performed.
+Physical Wayland compositor behavior remains a manual check.

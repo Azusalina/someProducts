@@ -93,6 +93,15 @@ describe('audio transport correctness', () => {
     expect(Context.instance.sources[0].playbackRate.value).toBeCloseTo(2 ** (9 / 12));
     expect(player.playing).toBe(false); expect(player.position).toBe(0);
   });
+  test('entering teaching/pause invalidates a keyboard audition still loading its samples', async () => {
+    const player = new PianoPlayer();
+    let release!: () => void;
+    vi.spyOn(player, 'ready').mockImplementation(() => new Promise<void>(resolve => {release = resolve;}));
+    const trigger = vi.spyOn(player as any, 'trigger');
+    const pending = player.audition(60);
+    player.pause(); release(); await pending;
+    expect(trigger).not.toHaveBeenCalled();
+  });
   test('pause invalidates pending sample-loading play', async () => {
     let resolve!: () => void;
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {

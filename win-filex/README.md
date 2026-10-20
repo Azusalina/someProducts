@@ -2,7 +2,7 @@
 
 ## What is it?
 
-filex 的 Windows 11 原生 Rust TUI 版本，与 `../fileX` 并列维护。横向连接目录树，支持双栏镜像、搜索、预览、创建、重命名、复制、移动和回收站删除。CMD、PowerShell 与 Git Bash 可用同一个 `.exe`。
+filex 的 Windows 11 原生 Rust TUI 版本，与 `../fileX` 并列维护。横向连接目录树，支持目录／直属文件分组树、搜索、预览、创建、重命名、复制、移动和回收站删除。CMD、PowerShell 与 Git Bash 可用同一个 `.exe`。
 
 Windows 接口、限制和验证记录见 [description.md](description.md)。
 
@@ -32,14 +32,14 @@ Windows 接口、限制和验证记录见 [description.md](description.md)。
 Git Bash 在 Windows Terminal 中直接运行；传统 mintty 优先自动使用随 Git for Windows 提供的 `winpty`。WSL Bash 请使用 `../fileX` 的 Linux 版本。直接执行 `.exe` 也能浏览，但 `x` 会进入子 CMD；使用对应 shell 包装脚本，`x` 才能切换原终端目录。
 
 - `↑/↓` 同层选择并首尾循环；`→` 展开／进入子级，`←` 返回父级；保持其他分支展开。`Enter` 展开目录或为文件选择打开方式。
-- `v` 开关镜像双栏，`Tab` 切换侧；右侧左右键反转。`Space` 标记多个文件／目录，显示亮洋红方框；`c/m` 后方向键选目标目录、Enter 执行，双栏自动切到另一侧。展开目录末尾的 `+` 可选中按 Enter 新建目标目录，或直接按 `+`；创建后再 Enter 执行。Esc 取消待执行操作，再按一次清空标记。已有普通文件需再次 Enter 确认替换；目录／链接冲突或整批重名则拒绝操作。
+- `v` 切换分组树／普通树；O 排序，z 隐藏，Z 管理恢复。`Space` 标记多个文件／目录，显示亮洋红方框；`c/m` 后方向键选目标目录、Enter 执行。展开目录末尾的 `+` 可选中按 Enter 直接放入待复制／移动的项目，`+` 键也可放入当前目标目录；`A` 新建目标子目录，创建后再 Enter 放入。Esc 取消待执行操作，再按一次清空标记。已有普通文件需再次 Enter 确认替换；目录／链接冲突或整批重名则拒绝操作。
 - `Ctrl+F` 或 `/` 搜索；`.` 显示点文件及 Windows Hidden 属性项目。`h` 收起当前目录，`E/C` 展开／收起全部，`f` 当前目录设为根。
 - `Ctrl+N`／`a` 新建文件，`Ctrl+Shift+N`／`A` 新建目录；`r` 重命名当前项目；输入框支持左右/Home/End 移动、在光标处插入与 Backspace/Delete。Windows Terminal 若拦截组合键，使用 `a/A` 或修改终端绑定。
 - `Delete/D` 将当前项目或 Space 标记的整批项目移到 Windows 回收站，再按 `Enter` 确认，`Esc` 取消。`q` 信息面板，`[/]` 调整宽度；显示文件前几行、UTC 创建／修改时间、大小与链接信息。
 - `y`／`Ctrl+Alt+C` 复制绝对路径到 Windows 剪贴板；`Ctrl+V` 在 filex 输入框粘贴内部已复制路径。`x` 退出至所选目录（选中文件使用父目录），`Q`／`Ctrl+C` 退出。
 - `F5`／`Ctrl+F5`／`Ctrl+R` 刷新，`,` 重读配置，`?` 帮助。`--print-tree` 输出文本树，可重定向；`--ascii` 兼容缺少线框字形的字体。
 
-主配置：`%APPDATA%\win-filex\filex.conf`。安装保留现有配置；无配置也能使用内置默认值。`filex --init-config` 创建示例，`filex --config 'C:\path\custom.conf'` 指定其他配置。TOML 可设置快捷键、文件扩展名／目录名颜色、排序、隐藏项、树缓存、双栏、面板宽度、预览行数及打开程序。Windows 路径建议使用 TOML 单引号，例如 `command = ['C:\Program Files\VSCodium\VSCodium.exe', '--', '{path}']`。
+主配置：`%APPDATA%\win-filex\filex.conf`。安装保留现有配置；无配置也能使用内置默认值。`filex --init-config` 创建示例，`filex --config 'C:\path\custom.conf'` 指定其他配置。TOML 可设置快捷键、文件扩展名／目录名颜色、排序、隐藏项、树缓存、分组树、面板宽度、预览行数及打开程序。Windows 路径建议使用 TOML 单引号，例如 `command = ['C:\Program Files\VSCodium\VSCodium.exe', '--', '{path}']`。
 
 默认使用系统关联；`.py` 默认记事本。可在 `open_defaults` 为 `.py` 设 `python`、`.r` 设 `rscript`、`.sh` 设 `bash`、`.ps1` 设 `powershell`，脚本也可在 Enter 菜单中显式运行。对应程序需另行安装并加入 PATH。内置预览只读取 UTF-8 文本。
 
@@ -78,3 +78,21 @@ Git 后台只读扫描，不自动 commit/push/fetch；`P` 不代表已实时查
 Linux 后台任务可用 `kill -- -PID` 停止对应进程组（PID 使用 filex 启动提示中的值）。日志需自行清理；服务能否启动仍取决于该项目依赖和命令自身。
 
 `G` 打开当前选中项所属仓库的 Git 菜单：一键 `add ALL → commit → push`、只暂存当前文件／目录、提交全部已暂存内容、单独推送。菜单选择后输入提交信息（需要时），再 Enter 确认；Esc 取消。组合流程暂存整个仓库的新增／修改／删除，包含当前视图外的文件；只暂存当前项不受 Space 多选影响。执行时使用当前终端，支持认证和签名提示，完成或失败后 Enter 返回；失败即停止后续步骤，已完成步骤保留。不自动 pull、force push、设置上游或初始化仓库，push 遵循 Git 的 remote/refspec 配置；首次推送可先在终端设置 upstream。`[keys] git_menu = "G"` 可修改。
+
+复制／移动模式下，目录末尾的虚拟 `+` 是放入位置：选中它按 Enter，直接将待操作项目复制／移动到其所在目录；按 `+` 键也会放入当前目标目录（选中文件时使用其父目录）。`A`／配置的新建文件夹键仍可创建子目录，`t` 仍可输入目标地址。同名普通文件沿用 Enter 覆盖确认。
+
+
+名称通配与完整顺序（文件和目录都适用，`%` 匹配任意长度，`-` 是普通字符）：
+
+```toml
+[directory_order."~/Documents/site"]
+sequence = ["README.md", "d-%", "%-d", "%"]
+# 首次匹配生效：README.md → d- 开头 → -d 结尾 → 所有剩余项。
+# d% 匹配所有 d 开头的名称；=100%.txt 强制按字面匹配百分号。
+```
+
+`sequence` 优先于 top/bottom；未匹配项回退到原规则。top/bottom 同样支持 `%`，并保留显式名称高于通配的优先级；同一通配组内沿用原有 sort。分组树会分别在目录列、文件列体现该顺序，普通树可显示完整混合顺序。
+
+`O` 编辑当前选中项的同级列表（根目录上则编辑其直接子项），↑↓ 选择，**K/J** 调整位置，Enter 保存为该目录专用 sequence；Esc 放弃修改。保存当前已加载、可见的项，并用末尾 `%` 接收未列出的项目；隐藏／未加载项不会被永久排除。保留配置其他设置与注释，并沿用配置软链接。
+
+`z` 隐藏选中项，仅在 filex 的树和搜索中不可见，不重命名或删除；目录包含的整个子树同时隐藏。路径写入当前配置 `[browser] excluded_paths`，下次启动继续生效。`.` 只切换点文件，不能恢复这些排除项；`Z` 打开列表，选中项目 Enter 恢复。隐藏规则按绝对路径限定当前位置，不影响其他目录里的同名项；根目录本身不可隐藏。移动／重命名后按新路径处理，旧规则可在 Z 中移除。

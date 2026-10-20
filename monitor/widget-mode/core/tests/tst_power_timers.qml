@@ -139,7 +139,7 @@ Item {
             keyClick(Qt.Key_Return)
             compare(prefs.countdownSeconds, 30)
             tryVerify(() => owner.readings.countdown.seconds === 30 && !owner.readings.countdown.running, 3000)
-            compare(findChild(board, "countdownTime").text, "00:00:30")
+            compare(findChild(board, "countdownTime").text, "00:00:30.000")
             for (const sample of [{input: "23000", seconds: 9000, display: "02:30:00"},
                                   {input: "2935", seconds: 1775, display: "00:29:35"},
                                   {input: "5", seconds: 5, display: "00:00:05"},
@@ -149,7 +149,7 @@ Item {
                 keyClick(Qt.Key_Return)
                 compare(prefs.countdownSeconds, sample.seconds)
                 tryVerify(() => owner.readings.countdown.seconds === sample.seconds && !owner.readings.countdown.running, 3000)
-                compare(findChild(board, "countdownTime").text, sample.display)
+                compare(findChild(board, "countdownTime").text, sample.display + ".000")
             }
             for (const invalid of ["0", "2960", "6000", "240001", "1234567"]) {
                 enterTime("countdown", invalid)

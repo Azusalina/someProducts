@@ -11,9 +11,10 @@ Item {
     property bool completionAcknowledged: false
     property bool countdownEditing: false
     property bool focusOpen: false
+    property string focusKind: "countdown"
     readonly property var focusWindow: focusLoader.item
-    function openFocus() {
-        if (active && session) focusOpen = true
+    function openFocus(kind = "countdown") {
+        if (active && session && ["countdown", "stopwatch"].includes(kind)) { focusKind = kind; focusOpen = true }
     }
     Loader {
         id: focusLoader
