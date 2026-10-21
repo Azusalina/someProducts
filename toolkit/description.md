@@ -4,13 +4,85 @@
 
 The first module turns a local `.md` or `.markdown` file into a formatted browser document and a manually downloaded PDF. The app reads the original file; it never edits it. A saved version is checked every 300 ms by default and sent to the browser through an authenticated event stream. Polling the pathname supports ordinary writes and atomic editor saves. Missing files keep the last preview visible with a warning and recover when the same path returns. Opening an invalid new path preserves the current document.
 
-No rendered HTML, Markdown copy, document history, localStorage, IndexedDB, automatic PDF, or document cache file is written by the application. Source text, rendered HTML, embedded images, and export PDF bytes live in process/browser memory. HTTP responses use `Cache-Control: no-store`. Export rereads the original saved file at click time. The browser downloads the resulting PDF only after that explicit action. Chromium uses its normal temporary browser profile during export; this is browser infrastructure, not a saved target document. Operating systems and browsers may retain their own process or download metadata.
+No rendered HTML, Markdown copy, document history, IndexedDB, automatic PDF, or document cache file is written by the document preview. Only navigation visibility/order preferences use localStorage; document data does not. Source text, rendered HTML, embedded images, and export PDF bytes live in process/browser memory. HTTP responses use `Cache-Control: no-store`. Export rereads the original saved file at click time. The browser downloads the resulting PDF only after that explicit action. Chromium uses its normal temporary browser profile during export; this is browser infrastructure, not a saved target document. Operating systems and browsers may retain their own process or download metadata.
 
 Each browser page owns an independent document session: file path, watcher, render revisions, current state, event subscribers, and export-in-progress flag. Pages share the loopback server and authentication cookie, but changing a path, losing a file, or rendering Markdown in one page never changes another page's state. Pages watching the same physical file naturally both reflect saved edits to that file. PDF exports run independently across pages and snapshot the respective page's selected file.
 
-Every page load creates a fresh server-side view. Browser history stores only an opaque view ID (no Markdown, path, rendered content, or authentication token), allowing a refresh or duplicated tab to fork the prior selected file while creating an independent watcher. No localStorage or sessionStorage is used. Disconnected views remain in server memory for up to 30 minutes, then release their watcher and document state; active event streams retain their views. After this expiry or a server restart, a fresh load uses the CLI's initial file, or starts empty. A still-open page reconnecting to an expired view can reopen its current in-memory path. There is no persistent per-tab document history.
+Every page load creates a fresh server-side view. Browser history stores only an opaque view ID (no Markdown, path, rendered content, or authentication token), allowing a refresh or duplicated tab to fork the prior selected file while creating an independent watcher. Document state does not use localStorage or sessionStorage; only navigation preferences use localStorage. Disconnected views remain in server memory for up to 30 minutes, then release their watcher and document state; active event streams retain their views. After this expiry or a server restart, a fresh load uses the CLI's initial file, or starts empty. A still-open page reconnecting to an expired view can reopen its current in-memory path. There is no persistent per-tab document history.
 
 A file supplied to the CLI is the initial default for newly opened pages. It does not force already open pages back to that file. Separate toolkit processes and ports remain available, but are no longer needed for independent documents.
+
+## PDF to Markdown
+
+The optional MarkItDown 0.1.8 worker converts uploaded PDFs on the loopback server.
+`npm run pdfmd:setup` installs only `markitdown[pdf]==0.1.8` into the ignored
+`.venv-markitdown` environment. `TOOLKIT_MARKITDOWN_PYTHON` can select an alternative
+Python with the converter installed. No cloud/OCR provider is configured.
+
+The worker disables built-ins and plugins, registers only `PdfConverter`, calls
+`convert_local()` with an application-generated local path and reads
+`result.markdown`. Socket connection APIs are disabled in the worker. User file
+names are never used as a path or polymorphic conversion URI. The PDF header is
+checked before conversion. Original files remain untouched; uploaded bytes exist
+only in a temporary work directory which is removed on success/error/cancel.
+Converted Markdown is returned in memory and displayed with `textContent`.
+Instructions and HTML within PDFs remain data, never executed by the UI.
+
+The endpoint requires the existing session cookie and page-view ID. Limits are
+25 MB input, 5 MB converted UTF-8 Markdown, 180 seconds, one conversion per view
+and two across the process. Cancel, disconnection and server shutdown terminate
+the worker. PDF-only operation requires no browser-side Chromium.
+
+This is existing-text extraction, not OCR, image export, or visual reconstruction.
+Image-only scans return an explicit OCR-needed message and no empty download.
+Complex tables, columns, mathematical notation and PDF reading order may require
+manual cleanup. Font ligatures and compatibility characters are left as emitted
+by MarkItDown; tests compare Unicode-normalized text without silently normalizing
+user output. Compare important conversions with the original authoritative PDF.
+
+Implementation: `src/pdfmd/{worker.py,service.js}`, `public/pdfmd.js`,
+`scripts/setup-pdfmd.py`. `npm test` covers real English/CJK PDFs, authenticated
+conversion and invalid/no-text inputs; `npm run test:pdfmd` verifies browser
+conversion, Markdown download, tool customization and independent page state.
+
+## Customizable navigation
+
+Customize tools exposes visibility checkboxes and earlier/later controls for all
+tools, including hidden ones. At least one tool remains visible. Hiding the active
+tool selects the first visible tool without clearing any current documents.
+Restore defaults returns the standard visibility/order. Preferences are remembered
+under `localStorage['toolkit-tools-v1']` as tool IDs in `hidden` and `order` arrays,
+shared by tabs at the same local origin. No filenames, Markdown, PDFs or tokens
+enter this storage. A new tool added by an update is visible by default. Malformed
+or unavailable storage falls back to a usable toolbar; saving failures are shown
+in the customization dialog. Hidden tools are a navigation preference, not an
+access control or API-disable feature.
+
+## Login startup
+
+`scripts/autostart.py install` creates the current user's
+`~/.config/systemd/user/toolkit.service`, enables it for `default.target`, and
+uses the current absolute Node.js executable and product directory. It does not
+open a browser, require root, alter VPN settings, or change login lingering.
+The installer preserves a pre-existing service without its managed marker.
+Removal disables/stops only this managed unit and leaves product/document files.
+`systemctl --user start/stop/restart toolkit.service` controls the process.
+The installer enables the service but leaves start explicit so an existing manual
+process can be stopped before handing over port 4177. Reinstall if paths change.
+
+Validation on 2026-10-21: `systemd-analyze --user verify` passed; the service was
+enabled and active and HTTP responded at port 4177. The existing manual process
+was stopped after verifying its working directory and CLI. Actual logout/login
+or reboot validation was not performed.
+
+## Conversion references
+
+- [Microsoft MarkItDown](https://github.com/microsoft/markitdown), pinned local PDF extra 0.1.8.
+- The MarkItDown procedural skill informed the PDF-only API, local processing and
+  conversion-quality checks: Kassis, T., Agarwal, V., He, Y., Patel, D., & Brueckner,
+  A. M. (2026). *Scientific Agent Skills: A Library of Procedural Knowledge for
+  Research Agents*. Latest arXiv record v2, verified 2026-10-21.
+  https://doi.org/10.48550/arXiv.2609.00065
 
 ## URL media and audio conversion
 
@@ -297,3 +369,11 @@ verified page ranges, downloads, text order, geometry and rotation, original fil
 immutability, invalid-file recovery, mobile width and independent tabs without
 PDF uploads. Exported pages and the desktop preview were visually inspected in
 `/tmp/toolkit-validation/pdf-pages`.
+
+2026-10-21: shipped MarkItDown PDF-to-Markdown, persistent tool visibility/order,
+and optional systemd login startup. All 22 core tests passed. Browser checks
+covered real conversion/download, customization persistence/reset, Markdown/Zen,
+PDF page editing and photo-to-PDF. Desktop/mobile customization screenshots and
+source-vs-extracted text were inspected. The running login service also converted
+the English/CJK fixture successfully through the live port-4177 API. Login startup
+is enabled; no logout or reboot was performed for validation.

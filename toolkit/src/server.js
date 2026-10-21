@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { convertPdfMarkdown, abortPdfMarkdown } from './pdfmd/service.js';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -19,7 +20,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const views = new Map();
   const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
   if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
-  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
+  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/pdfmd.js', ['pdfmd.js', 'text/javascript']], ['/tool-preferences.js', ['tool-preferences.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
   const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
   // Retain disconnected views briefly for reload/duplicate, then release memory
   // and watchers. No page IDs, paths or document data are written to disk.
@@ -92,6 +93,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         });
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/api/pdfmd/convert') return json(res, await convertPdfMarkdown(view, req, res));
       if (req.method === 'POST' && url.pathname === '/api/media/scan') {
         const options = await body(req);
         const controller = new AbortController();
@@ -172,7 +174,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   const url = `http://127.0.0.1:${server.address().port}/`;
   const close = async () => {
-    for (const view of views.values()) { abortMedia(view); view.close(); }
+    for (const view of views.values()) { abortMedia(view); abortPdfMarkdown(view); view.close(); }
     views.clear();
     server.closeIdleConnections();
     await new Promise(resolve => server.close(resolve));

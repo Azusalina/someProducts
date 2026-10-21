@@ -11,6 +11,7 @@
   <script type="module" src="/omr.js"></script>
   <script type="module" src="/tools.js"></script>
   <script type="module" src="/media.js"></script>
+  <script type="module" src="/pdfmd.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -19,7 +20,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -120,6 +121,20 @@
       </fieldset>
       <button id="media-cancel" type="button" hidden>Cancel</button>
     </section>
+    <section id="pdfmd-workspace" aria-label="PDF to Markdown" hidden>
+      <label for="pdfmd-file">PDF file</label><input id="pdfmd-file" type="file" accept="application/pdf,.pdf">
+      <p class="pdfmd-help">MarkItDown extracts selectable text locally. Scanned image-only PDFs need OCR; complex layouts may need cleanup.</p>
+      <div class="pdf-save-controls"><button id="pdfmd-convert" disabled>Convert to Markdown</button><button id="pdfmd-download" disabled>Download Markdown</button><button id="pdfmd-cancel" hidden>Cancel</button></div>
+      <p id="pdfmd-status" role="status" aria-live="polite">Choose a PDF to convert.</p>
+      <pre id="pdfmd-output" tabindex="0" aria-label="Converted Markdown"></pre>
+    </section>
+    <dialog id="tools-dialog" aria-labelledby="tools-dialog-title">
+      <h2 id="tools-dialog-title">Customize tools</h2>
+      <p>Choose which tools to show and adjust their order. Hidden tools keep their current content.</p>
+      <ul id="tools-list"></ul>
+      <p id="tools-save-status" role="status">Changes are saved automatically in this browser. At least one tool stays visible.</p>
+      <div class="pdf-save-controls"><button id="tools-reset" type="button">Restore defaults</button><button id="tools-done" type="button">Done</button></div>
+    </dialog>
   </main>
 </body>
 </html>

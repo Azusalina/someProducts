@@ -16,7 +16,11 @@
     "test:pdf-pages": "node tests/pdf-pages-browser.js",
     "test:photos": "node tests/photos-browser.js",
     "media:setup": "python3 scripts/setup-media.py",
-    "test:media": ".venv-media/bin/python tests/test_media.py && node tests/media-browser.js"
+    "test:media": ".venv-media/bin/python tests/test_media.py && node tests/media-browser.js",
+    "pdfmd:setup": "python3 scripts/setup-pdfmd.py",
+    "autostart:install": "python3 scripts/autostart.py install",
+    "autostart:remove": "python3 scripts/autostart.py uninstall",
+    "test:pdfmd": "node tests/pdfmd-browser.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",

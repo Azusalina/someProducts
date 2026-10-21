@@ -131,3 +131,23 @@ body.zen-mode{overflow:hidden}
 #media-list input{flex-shrink:0;accent-color:#ddd}#media-list span{min-width:0}
 #media-local-file{max-width:100%}#media-local button{display:block;margin-top:12px}
 @media(max-width:700px){#media-workspace{padding:12px}.media-url-row{flex-wrap:wrap}#media-url{flex-basis:100%}#media-format{max-width:100%}}
+
+.pdfmd-mode .sidebar,.pdfmd-mode #sidebar-toggle,.pdfmd-mode .file-panel,.pdfmd-mode #markdown-workspace,.pdfmd-mode #message,.pdfmd-mode #connection{display:none!important}
+.pdfmd-mode main{margin-left:0;width:100%}
+#pdfmd-workspace{padding:16px;border:1px solid #ffffff18;background:#191919a6}
+#pdfmd-workspace label{display:block;font-size:13px;margin-bottom:8px}
+#pdfmd-file{max-width:100%}
+.pdfmd-help,#pdfmd-status{font-size:12px;line-height:1.6;color:#bbb;overflow-wrap:anywhere;white-space:pre-line}
+#pdfmd-output{margin:16px 0 0;padding:16px;min-height:240px;max-height:65vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#161616;font:13px/1.8 ui-monospace,monospace}
+
+.tool-buttons{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.tool-modes{align-items:flex-start}#tools-customize{margin-left:auto;color:#bbb}
+#tools-dialog{width:min(560px,calc(100% - 32px));max-height:85vh;overflow:auto;background:#1b1b1b;color:#eee;border:1px solid #666;padding:20px}
+#tools-dialog::backdrop{background:#0009;backdrop-filter:blur(3px)}
+#tools-dialog h2{font-size:18px;margin:0 0 12px}
+#tools-dialog p{font-size:12px;line-height:1.7;color:#bbb}
+#tools-list{list-style:none;margin:16px 0;padding:0}
+#tools-list li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #333}
+#tools-list label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:13px}
+#tools-list input{accent-color:#ddd}
+@media(max-width:700px){#tools-customize{margin-left:0}.tool-modes{gap:12px}}

@@ -1,6 +1,6 @@
 # What is it?
 
-A local, modular file-rendering toolkit. Preview saved Markdown with live updates, export a formatted PDF, combine photos into one PDF, extract/delete/reorder PDF pages, or download audio from a URL and convert audio formats. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
+A local, modular file-rendering toolkit. Convert PDF to Markdown with MarkItDown, preview saved Markdown with live updates, export a formatted PDF, combine photos into one PDF, extract/delete/reorder PDF pages, or download audio from a URL and convert audio formats. Preview content stays in memory; no rendered document or work-in-progress cache is saved. See [description.md](description.md) for architecture, limitations, and development details.
 
 # How to use
 
@@ -13,6 +13,22 @@ npm start
 ```
 
 Open **http://127.0.0.1:4177** (or the local address printed in the terminal if you chose another port). No token or URL fragment is needed; allow cookies for this local address. Enter an absolute Markdown path, a `~/` path, or a path relative to the directory where you started the app. Click **Open file**, or **Open example**. Edit the original file in your usual editor and **save** it: the preview updates automatically. Use **Source** to inspect the saved Markdown, or the outline to jump to a heading. The interface and preview use a dark black-and-white theme. Use **Hide sidebar** or **Show sidebar** to completely hide or reopen the outline.
+
+Use **Customize tools** to hide tools you are not using (for example OMR scan),
+move tools earlier/later, or **Restore defaults**. These choices are remembered
+in this browser; only toolbar preferences are saved. Hidden tools keep their
+current content and can be shown again at any time.
+
+For **PDF to Markdown**, install the optional local converter once:
+
+```bash
+npm run pdfmd:setup
+```
+
+Choose a PDF, click **Convert to Markdown**, review the result, then **Download
+Markdown**. MarkItDown extracts existing text; it does not OCR image-only scans
+or guarantee the original visual layout. PDFs are processed on the local toolkit
+server without cloud services. The original PDF is unchanged.
 
 Open the same local address in additional tabs or windows to work on different Markdown files. Each page keeps its own path, outline, preview, file watching, and export settings. Changing a path in one page does not affect another. Refreshing or duplicating an active page starts an independent view of its selected file.
 
@@ -94,4 +110,19 @@ The default address is `127.0.0.1:4177`, with a 300 ms file check interval. `--p
 TOOLKIT_CHROMIUM=/path/to/chromium npm start
 ```
 
-Stop with **Ctrl+C**. No global installation, startup service, or file association is created. To remove the toolkit, stop it and delete this folder; original Markdown files and PDFs downloaded elsewhere remain yours.
+For login startup on Linux with systemd, run:
+
+```bash
+npm run autostart:install
+systemctl --user start toolkit.service
+```
+
+The user service starts toolkit at **http://127.0.0.1:4177** when you log in. Stop
+an existing manually launched toolkit before starting the service on the same
+port. Use `systemctl --user stop toolkit.service` to stop it, or
+`npm run autostart:remove` to remove login startup. Re-run the installer after
+moving the product or changing the Node.js installation path.
+
+A manually launched `npm start` stops with **Ctrl+C**. To remove the toolkit,
+remove its login service if installed, stop it and delete this folder; original
+Markdown/PDF files and downloads elsewhere remain yours.
