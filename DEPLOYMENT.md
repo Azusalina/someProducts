@@ -7,7 +7,6 @@ The public landing page is https://azusalina.github.io/someProducts/.
 | `d-ba/` | `/someProducts/ba/` |
 | `d-gitpop/` | `/someProducts/gitpop/` |
 | `d-ict/` | `/someProducts/ict/` |
-| `d-jupasanalysis/` | `/someProducts/jupasanalysis/` |
 | `d-la/` | `/someProducts/la/` |
 | `d-todos/` | `/someProducts/todos/` |
 | `d-Visualize-graph/` | `/someProducts/Visualize-graph/` |

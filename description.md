@@ -50,7 +50,9 @@ git push
 The six accidentally created website repositories (`d-ba`, `d-gitpop`, `d-ict`,
 `d-jupasanalysis`, `d-la`, and `d-todos`) were deleted after the user confirmed
 their removal. They are excluded from the publication registry and local export
-refs. Their original source folders, parent history, and deployment remain intact.
+refs. At that point their original source folders, parent history, and deployment
+remained intact. On 2026-10-23, `d-jupasanalysis` was subsequently removed from
+the local workspace, current hub source, and deployed website at the user's request.
 
 ## History projection
 
@@ -189,6 +191,10 @@ including files already tracked in that source.
 - [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
 ## History
+
+2026-10-23: Removed `d-jupasanalysis`, its landing-page entry, build packaging,
+and workflow path filters. The replacement Pages artifact no longer includes
+`/jupasanalysis/`. Other product sources and ongoing staged work are preserved.
 
 2026-10-18: Added `win-filex` as the sixth independent product destination,
 retaining its existing folder history. The root pre-push hook detects committed
