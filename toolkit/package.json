@@ -20,7 +20,9 @@
     "pdfmd:setup": "python3 scripts/setup-pdfmd.py",
     "autostart:install": "python3 scripts/autostart.py install",
     "autostart:remove": "python3 scripts/autostart.py uninstall",
-    "test:pdfmd": "node tests/pdfmd-browser.js"
+    "test:pdfmd": "node tests/pdfmd-browser.js",
+    "formats:setup": "python3 scripts/setup-formats.py",
+    "test:formats": "node tests/formats-browser.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",

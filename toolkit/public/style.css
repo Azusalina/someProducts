@@ -151,3 +151,12 @@ body.zen-mode{overflow:hidden}
 #tools-list label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:13px}
 #tools-list input{accent-color:#ddd}
 @media(max-width:700px){#tools-customize{margin-left:0}.tool-modes{gap:12px}}
+
+.format-photo-mode .sidebar,.format-photo-mode #sidebar-toggle,.format-photo-mode .file-panel,.format-photo-mode #markdown-workspace,.format-photo-mode #message,.format-photo-mode #connection,
+.format-audio-mode .sidebar,.format-audio-mode #sidebar-toggle,.format-audio-mode .file-panel,.format-audio-mode #markdown-workspace,.format-audio-mode #message,.format-audio-mode #connection,
+.format-video-mode .sidebar,.format-video-mode #sidebar-toggle,.format-video-mode .file-panel,.format-video-mode #markdown-workspace,.format-video-mode #message,.format-video-mode #connection{display:none!important}
+.format-photo-mode main,.format-audio-mode main,.format-video-mode main{margin-left:0;width:100%}
+.format-workspace{padding:16px;border:1px solid #ffffff18;background:#191919a6}
+.format-workspace label{display:block;font-size:13px;margin:12px 0 8px}
+.format-workspace input,.format-workspace select{max-width:100%}
+.format-help{font-size:12px;line-height:1.7;color:#bbb;white-space:pre-line;overflow-wrap:anywhere}

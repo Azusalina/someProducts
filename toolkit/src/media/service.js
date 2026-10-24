@@ -31,7 +31,7 @@ async function sizeOf(folder) {
   for (const name of await readdir(folder)) size += (await stat(path.join(folder,name)).catch(()=>({size:0}))).size;
   return size;
 }
-export async function runMediaProcess(command, args, { input, signal, folder, timeout = 600000 } = {}) {
+export async function runMediaProcess(command, args, { input, signal, folder, timeout = 600000, maxWorkBytes = LIMIT } = {}) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new Error('Cancelled.'));
     const child = spawn(command, args, { detached: process.platform !== 'win32', stdio:['pipe','pipe','pipe'] });
@@ -42,7 +42,7 @@ export async function runMediaProcess(command, args, { input, signal, folder, ti
     };
     const abort = () => stop('Cancelled.');
     const timer = setTimeout(()=>stop('Media operation timed out. Try a smaller selection.'),timeout);
-    const check = folder ? setInterval(async()=>{try{if(await sizeOf(folder)>LIMIT)stop('Media exceeds the 250 MB working-file limit.');}catch{}},250) : null;
+    const check = folder ? setInterval(async()=>{try{if(await sizeOf(folder)>maxWorkBytes)stop(`Conversion exceeds its ${maxWorkBytes/1024/1024} MB working-file limit.`);}catch{}},250) : null;
     signal?.addEventListener('abort',abort,{once:true});
     child.stdout.on('data',data=>{out+=data;if(out.length>2*1024*1024)stop('Media listing is too large.');});
     child.stderr.on('data',data=>{err=(err+data).slice(-4000);});
@@ -100,9 +100,9 @@ export async function convertMedia(folder, format, signal) {
   await runMediaProcess(process.env.TOOLKIT_FFMPEG||'ffmpeg',['-nostdin','-v','error','-protocol_whitelist','file,pipe','-format_whitelist','wav,mp3,flac,ogg,mov,matroska,webm,aac,aiff,asf,avi,mpegts,mpeg','-i',path.join(folder,'input'),'-map','0:a:0','-vn',...(format==='mp3'?['-c:a','libmp3lame','-q:a','0']:['-c:a','flac']),path.join(folder,filename)],{signal,folder});
   return filename;
 }
-export async function sendMedia(res, folder, filename) {
+export async function sendMedia(res, folder, filename, { maxBytes = LIMIT, contentType } = {}) {
   const file=path.join(folder,filename);
-  if((await stat(file)).size>LIMIT)throw new Error('Output exceeds the 250 MB limit.');
-  res.writeHead(200,{'Content-Type':types[path.extname(filename)]||'application/octet-stream','Content-Disposition':`attachment; filename="audio${path.extname(filename)}"; filename*=UTF-8''${encodeURIComponent(filename)}`});
+  if((await stat(file)).size>maxBytes)throw new Error(`Output exceeds the ${maxBytes/1024/1024} MB limit.`);
+  res.writeHead(200,{'Content-Type':contentType||types[path.extname(filename)]||'application/octet-stream','Content-Disposition':`attachment; filename="audio${path.extname(filename)}"; filename*=UTF-8''${encodeURIComponent(filename)}`});
   await pipeline(createReadStream(file),res);
 }

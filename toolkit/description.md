@@ -84,6 +84,74 @@ or reboot validation was not performed.
   Research Agents*. Latest arXiv record v2, verified 2026-10-21.
   https://doi.org/10.48550/arXiv.2609.00065
 
+## Photo, audio and video format converters
+
+Three separately manageable tools provide local file conversion through
+`POST /api/formats/convert?kind=…&format=…`. Each saves a new download and keeps
+its selected input/options in page memory while navigating. Only tool visibility
+and ordering preferences persist. Formats are validated against the shared
+`public/format-options.js` catalog; user-provided command strings and paths are
+not accepted.
+
+| Tool | Output formats | Implementation |
+| --- | --- | --- |
+| Photo formats | JPG, PNG, WebP, AVIF | Pillow 13.0.0 in `.venv-formats` |
+| Audio formats | MP3, FLAC, WAV, M4A, AAC, Opus, OGG | Local FFmpeg/ffprobe |
+| Video formats | MP4, WebM, MKV, MOV, AVI | Local FFmpeg/ffprobe |
+
+`npm run formats:setup` installs only Pillow in an ignored product-local venv.
+`TOOLKIT_FORMATS_PYTHON`, `TOOLKIT_FFMPEG` and `TOOLKIT_FFPROBE` override the
+executables if needed. Available input decoding and output encoding depend on
+the installed versions/builds. The current machine was verified for all listed
+target formats; no cloud service or extra yt-dlp dependency is involved.
+
+Photos accept JPEG/PNG/WebP/AVIF/BMP/TIFF/GIF inputs, normalize EXIF orientation,
+and convert the first image frame to the chosen output. RGB-compatible ICC and
+remaining EXIF data are copied where supported. JPG flattens transparent pixels
+onto white at quality 95; WebP uses quality 95 and AVIF 90. PNG is lossless. Alpha
+is retained in PNG/WebP/AVIF. Conversion is not a guarantee of identical metadata
+or color management for unusual color spaces. Inputs are limited to 25 MB and
+32 megapixels; processing times out after two minutes.
+
+Audio converts the first audio stream. MP3 uses LAME quality 0 VBR; FLAC uses
+lossless encoding; WAV uses 24-bit PCM; M4A/AAC use 256 kbps AAC; Opus uses
+192 kbps at 48 kHz; OGG uses Vorbis quality 6. Multichannel MP3 sources are mixed
+to stereo. Uncompressed/lossless containers do not upgrade a lossy input.
+Input is capped at 100 MB with a ten-minute timeout.
+
+Video transcodes the first non-cover-art video and optional first audio stream.
+MP4/MOV/MKV use H.264 CRF 20 and AAC 192 kbps; WebM uses VP9 CRF 30 and Opus
+160 kbps; AVI uses MPEG-4 Part 2 quality 3 and MP3 192 kbps. Output uses 8-bit
+YUV420 for compatibility. Odd dimensions gain at most a one-pixel padded edge;
+no cropping or requested resizing is applied. Multiple audio tracks, subtitles,
+attachments, HDR color management, and lossless video remuxing are outside this
+conversion workflow. Video input is capped at 250 MB and runs for at most
+15 minutes; FFmpeg encoding uses two threads.
+
+Authenticated uploads stream into fresh temporary directories rather than being
+accumulated in Node memory. Media-processing limits remain one operation per page
+and two across the process. The existing URL-audio working-data default remains
+250 MB; format conversion can specify its own periodic quota (250 MB for
+photo/audio, 1 GB for video, including input and output files). Binary results
+stream back with a matching MIME type; temporary work is deleted on completion,
+errors and cancellation. Source files are never rewritten. FFmpeg inputs restrict
+protocols to local file/pipe and use a demuxer allowlist. Still-image conversion
+allows only the selected raster decoders and blocks socket connections.
+
+Implementation: `public/formats.js`, `public/format-options.js`,
+`src/formats/{service.js,photo.py}` and `scripts/setup-formats.py` reuse the existing
+media process and temporary-work helpers through backward-compatible options.
+The URL audio tool keeps its existing MP3/FLAC quick conversion controls.
+
+Validation on 2026-10-25: all 16 output formats were decoded/probed for their
+actual format or codec, dimensions, audio presence and duration. Tests covered
+EXIF normalization, alpha/white backgrounds, invalid inputs, auth, working-data
+quota, and unchanged originals. `npm run test:formats` checked real downloads in
+all three tools, output naming, toolbar preferences, independent page state,
+mobile layout and cancellation across tool switches. Evidence is under
+`/tmp/toolkit-validation/formats`. FFmpeg-decoded video and image output were
+visually inspected.
+
 ## URL media and audio conversion
 
 The URL audio tool uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for public media

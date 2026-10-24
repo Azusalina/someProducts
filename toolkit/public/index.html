@@ -10,6 +10,7 @@
   <script type="module" src="/photos.js"></script>
   <script type="module" src="/omr.js"></script>
   <script type="module" src="/tools.js"></script>
+  <script type="module" src="/formats.js"></script>
   <script type="module" src="/media.js"></script>
   <script type="module" src="/pdfmd.js"></script>
 </head>
@@ -20,7 +21,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -127,6 +128,33 @@
       <div class="pdf-save-controls"><button id="pdfmd-convert" disabled>Convert to Markdown</button><button id="pdfmd-download" disabled>Download Markdown</button><button id="pdfmd-cancel" hidden>Cancel</button></div>
       <p id="pdfmd-status" role="status" aria-live="polite">Choose a PDF to convert.</p>
       <pre id="pdfmd-output" tabindex="0" aria-label="Converted Markdown"></pre>
+    </section>
+    <section id="format-photo-workspace" class="format-workspace" aria-label="Photo formats" hidden>
+      <label for="format-photo-file">Local photo file</label><input id="format-photo-file" type="file">
+      <p class="format-help">JPG / PNG / WebP / AVIF. EXIF orientation is applied. Transparent areas become white in JPG; other targets preserve transparency. Animated inputs use the first frame.</p>
+      <p class="format-help">Local conversion · up to 25 MB · saves a new file</p>
+      <label for="format-photo-format">Convert photo to</label><select id="format-photo-format"></select>
+      <label for="format-photo-name">Output filename</label><input id="format-photo-name" value="converted.jpg" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-photo-convert" disabled>Convert photo and download</button><button id="format-photo-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-photo-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
+    </section>
+    <section id="format-audio-workspace" class="format-workspace" aria-label="Audio formats" hidden>
+      <label for="format-audio-file">Local audio file</label><input id="format-audio-file" type="file">
+      <p class="format-help">MP3 / FLAC / WAV / M4A / AAC / Opus / OGG. Lossless output cannot restore detail missing from a lossy source.</p>
+      <p class="format-help">Local conversion · up to 100 MB · saves a new file</p>
+      <label for="format-audio-format">Convert audio to</label><select id="format-audio-format"></select>
+      <label for="format-audio-name">Output filename</label><input id="format-audio-name" value="converted.mp3" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-audio-convert" disabled>Convert audio and download</button><button id="format-audio-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-audio-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
+    </section>
+    <section id="format-video-workspace" class="format-workspace" aria-label="Video formats" hidden>
+      <label for="format-video-file">Local video file</label><input id="format-video-file" type="file">
+      <p class="format-help">MP4 / WebM / MKV / MOV / AVI. Converts the first video stream and keeps audio when present. Output is re-encoded for compatibility.</p>
+      <p class="format-help">Local conversion · up to 250 MB · saves a new file</p>
+      <label for="format-video-format">Convert video to</label><select id="format-video-format"></select>
+      <label for="format-video-name">Output filename</label><input id="format-video-name" value="converted.mp4" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-video-convert" disabled>Convert video and download</button><button id="format-video-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-video-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
     </section>
     <dialog id="tools-dialog" aria-labelledby="tools-dialog-title">
       <h2 id="tools-dialog-title">Customize tools</h2>

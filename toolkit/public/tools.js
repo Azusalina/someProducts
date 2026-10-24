@@ -4,6 +4,9 @@ const tools=[
  ['pdfmd-tab','PDF to Markdown','pdfmd'],
  ['pdf-pages-tab','PDF pages','pdf'],
  ['photos-tab','Photos to PDF','photos'],
+ ['format-photo-tab','Photo formats','format-photo'],
+ ['format-audio-tab','Audio formats','format-audio'],
+ ['format-video-tab','Video formats','format-video'],
  ['media-tab','URL audio','media'],
  ['omr-tab','OMR scan','omr'],
 ];

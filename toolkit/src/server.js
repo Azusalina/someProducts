@@ -1,7 +1,9 @@
 import http from 'node:http';
+import { FORMAT_OPTIONS, formatOption } from '../public/format-options.js';
+import { convertFormat } from './formats/service.js';
 import { convertPdfMarkdown, abortPdfMarkdown } from './pdfmd/service.js';
 import path from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { readFile, open } from 'node:fs/promises';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -20,7 +22,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const views = new Map();
   const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
   if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
-  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/pdfmd.js', ['pdfmd.js', 'text/javascript']], ['/tool-preferences.js', ['tool-preferences.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
+  const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/pdfmd.js', ['pdfmd.js', 'text/javascript']], ['/tool-preferences.js', ['tool-preferences.js', 'text/javascript']], ['/formats.js', ['formats.js', 'text/javascript']], ['/format-options.js', ['format-options.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
   const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
   // Retain disconnected views briefly for reload/duplicate, then release memory
   // and watchers. No page IDs, paths or document data are written to disk.
@@ -94,6 +96,20 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/pdfmd/convert') return json(res, await convertPdfMarkdown(view, req, res));
+      if (req.method === 'POST' && url.pathname === '/api/formats/convert') {
+        const kind=url.searchParams.get('kind'),format=url.searchParams.get('format');
+        const option=formatOption(kind,format),limit=FORMAT_OPTIONS[kind].limit*1024*1024;
+        return await withMediaWork(view,res,async(folder,signal)=>{
+          let size=0;
+          const input=await open(path.join(folder,'input'),'wx');
+          try {
+            for await(const chunk of req){size+=chunk.length;if(size>limit)throw new Error(`Choose a ${kind} file up to ${FORMAT_OPTIONS[kind].limit} MB.`);await input.writeFile(chunk);}
+          } finally {await input.close();}
+          if(!size)throw new Error('Choose a local file.');
+          const filename=await convertFormat(folder,kind,format,signal);
+          await sendMedia(res,folder,filename,{maxBytes:(kind==='video'?1024:250)*1024*1024,contentType:option[2]});
+        });
+      }
       if (req.method === 'POST' && url.pathname === '/api/media/scan') {
         const options = await body(req);
         const controller = new AbortController();

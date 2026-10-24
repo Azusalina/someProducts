@@ -63,6 +63,23 @@ hash and processing details. The original stays unchanged. This tool does not
 recognize notes or establish that a candidate is more accurate. See
 [description.md](description.md) for the local processing and limitations.
 
+For local file format conversion, open **Photo formats**, **Audio formats**, or
+**Video formats**. Select a file, choose the output format and filename, then click
+**Convert … and download**. Each result is saved separately; originals are not
+changed. The three tools can be hidden/reordered with **Customize tools**.
+
+- Photos: JPG, PNG, WebP, AVIF. EXIF direction is applied; JPG uses white behind
+  transparency. Animated image inputs use only their first frame.
+- Audio: MP3, FLAC, WAV, M4A, AAC, Opus, OGG.
+- Video: MP4, WebM, MKV, MOV, AVI; includes the first audio track when present.
+
+Install photo support once with `npm run formats:setup` (Python 3/venv required).
+Audio/video conversion requires FFmpeg and ffprobe on PATH. Files are processed
+on this computer by the local toolkit server. Input limits: photos 25 MB and
+32 megapixels, audio 100 MB, video 250 MB. **Cancel current conversion** works
+even after switching between these three tools. Lossy formats re-encode the
+source; converting to a lossless format cannot recover discarded information.
+
 For URL audio downloads and local audio conversion, install the optional media
 support once (Python 3 with venv support, plus FFmpeg on PATH):
 
