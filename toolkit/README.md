@@ -36,7 +36,8 @@ Click **Zen mode** to fill the window with only the rendered document. Press **E
 
 For an existing PDF, click **PDF pages** and **Open PDF** to choose a local file.
 Enter original page numbers such as `1-3, 7, 5`, choose **Keep / reorder these
-pages** or **Delete these pages**, then click **Apply**. The page list also has
+pages** or **Delete these pages**, then click **Apply**. Press **Enter** in the
+page-number field to apply the selection and preview the result immediately. The page list also has
 earlier/later and delete buttons; **Restore all pages** resets it. Use **Preview
 result**, choose a new filename and click **Save as new PDF**. The browser downloads
 a separate PDF; the original stays unchanged. Editing runs in the current browser

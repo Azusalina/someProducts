@@ -32,6 +32,11 @@ try {
     if (/^https?:/.test(r.url()) && !r.url().startsWith(new URL(app.url).origin)) external.push(r.url());
     if (r.method() === 'POST') writes.push(r.url());
   });
+  await page.addInitScript(() => {
+    const create = URL.createObjectURL.bind(URL);
+    window.pdfTestBlobs = new Map();
+    URL.createObjectURL = blob => { const url = create(blob); window.pdfTestBlobs.set(url, blob); return url; };
+  });
   await page.goto(app.url);
   await page.getByRole('button', { name: 'PDF pages', exact: true }).click();
   assert.equal(await page.locator('#pdf-save').isDisabled(), true);
@@ -39,7 +44,19 @@ try {
   await page.locator('#pdf-selection-count').filter({ hasText: '5 of 5' }).waitFor();
   const importPosts = writes.length;
   await page.locator('#pdf-range').fill('4, 2-3');
-  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await page.locator('#pdf-range').press('Enter');
+  await page.locator('#pdf-status').filter({ hasText: 'Preview updated' }).waitFor();
+  const preview = await page.locator('#pdf-native-preview').getAttribute('src');
+  assert.match(preview, /#view=FitH&zoom=page-width/);
+  const previewBytes = await page.evaluate(async () => Array.from(new Uint8Array(await window.pdfTestBlobs.get(document.querySelector('#pdf-native-preview').src.split('#')[0]).arrayBuffer())));
+  const entered = await PDFDocument.load(new Uint8Array(previewBytes));
+  assert.deepEqual(entered.getPages().map(p => p.getWidth()), [440, 420, 430]);
+  const bounds = await page.evaluate(() => {
+    const column = document.querySelector('.pdf-result-preview').getBoundingClientRect();
+    const frame = document.querySelector('#pdf-native-preview').getBoundingClientRect();
+    return { width: Math.abs(column.width - frame.width), bottom: Math.abs(column.bottom - frame.bottom) };
+  });
+  assert.ok(bounds.width <= 1 && bounds.bottom <= 1, JSON.stringify(bounds));
   const order = () => page.locator('#pdf-page-list li').evaluateAll(rows => rows.map(r => Number(r.dataset.page)));
   assert.deepEqual(await order(), [4, 2, 3]);
   await page.getByRole('button', { name: 'Move page 3 earlier', exact: true }).click();
@@ -64,12 +81,16 @@ try {
   const { stdout } = await run('pdftotext', [`${evidence}/subset.pdf`, '-']);
   assert.ok(stdout.indexOf('Original page 4') < stdout.indexOf('Original page 2'));
   assert.ok(!stdout.includes('Original page 3'));
+  const validPreview = await page.locator('#pdf-native-preview').getAttribute('src');
   await page.locator('#pdf-range').fill('99');
-  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await page.locator('#pdf-range').press('Enter');
+  assert.match(await page.locator('#pdf-status').textContent(), /between 1 and 5/);
+  assert.equal(await page.locator('#pdf-native-preview').getAttribute('src'), validPreview);
   assert.deepEqual(await order(), [4, 2]);
   await page.locator('#pdf-range-action').selectOption('delete');
   await page.locator('#pdf-range').fill('2,4');
-  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await page.locator('#pdf-range').press('Enter');
+  assert.match(await page.locator('#pdf-status').textContent(), /Keep at least one page/);
   assert.equal(await page.locator('#pdf-save').isDisabled(), true);
   await page.getByRole('button', { name: 'Restore all pages', exact: true }).click();
   assert.deepEqual(await order(), [1, 2, 3, 4, 5]);
@@ -87,7 +108,7 @@ try {
   assert.match(await page.locator('#pdf-open-preview').getAttribute('href'), /^blob:/);
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${evidence}/mobile.png`, fullPage: true });
-  await page.getByRole('button', { name: 'Markdown to PDF', exact: true }).click();
+  await page.getByRole('button', { name: /^Markdown.*to PDF$/, exact: true }).click();
   assert.equal(await page.locator('.file-panel').isVisible(), true);
   assert.equal(await page.locator('#pdf-pages-workspace').isVisible(), false);
   assert.deepEqual(await readFile(filename), Buffer.from(originalBytes));

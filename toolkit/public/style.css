@@ -92,11 +92,11 @@ body.zen-mode{overflow:hidden}
 #pdf-page-list li{display:flex;align-items:center;gap:6px;border-bottom:1px solid #333;padding:6px 0;font-size:13px}
 #pdf-page-list li span{flex:1;white-space:nowrap}
 #pdf-page-list button{padding:6px 9px}
-.pdf-result-preview{min-width:0}
+.pdf-result-preview{min-width:0;display:flex;flex-direction:column;align-self:stretch}
 #pdf-preview-label{font-size:13px;font-weight:500;color:#bbb;margin:0 0 12px;overflow-wrap:anywhere}
 #pdf-open-preview{display:inline-block;margin-bottom:12px;color:#ddd;font-size:12px}
-#pdf-native-preview{height:75vh;min-height:400px;background:#262626}
-@media(max-width:700px){.pdf-edit-layout{grid-template-columns:minmax(0,1fr)}#pdf-pages-workspace{padding:12px}#pdf-native-preview{height:65vh}}
+#pdf-native-preview{width:100%;flex:1;min-height:max(400px,calc(100dvh - 300px));height:100%;background:#262626}
+@media(max-width:700px){.pdf-edit-layout{grid-template-columns:minmax(0,1fr)}#pdf-pages-workspace{padding:12px}#pdf-native-preview{height:65vh;min-height:400px;flex:none}}
 
 .photos-mode .sidebar,.photos-mode #sidebar-toggle,.photos-mode .file-panel,.photos-mode #markdown-workspace,.photos-mode #message,.photos-mode #connection{display:none!important}
 .photos-mode main{margin-left:0;width:100%}

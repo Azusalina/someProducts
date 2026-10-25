@@ -248,6 +248,17 @@ is in `/tmp/toolkit-validation/photos`.
 
 ## PDF page editor
 
+The right-hand PDF viewer stretches to fill its grid column and available row
+height. Native viewer hints request page-width fitting and a collapsed navigation
+pane; individual browsers may handle these hints differently. Enter in the page
+range field or action selector applies a valid selection and immediately renders
+the result. Invalid ranges leave the existing selection and preview intact.
+
+2026-10-26 validation: the PDF-pages browser workflow passed with Enter-applied
+page ordering checked from the generated PDF bytes, invalid/empty selections,
+right-column width and bottom-edge alignment, downloads and mobile overflow.
+Desktop and mobile screenshots are in `/tmp/toolkit-validation/pdf-pages/`.
+
 The PDF pages tool runs locally in the browser using the installed
 [PDF-LIB](https://pdf-lib.js.org/) library, served by the toolkit without a CDN.
 It accepts one PDF through the browser file picker and keeps it in page-local

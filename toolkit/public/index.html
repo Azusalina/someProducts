@@ -52,7 +52,8 @@
           <fieldset id="pdf-editor-controls" disabled>
             <legend>Pages</legend>
             <label for="pdf-range">Page numbers / order</label>
-            <input id="pdf-range" placeholder="1-3, 7, 5" autocomplete="off">
+            <input id="pdf-range" placeholder="1-3, 7, 5" autocomplete="off" aria-describedby="pdf-range-help">
+            <p id="pdf-range-help" class="media-help">Press Enter to apply these pages and preview the result.</p>
             <div class="pdf-range-controls">
               <label class="sr-only" for="pdf-range-action">Page range action</label>
               <select id="pdf-range-action"><option value="keep">Keep / reorder these pages</option><option value="delete">Delete these pages</option></select>

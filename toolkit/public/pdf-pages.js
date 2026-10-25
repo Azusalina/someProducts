@@ -40,7 +40,7 @@ function changed() {
 function showPreview(bytes) {
   const old = previewUrl;
   previewUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-  $('pdf-native-preview').src = previewUrl;
+  $('pdf-native-preview').src = `${previewUrl}#view=FitH&zoom=page-width&pagemode=none&navpanes=0`;
   $('pdf-native-preview').hidden = false;
   $('pdf-open-preview').href = previewUrl;
   $('pdf-open-preview').hidden = false;
@@ -70,12 +70,23 @@ $('pdf-file').addEventListener('change', async () => {
     if (current === revision) status(/encrypt/i.test(error.message) ? 'Password-protected PDFs are not supported. Open an unlocked copy.' : `Could not open PDF: ${error.message}`, true);
   } finally { if (current === revision) { busy = false; update(); } }
 });
-$('pdf-apply-range').addEventListener('click', () => {
+function applyRange() {
+  if (!original || busy) return false;
   try {
     const selected = parsePages($('pdf-range').value, original.getPageCount());
     pages = $('pdf-range-action').value === 'keep' ? selected : pages.filter(p => !selected.includes(p));
     changed();
-  } catch (error) { status(error.message, true); }
+    return true;
+  } catch (error) { status(error.message, true); return false; }
+}
+$('pdf-apply-range').addEventListener('click', applyRange);
+for (const id of ['pdf-range', 'pdf-range-action']) $(id).addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || event.isComposing || event.repeat) return;
+  event.preventDefault();
+  if (applyRange()) {
+    if (pages.length) produce(false);
+    else status('Keep at least one page to preview the result.', true);
+  }
 });
 $('pdf-reset').addEventListener('click', () => {
   pages = Array.from({ length: original.getPageCount() }, (_, i) => i + 1); changed();
