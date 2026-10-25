@@ -193,8 +193,9 @@ including files already tracked in that source.
 ## History
 
 2026-10-25: Simplified the Pages landing page to names and links only. Tools
-(`graphVis`, HKDSE Cutoffs, and Gitpop) appear first; teaching pages appear below
-in Learning. Removed descriptive copy, promotional headings, rounded cards,
+(`graphVis` and HKDSE Cutoffs) appear first. Cost / Logic, Gitpop, Data / Logic,
+Little Algebra, and Yupi Economics appear below in Learning, in that order.
+Removed descriptive copy, promotional headings, rounded cards,
 icons, and decorative effects. Public product paths remain unchanged. Validated
 the full Pages build, 320/390/768/1440px layouts, keyboard focus and activation,
 and all seven entry URLs.
