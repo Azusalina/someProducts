@@ -200,6 +200,15 @@ icons, and decorative effects. Public product paths remain unchanged. Validated
 the full Pages build, 320/390/768/1440px layouts, keyboard focus and activation,
 and all seven entry URLs.
 
+2026-10-25: Unified every landing-page product title to the same 32px sans-serif
+type, weight, and spacing. Added a text-only Light/Dark control. The first visit
+follows the system color scheme; an explicit choice is stored in localStorage
+and applied before rendering. Theme switching remains usable if storage is
+unavailable. Product order and public URLs are unchanged. Browser checks cover
+both themes at 320/390/768/1440px, consistent title typography, keyboard
+activation, saved preferences, system-theme changes, blocked storage, and all
+seven entry URLs.
+
 2026-10-23: Removed `d-jupasanalysis`, its landing-page entry, build packaging,
 and workflow path filters. The replacement Pages artifact no longer includes
 `/jupasanalysis/`. Other product sources and ongoing staged work are preserved.
