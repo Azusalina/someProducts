@@ -192,6 +192,13 @@ including files already tracked in that source.
 
 ## History
 
+2026-10-25: Simplified the Pages landing page to names and links only. Tools
+(`graphVis`, HKDSE Cutoffs, and Gitpop) appear first; teaching pages appear below
+in Learning. Removed descriptive copy, promotional headings, rounded cards,
+icons, and decorative effects. Public product paths remain unchanged. Validated
+the full Pages build, 320/390/768/1440px layouts, keyboard focus and activation,
+and all seven entry URLs.
+
 2026-10-23: Removed `d-jupasanalysis`, its landing-page entry, build packaging,
 and workflow path filters. The replacement Pages artifact no longer includes
 `/jupasanalysis/`. Other product sources and ongoing staged work are preserved.
