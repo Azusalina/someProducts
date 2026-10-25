@@ -38,6 +38,7 @@ Item {
     Rectangle { anchors.fill: parent; color: "#eff0f1"; visible: config.visible }
     ConfigTimers { id: config; visible: false; width: 280; height: 400 }
     TextArea { id: otherInput; x: 1000; width: 100; height: 40 }
+    Component { id: splitBoard; Dashboard {} }
     TestCase {
         name: "PowerTimers"
         when: windowShown
@@ -225,6 +226,24 @@ Item {
             tryVerify(() => owner.readings.countdown.seconds === 4 && !owner.countdownFinished, 3000)
             owner.setTime("countdown", 2); owner.setTime("stopwatch", 5)
             tryVerify(() => owner.readings.countdown.seconds === 2 && owner.readings.stopwatch.seconds === 5, 3000)
+        }
+        function test_038_splitViewsKeepOwners() {
+            const timers = board.timerControls, power = board.powerControls
+            const token = timers.session
+            const child = createTemporaryObject(splitBoard, root, {width: 220, height: 350,
+                preferences: prefs, detachedModule: "timers", inheritedTimerOwner: timers,
+                inheritedPowerOwner: power, inheritedTerminalOwner: board.terminalControls})
+            verify(child)
+            board.detachedModules = ["timers"]
+            compare(findChild(board, "timersCard"), null)
+            compare(findChild(child, "timersCard").owner, timers)
+            compare(timers.session, token)
+            compare(child.activeModules.join(","), "timers")
+            child.destroy()
+            board.detachedModules = []
+            tryVerify(() => findChild(board, "timersCard") !== null, 1000)
+            compare(board.timerControls.session, token)
+            compare(board.powerControls, power)
         }
         function test_04_moduleHideReleasesOwnedResources() {
             const power = findChild(board, "batteryCard").owner

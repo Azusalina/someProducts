@@ -5,6 +5,8 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 ScrollView {
     id: page
+    property string cfg_countdownShortcut: "Meta+Ctrl+Alt+C"
+    property string cfg_stopwatchShortcut: "Meta+Ctrl+Alt+S"
     property int cfg_countdownSeconds: 300
     property int cfg_stopwatchSeconds: 0
     property string cfg_countdownColor: ""
@@ -18,6 +20,11 @@ ScrollView {
         width: page.availableWidth
         spacing: 12
         Label { Layout.fillWidth: true; text: "Countdown and stopwatch · Click dashboard time to edit HH:MM:SS"; wrapMode: Text.Wrap }
+        Label { Layout.fillWidth: true; text: "Global fullscreen shortcuts · available on the desktop after installation. Clear to disable; use a modifier key. Conflicts appear on the widget."; wrapMode: Text.Wrap }
+        Label { text: "Countdown shortcut" }
+        TextField { objectName: "countdownShortcutSetting"; Layout.fillWidth: true; text: page.cfg_countdownShortcut; placeholderText: "Meta+Ctrl+Alt+C"; onTextEdited: page.cfg_countdownShortcut = text }
+        Label { text: "Stopwatch shortcut" }
+        TextField { objectName: "stopwatchShortcutSetting"; Layout.fillWidth: true; text: page.cfg_stopwatchShortcut; placeholderText: "Meta+Ctrl+Alt+S"; onTextEdited: page.cfg_stopwatchShortcut = text }
         Repeater {
             model: ["countdown", "stopwatch"]
             delegate: ColumnLayout {

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>Skill Manager · 本地技能库</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><script src="/app.js" type="module"></script></head>
+<body>
+<div class="backdrop" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orb orb-three"></div></div>
+<div class="app-shell glass">
+  <header class="app-header">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">S<span>m</span></span><span>Skill Manager<small><i class="live-dot"></i>本地工作空间</small></span></a>
+    <div class="header-search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索名称、用途、来源或路径…" aria-label="搜索技能和插件"><kbd>Ctrl K</kbd></div>
+    <div class="header-actions"><button id="mobile-settings" class="icon-button mobile-only" aria-label="设置">⚙</button><button class="theme-toggle" id="theme" aria-label="切换深色模式" title="切换深色模式" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☾</span><span class="theme-label" id="theme-label">深色模式</span></button><button class="button primary" id="add"><span>＋</span> 添加</button></div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-section-label">资料库 <span>LIBRARY</span></div>
+      <nav id="library-nav" aria-label="资料库">
+        <button class="nav-item active" data-view="all"><span class="nav-symbol">▦</span>全部项目<span class="count" id="count-all">—</span></button>
+        <button class="nav-item" data-view="pinned"><span class="nav-symbol">☆</span>我的收藏<span class="count" id="count-pinned">—</span></button>
+        <button class="nav-item" data-view="skill"><span class="nav-symbol">⌘</span>技能<span class="count" id="count-skill">—</span></button>
+        <button class="nav-item" data-view="plugin"><span class="nav-symbol">⬡</span>插件<span class="count" id="count-plugin">—</span></button>
+      </nav>
+      <div class="sidebar-section-label source-label">来源 <span>SOURCES</span></div>
+      <nav id="provider-nav" aria-label="按来源筛选">
+        <button class="nav-item" data-provider="Codex"><span class="provider-dot codex"></span>Codex<span class="count" id="count-codex">—</span></button>
+        <button class="nav-item" data-provider="Claude"><span class="provider-dot claude"></span>Claude<span class="count" id="count-claude">—</span></button>
+        <button class="nav-item" data-provider="Shared"><span class="provider-dot shared"></span>共享技能<span class="count" id="count-shared">—</span></button>
+        <button class="nav-item" data-provider="Custom"><span class="provider-dot custom"></span>自定义<span class="count" id="count-custom">—</span></button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="appearance glass-inset"><div class="appearance-title"><span>◈ &nbsp;玻璃不透明度</span><output id="opacity-value" for="opacity">20%</output></div><input id="opacity" type="range" min="0" max="100" value="20" aria-label="玻璃不透明度"><div class="appearance-hint"><span>通透</span><span>凝实</span></div></div>
+      <button class="sidebar-utility" id="trash"><span>↶</span>已移除项目</button>
+      <button class="sidebar-utility" id="settings"><span>⚙</span>扫描位置与设置</button>
+      <div class="local-address"><i class="live-dot"></i><span>127.0.0.1 · 仅此设备</span></div>
+    </aside>
+    <main class="library-pane">
+      <div class="library-heading"><div><div class="eyebrow">YOUR LOCAL COLLECTION</div><h1 id="view-title">全部项目<span id="view-count"></span></h1></div><button id="scan" class="icon-button" title="重新扫描" aria-label="重新扫描">↻</button></div>
+      <p id="library-subtitle">把散落的能力，收在一处。</p>
+      <div class="list-filters"><select id="mobile-provider" class="mobile-only" aria-label="按来源筛选"><option value="">全部来源</option><option>Codex</option><option>Claude</option><option value="Shared">共享技能</option><option value="Custom">自定义</option></select><select id="scope" aria-label="按安装范围筛选"><option value="all">所有安装范围</option><option value="user">用户级</option><option value="project">项目级</option><option value="plugin">插件内技能</option><option value="system">系统级</option><option value="cache">插件缓存</option><option value="custom">自定义</option><option value="broken">失效链接</option></select><select id="sort" aria-label="排序"><option value="pinned">收藏优先</option><option value="name">名称 A–Z</option><option value="provider">按来源</option></select></div>
+      <div class="selection-controls"><label><input type="checkbox" id="select-all"> 全选当前结果</label><span id="selection-summary" aria-live="polite"></span></div>
+      <div class="bulk-bar glass-inset" id="bulk-bar" hidden><div class="bulk-count" id="bulk-count"></div><div class="bulk-actions"><button id="bulk-pin">收藏</button><button id="bulk-unpin">取消收藏</button><button id="bulk-remove" class="bulk-danger">移除</button><button id="bulk-clear">清空选择</button></div></div>
+      <div class="item-list" id="items" aria-label="技能与插件列表" aria-busy="true"><div class="loading-state"><span class="spinner"></span>正在查找本机的技能与插件…</div></div>
+      <footer class="library-footer"><span id="scan-status">首次扫描中</span><button id="batch-progress" hidden>批量进度 ↗</button><button id="coverage">查看扫描范围 ↗</button></footer>
+    </main>
+    <section class="reader-pane" id="reader-pane" aria-label="文档阅读器">
+      <div id="reader-empty" class="reader-empty"><div class="empty-emblem">⌘</div><h2>让每项能力，都清晰可见。</h2><p>选择一个技能或插件<br>阅读原始指令，了解它如何工作。</p><span>LOCAL FILES. A LITTLE MORE ORDER.</span></div>
+      <div id="reader" hidden>
+        <div class="reader-topbar"><button id="back" class="back-button">‹ 返回列表</button><span id="reader-kind" class="eyebrow">SKILL / INSTRUCTIONS</span><div><button id="pin-detail" class="icon-button" aria-label="收藏">☆</button><button id="remove" class="icon-button danger-hover" aria-label="移除项目" title="移除项目">⌫</button></div></div>
+        <div class="reader-intro"><div id="reader-badges" class="badges"></div><h2 id="reader-title"></h2><p id="reader-description"></p><div class="path-line"><code id="reader-path"></code><button id="copy-path" class="icon-button" aria-label="复制路径" title="复制路径">⧉</button></div><details id="locations"><summary>安装位置与关联</summary><div id="location-list"></div></details></div>
+        <div class="document-toolbar"><select id="document-select" aria-label="选择文档"></select><div class="segmented"><button id="rendered" class="active">阅读</button><button id="raw">原文</button></div><button id="copy-document" class="icon-button" aria-label="复制文档内容" title="复制文档内容">⧉</button></div>
+        <div id="document-status" role="status"></div><article class="markdown" id="document"></article>
+      </div>
+    </section>
+  </div>
+</div>
+<dialog id="terminal-dialog" class="modal terminal-modal glass">
+  <div class="modal-header"><div><div class="eyebrow">LOCAL TERMINAL</div><h2>添加与管理</h2></div><button class="icon-button" data-close aria-label="关闭">×</button></div>
+  <p class="modal-description">在本机运行安装命令，输出实时显示。命令以你的账户权限执行。</p>
+  <div id="command-presets" class="segmented preset-tabs"><button data-preset="skill" class="active">技能</button><button data-preset="codex">Codex 插件</button><button data-preset="claude">Claude 插件</button><button data-preset="custom">自定义命令</button></div>
+  <label id="plugin-label" hidden>插件标识<input id="plugin-spec" placeholder="plugin@marketplace" autocomplete="off"></label>
+  <label>工作目录<input id="command-cwd" autocomplete="off" spellcheck="false"></label>
+  <label>终端命令<textarea id="command" rows="3" spellcheck="false" placeholder="粘贴技能作者提供的安装命令，例如 git clone 或安装器命令…"></textarea></label>
+  <div class="command-actions"><span id="command-hint">支持 Bash 命令；需要 TTY 的交互式安装器请在系统终端运行。</span><button id="run-command" class="button primary">运行命令 ↗</button><button id="stop-command" class="button danger" hidden>停止</button></div>
+  <div class="console-header"><span><i class="live-dot"></i><span id="job-status">等待执行</span></span><button id="job-history">最近执行 ▾</button></div>
+  <div id="history-list" hidden></div><pre id="terminal-output" class="terminal-output" tabindex="0">命令输出将在这里显示。</pre>
+  <form id="stdin-form" class="stdin-form" hidden><input id="stdin" aria-label="发送命令输入" placeholder="向运行中的命令发送一行输入（不会保存）" autocomplete="off"><button class="button" type="submit">发送 ↵</button></form>
+</dialog>
+<dialog id="settings-dialog" class="modal glass"><div class="modal-header"><div><div class="eyebrow">DISCOVERY</div><h2>扫描位置与设置</h2></div><button class="icon-button" data-close aria-label="关闭">×</button></div><p class="modal-description">自动扫描常见安装目录，并在用户主目录中查找项目配置。可在下方补充其他磁盘或自定义位置。</p><label>外观<select id="appearance-theme"><option value="light">浅色模式</option><option value="dark">深色模式</option></select></label><label>额外扫描目录（每行一个）<textarea id="extra-roots" rows="3" placeholder="/mnt/workspace\n~/custom-skills" spellcheck="false"></textarea></label><div class="settings-actions"><span id="coverage-summary"></span><button class="button primary" id="save-roots">保存并扫描</button></div><div class="mobile-only"><label>玻璃不透明度 <output id="opacity-settings-value">20%</output><input id="opacity-settings" type="range" min="0" max="100" value="20"></label><button id="settings-trash" class="button">已移除项目 ↶</button></div><details open><summary>默认目录与扫描状态</summary><div id="source-list"></div></details><details><summary id="scan-errors-title">扫描提示</summary><div id="scan-errors"></div></details></dialog>
+<dialog id="trash-dialog" class="modal glass"><div class="modal-header"><div><div class="eyebrow">RECENTLY REMOVED</div><h2>已移除项目</h2></div><button class="icon-button" data-close aria-label="关闭">×</button></div><p class="modal-description">独立技能和本地插件移至同级隐藏暂存区，可在这里恢复。通过 CLI 卸载的插件需要重新安装。</p><div id="trash-list"></div></dialog>
+<dialog id="remove-dialog" class="modal glass"><div class="modal-header"><div><div class="eyebrow">MANAGE INSTALLATION</div><h2>移除项目</h2></div><button class="icon-button" data-close aria-label="关闭">×</button></div><p id="remove-name"></p><label id="remove-location-label">选择安装入口<select id="remove-location"></select></label><p class="modal-description" id="remove-explanation"></p><div id="remove-details"></div><div class="modal-footer"><button class="button" data-close>取消</button><button id="confirm-remove" class="button danger">移至暂存区</button></div></dialog>
+<dialog id="batch-dialog" class="modal glass batch-modal"><div class="modal-header"><div><div class="eyebrow">BATCH OPERATIONS</div><h2 id="batch-title">批量移除</h2></div><button class="icon-button" data-close aria-label="关闭">×</button></div><p class="modal-description" id="batch-description">独立目录进入暂存区；插件按下列命令卸载。请核对安装入口与卸载范围，操作将依次执行。</p><div id="batch-rows"></div><div id="batch-summary" role="status"></div><div class="modal-footer"><button class="button" data-close>关闭</button><button class="button danger" id="batch-stop" hidden>停止后续操作</button><button class="button danger" id="batch-confirm">执行批量移除</button></div></dialog>
+<div id="toast" role="status" class="toast" hidden></div>
+</body></html>

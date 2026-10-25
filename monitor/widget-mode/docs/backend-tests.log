@@ -5,14 +5,15 @@ test_settings_api_rejects_command_injection_and_invalid_shapes (test_backend.Api
 test_settings_api_routes_native_target (test_backend.ApiTests.test_settings_api_routes_native_target) ... ok
 test_settings_missing_application_is_explicit_error (test_backend.ApiTests.test_settings_missing_application_is_explicit_error) ... ok
 test_snapshot_does_not_wait_for_ping (test_backend.ApiTests.test_snapshot_does_not_wait_for_ping) ... ok
+test_snapshot_refresh_parameters_are_validated_and_applied (test_backend.ApiTests.test_snapshot_refresh_parameters_are_validated_and_applied) ... ok
 test_terminal_routes_require_native_origin_and_valid_dimensions (test_backend.ApiTests.test_terminal_routes_require_native_origin_and_valid_dimensions) ... ok
 test_unknown_terminal_does_not_expose_other_sessions (test_backend.ApiTests.test_unknown_terminal_does_not_expose_other_sessions) ... ok
 test_valid_pause_calls_playpause (test_backend.ApiTests.test_valid_pause_calls_playpause) ... ok
 test_bus_variant_metadata (test_backend.TelemetryTests.test_bus_variant_metadata) ... ok
 test_cpu_excludes_guest_and_uses_deltas (test_backend.TelemetryTests.test_cpu_excludes_guest_and_uses_deltas) ... ok
-test_half_second_stats_do_not_wait_for_media_bus (test_backend.TelemetryTests.test_half_second_stats_do_not_wait_for_media_bus) ... ok
+test_five_hz_stats_do_not_wait_for_media_bus (test_backend.TelemetryTests.test_five_hz_stats_do_not_wait_for_media_bus) ... ok
 test_host_url_normalization_and_option_injection (test_backend.TelemetryTests.test_host_url_normalization_and_option_injection) ... ok
-test_ping_half_second_deadline_and_no_overlapping_probe (test_backend.TelemetryTests.test_ping_half_second_deadline_and_no_overlapping_probe) ... ok
+test_ping_five_hz_deadline_and_no_overlapping_probe (test_backend.TelemetryTests.test_ping_five_hz_deadline_and_no_overlapping_probe) ... ok
 test_ping_missing_reply_is_unknown (test_backend.TelemetryTests.test_ping_missing_reply_is_unknown) ... ok
 test_ping_scheduler_samples_between_widget_requests (test_backend.TelemetryTests.test_ping_scheduler_samples_between_widget_requests) ... ok
 test_ping_under_one_ms (test_backend.TelemetryTests.test_ping_under_one_ms) ... ok
@@ -45,6 +46,12 @@ test_unknown_and_invalid_battery_values (test_power_timers.PowerTests.test_unkno
 test_independent_pause_resume_and_finish (test_power_timers.TimerTests.test_independent_pause_resume_and_finish) ... ok
 test_instances_and_configure_do_not_affect_other_timer (test_power_timers.TimerTests.test_instances_and_configure_do_not_affect_other_timer) ... ok
 test_validation_expiry_and_idempotent_start (test_power_timers.TimerTests.test_validation_expiry_and_idempotent_start) ... ok
+test_failed_upgrade_also_restores_shell (test_refresh.RefreshTests.test_failed_upgrade_also_restores_shell) ... ok
+test_successful_upgrade_preserves_private_backup_and_restores_shell (test_refresh.RefreshTests.test_successful_upgrade_preserves_private_backup_and_restores_shell) ... ok
+test_fast_view_interrupts_slow_sample_wait (test_refresh_rates.RefreshRateTests.test_fast_view_interrupts_slow_sample_wait) ... ok
+test_fastest_active_client_and_per_target_ping_period (test_refresh_rates.RefreshRateTests.test_fastest_active_client_and_per_target_ping_period) ... ok
+test_invalid_requests_and_persisted_config_bounds (test_refresh_rates.RefreshRateTests.test_invalid_requests_and_persisted_config_bounds) ... ok
+test_same_view_can_slow_down_and_clients_are_bounded (test_refresh_rates.RefreshRateTests.test_same_view_can_slow_down_and_clients_are_bounded) ... ok
 test_layout_validation (test_resize.ResizeTests.test_layout_validation) ... ok
 test_completion_customization_and_profiles_survive_reload (test_todos.TodoSettingsTests.test_completion_customization_and_profiles_survive_reload) ... ok
 test_customization_bounds_and_defaults (test_todos.TodoSettingsTests.test_customization_bounds_and_defaults) ... ok
@@ -60,6 +67,7 @@ test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_c
 test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 60 tests in 5.054s
+Ran 67 tests in 4.303s
 
 OK
+Reloaded Plasma for 1 monitor instance(s). Private settings backup: /tmp/tmpl4m0mjwq/monitor-dashboard/widget-refresh-20261025-141339-948942.json

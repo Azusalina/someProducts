@@ -1,0 +1,10 @@
+-I
+/home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/native
+-I
+/home/a/Documents/someProducts/monitor/widget-mode/core/build/native
+-I
+/usr/lib/qt6/qml
+--resource
+/home/a/Documents/someProducts/monitor/widget-mode/core/build/native/.qt/rcc/qmake_Monitor_Native.qrc
+--module
+Monitor.Native

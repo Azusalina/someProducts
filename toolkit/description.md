@@ -445,3 +445,45 @@ PDF page editing and photo-to-PDF. Desktop/mobile customization screenshots and
 source-vs-extracted text were inspected. The running login service also converted
 the English/CJK fixture successfully through the live port-4177 API. Login startup
 is enabled; no logout or reboot was performed for validation.
+
+## 2026-10-25: Live TeX preview and native file actions
+
+The renderer registry now includes `.tex`. `src/modules/tex/index.js` compiles a
+saved source snapshot with XeLaTeX (or `TOOLKIT_TEX_ENGINE`) in two passes.
+The compiler's working directory, logs, auxiliary files, recorder output and
+font caches are confined to a temporary work directory; cleanup runs after
+success, compiler errors and cancellation. `TEXINPUTS` permits local document
+assets. Shell escape is disabled. This is local compilation, not a sandbox for
+untrusted TeX; existing local TeX packages are used and no packages are downloaded.
+At most two compilations run at once, with a 45-second limit per pass, a 2 MB
+compiler-output limit and a 20 MB preview-PDF limit. Two passes cover common
+cross-references; bibliography/index tools and more involved build chains are
+not automatically run.
+
+The complete preview PDF stays in the page session's memory and is rendered
+locally with PDF.js on a canvas (one page at a time, with page navigation). A
+blob URL also supports opening the completed PDF in the browser viewer. The document folder receives no generated log, aux
+or draft PDF. Explicit **Save PDF** downloads a copy; when source and tracked
+dependencies are unchanged, it reuses the complete in-memory preview. Source
+changes, atomic replacements and up to 200 local recorded dependency files are
+watched. Compiler errors retain the last successful preview and expose the
+current saved source/error. Closing or changing documents aborts obsolete work.
+Abrupt process termination/power loss can leave an OS temporary directory; cleanup
+on an ordinary completion, error or cancellation is tested. System package and
+font changes are not tracked dependencies.
+
+`src/desktop/worker.mjs` is a private stdin/stdout bridge for the adjacent native
+[FileX + KDE integration](../integrate-toolkit-arch/description.md), reusing the
+existing file tools without adding an HTTP write-to-path API. It also supports
+explicit TeX-to-PDF export.
+
+Validation: the full Node suite passed 28 tests after adding TeX and native-bridge
+coverage. Real XeLaTeX tests covered included-file changes, readable PDFs, invalid
+drafts, preserving the previous PDF, cancellation and compiler-artifact cleanup.
+The TeX browser test passed live updates, Source, explicit PDF download, error
+recovery and no generated files next to the source. The existing full Markdown
+browser suite also passed, including Zen, atomic save, Mermaid, independent
+preview behavior and PDF exports. No actual held-modifier desktop click is claimed;
+that integration is awaiting accessibility approval and physical desktop validation.
+
+TeX temporary work can be relocated with `TOOLKIT_TEX_TMPDIR` (an existing directory). PDF.js and its worker, fonts and character maps are served locally from the pinned npm dependency, with no runtime CDN requests. Renderer source: [Mozilla PDF.js examples](https://mozilla.github.io/pdf.js/examples/).

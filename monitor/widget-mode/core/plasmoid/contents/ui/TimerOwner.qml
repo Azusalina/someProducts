@@ -3,6 +3,8 @@ import QtQuick
 Item {
     id: owner
     required property var preferences
+    property var mediaPlayers: []
+    signal mediaToggleRequested(string service)
     property bool active: false
     property string session: ""
     property var readings: ({countdown: {}, stopwatch: {}})

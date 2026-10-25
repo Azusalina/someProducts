@@ -38,6 +38,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
     flows.setProperty('cfg_cpuFlowColor', '#ff6633')
+    flows.setProperty('cfg_flowRefreshMs', 750)
+    flows.setProperty('cfg_flowHistorySeconds', 60)
+    flows.setProperty('cfg_audioRefreshMs', 50)
     timers.setProperty('cfg_countdownSeconds', 42)
     timers.setProperty('cfg_stopwatchColor', '#55cc88')
     timers.setProperty('cfg_countdownStyle', 'ring')
@@ -46,6 +49,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert preferences.property('enabledModules') == original
     assert preferences.property('backgroundOpacity') == 0
     assert preferences.property('cpuFlowColor') == ''
+    assert preferences.property('flowRefreshMs') == 200
+    assert preferences.property('flowHistorySeconds') == 30
+    assert preferences.property('audioRefreshMs') == 100
     assert QMetaObject.invokeMethod(buttons, 'rejected')
     assert not config_window.property('visible')
     assert QMetaObject.invokeMethod(root, 'configure')
@@ -53,6 +59,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert modules.property('cfg_enabledModules') == original
     assert appearance.property('cfg_backgroundOpacity') == 0
     assert flows.property('cfg_cpuFlowColor') == ''
+    assert flows.property('cfg_flowRefreshMs') == 200
+    assert flows.property('cfg_flowHistorySeconds') == 30
+    assert flows.property('cfg_audioRefreshMs') == 100
     assert timers.property('cfg_countdownSeconds') == 300
     assert timers.property('cfg_stopwatchColor') == ''
     assert timers.property('cfg_countdownStyle') == 'minimal'
@@ -64,6 +73,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     appearance.setProperty('cfg_backgroundColorHex', '#102030')
     appearance.setProperty('cfg_backgroundOpacity', 70)
     flows.setProperty('cfg_cpuFlowColor', '#ff6633')
+    flows.setProperty('cfg_flowRefreshMs', 750)
+    flows.setProperty('cfg_flowHistorySeconds', 60)
+    flows.setProperty('cfg_audioRefreshMs', 50)
     timers.setProperty('cfg_countdownSeconds', 42)
     timers.setProperty('cfg_stopwatchColor', '#55cc88')
     timers.setProperty('cfg_countdownStyle', 'ring')
@@ -74,6 +86,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-preview-config-') as temp:
     assert preferences.property('textColorHex') == '#aabbcc'
     assert preferences.property('backgroundOpacity') == 70
     assert preferences.property('cpuFlowColor') == '#ff6633'
+    assert preferences.property('flowRefreshMs') == 750
+    assert preferences.property('flowHistorySeconds') == 60
+    assert preferences.property('audioRefreshMs') == 50
     assert preferences.property('countdownSeconds') == 42
     assert preferences.property('stopwatchColor') == '#55cc88'
     assert preferences.property('countdownStyle') == 'ring'

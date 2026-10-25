@@ -1,0 +1,50 @@
+{
+  "JS6298": {
+    "type": "artsai",
+    "formula": "2×英文 + 1.5×數學 + 兩科指定選修×1.5 + 最佳餘下一科"
+  },
+  "JS6755": {
+    "type": "business",
+    "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科"
+  },
+  "JS6767": {
+    "type": "business",
+    "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科"
+  },
+  "JS6793": {
+    "type": "business",
+    "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科"
+  },
+  "JS6810": {
+    "type": "six",
+    "formula": "最佳六科"
+  },
+  "JS6200": {
+    "type": "engmath",
+    "formula": "英文 + 數學 + 最佳三科"
+  },
+  "JS6224": {
+    "type": "engmath",
+    "formula": "英文 + 數學 + 最佳三科（2026獨立代碼）"
+  },
+  "JS6248": {
+    "type": "engmath",
+    "formula": "英文 + 數學 + 最佳三科"
+  },
+  "JS6729": {
+    "type": "actuarial",
+    "formula": "1.2×英文 + 1.2×數學 + 1.2×M1 + 最佳兩科"
+  },
+  "JS6779": {
+    "type": "stats",
+    "formula": "1.5×數學 + 最佳四科"
+  },
+  "JS6999": {
+    "type": "engmath",
+    "formula": "英文 + 數學 + 最佳三科"
+  },
+  "JS6602": {
+    "type": "innovation",
+    "formula": "2×英文 + 2×數學 + 最佳三科（M1／ICT×2，其他×1.5）"
+  }
+}

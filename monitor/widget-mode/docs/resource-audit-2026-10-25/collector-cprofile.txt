@@ -1,0 +1,23 @@
+         128066 function calls (128057 primitive calls) in 0.152 seconds
+
+   Ordered by: cumulative time
+   List reduced from 212 to 15 due to restriction <15>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.152    0.152 /home/a/Documents/someProducts/monitor/widget-mode/core/backend/monitor_service.py:198(sample)
+        1    0.006    0.006    0.127    0.127 /home/a/Documents/someProducts/monitor/widget-mode/core/backend/monitor_service.py:176(clients)
+     3761    0.005    0.000    0.078    0.000 /home/a/Documents/someProducts/monitor/widget-mode/core/backend/monitor_service.py:36(read)
+     3761    0.007    0.000    0.072    0.000 /usr/lib/python3.14/pathlib/__init__.py:780(read_text)
+     3761    0.003    0.000    0.031    0.000 /usr/lib/python3.14/pathlib/__init__.py:763(open)
+     4385    0.002    0.000    0.029    0.000 /usr/lib/python3.14/pathlib/__init__.py:841(<genexpr>)
+     3763    0.021    0.000    0.027    0.000 {built-in method _io.open}
+     3757    0.023    0.000    0.027    0.000 {method 'read' of '_io.TextIOWrapper' objects}
+     4266    0.004    0.000    0.026    0.000 /usr/lib/python3.14/pathlib/__init__.py:823(_from_dir_entry)
+        1    0.000    0.000    0.024    0.024 /home/a/Documents/someProducts/monitor/widget-mode/core/backend/monitor_service.py:43(command)
+        1    0.000    0.000    0.024    0.024 /usr/lib/python3.14/subprocess.py:513(run)
+        1    0.000    0.000    0.022    0.022 /usr/lib/python3.14/subprocess.py:1177(communicate)
+        1    0.000    0.000    0.022    0.022 /usr/lib/python3.14/subprocess.py:2093(_communicate)
+        2    0.000    0.000    0.022    0.011 /usr/lib/python3.14/selectors.py:385(select)
+        2    0.022    0.011    0.022    0.011 {method 'poll' of 'select.poll' objects}
+
+

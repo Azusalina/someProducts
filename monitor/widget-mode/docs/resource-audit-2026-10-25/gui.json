@@ -1,0 +1,21 @@
+{
+  "blank": {
+    "cpu_percent_one_core": 0.0,
+    "Pss_MiB_start": 47.55,
+    "Pss_MiB_end": 47.56,
+    "RSS_MiB_end": 91.54,
+    "measurement_seconds": 10.51,
+    "warnings": []
+  },
+  "widget": {
+    "cpu_percent_one_core": 51.35,
+    "Pss_MiB_start": 107.84,
+    "Pss_MiB_end": 107.88,
+    "RSS_MiB_end": 166.31,
+    "measurement_seconds": 15.0,
+    "warnings": []
+  },
+  "incremental_widget_Pss_MiB": 60.32,
+  "incremental_widget_CPU_one_core": 51.35,
+  "method": "Software/offscreen Qt preview at live size/rates/modules with empty notes/tasks; 35s warmup + 15s sampling (blank 3s+10s). Not a native per-applet measurement."
+}

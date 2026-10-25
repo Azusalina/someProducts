@@ -1,0 +1,32 @@
+{
+  "instances": [
+    {
+      "id": 163,
+      "version": "1.17.0",
+      "settingsPreserved": true,
+      "geometryPreserved": true,
+      "geometry": {
+        "x": 1424,
+        "y": 32,
+        "width": 624,
+        "height": 1168
+      }
+    }
+  ],
+  "installedSourcesMatch": true,
+  "observedMeanSampleSeconds": 0.2007,
+  "registeredGlobalShortcuts": [
+    {
+      "kind": "countdown",
+      "nativeKeys": [
+        469762115
+      ]
+    },
+    {
+      "kind": "stopwatch",
+      "nativeKeys": [
+        469762131
+      ]
+    }
+  ]
+}

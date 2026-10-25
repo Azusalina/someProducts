@@ -1,0 +1,7 @@
+{
+  "name": "local-skill-manager", "version": "1.0.0", "private": true, "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node src/server.mjs", "dev": "node --watch src/server.mjs", "test": "node --test tests/*.test.mjs", "test:browser": "node tests/browser.mjs", "service:install": "python3 scripts/service.py install", "service:remove": "python3 scripts/service.py remove", "service:status": "python3 scripts/service.py status" },
+  "dependencies": { "markdown-it": "^14.1.0", "smol-toml": "^1.4.2", "yaml": "^2.8.1" },
+  "devDependencies": { "playwright-core": "^1.56.0" }
+}

@@ -1,0 +1,45 @@
+{
+  "blank": {
+    "Rss_MiB": 89.34,
+    "Pss_MiB": 34.45,
+    "Private_Clean_MiB": 7.66,
+    "Private_Dirty_MiB": 22.32
+  },
+  "widget": {
+    "Rss_MiB": 155.13,
+    "Pss_MiB": 74.75,
+    "Private_Clean_MiB": 13.08,
+    "Private_Dirty_MiB": 51.89
+  },
+  "incremental_preview_Pss_MiB": 40.3,
+  "shared_processes": [
+    {
+      "pid": 404226,
+      "name": "Monitor bridge",
+      "Rss_MiB": 36.2,
+      "Pss_MiB": 21.45,
+      "Private_Clean_MiB": 0.0,
+      "Private_Dirty_MiB": 20.11
+    },
+    {
+      "pid": 404268,
+      "name": "whole Plasma desktop (not attributable to this widget)",
+      "Rss_MiB": 612.8,
+      "Pss_MiB": 321.96,
+      "Private_Clean_MiB": 45.39,
+      "Private_Dirty_MiB": 186.87
+    }
+  ],
+  "monitor_helpers": [
+    {
+      "pid": 404450,
+      "program": "cava",
+      "Rss_MiB": 13.92,
+      "Pss_MiB": 6.78,
+      "Private_Clean_MiB": 3.3,
+      "Private_Dirty_MiB": 2.94
+    }
+  ],
+  "method": "8s offscreen software preview minus blank Qt window; PSS includes apportioned shared pages. This is an estimate, not a per-applet Plasma measurement.",
+  "estimated_incremental_plus_bridge_helpers_Pss_MiB": 68.53
+}

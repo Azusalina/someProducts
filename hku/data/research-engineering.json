@@ -1,0 +1,137 @@
+[
+  {
+    "code": "JS6298",
+    "name": "人工智能與數據科學＋文學雙學位",
+    "englishName": "Bachelor of Arts and Bachelor of Engineering in Artificial Intelligence and Data Science",
+    "years": 5,
+    "quota": "現行2027聯招頁：20；2026主輪offer11（不可當作學額）",
+    "eligibility": "已列中4、英5、數5**、ICT5*、M1 5**等符合目前學科門檻；公民科按用戶指示假設Attained。",
+    "secondAs": "整個五年雙學位不能當第二主修；AI and Humanity未見於全校開放第二主修清單。可另查正式Computer Science主修，兩者不等同。",
+    "secondWith": "300學分中自由選修36，官方明示可修minor；未核實可再加完整72–96學分第二主修。",
+    "curriculum": [
+      "78學分AI and Humanity主修：倫理、認知、生成式AI、研究；其中36學分同一人文領域進階課",
+      "144學分AI與數據科學專業核心：編程、算法、概率統計、資料庫、機器學習、深度學習、實習及專題",
+      "42學分大學要求＋36自由選修；五年共300"
+    ],
+    "careers": [
+      "AI／資料工程與軟件職位（需作品集及工程能力）",
+      "人本AI、AI產品、負責任AI／治理（多為跨職能路徑）",
+      "數碼人文與研究助理"
+    ],
+    "postgraduate": [
+      "CS／AI／Data Science授課碩士",
+      "人本AI、NLP、計算語言學、數碼人文研究",
+      "MPhil／PhD須研究經歷、成績、推薦及合適導師，非自動銜接"
+    ],
+    "salary": "未找到本課程獨立畢業薪酬。2024僱主調查香港學士起薪：IT HK$20,300／月、工程HK$21,974／月（跨院校職能代理，不是HKU此課程均薪，也不是2031–32薪酬預測）。",
+    "reviews": [
+      {
+        "summary": "2025-10-25匿名回覆指出此雙學位包含大量人文必修，並警告跨學院轉課程不容易；身份未核實，屬課程辨析而非已證實在讀教學評價。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1oaeqyb",
+        "date": "2025-10-25",
+        "kind": "匿名討論；身份未核實"
+      }
+    ],
+    "sources": [
+      {
+        "title": "2027周期JUPAS：門檻、20學額、5年",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6298/"
+      },
+      {
+        "title": "官方課程結構及科目",
+        "url": "https://aidata.arts.hku.hk/programme/"
+      },
+      {
+        "title": "2025-26及以後課綱（標示pending approval）",
+        "url": "https://arts.hku.hk/wp-content/uploads/2026/02/BA-BEng-syl.pdf"
+      },
+      {
+        "title": "全校正式major清單",
+        "url": "https://aas.hku.hk/list-of-major/"
+      },
+      {
+        "title": "2024香港僱主薪酬調查",
+        "url": "https://www.hkbu.edu.hk/content/dam/hongkongbaptistuniversity/hkbu-assets/doc/press-release/2024/1024/2024_GBA_Pay_Benefits_Survey_e_final.pdf"
+      }
+    ],
+    "advice": "若你對哲學、語言、倫理的興趣不明確，不應只為AI標籤接受五年。先試讀一篇AI倫理論文並做一個編程項目；若兩者都喜歡，才把6298放前。數學／編程／商科三向彈性通常不如四年技術主修加商科選修直接。",
+    "caveats": [
+      "2027完整課綱仍需確認；官網2026-27規章標pending approval",
+      "人文課是正式要求，不是少量通識",
+      "未找到可核實身份、針對教學品質的獨立在讀長評",
+      "5*+不是DSE等級；保守按5*處理"
+    ]
+  },
+  {
+    "code": "JS6602",
+    "name": "創新與科技",
+    "englishName": "Bachelor of Science in Innovation and Technology",
+    "years": 4,
+    "quota": "現行2027聯招頁：25；2026主輪offer19（不同口徑）",
+    "eligibility": "核心數學須4；ICT接受作指定科技科且須4。你的預測達標；公民科假設Attained，面試及項目表現重要。",
+    "secondAs": "未見Innovation and Technology開放作正式第二主修；Innovation and Design minor是另一項資格，不能混稱。",
+    "secondWith": "官方有自訂technology focus及外系選修，但未找到2027正式第二主修規章／學分保證。先問能否完成CS／Math／Statistics／Finance major及co-op撞課。",
+    "curriculum": [
+      "年一：人本創新、Physical Computing、計算解難、建模、感測",
+      "年二：未來創新、創業、Making Sciences、Forms and Materials",
+      "年三：社會影響創新＋6–8個月全職co-op；年四capstone",
+      "項目工作坊主導，自訂技術深度；可在企業、初創或研究室實作"
+    ],
+    "careers": [
+      "科技產品、原型設計、創新專案、技術商業化",
+      "企業內創業或創辦公司（收入高度不穩定）",
+      "技術focus夠深時申請相關研發／工程職，不能只依學位名稱"
+    ],
+    "postgraduate": [
+      "Innovation／Technology Management",
+      "按tech focus補先修後申請CS／Engineering／Design等MSc",
+      "有研究作品、數理課及導師契合才考慮MPhil／PhD"
+    ],
+    "salary": "未找到本課程獨立畢業薪酬。2024僱主調查香港學士起薪：IT HK$20,300／月、工程HK$21,974／月（跨院校職能代理，不是HKU此課程均薪，也不是2031–32薪酬預測）。 2025首屆四年本科尚未有完整畢業cohort，無本課程畢業薪酬可查。",
+    "reviews": [
+      {
+        "summary": "官方2026單張兩位匿名Year1學生表示期待結合科技、設計、商業及團隊多元背景；沒有具體批評、評分或就業驗證，屬宣傳中選錄的早期感受。",
+        "url": "https://admissions.hku.hk/sites/default/files/2025-10/I-School_Leaflet_2026.pdf",
+        "date": "2026招生單張；檔案路徑2025-10",
+        "kind": "官方匿名Year1見證"
+      }
+    ],
+    "sources": [
+      {
+        "title": "2027周期JUPAS：25學額、ICT門檻",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6602/"
+      },
+      {
+        "title": "I-School官方課程及co-op",
+        "url": "https://i-school.hku.hk/programmes/undergraduate/"
+      },
+      {
+        "title": "官方逐科描述",
+        "url": "https://i-school.hku.hk/courses/"
+      },
+      {
+        "title": "官方2026單張與Year1見證",
+        "url": "https://admissions.hku.hk/sites/default/files/2025-10/I-School_Leaflet_2026.pdf"
+      },
+      {
+        "title": "2025首屆入學報道",
+        "url": "https://www.hk01.com/article/1100351"
+      },
+      {
+        "title": "2026-10-24官方Info Day",
+        "url": "https://i-school.hku.hk/news-event/hku-information-day-2026-discover-i-school/"
+      },
+      {
+        "title": "2024香港僱主薪酬調查",
+        "url": "https://www.hkbu.edu.hk/content/dam/hongkongbaptistuniversity/hkbu-assets/doc/press-release/2024/1024/2024_GBA_Pay_Benefits_Survey_e_final.pdf"
+      }
+    ],
+    "advice": "適合願意反覆做原型、訪談用戶、團隊協作及pitch的人。若你希望先有可辨識的數學／程式主修再探索商業，務必驗證技術focus深度和正式第二主修，不能把「自由」理解為所有專業都可達。面試可準備真實項目的問題、迭代、失敗、自己的貢獻與反思。",
+    "caveats": [
+      "新課程無成熟畢業結果；2027 syllabus尚待最終核實",
+      "未找到獨立、身份可核的在讀教學長評",
+      "co-op佔6–8個月，需問學費／薪酬／安排名額及跨系課時",
+      "科技focus不等同已核准的第二主修"
+    ]
+  }
+]

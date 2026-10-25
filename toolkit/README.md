@@ -143,3 +143,22 @@ moving the product or changing the Node.js installation path.
 A manually launched `npm start` stops with **Ctrl+C**. To remove the toolkit,
 remove its login service if installed, stop it and delete this folder; original
 Markdown/PDF files and downloads elsewhere remain yours.
+
+For **live TeX → PDF**, use **Markdown / TeX to PDF** and open a saved `.tex`
+path. Install XeLaTeX (`texlive-xetex` on Arch); set `TOOLKIT_TEX_ENGINE` to another
+installed TeX engine if needed. Save edits in your editor to update the preview,
+including local files referenced by `\input` and local graphics. **Source** shows
+the saved source; **Open PDF preview in new tab** is available if the embedded
+viewer does not display it. **Save PDF** is the explicit download step. Paper
+size and colors come from the TeX document. Compiler logs, auxiliary files and
+intermediate PDFs use a temporary directory that is removed after success,
+errors or cancellation; no compiler files are placed beside your source. A
+failed compile keeps the last successful preview and disables saving until fixed.
+Bibliography/index processors and automatic missing-package installation are not
+run. See [description.md](description.md) for limits.
+
+For native circular desktop tools, the held Super+Alt+click integration and
+FileX's **T** vertical tool menu, install the adjacent
+[Arch/KDE integration](../integrate-toolkit-arch/README.md). Its native save dialog
+lets you choose the result directory and filename. This integration is separate
+from the existing local web login service.

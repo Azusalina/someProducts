@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 monitor_core="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+"$monitor_core/scripts/build-native.sh"
 python - "$monitor_core" <<'PY'
 from pathlib import Path
 import sys

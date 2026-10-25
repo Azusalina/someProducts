@@ -4,6 +4,9 @@ import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 Item {
     id: card
+    property var timedHistories: null
+    property int historySeconds: 30
+    property int refreshInterval: 200
     property color ink: "#f5f5f4"
     property color flowInk: ink
     property var targets: []
@@ -29,8 +32,31 @@ Item {
                 width: card.width
                 height: 42
                 readonly property var reading: card.readings.find(value => value.target === modelData.url) || {}
-                readonly property var samples: card.histories[modelData.url] || []
+                readonly property var timeSamples: card.timedHistories === null ? null : card.timedHistories[modelData.url] || []
+                readonly property var samples: timeSamples === null ? card.histories[modelData.url] || [] : timeSamples.filter(point => point.at >= ((timeSamples[timeSamples.length-1] || {}).at || 0)-card.historySeconds).map(point => point.value)
                 readonly property real historyMaximum: Math.max(10, ...samples.filter(v => typeof v === "number" && isFinite(v)))
+                property real graphMaximum: 10
+                property int quietTicks: 0
+                function scaleFor(value) {
+                    if (value <= 10) return 10
+                    const required = value * 1.25
+                    const power = Math.pow(10, Math.floor(Math.log10(required)))
+                    for (const step of [1,2,5,10]) if (step * power >= required) return step * power
+                    return required
+                }
+                function observeScale() {
+                    if (!samples.length) { graphMaximum=10; quietTicks=0; return }
+                    if (historyMaximum > graphMaximum) { graphMaximum=scaleFor(historyMaximum); quietTicks=0 }
+                    else if (historyMaximum < graphMaximum * 0.35) {
+                        quietTicks++
+                        if (quietTicks >= 10) { graphMaximum=scaleFor(historyMaximum); quietTicks=0 }
+                    } else quietTicks=0
+                }
+                onHistoryMaximumChanged: {
+                    if (historyMaximum > graphMaximum) { graphMaximum=scaleFor(historyMaximum); quietTicks=0 }
+                }
+                onSamplesChanged: if (!samples.length) { graphMaximum=10; quietTicks=0 }
+                Timer { interval: 1000; running: row.visible && row.samples.length > 0; repeat: true; onTriggered: row.observeScale() }
                 Accessible.name: "Ping " + modelData.label
                 Accessible.description: number.text + "; " + (reading.status || "Waiting for telemetry")
                 Sparkline {
@@ -39,8 +65,11 @@ Item {
                     anchors.topMargin: 12
                     ink: row.modelData.color || card.flowInk
                     values: row.samples
-                    sampleCount: Math.max(2, Math.min(40, row.samples.length))
-                    maximum: row.historyMaximum
+                    timeSamples: row.timeSamples
+                    historySeconds: card.historySeconds
+                    sampleCount: 40
+                    transitionDuration: Math.round(card.refreshInterval * 0.9)
+                    maximum: row.graphMaximum
                 }
                 Row {
                     spacing: 3
@@ -73,7 +102,7 @@ Item {
                 HoverHandler { id: hover }
                 ToolTip.visible: hover.hovered
                 ToolTip.delay: 600
-                ToolTip.text: row.modelData.label + " · " + row.modelData.url + " · " + (row.reading.status || "Waiting for telemetry") + " · ICMP · auto-scaled graph"
+                ToolTip.text: row.modelData.label + " · " + row.modelData.url + " · " + (row.reading.status || "Waiting for telemetry") + " · ICMP · scale 0–" + row.graphMaximum + "ms"
             }
         }
     }

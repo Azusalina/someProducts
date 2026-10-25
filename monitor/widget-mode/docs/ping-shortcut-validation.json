@@ -1,0 +1,17 @@
+{
+  "widgets": [
+    {
+      "id": 163,
+      "version": "1.19.1",
+      "settings_preserved": true,
+      "geometry_preserved": true,
+      "stopwatch_shortcut": "Alt+S"
+    }
+  ],
+  "installed_matches": true,
+  "services": [
+    "active",
+    "active"
+  ],
+  "alt_s_owner": "a(ssssssaiai) 1 \"monitor-163-stopwatch\" \"Fullscreen stopwatch\" \"someProducts-monitor\" \"plasmashell\" \"default\" \"Default Context\" 1 134217811 0"
+}

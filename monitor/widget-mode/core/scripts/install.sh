@@ -2,6 +2,7 @@
 # Install locally without touching system packages or desktop placement.
 set -euo pipefail
 monitor_core="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+"$monitor_core/scripts/build-native.sh"
 monitor_data="${XDG_DATA_HOME:-$HOME/.local/share}"
 monitor_config="${XDG_CONFIG_HOME:-$HOME/.config}"
 monitor_python="$(command -v python)"
@@ -48,7 +49,7 @@ RestartSec=5
 WantedBy=graphical-session.target
 EOF
 if test -d "$monitor_data/plasma/plasmoids/local.monitor.dashboard"; then
-    kpackagetool6 --type Plasma/Applet --upgrade "$monitor_core/plasmoid"
+    python "$monitor_core/scripts/refresh-desktop.py" --package "$monitor_core/plasmoid"
 else
     kpackagetool6 --type Plasma/Applet --install "$monitor_core/plasmoid"
 fi

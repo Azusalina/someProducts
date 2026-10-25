@@ -1,0 +1,407 @@
+[
+  {
+    "code": "JS6200",
+    "name": "計算與數據科學（港滬科技菁英）",
+    "englishName": "Computing and Data Science (Delta+)",
+    "years": 4,
+    "quota": "2027：128（與 JS6999 共用；2026-10-15 更新，不能相加）",
+    "eligibility": "數學／M1 5**、ICT 5*／Econ 4 符合已公布科目門檻；英語至少 3。本路線須願意赴上海 1.5 年。",
+    "secondAs": "Delta+ 是入學／跨地域路線，不是可申報的第二主修。CS 第二主修現行名單只列 2025–26 或以前 cohort，2027 不應當作可用；CS／AI&DS 副修另有選拔。",
+    "secondWith": "可探索數學、經濟、金融等互補領域，但上海授課、6 個月 Co-op 及僅約 30 自選學分令第二主修更難排課；宜先看副修方案。CS／AI&DS 不可配 Decision Analytics major。",
+    "curriculum": [
+      "首 2.5 年香港、末 1.5 年上海；六個月 Co-operative Placement",
+      "Year 1 後選 BEng Computer Science 或 BEng AI and Data Science",
+      "CS：演算法、作業系統、軟件工程；AI&DS：概率、機器學習、深度學習及資料庫"
+    ],
+    "careers": [
+      "軟件／資料工程",
+      "AI／機器學習工程",
+      "金融科技開發；上海科技公司實習提供接觸，非保證聘用"
+    ],
+    "postgraduate": [
+      "官方列 Year 4 兩科 MSc 課及 MSc(CompSc) conditional offer，可能五年完成 BEng+MSc",
+      "MPhil/PhD 仍需研究經驗與獨立申請"
+    ],
+    "salary": "無 Delta+ 畢業 cohort 薪酬；不可把全校或舊 CS 數字當本課程預期薪金。",
+    "reviews": [
+      {
+        "summary": "2026 新路線，未找到已完成香港＋上海＋Co-op 全流程的第一手本科評論。舊 CS 經驗僅可參考共同技術課。",
+        "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6200-computing-and-data-science-delta/",
+        "date": "截至 2026-10-22",
+        "kind": "研究缺口"
+      },
+      {
+        "summary": "自稱四年級 CS 學生：畢業與爭取 A 的難度不同；部分課堂令人失望，需要自學。其他留言提及演算法／離散數學及評分壓力。身份和代表性未核實，並非 Delta+ 或新 AI&DS 畢業生。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1qkqaxe/is_hkus_computer_science_program_really_that/",
+        "date": "2026-01-23 至 2026-01-26",
+        "kind": "匿名自述在讀生／其他匿名留言"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6200/"
+      },
+      {
+        "title": "Delta+ 現行頁（含 2027 資助註解）",
+        "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6200-computing-and-data-science-delta/"
+      },
+      {
+        "title": "2026–27 及以後 CS 規例",
+        "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C48_0626_amended_BEng(CompSc)%20Regulations%20&%20syllabus%202026-27_Oct2026_For%20website.pdf"
+      },
+      {
+        "title": "2026–27 及以後 AI&DS 規例",
+        "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+      }
+    ],
+    "advice": "只有確實想赴上海、能接受生活與實習安排時才優先；若首要是保留香港修課及第二主修彈性，JS6999 較合適。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "現行頁列 HK$150,000 上海 fellowship（住宿／生活／機票），另 2027 入學獎學金 HK$50,000／100,000／200,000 須符合條件；不要理解為人人現金 HK$350,000。",
+      "官方頁明示其他 HKU 課程不能內部轉入 JS6200。",
+      "MSc 學費、續獎條件、實習待遇及公司分配未找到完整保證條款。"
+    ]
+  },
+  {
+    "code": "JS6224",
+    "name": "應用人工智能（2027 併入 JS6999）",
+    "englishName": "Bachelor of Arts and Sciences in Applied Artificial Intelligence",
+    "years": 4,
+    "quota": "2027 不再當作獨立 JS 選擇；轉由 JS6999 common admission（共享 128）。",
+    "eligibility": "2027 應查看 JS6999 科目要求和計分，不能沿用獨立 JS6224 舊收分。",
+    "secondAs": "未查得 Applied AI 對外開放的正式第二主修；BASc 是學位課程。可另看 AI&DS minor，但它與 AppliedAI 本身不相容。",
+    "secondWith": "2025–26/2026–27 架構有 84 自選學分供第二主修／副修；數學、經濟、金融或相關領域可作規劃方向，須依 2027 規例。不可配 DA major；CS 第二主修不能依舊 cohort 假設。",
+    "curriculum": [
+      "AI foundations、跨學科問題解決、哲學與倫理",
+      "五個方向：AI Technology、Business and Finance、Medicine、Smart City、Neurocognitive Science",
+      "現行架構：48 基礎＋18 進階＋24 concentration＋6 capstone；另 BASc core 18"
+    ],
+    "careers": [
+      "AI 應用／資料分析",
+      "跨領域 AI 產品與顧問",
+      "研究助理；高階 ML research 通常要更深數學／研究訓練"
+    ],
+    "postgraduate": [
+      "AI／Data Science／Statistics／CS 研究或授課碩士",
+      "研究取向需補證明、線性代數、概率、最佳化及研究專題"
+    ],
+    "salary": "未取得公開且可核實的 AppliedAI 專屬畢業薪酬；2027 合併 admission 沒有畢業 cohort。",
+    "reviews": [
+      {
+        "summary": "2026-02 自稱 NYU CS 新生獲 HKU AppliedAI offer，指出網上課程經驗少；屬申請人疑問，不是在讀評價。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1qwyhn4/got_offer_for_basc_applied_ai_hku_students_please/",
+        "date": "2026-02-05",
+        "kind": "申請人討論；非課程評價"
+      },
+      {
+        "summary": "2023 課程比較串討論 CS 較廣與 AppliedAI 專門化；屬舊課程架構，不能證實 2027 學分／轉科安排。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/12r0k7i/",
+        "date": "2023-04",
+        "kind": "匿名舊制討論"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6999/"
+      },
+      {
+        "title": "AppliedAI 官方課程頁",
+        "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6224-bachelor-of-arts-sciences-in-applied-artificial-intelligence/"
+      },
+      {
+        "title": "正式第二主修名單",
+        "url": "https://aas.hku.hk/list-of-major/"
+      },
+      {
+        "title": "AI&DS minor 相容性規例",
+        "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+      }
+    ],
+    "advice": "保留此方向在研究清單，但 2027 JUPAS 排位應用 JS6999。先讀共同首年再比較 CS／AI&DS／AppliedAI，更符合尚未定向的你。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "JS6999 三課程 common admission 的 JUPAS 描述仍附 Subject to University approval。",
+      "舊 JS6224 分數與 37 名額不應直接當 2027 獨立選擇。"
+    ]
+  },
+  {
+    "code": "JS6248",
+    "name": "金融科技",
+    "englishName": "Bachelor of Arts and Sciences in Financial Technology",
+    "years": 4,
+    "quota": "2027：24（獨立課程 indicative intake）",
+    "eligibility": "英語要求 4、數學 3；你的預測符合；M1 有助數學基礎。",
+    "secondAs": "未查得 FinTech 對外開放的正式第二主修；不能把 BASc(FinTech) 當任何學位可加的 major。",
+    "secondWith": "84 自選學分；官方提供 Finance 第二主修計劃。CS 第二主修樣本只適用 2025/26 intake；2027 應考慮 CS minor（42 學分＋選拔），或 Statistics／Mathematics 等並核對相容性。",
+    "curriculum": [
+      "240 學分：FinTech core 54、electives 30、capstone 12、BASc core 18、UG5 42、自選 84",
+      "程式設計、FinTech programming、區塊鏈",
+      "財務會計、微觀經濟、企業金融、金融市場監管",
+      "可選資料庫、ML、衍生工具、數理金融、NLP、電子支付"
+    ],
+    "careers": [
+      "銀行數碼產品／系統開發",
+      "FinTech／RegTech 分析",
+      "資料分析、軟件開發、金融科技創業"
+    ],
+    "postgraduate": [
+      "MSc FinTech / Financial Technology and Data Analytics",
+      "MSc CS／Data Science／Finance（核對數理先修）",
+      "Quant 研究需補概率、最佳化與較深程式能力"
+    ],
+    "salary": "官方課程頁報 2025 大學調查：FinTech 畢業生平均 gross monthly HK$34,023、最高 HK$60,600；未公開樣本數／中位數，最高值不可作預期。",
+    "reviews": [
+      {
+        "summary": "留言者稱朋友畢業走 project manager／software engineering，並承認不了解課堂內容；只能當二手職涯線索。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/15y7zdk/hku_fintech/",
+        "date": "2023-08-22",
+        "kind": "匿名二手評論"
+      },
+      {
+        "summary": "獲取錄申請人詢問課程及就業，公開頁沒有可核實的在讀生實質回覆。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1s9p6qh/hku_fintech_program/",
+        "date": "2026-04（搜尋日期）",
+        "kind": "申請人討論；非課程評價"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6248/"
+      },
+      {
+        "title": "FinTech 最新 curriculum",
+        "url": "https://cs.hku.hk/programmes/basc-fintech/curriculum"
+      },
+      {
+        "title": "2026 advising／second-major plans",
+        "url": "https://www.cs.hku.hk/programmes/basc-fintech/academic-advising"
+      },
+      {
+        "title": "FinTech 官方薪酬及課程頁",
+        "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6248-bachelor-of-arts-and-sciences-in-financial-technology/"
+      }
+    ],
+    "advice": "對數學＋編程＋商科均有興趣時是值得比較的折衷方案；若你其實更想深入軟件系統，先比較 CS 的必修深度，不要單憑 FinTech 名稱以為等於 CS＋Finance 雙學位。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "2026：Band A 73 人，主輪 offer 24；比例不是個人取錄率。",
+      "金融科技課程不保證投行或量化交易職位。"
+    ]
+  },
+  {
+    "code": "JS6729",
+    "name": "精算學",
+    "englishName": "Bachelor of Science in Actuarial Science",
+    "years": 4,
+    "quota": "2027：50（獨立課程 indicative intake）",
+    "eligibility": "數學 core 至少 4、M1/M2 至少 4；你的雙 5** 符合並匹配，但數學強不等於喜歡保險風險工作。",
+    "secondAs": "Actuarial Science 學位未見開放作第二主修；對外有 Actuarial Studies 副修，不能視為同等專業訓練或同等豁免。",
+    "secondWith": "官方容許另加 science／non-science major，但需符合要求及處理學分；可優先核對 Finance／Mathematics／Statistics，或 CS minor；2027 不能照舊建議 CS 第二主修。",
+    "curriculum": [
+      "概率、統計、金融數學、精算模型",
+      "保險、投資、會計、經濟及法律",
+      "專業考試對接：IFoA 及 SOA 相關課程豁免有指定成績門檻"
+    ],
+    "careers": [
+      "精算分析：定價／準備金／資產負債管理",
+      "保險／再保險／精算顧問",
+      "風險分析；轉資料工作需相應程式實作"
+    ],
+    "postgraduate": [
+      "Actuarial Science／Statistics／Financial Mathematics",
+      "MPhil/PhD 需研究成績與先修；專業精算晉升亦需持續考試／資格"
+    ],
+    "salary": "官方引用 2024 大學調查：精算 fresh graduates 平均月總收入 HK$31,144、最高 HK$70,000。不是合資格資深精算師薪金；樣本數／中位數未列。",
+    "reviews": [
+      {
+        "summary": "2025 精算畢業生 XIAO Fanju Sean 肯定課程結構、教師支援、導師及實習把課堂連到實務；是校方挑選的具名宣傳訪談。",
+        "url": "https://saasweb.hku.hk/current/student-sharing/XIAO-Fanju-Sean",
+        "date": "2025 畢業；頁面未列發佈日",
+        "kind": "具名校友／官方精選分享"
+      },
+      {
+        "summary": "Dcard 申請人數學/M1 預測 5*–5**，擔心精算數學及 workload；此帖呈現選科焦慮，不能當已證實課程難度。",
+        "url": "https://www.dcard.tw/f/hkfreshmen/p/255402941",
+        "date": "頁面日期未核實",
+        "kind": "匿名申請人討論"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6729/"
+      },
+      {
+        "title": "精算官方課程／豁免／薪酬",
+        "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6729-bachelor-of-science-in-actuarial-science/"
+      },
+      {
+        "title": "第二主修現行名單",
+        "url": "https://aas.hku.hk/list-of-major/"
+      },
+      {
+        "title": "Actuarial Studies minor 官方記錄",
+        "url": "https://ugaa.hku.hk/showonemm.php?acad_year=2024&mm_code=SI032"
+      }
+    ],
+    "advice": "若享受概率、長期風險及保險決策，而且願意在工作後持續專業考試，它很合理；若仍想廣泛探索，SDS／CDS 通常較少把早期學習集中於保險。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "IFoA／SOA exemptions 不是自動取得完整精算資格；須達指定課程分數。",
+      "2026 Band A 132、主輪 offer 48；不可由此推個人機率。"
+    ]
+  },
+  {
+    "code": "JS6779",
+    "name": "統計決策科學",
+    "englishName": "Statistical Decision Sciences (Bachelor of Statistics)",
+    "years": 4,
+    "quota": "2027：30（整個 BStat 三個 professional cores 共用）",
+    "eligibility": "數學 core 要求 4；你的 core/M1 5** 非常契合定量基礎。可用數學強項，但須願意讀概率推導及統計模型。",
+    "secondAs": "SDS 是 admission umbrella；對外正式第二主修是 Decision Analytics 96 學分、Risk Management 90、Statistics 96（現頁適用 2025/2026 cohort）。DA 不可搭 CS／AI&DS／AppliedAI；三者不可互配或搭 BStat。2027 規例待重核。",
+    "secondWith": "BStat 有 66 自選學分；可規劃 Mathematics／Economics／Finance，但完整 major 可能需超修。不能用 DA＋ST／RM 包裝第二主修。DA core 不可加 CS／AI&DS minor；ST／RM 可再核對 CS minor 選拔。",
+    "curriculum": [
+      "入學選 DA／RM／ST professional core，可按興趣轉換（JUPAS）",
+      "DA：程式、資料結構、統計 ML、可解釋機器學習、高維資料",
+      "RM：投資風險、衍生工具、時間序列、信用／市場風險",
+      "ST：統計推斷、隨機過程、非參數、Bayesian、多變量分析"
+    ],
+    "careers": [
+      "資料／商業／風險分析",
+      "Statistician／統計研究",
+      "市場風險／信用風險；軟件或資料工程須加強工程技能"
+    ],
+    "postgraduate": [
+      "Statistics／Data Science／Biostatistics",
+      "Quantitative Finance／Risk／Operations Research",
+      "理論研究宜補 real analysis、概率及線性代數，累積專題與推薦信"
+    ],
+    "salary": "2025-10-25 官方講座列 2024 舊 BSc majors 平均月薪：DA HK$24,259、RM HK$25,314、ST HK$32,812；新 BStat 2025 首屆未有畢業 cohort。不能把差異當 ST 保證更高薪。",
+    "reviews": [
+      {
+        "summary": "GALINA Chakheeva（2025–26 首屆 BStat 在讀生）因 DA 結合資料與商業決策而選課；屬早期期待，未反映完整四年成果。",
+        "url": "https://saasweb.hku.hk/current/student-sharing/GALINA-Chakheeva",
+        "date": "2025–26 cohort；頁面未列發佈日",
+        "kind": "具名在讀生／官方精選分享"
+      },
+      {
+        "summary": "Dcard B1 帶「香港大學 理學院」標籤留言不推薦 stat/rm，但沒有提出原因；身份未核實，不能推廣為課程品質結論。其餘留言未完整讀取。",
+        "url": "https://www.dcard.tw/f/hkfreshmen/p/260280421/b/1",
+        "date": "搜尋約 2025-11；精確日期未核實",
+        "kind": "匿名負面評論／無理由"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6779/"
+      },
+      {
+        "title": "BStat handbook／course／student sharing",
+        "url": "https://saasweb.hku.hk/current/bstat"
+      },
+      {
+        "title": "DA 第二主修限制",
+        "url": "https://saasweb.hku.hk/courses/Major_DA_2025.html"
+      },
+      {
+        "title": "RM 第二主修限制",
+        "url": "https://saasweb.hku.hk/courses/Major_RM_2025.html"
+      },
+      {
+        "title": "ST 第二主修限制",
+        "url": "https://saasweb.hku.hk/courses/Major_ST_2025.html"
+      },
+      {
+        "title": "2025 Info Day 第31頁薪酬",
+        "url": "https://www.cds.hku.hk/wp-content/uploads/2025/10/6779_Info_Day_ppt.pdf"
+      }
+    ],
+    "advice": "非常值得列入核心候選：保留統計、資料與金融風險三條線。若喜歡建立模型多於軟件系統，優先比較此課程與 JS6999；不必先承諾精算職涯。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "學位為 BStat，DA/RM/ST 為 professional core；不要寫成取得三個學位或三個 major。",
+      "2026 Band A 196、主輪 offer 23；小 cohort 年度波動較大。",
+      "第二主修頁仍明列 2025/2026；2027 應再核對。"
+    ]
+  },
+  {
+    "code": "JS6999",
+    "name": "計算與數據科學",
+    "englishName": "Computing and Data Science",
+    "years": 4,
+    "quota": "2027：128（與 JS6200 共用；不是各 128）",
+    "eligibility": "你的 ICT／Econ 滿足指定選修要求；core Math／M1 強。2027 英語門檻 3、core Math 3。",
+    "secondAs": "CDS 是 admission umbrella，不是第二主修名稱。2027 CS 第二主修未列為可用；現有 CS／AI&DS minor 是 42 學分且需選拔／符合相容性。",
+    "secondWith": "BEng CS／AI&DS 2026–27 及後架構只 42 自選學分；完整第二主修通常要精密安排／超修，Finance／Economics／Mathematics／Statistics 可先核對。不可 DA major。AppliedAI 現行有 84 自選學分，較寬。",
+    "curriculum": [
+      "2027 common admission 三選一：BEng CS、BEng AI&DS、BASc AppliedAI；Year 1 結束可自由選",
+      "CS：資料結構、離散數學、作業系統、演算法、軟件工程及 ML",
+      "AI&DS：概率 I/II、AI、資料庫、法律倫理、ML／deep learning",
+      "BEng 240 學分：foundation36、discipline core54、discipline electives36、capstone18、自選42、UG5 54"
+    ],
+    "careers": [
+      "Software engineer／systems／cybersecurity",
+      "AI／ML／data engineer",
+      "金融科技開發及 technology consulting"
+    ],
+    "postgraduate": [
+      "CS／AI／Data Science 授課碩士",
+      "MPhil/PhD：研究專題、進階數學、導師推薦較重要",
+      "現行 BEng 可經批准修最多三科 6-credit 研究生課程"
+    ],
+    "salary": "新 common-admission 三課程並無統一畢業薪酬。舊 BEng CS 數據只能作歷史 proxy；不以全校 HK$33,338 平均冒充課程薪酬。",
+    "reviews": [
+      {
+        "summary": "自稱四年級 CS 學生：畢業與爭取 A 的難度不同；部分課堂令人失望，需要自學。其他留言提及演算法／離散數學及評分壓力。身份和代表性未核實，並非 Delta+ 或新 AI&DS 畢業生。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1qkqaxe/is_hkus_computer_science_program_really_that/",
+        "date": "2026-01-23 至 2026-01-26",
+        "kind": "匿名自述在讀生／其他匿名留言"
+      },
+      {
+        "summary": "2026-10 有申請人發現 JS6224 不見了，留言引述官方合併至 JS6999；此處只作變更線索，變更本身由 JUPAS 官方驗證。",
+        "url": "https://www.reddit.com/r/HKUniversity/comments/1x4k6ok/why_is_this_program_missing/",
+        "date": "2026-10（搜尋約一週前）",
+        "kind": "申請人討論；非在讀評價"
+      }
+    ],
+    "sources": [
+      {
+        "title": "JUPAS 2027 課程頁",
+        "url": "https://www.jupas.edu.hk/en/programme/hku/JS6999/"
+      },
+      {
+        "title": "CS 2026–27 及以後規例",
+        "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C48_0626_amended_BEng(CompSc)%20Regulations%20&%20syllabus%202026-27_Oct2026_For%20website.pdf"
+      },
+      {
+        "title": "AI&DS 2026–27 及以後規例",
+        "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+      },
+      {
+        "title": "正式第二主修名單",
+        "url": "https://aas.hku.hk/list-of-major/"
+      },
+      {
+        "title": "CS 第二主修限 cohort 的交叉證據",
+        "url": "https://www.cs.hku.hk/programmes/basc-fintech/academic-advising"
+      }
+    ],
+    "advice": "以尚未定向、想保留數學／編程／商業彈性的目標，應優先深入研究。先建立可轉移的 CS 基礎，再用金融／經濟副修或選修試水；若偏應用 AI 可在共同首年後比較。",
+    "caveats": [
+      "查核日 2026-10-22；2027 入學規例仍可更新。",
+      "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+      "2027 三課程方案仍標 subject to University approval。",
+      "BEng AI&DS 是新學位；官方計劃首屆畢業時申請 HKIE，不應寫成已認證。",
+      "2026 CS-only／兩課程收生歷史不能直接預測合併 AppliedAI 後的 2027 收分。"
+    ]
+  }
+]

@@ -23,7 +23,7 @@ def schema():
     for entry in root.iter('{http://www.kde.org/standards/kcfg/1.0}entry'):
         def text(tag):
             return entry.findtext('{http://www.kde.org/standards/kcfg/1.0}' + tag, '')
-        if entry.attrib['name'] == 'settingsProfile':
+        if entry.attrib['name'] in ('settingsProfile', 'detachedModule', 'detachedParent'):
             continue  # Profile selection belongs to each Plasma instance.
         kind = entry.attrib['type']
         default = text('default')
@@ -93,6 +93,8 @@ def validate(settings):
                     text = row['text']
                     if not isinstance(text, str) or not text.strip() or len(text) > 300 or '\n' in text or '\r' in text or type(row['done']) is not bool:
                         raise ValueError('Tasks need 1-300 characters on one line and a boolean done state')
+        if key.endswith('Shortcut') and (len(value) > 96 or any(ord(c) < 32 for c in value)):
+            raise ValueError('Shortcut must be a single readable key sequence')
         if key.endswith(('Color', 'ColorHex')) and value and not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
             raise ValueError(f'{key} must be empty or #rrggbb')
         if key.endswith('Style') and value not in ('minimal', 'digital', 'ring'):

@@ -1,0 +1,1 @@
+python: /usr/src/debug/pyside6/pyside-setup/sources/shiboken6/libshiboken/pep384impl.cpp:916: SbkObjectTypePrivate* PepType_SOTP(PyTypeObject*): Assertion `SbkObjectType_Check(type)' failed.

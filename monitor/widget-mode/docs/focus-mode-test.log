@@ -1,1 +1,1 @@
-Countdown/stopwatch fullscreen and milliseconds passed. Focus Mode: fullscreen, shared progress, Space start/pause, prominent status, edit, Esc/close, completion Enter and module cleanup passed; no QML warnings.
+Mouse media reveal/hide, hover pin, media routing and quiet-audio gain passed. Countdown/stopwatch fullscreen and milliseconds passed. Focus Mode: fullscreen, shared progress, Space start/pause, prominent status, edit, Esc/close, completion Enter and module cleanup passed; no QML warnings.

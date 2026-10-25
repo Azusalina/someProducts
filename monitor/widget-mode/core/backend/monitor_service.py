@@ -30,7 +30,7 @@ from widget_config import WidgetConfig, Conflict, MAX_BYTES
 MPRIS = 'org.mpris.MediaPlayer2'
 PLAYER = MPRIS + '.Player'
 OBJECT = '/org/mpris/MediaPlayer2'
-SAMPLE_INTERVAL = 0.5
+SAMPLE_INTERVAL = 0.2
 
 
 def read(path: Path) -> str:
@@ -271,11 +271,30 @@ class Telemetry:
         self.timers = TimerManager()
         self.snapshot = {'cpu': {}, 'ram': {}, 'gpus': [], 'media': {'players': []}}
         self.pings = OrderedDict()
+        self.sample_clients = {}
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='ping')
         self.stop = threading.Event()
         self.thread = threading.Thread(target=self.collect, daemon=True)
         self.media_thread = threading.Thread(target=self.collect_media, daemon=True)
         self.ping_thread = threading.Thread(target=self.collect_pings, daemon=True)
+
+    def sample_interval(self, target=None):
+        with self.lock:
+            now = time.monotonic()
+            self.sample_clients = {key: value for key, value in self.sample_clients.items() if value['expires'] > now}
+            periods = [value['interval'] for value in self.sample_clients.values() if target is None or target in value['targets']]
+            return min(periods, default=SAMPLE_INTERVAL)
+
+    def wait_sample(self, started):
+        # A newly opened faster widget must not wait out an old slow period.
+        if time.monotonic() - started >= self.sample_interval():
+            self.stop.wait(0.01)  # Slow GPU probes must not become a busy loop.
+            return
+        while not self.stop.is_set():
+            remaining = self.sample_interval() - (time.monotonic() - started)
+            if remaining <= 0:
+                break
+            self.stop.wait(min(0.05, remaining))
 
     def collect(self):
         cpu, gpu = Cpu(), Gpu()
@@ -290,7 +309,7 @@ class Telemetry:
             except (OSError, ValueError, IndexError) as error:
                 with self.lock:
                     self.snapshot['error'] = str(error)
-            self.stop.wait(max(0.01, SAMPLE_INTERVAL - (time.monotonic() - started)))
+            self.wait_sample(started)
 
     def collect_media(self):
         # Session-bus timeouts must not stall the faster system-stat samples.
@@ -301,10 +320,21 @@ class Telemetry:
                 self.snapshot['media'] = value
             self.stop.wait(max(0.1, 2 - (time.monotonic() - started)))
 
-    def get(self, targets):
+    def get(self, targets, interval_ms=200, client='legacy'):
+        if type(interval_ms) is not int or not 100 <= interval_ms <= 5000:
+            raise ValueError('Refresh interval must be 100–5000ms')
+        if not isinstance(client, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', client):
+            raise ValueError('Invalid refresh client')
         with self.lock:
             snapshot = copy.deepcopy(self.snapshot)
             now = time.monotonic()
+            period = interval_ms / 1000
+            expires = now + max(2, period * 3)
+            self.sample_interval()
+            if client not in self.sample_clients and len(self.sample_clients) >= 64:
+                self.sample_clients.pop(next(iter(self.sample_clients)))
+            self.sample_clients[client] = {'interval': period, 'expires': expires, 'targets': tuple(t for t in targets if isinstance(t, str))}
+            snapshot['sampling_interval_ms'] = round(self.sample_interval() * 1000)
             values = []
             for target in targets[:8]:
                 if not isinstance(target, str) or len(target) > 2048:
@@ -317,7 +347,8 @@ class Telemetry:
                     self.pings[target] = entry
                 self.pings.move_to_end(target)
                 entry['requested'] = now
-                if not entry['pending'] and now - entry['time'] >= SAMPLE_INTERVAL:
+                entry['expires'] = max(entry.get('expires', 0), expires)
+                if not entry['pending'] and now - entry['time'] >= self.sample_interval(target):
                     self.start_ping(target, entry, now)
                 values.append({'target': target, **entry['value']})
             snapshot['pings'] = values
@@ -336,7 +367,7 @@ class Telemetry:
             now = time.monotonic()
             with self.lock:
                 for target, entry in self.pings.items():
-                    if now - entry.get('requested', 0) <= 2 and not entry['pending'] and now - entry['time'] >= SAMPLE_INTERVAL:
+                    if now <= entry.get('expires', entry.get('requested', 0) + 2) and not entry['pending'] and now - entry['time'] >= self.sample_interval(target):
                         self.start_ping(target, entry, now)
             self.stop.wait(0.025)
 
@@ -442,7 +473,10 @@ class Handler(BaseHTTPRequestHandler):
             targets = json.loads(parse_qs(parsed.query).get('targets', ['[]'])[0])
             if not isinstance(targets, list) or len(targets) > 8:
                 raise ValueError('Use at most eight targets')
-            self.reply(200, self.server.telemetry.get(targets))
+            query = parse_qs(parsed.query, keep_blank_values=True)
+            interval_ms = int(query.get('interval_ms', ['200'])[0])
+            client = query.get('client', ['legacy'])[0]
+            self.reply(200, self.server.telemetry.get(targets, interval_ms, client))
         except (ValueError, TypeError):
             self.reply(400, {'error': 'Invalid targets'})
 

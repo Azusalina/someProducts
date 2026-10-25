@@ -1,0 +1,796 @@
+[
+  {
+    "id": "S640789D1",
+    "title": "2026 JUPAS Admissions Scores",
+    "url": "data/hku26.pdf",
+    "type": "user_provided_hku_publication",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298",
+      "JS6755",
+      "JS6767",
+      "JS6793",
+      "JS6810",
+      "JS6200",
+      "JS6224",
+      "JS6248",
+      "JS6729",
+      "JS6779",
+      "JS6999",
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S03F49CEF",
+    "title": "全校正式major清單",
+    "url": "https://aas.hku.hk/list-of-major/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298",
+      "JS6224",
+      "JS6729",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB6F3E264",
+    "title": "HKU JUPAS 換算與資格",
+    "url": "https://admissions.hku.hk/apply/jupas",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SAF078A72",
+    "title": "官方2026單張與Year1見證",
+    "url": "https://admissions.hku.hk/sites/default/files/2025-10/I-School_Leaflet_2026.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S3967BC48",
+    "title": "官方課程結構及科目",
+    "url": "https://aidata.arts.hku.hk/programme/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S9C85EEFF",
+    "title": "2025-26及以後課綱（標示pending approval）",
+    "url": "https://arts.hku.hk/wp-content/uploads/2026/02/BA-BEng-syl.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB9517317",
+    "title": "FinTech 最新 curriculum",
+    "url": "https://cs.hku.hk/programmes/basc-fintech/curriculum",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S644F1880",
+    "title": "CS研究招生FAQ",
+    "url": "https://cs.hku.hk/programmes/research-based/mphil-phd-faqs",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SA8D097F2",
+    "title": "2026–27 及以後 AI&DS 規例",
+    "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6200",
+      "JS6224",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SBC78E193",
+    "title": "2026–27 及以後 CS 規例",
+    "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C48_0626_amended_BEng(CompSc)%20Regulations%20&%20syllabus%202026-27_Oct2026_For%20website.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6200",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S62E0CA14",
+    "title": "PGS條件",
+    "url": "https://gradsch.hku.hk/prospective_students/fees_scholarships_and_financial_support/postgraduate_scholarships",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S7DA18FE4",
+    "title": "官方逐科描述",
+    "url": "https://i-school.hku.hk/courses/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SBF51821F",
+    "title": "2026-10-24官方Info Day",
+    "url": "https://i-school.hku.hk/news-event/hku-information-day-2026-discover-i-school/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S67BE534E",
+    "title": "I-School官方課程及co-op",
+    "url": "https://i-school.hku.hk/programmes/undergraduate/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SCDA8C331",
+    "title": "2027官方要求PDF",
+    "url": "https://join.hkust.edu.hk/docs/ADMISSIONS%20REQUIREMENTS%20AND%20SCORE%20FORMULAE.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S5E72A1C1",
+    "title": "Data Science and Technology入口",
+    "url": "https://join.hkust.edu.hk/our-programs/joint-school-program/data-science-and-technology",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S0C09DBC7",
+    "title": "PPA 官方課程",
+    "url": "https://ppa.hku.hk/undergraduate/bachelor-of-social-sciences-government-and-laws-bachelor-of-laws-bsocsc-gl-llb/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S81CAA608",
+    "title": "DA 第二主修限制",
+    "url": "https://saasweb.hku.hk/courses/Major_DA_2025.html",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB3EC8374",
+    "title": "RM 第二主修限制",
+    "url": "https://saasweb.hku.hk/courses/Major_RM_2025.html",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB187AEA7",
+    "title": "ST 第二主修限制",
+    "url": "https://saasweb.hku.hk/courses/Major_ST_2025.html",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S89A44F53",
+    "title": "BStat handbook／course／student sharing",
+    "url": "https://saasweb.hku.hk/current/bstat",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S86291A5A",
+    "title": "具名在讀生／官方精選分享",
+    "url": "https://saasweb.hku.hk/current/student-sharing/GALINA-Chakheeva",
+    "type": "official_selected_testimonial_or_gap",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S00CEA178",
+    "title": "具名校友／官方精選分享",
+    "url": "https://saasweb.hku.hk/current/student-sharing/XIAO-Fanju-Sean",
+    "type": "official_selected_testimonial_or_gap",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6729"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SAE86EDA6",
+    "title": "2027工程招生",
+    "url": "https://seng.hkust.edu.hk/academics/undergraduate/2027-admissions/jupas",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SDBC5AF6D",
+    "title": "2027 Business School JUPAS FAQ：學額與選科原則",
+    "url": "https://ug.hkubs.hku.hk/admission/faq/jupas-applicants",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767",
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SAA21DD5C",
+    "title": "2025–26 及以後 BEcon&Fin 課綱（subject to approval）",
+    "url": "https://ug.hkubs.hku.hk/f/curriculum/255368/BEcon%26Fin_Syllabuses%202025-26.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6767"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S7B48494E",
+    "title": "BBA 正式課程與五個主修",
+    "url": "https://ug.hkubs.hku.hk/programme/bba",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S55E9E818",
+    "title": "BBA(BA) 課程、96學分與90自選學分",
+    "url": "https://ug.hkubs.hku.hk/programme/bba-ba",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S4991E65B",
+    "title": "BEcon 課程",
+    "url": "https://ug.hkubs.hku.hk/programme/becon",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6767"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S4D52180A",
+    "title": "BEcon&Fin 課程與逐屆課綱",
+    "url": "https://ug.hkubs.hku.hk/programme/becon-and-fin",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6767"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB078ABC4",
+    "title": "跨院 Major / Minor Options（逐屆課綱另核）",
+    "url": "https://ug.hkubs.hku.hk/programme/major-and-minor-options",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767",
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S7237AAB5",
+    "title": "選課 FAQ：學分上限、申報、重疊及課位",
+    "url": "https://ug.hkubs.hku.hk/support-and-development/orientation-for-freshmen/frequently-asked-questions-on-course-selection",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767",
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S728D13BF",
+    "title": "Actuarial Studies minor 官方記錄",
+    "url": "https://ugaa.hku.hk/showonemm.php?acad_year=2024&mm_code=SI032",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6729"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S7F7A25A5",
+    "title": "Delta+ 現行頁（含 2027 資助註解）",
+    "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6200-computing-and-data-science-delta/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6200"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S19BD6B25",
+    "title": "AppliedAI 官方課程頁",
+    "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6224-bachelor-of-arts-sciences-in-applied-artificial-intelligence/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6224"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S667E9581",
+    "title": "FinTech 官方薪酬及課程頁",
+    "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6248-bachelor-of-arts-and-sciences-in-financial-technology/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S5E1477FA",
+    "title": "精算官方課程／豁免／薪酬",
+    "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6729-bachelor-of-science-in-actuarial-science/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6729"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S64DEA4A1",
+    "title": "2025 Info Day 第31頁薪酬",
+    "url": "https://www.cds.hku.hk/wp-content/uploads/2025/10/6779_Info_Day_ppt.pdf",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SA2D55E99",
+    "title": "HKU CEDARS 2025 畢業生調查",
+    "url": "https://www.cedars.hku.hk/careers/graduate-employment-survey",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767",
+      "JS6793",
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S6EE4855D",
+    "title": "2026 advising／second-major plans",
+    "url": "https://www.cs.hku.hk/programmes/basc-fintech/academic-advising",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S36E88FCF",
+    "title": "文化討論原帖",
+    "url": "https://www.dcard.tw/f/hkfreshmen/p/240420331",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S0F6A91AC",
+    "title": "匿名申請人討論",
+    "url": "https://www.dcard.tw/f/hkfreshmen/p/255402941",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6729"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SE17C6281",
+    "title": "匿名負面評論／無理由",
+    "url": "https://www.dcard.tw/f/hkfreshmen/p/260280421/b/1",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S1AE6947D",
+    "title": "匿名共同科目體驗；學校標籤未獨立驗證",
+    "url": "https://www.dcard.tw/f/hku/p/259398904",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767",
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S86A36A35",
+    "title": "2025首屆入學報道",
+    "url": "https://www.hk01.com/article/1100351",
+    "type": "supplementary",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S241ECC64",
+    "title": "HK Bar 法律專業路徑",
+    "url": "https://www.hkba.org/content/becoming-barristers/general-admission",
+    "type": "supplementary",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S1E7FAABC",
+    "title": "2024香港僱主薪酬調查",
+    "url": "https://www.hkbu.edu.hk/content/dam/hongkongbaptistuniversity/hkbu-assets/doc/press-release/2024/1024/2024_GBA_Pay_Benefits_Survey_e_final.pdf",
+    "type": "supplementary",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298",
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S913208D1",
+    "title": "RIICH 學生實習分享",
+    "url": "https://www.hkuriich.org/internship",
+    "type": "supplementary",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6793"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S0E5960E6",
+    "title": "JUPAS iteration process",
+    "url": "https://www.jupas.edu.hk/en/application-procedures/post-hkdse-exam-results-announcement/iteration-process/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB9C4FA4C",
+    "title": "JUPAS 2027 課程頁",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6200/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6200"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S95AD817D",
+    "title": "JUPAS 2027 課程頁",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6248/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S7BD175A3",
+    "title": "2027周期JUPAS：門檻、20學額、5年",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6298/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SB94586E6",
+    "title": "2027周期JUPAS：25學額、ICT門檻",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6602/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6602"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SFB8EBB65",
+    "title": "JUPAS 2027 課程頁",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6729/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6729"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SBFCB65F5",
+    "title": "JUPAS 2027 課程頁",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6779/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6779"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SF466C11A",
+    "title": "2027 JUPAS：40學額及四／五年出口",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6810/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S2B32F896",
+    "title": "JUPAS 2027 課程頁",
+    "url": "https://www.jupas.edu.hk/en/programme/hku/JS6999/",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6224",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S8E6935F0",
+    "title": "職位市場代理",
+    "url": "https://www.morganmckinley.com/hk/salary-guide/data/data-analyst/hong-kong-sar",
+    "type": "supplementary",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SBEE8064B",
+    "title": "HKU PCLL 正式招生及IELTS條件",
+    "url": "https://www.ple.hku.hk/the-pcll",
+    "type": "official",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S8F7BE0C1",
+    "title": "匿名舊制討論",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/12r0k7i/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6224"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S5EDE6895",
+    "title": "匿名二手評論",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/15y7zdk/hku_fintech/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S9F97B3FC",
+    "title": "匿名討論；身份未核實",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1oaeqyb",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6298"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S98267CAA",
+    "title": "匿名自述在讀生／其他匿名留言",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1qkqaxe/is_hkus_computer_science_program_really_that/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6200",
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SBBA684F9",
+    "title": "申請人討論；非課程評價",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1qwyhn4/got_offer_for_basc_applied_ai_hku_students_please/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6224"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S960643B0",
+    "title": "第一手面試經驗；非在讀評價",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1qxkut0/law_interview_advice/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S6CF954F8",
+    "title": "申請人討論；非課程評價",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1s9p6qh/hku_fintech_program/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6248"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SE855BAC9",
+    "title": "匿名二手面試討論／研究缺口",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1suohdk/got_an_interview_invite_for_government_laws_llb/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6810"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S683887E2",
+    "title": "匿名課程經驗／準新生討論",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1tj5oon/1st_year_courses_for_business_student/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6755",
+      "JS6767"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SF4D8DD34",
+    "title": "匿名學生選課討論",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1va3r5p/double_majoring/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6767"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "SC5F2F003",
+    "title": "原始討論",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1w9je0m/how_is_the_job_market_for_recent_graduates/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  },
+  {
+    "id": "S26D776ED",
+    "title": "申請人討論；非在讀評價",
+    "url": "https://www.reddit.com/r/HKUniversity/comments/1x4k6ok/why_is_this_program_missing/",
+    "type": "student_discussion",
+    "checkedAt": "2026-10-22 to 2026-10-23",
+    "programmes": [
+      "JS6999"
+    ],
+    "accessNote": "Public page / PDF or indexed excerpt. Exact limitations are retained in programme notes; no authenticated/private content collected."
+  }
+]

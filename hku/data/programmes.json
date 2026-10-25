@@ -1,0 +1,1809 @@
+{
+  "schemaVersion": 2,
+  "targetEntry": "2027–28",
+  "checkedAt": "2026-10-22 to 2026-10-23",
+  "admissionsSource": "data/hku26.pdf",
+  "admissionsSourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+  "profile": {
+    "chinese": "4",
+    "english": "5",
+    "math": "5**",
+    "m1": "5**",
+    "bafs": "5*",
+    "ict": "5*",
+    "econ": "4",
+    "csd": "attained"
+  },
+  "programmes": [
+    {
+      "code": "JS6298",
+      "name": "人工智能與數據科學＋文學雙學位",
+      "englishName": "Bachelor of Arts and Bachelor of Engineering in Artificial Intelligence and Data Science",
+      "years": 5,
+      "quota": "現行2027聯招頁：20；2026主輪offer11（不可當作學額）",
+      "eligibility": "已列中4、英5、數5**、ICT5*、M1 5**等符合目前學科門檻；公民科按用戶指示假設Attained。",
+      "secondAs": "整個五年雙學位不能當第二主修；AI and Humanity未見於全校開放第二主修清單。2027 CS第二主修不能沿用舊屆規則；另查CS／AI&DS minor亦與本課程不同。",
+      "secondWith": "300學分中自由選修36，官方明示可修minor；未核實可再加完整72–96學分第二主修。",
+      "curriculum": [
+        "78學分AI and Humanity主修：倫理、認知、生成式AI、研究；其中36學分同一人文領域進階課",
+        "144學分AI與數據科學專業核心：編程、算法、概率統計、資料庫、機器學習、深度學習、實習及專題",
+        "42學分大學要求＋36自由選修；五年共300"
+      ],
+      "careers": [
+        "AI／資料工程與軟件職位（需作品集及工程能力）",
+        "人本AI、AI產品、負責任AI／治理（多為跨職能路徑）",
+        "數碼人文與研究助理"
+      ],
+      "postgraduate": [
+        "CS／AI／Data Science授課碩士",
+        "人本AI、NLP、計算語言學、數碼人文研究",
+        "MPhil／PhD須研究經歷、成績、推薦及合適導師，非自動銜接"
+      ],
+      "salary": "未找到本課程獨立畢業薪酬。2024僱主調查香港學士起薪：IT HK$20,300／月、工程HK$21,974／月（跨院校職能代理，不是HKU此課程均薪，也不是2031–32薪酬預測）。",
+      "reviews": [
+        {
+          "summary": "2025-10-25匿名回覆指出此雙學位包含大量人文必修，並警告跨學院轉課程不容易；身份未核實，屬課程辨析而非已證實在讀教學評價。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1oaeqyb",
+          "date": "2025-10-25",
+          "kind": "匿名討論；身份未核實",
+          "sourceId": "S9F97B3FC"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027周期JUPAS：門檻、20學額、5年",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6298/"
+        },
+        {
+          "title": "官方課程結構及科目",
+          "url": "https://aidata.arts.hku.hk/programme/"
+        },
+        {
+          "title": "2025-26及以後課綱（標示pending approval）",
+          "url": "https://arts.hku.hk/wp-content/uploads/2026/02/BA-BEng-syl.pdf"
+        },
+        {
+          "title": "全校正式major清單",
+          "url": "https://aas.hku.hk/list-of-major/"
+        },
+        {
+          "title": "2024香港僱主薪酬調查",
+          "url": "https://www.hkbu.edu.hk/content/dam/hongkongbaptistuniversity/hkbu-assets/doc/press-release/2024/1024/2024_GBA_Pay_Benefits_Survey_e_final.pdf"
+        }
+      ],
+      "advice": "若你對哲學、語言、倫理的興趣不明確，不應只為AI標籤接受五年。先試讀一篇AI倫理論文並做一個編程項目；若兩者都喜歡，才把6298放前。數學／編程／商科三向彈性通常不如四年技術主修加商科選修直接。",
+      "caveats": [
+        "2027完整課綱仍需確認；官網2026-27規章標pending approval",
+        "人文課是正式要求，不是少量通識",
+        "未找到可核實身份、針對教學品質的獨立在讀長評",
+        "5*+不是DSE等級；保守按5*處理"
+      ],
+      "field": "engineering",
+      "fieldLabel": "工程與創新",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "S7BD175A3",
+        "S3967BC48",
+        "S9C85EEFF",
+        "S03F49CEF",
+        "S1E7FAABC",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 44,
+        "median": 45,
+        "uq": 47,
+        "page": 1,
+        "formulaOriginal": "2 x Eng + 1.5 x Math + Best 2 Subjects with [Weighting 2] + Best Subject",
+        "formulaType": "artsai",
+        "year": 2026,
+        "formula": "2×英文 + 1.5×數學 + 兩科指定選修×1.5 + 最佳餘下一科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 54,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 2,
+            "value": 11
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1.5,
+            "value": 10.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 9,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6755",
+      "name": "工商管理",
+      "englishName": "Bachelor of Business Administration",
+      "years": 4,
+      "quota": "2027 FAQ：226（JS6755、JS6767、JS6781 共用，不能各算 226）",
+      "eligibility": "英文4、中文3、數學3；你的預測符合目前已知學科門檻。2027 選科原則包含英文＋數學＋最佳三科（可含 M1）。",
+      "secondAs": "BBA 是學位，不是可加在其他課程上的第二主修。可查對外開放的 Finance、Information Systems and Analytics、Marketing、HRM 等具名主修；EDI、QFin、AMPB 等有額外遴選或限制。",
+      "secondWith": "官方明確容許完成要求後加第二主修。可先比較數學／統計與商科另一主修；CS 第二主修不能假定 2027 仍開放。確認先修、不能重複計分及 288 學分上限。",
+      "curriculum": [
+        "四年 240 學分；首年共通商科基礎，年二選專業。",
+        "五個方向：Finance、Information Systems and Analytics、HRM、Marketing、Entrepreneurship Design and Innovation。",
+        "會計 ACCT1101、微觀 ECON1210、企業金融 FINA1310、商業概率統計；後期按主修加入資訊系統、金融或組織管理等專業課。",
+        "EDI 需要額外申請／遴選；不要把五個選項理解成無條件自由分流。"
+      ],
+      "careers": [
+        "商業／金融分析、管理培訓生、資訊系統／科技顧問",
+        "市場分析、HR、企業營運；實際技能取決所選主修",
+        "投行、策略顧問與大公司熱門職位需競爭實習與面試，不是學位的保證成果"
+      ],
+      "postgraduate": [
+        "MSc Business Analytics／Finance／Management 等；應按目標先修選課",
+        "MPhil／PhD in Business 需研究方法、研究經歷與推薦",
+        "MBA 通常適合累積工作經驗後再評估，並非本科後必修"
+      ],
+      "salary": "未核實本課程獨立薪酬。HKU CEDARS 2025 全校全日制 UGC 學士平均月總薪 HK$33,338、中位 HK$26,000；全校混合不同學科，不能當此課程預期。原 sum.md 的商學院 HK$36,770 未找到可靠原始調查，故不採用。",
+      "reviews": [
+        {
+          "summary": "準 BBA 新生問 ACCT1101、ECON1210、FINA1310、IIMT1640；匿名回覆形容微觀經濟與企業金融具挑戰，提醒主動學習及小組隊友重要。回覆身份未核實，沒有成績分布或可代表全體的樣本。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1tj5oon/1st_year_courses_for_business_student/",
+          "date": "2026-05-21",
+          "kind": "匿名課程經驗／準新生討論",
+          "sourceId": "S683887E2"
+        },
+        {
+          "summary": "Dcard ECON1210 選課串，帶HKU標籤匿名留言對不同教師有不同評價，亦有人自述無DSE經濟背景仍獲高分。身份與分數未核實、授課安排可變；僅是共同科目的個人經驗，不能代表整個課程。",
+          "url": "https://www.dcard.tw/f/hku/p/259398904",
+          "date": "2025-07-25 至 07-27",
+          "kind": "匿名共同科目體驗；學校標籤未獨立驗證",
+          "sourceId": "S1AE6947D"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027 Business School JUPAS FAQ：學額與選科原則",
+          "url": "https://ug.hkubs.hku.hk/admission/faq/jupas-applicants"
+        },
+        {
+          "title": "BBA 正式課程與五個主修",
+          "url": "https://ug.hkubs.hku.hk/programme/bba"
+        },
+        {
+          "title": "跨院 Major / Minor Options（逐屆課綱另核）",
+          "url": "https://ug.hkubs.hku.hk/programme/major-and-minor-options"
+        },
+        {
+          "title": "選課 FAQ：學分上限、申報、重疊及課位",
+          "url": "https://ug.hkubs.hku.hk/support-and-development/orientation-for-freshmen/frequently-asked-questions-on-course-selection"
+        },
+        {
+          "title": "HKU CEDARS 2025 畢業生調查",
+          "url": "https://www.cedars.hku.hk/careers/graduate-employment-survey"
+        }
+      ],
+      "advice": "若你更重視商科探索，BBA 的 ISA／Finance 組合合理；但「選擇很多」也意味要自己建立主線。若主要想寫程式或學數學模型，先以 CDS／SDS 為基礎再補商科，通常更直接。",
+      "caveats": [
+        "按 2027 入學規劃；2026–27 課綱只作目前可得參考，2027 最終規例需重核。",
+        "公民科按用戶指示假設Attained；假設本地JUPAS、單次應考。",
+        "5*+ 以正式 5* 保守計；預測分數不代表錄取承諾。",
+        "實習、交換、課位及第二主修均有條件；申報第二主修不保證必修課位。"
+      ],
+      "field": "business",
+      "fieldLabel": "商科與經濟",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SDBC5AF6D",
+        "S7B48494E",
+        "SB078ABC4",
+        "S7237AAB5",
+        "SA2D55E99",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 37,
+        "median": 38,
+        "uq": 38,
+        "page": 1,
+        "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+        "formulaType": "business",
+        "year": 2026,
+        "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 44.3,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1.5,
+            "value": 8.25
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "chinese",
+            "label": "中文",
+            "grade": "4",
+            "points": 4,
+            "weight": 0.2,
+            "value": 0.8
+          }
+        ],
+        "differenceFromMedian": 6.3,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6767",
+      "name": "經濟／經濟金融",
+      "englishName": "Bachelor of Economics / Bachelor of Economics and Finance",
+      "years": 4,
+      "quota": "2027 FAQ：226（與 JS6755、JS6781 共用；不是本課程獨立 226）",
+      "eligibility": "英文4、中文3、數學3；你的預測符合目前學科要求。DSE Econ 4 不妨礙選讀，但應測試自己是否喜歡理論、數學和資料實證。",
+      "secondAs": "Economics 和 Finance 有對外開放的正式 major；BEcon&Fin 是學位，不等於跨院可直接加一個同名雙領域 major。按 2027 課綱、先修及本系相容性確認。",
+      "secondWith": "目前 BEcon 108、BEcon&Fin 90 自選學分，第二主修空間較大。可比較 Mathematics／Statistics／ISA；2027 CS 第二主修不可依舊制保證。BEcon&Fin 已含金融，避免再申報重疊 Finance。",
+      "curriculum": [
+        "四年 240 學分。現行 BEcon：經濟 major 78＋UG5 54＋自由選修108；BEcon&Fin：major96＋UG5 54＋自由選修90。",
+        "核心：ECON1210／1220 微觀宏觀入門，ECON2210／2220 中級理論，ECON2280 計量經濟，數學及統計。",
+        "BEcon&Fin 加 FINA2320 Investments and Portfolio Analysis、FINA2322 Derivatives、經濟與金融選修，ECON4200 capstone。",
+        "內容由模型、資料與識別方法支持經濟決策；與 DSE 背誦考點的體驗可有很大差異。"
+      ],
+      "careers": [
+        "經濟／商業／金融／政策分析",
+        "銀行、顧問、投資研究、資料分析；需按職位補程式與實習",
+        "研究型經濟學家多需要研究學位；本科就業不必先讀碩士"
+      ],
+      "postgraduate": [
+        "MSc Economics／Finance／Business Analytics；理論經濟博士宜補 real analysis、線性代數、概率與進階計量",
+        "MPhil／PhD in Economics：高成績、研究題目、RA／專題與推薦信",
+        "Quant finance 需要更多數學、編程與競爭性面試準備，不能僅靠 Econ&Fin 名稱"
+      ],
+      "salary": "未核實本課程獨立薪酬。HKU CEDARS 2025 全校全日制 UGC 學士平均月總薪 HK$33,338、中位 HK$26,000；全校混合不同學科，不能當此課程預期。原 sum.md 的商學院 HK$36,770 未找到可靠原始調查，故不採用。",
+      "reviews": [
+        {
+          "summary": "第二主修規劃串中，匿名回覆建議先修微觀／宏觀等先修課，較早完成入門可減少高階課只開一學期的排課風險；並指出 MATH1013 比商科數學更難。這是選課建議，須用正式課綱核實。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1va3r5p/double_majoring/",
+          "date": "2026-07-29 至 07-30",
+          "kind": "匿名學生選課討論",
+          "sourceId": "SF4D8DD34"
+        },
+        {
+          "summary": "準 BBA 新生問 ACCT1101、ECON1210、FINA1310、IIMT1640；匿名回覆形容微觀經濟與企業金融具挑戰，提醒主動學習及小組隊友重要。回覆身份未核實，沒有成績分布或可代表全體的樣本。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1tj5oon/1st_year_courses_for_business_student/",
+          "date": "2026-05-21",
+          "kind": "匿名課程經驗／準新生討論",
+          "sourceId": "S683887E2"
+        },
+        {
+          "summary": "Dcard ECON1210 選課串，帶HKU標籤匿名留言對不同教師有不同評價，亦有人自述無DSE經濟背景仍獲高分。身份與分數未核實、授課安排可變；僅是共同科目的個人經驗，不能代表整個課程。",
+          "url": "https://www.dcard.tw/f/hku/p/259398904",
+          "date": "2025-07-25 至 07-27",
+          "kind": "匿名共同科目體驗；學校標籤未獨立驗證",
+          "sourceId": "S1AE6947D"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027 Business School JUPAS FAQ：學額與選科原則",
+          "url": "https://ug.hkubs.hku.hk/admission/faq/jupas-applicants"
+        },
+        {
+          "title": "BEcon 課程",
+          "url": "https://ug.hkubs.hku.hk/programme/becon"
+        },
+        {
+          "title": "BEcon&Fin 課程與逐屆課綱",
+          "url": "https://ug.hkubs.hku.hk/programme/becon-and-fin"
+        },
+        {
+          "title": "2025–26 及以後 BEcon&Fin 課綱（subject to approval）",
+          "url": "https://ug.hkubs.hku.hk/f/curriculum/255368/BEcon%26Fin_Syllabuses%202025-26.pdf"
+        },
+        {
+          "title": "跨院 Major / Minor Options（逐屆課綱另核）",
+          "url": "https://ug.hkubs.hku.hk/programme/major-and-minor-options"
+        },
+        {
+          "title": "選課 FAQ：學分上限、申報、重疊及課位",
+          "url": "https://ug.hkubs.hku.hk/support-and-development/orientation-for-freshmen/frequently-asked-questions-on-course-selection"
+        },
+        {
+          "title": "HKU CEDARS 2025 畢業生調查",
+          "url": "https://www.cedars.hku.hk/careers/graduate-employment-survey"
+        }
+      ],
+      "advice": "值得列入核心候選。若你最想理解市場、政策與人的決策，用 Economics＋Statistics／Math 建立量化主線；若對開發軟件更有熱情，就用 CDS 為第一主修。不要因目前 Econ 只有4就排除，也不要只因金融薪酬印象而選。",
+      "caveats": [
+        "按 2027 入學規劃；2026–27 課綱只作目前可得參考，2027 最終規例需重核。",
+        "公民科按用戶指示假設Attained；假設本地JUPAS、單次應考。",
+        "5*+ 以正式 5* 保守計；預測分數不代表錄取承諾。",
+        "實習、交換、課位及第二主修均有條件；申報第二主修不保證必修課位。"
+      ],
+      "field": "business",
+      "fieldLabel": "商科與經濟",
+      "priority": true,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SDBC5AF6D",
+        "S4991E65B",
+        "S4D52180A",
+        "SAA21DD5C",
+        "SB078ABC4",
+        "S7237AAB5",
+        "SA2D55E99",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 40,
+        "median": 41,
+        "uq": 42,
+        "page": 1,
+        "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+        "formulaType": "business",
+        "year": 2026,
+        "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 44.3,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1.5,
+            "value": 8.25
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "chinese",
+            "label": "中文",
+            "grade": "4",
+            "points": 4,
+            "weight": 0.2,
+            "value": 0.8
+          }
+        ],
+        "differenceFromMedian": 3.3,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6793",
+      "name": "工商管理（商業分析）",
+      "englishName": "Bachelor of Business Administration (Business Analytics)",
+      "years": 4,
+      "quota": "2027 FAQ：15（本課程獨立 indicative intake；小 cohort 年度波動較大）",
+      "eligibility": "英文4、中文3、數學3；指定選修含 ICT3，你符合；M1／M2 至少3受優先考慮，你亦符合。",
+      "secondAs": "非商學院學生的正式 major 表未列 Business Analytics，不能當作對所有學位開放的第二主修。可另外看 Information Systems and Analytics，但名稱、學分及資格不同。",
+      "secondWith": "官網列 90 自選學分供第二主修／副修（展示架構適用2022及後，2027另核）。可規劃統計、數學、經濟；DA 與其他主修的禁止組合需逐項核對。2027 CS 第二主修不應保證。",
+      "curriculum": [
+        "四年 240 學分，官方展示 major96＋語文18＋Common Core36＋自由選修90；新屆 AI literacy 可能改變分項，必須用當屆課綱。",
+        "商科核心24；程式語言、資料庫管理、管理資訊系統、商業分析、決策與風險分析。",
+        "高階在 analytics techniques 與 business applications 間選修，包括 AI、big data、social media 等應用。",
+        "更重視把商業問題變成可執行的分析；軟件系統與理論 CS 深度不能直接等同 CS 學位。"
+      ],
+      "careers": [
+        "Business／Data／Product／Marketing Analyst",
+        "分析顧問、營運分析、銀行／平台數據決策",
+        "Data Scientist 或 ML engineer 需額外數學／演算法／部署實作，不應當自動對口"
+      ],
+      "postgraduate": [
+        "MSc Business Analytics／Statistics／Data Science",
+        "MPhil／PhD in Information Systems／Operations／Marketing Analytics：需研究方法、數理與專題",
+        "高階 CS 研究通常需先補離散數學、演算法、線性代數、概率及研究經驗"
+      ],
+      "salary": "未核實本課程獨立薪酬。HKU CEDARS 2025 全校全日制 UGC 學士平均月總薪 HK$33,338、中位 HK$26,000；全校混合不同學科，不能當此課程預期。原 sum.md 的商學院 HK$36,770 未找到可靠原始調查，故不採用。",
+      "reviews": [
+        {
+          "summary": "具名 Year2 Business Analytics 學生 Farrukh Akhmedov 肯定 RIICH 實習的理論實務結合、團隊接納及專業環境。這是校方研究項目選錄的實習見證，不是整個課程或所有學生的教學滿意度。",
+          "url": "https://www.hkuriich.org/internship",
+          "date": "頁面未列發表日期；2026-10-23 查閱",
+          "kind": "具名在讀生／官方精選實習分享",
+          "sourceId": "S913208D1"
+        },
+        {
+          "summary": "未找到可核實身份並詳細評價完整 BBA(BA) 教學的獨立長評；不要用申請人問收分的帖子代替在讀生評價。",
+          "url": "https://ug.hkubs.hku.hk/programme/bba-ba",
+          "date": "截至2026-10-23",
+          "kind": "研究缺口",
+          "sourceId": "S55E9E818"
+        },
+        {
+          "summary": "Dcard ECON1210 選課串，帶HKU標籤匿名留言對不同教師有不同評價，亦有人自述無DSE經濟背景仍獲高分。身份與分數未核實、授課安排可變；僅是共同科目的個人經驗，不能代表整個課程。",
+          "url": "https://www.dcard.tw/f/hku/p/259398904",
+          "date": "2025-07-25 至 07-27",
+          "kind": "匿名共同科目體驗；學校標籤未獨立驗證",
+          "sourceId": "S1AE6947D"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027 Business School JUPAS FAQ：學額與選科原則",
+          "url": "https://ug.hkubs.hku.hk/admission/faq/jupas-applicants"
+        },
+        {
+          "title": "BBA(BA) 課程、96學分與90自選學分",
+          "url": "https://ug.hkubs.hku.hk/programme/bba-ba"
+        },
+        {
+          "title": "跨院 Major / Minor Options（逐屆課綱另核）",
+          "url": "https://ug.hkubs.hku.hk/programme/major-and-minor-options"
+        },
+        {
+          "title": "選課 FAQ：學分上限、申報、重疊及課位",
+          "url": "https://ug.hkubs.hku.hk/support-and-development/orientation-for-freshmen/frequently-asked-questions-on-course-selection"
+        },
+        {
+          "title": "HKU CEDARS 2025 畢業生調查",
+          "url": "https://www.cedars.hku.hk/careers/graduate-employment-survey"
+        },
+        {
+          "title": "RIICH 學生實習分享",
+          "url": "https://www.hkuriich.org/internship"
+        }
+      ],
+      "advice": "適合你想把數據用在商業決策，又不希望商科與技術完全分開。與 JS6779 比較時，問自己更享受商業溝通與策略，還是概率模型的推導；15學額不等於個人機率低至某百分比。",
+      "caveats": [
+        "按 2027 入學規劃；2026–27 課綱只作目前可得參考，2027 最終規例需重核。",
+        "公民科按用戶指示假設Attained；假設本地JUPAS、單次應考。",
+        "5*+ 以正式 5* 保守計；預測分數不代表錄取承諾。",
+        "實習、交換、課位及第二主修均有條件；申報第二主修不保證必修課位。"
+      ],
+      "field": "business",
+      "fieldLabel": "商科與經濟",
+      "priority": true,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SDBC5AF6D",
+        "S55E9E818",
+        "SB078ABC4",
+        "S7237AAB5",
+        "SA2D55E99",
+        "S913208D1",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 35,
+        "median": 35,
+        "uq": 37,
+        "page": 2,
+        "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+        "formulaType": "business",
+        "year": 2026,
+        "formula": "1.5×英文 + 1.5×數學 + 最佳三科 + 0.2×第六科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 44.3,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1.5,
+            "value": 8.25
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "chinese",
+            "label": "中文",
+            "grade": "4",
+            "points": 4,
+            "weight": 0.2,
+            "value": 0.8
+          }
+        ],
+        "differenceFromMedian": 9.3,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6810",
+      "name": "政治學與法學＋法學士",
+      "englishName": "BSocSc (Government and Laws) and Bachelor of Laws",
+      "years": 5,
+      "quota": "2027 現行 JUPAS：40（獨立 first-year intake）",
+      "eligibility": "英文5、中文4、數學3；你的預測剛達語文門檻，英文回落至4會影響基本資格；公民科假設Attained，完整資格仍須校方評核。",
+      "secondAs": "整個雙學位及 LLB 不能作別人的第二主修。Politics／Public Administration 等獨立社科 major 應另查；法律研究選修不等於取得 LLB 或執業資格。",
+      "secondWith": "五年整合雙學位已含法律與政治；未找到足夠證據保證可再加第三領域完整 major。數據／經濟選修可增加政策或監管視角，但需核對課位和總學分。",
+      "curriculum": [
+        "比較政治、政治哲學與倫理、國際關係、公共行政；結合法律專業科目、法律分析與寫作。",
+        "Law core 涉合同、侵權、刑事、憲制等基礎；必須按當屆法學規例完成專業要求。",
+        "官方列年二末選擇：四年完成 BSocSc(Govt&Laws) 的政治與法律研究雙主修，或五年完成 BSocSc＋LLB。四年出口不授 LLB。"
+      ],
+      "careers": [
+        "法律實習／執業路線需 LLB 後再競逐 PCLL、實習及專業資格",
+        "政策研究、公共行政、合規、監管、NGO、新聞與公共事務",
+        "In-house counsel 常要求已取得執業資格及經驗，通常不是一般本科直接出口"
+      ],
+      "postgraduate": [
+        "LLB 可申請 PCLL；現行 HKU 要求 IELTS Academic overall7，並須滿足其他條件，非保證取錄",
+        "LLM／MPP／MPA；MPhil／PhD Law／Politics 按研究準備申請",
+        "打算 2032 年前後執業時須重核當時規則；不要把現行要求視為未來不變"
+      ],
+      "salary": "未找到本課程可公開核實的獨立薪酬。法律職位受律師行類型、取得 PCLL／training contract 與資格階段影響很大；本科學位、trainee 和已執業律師不能混為同一薪酬。全校2025中位HK$26,000只作跨學科背景參考。",
+      "reviews": [
+        {
+          "summary": "2026年面試後申請人分享討論廣泛社會議題、考慮多角度與提出新論點的經驗。該帖明言是國際 non-JUPAS IB 申請，不能直接推定本地 JUPAS 面試格式，也不是在讀課程評價。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1qxkut0/law_interview_advice/",
+          "date": "2026-02-06；回覆02-20",
+          "kind": "第一手面試經驗；非在讀評價",
+          "sourceId": "S960643B0"
+        },
+        {
+          "summary": "2026年4月討論中，自稱無面試獲取錄者轉述朋友的面試建議，提及權利、政府正當性與時事；二手建議，無法證實所有面試情況。未取得可獨立核實身份的整體教學長評。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1suohdk/got_an_interview_invite_for_government_laws_llb/",
+          "date": "2026-04-24 至 04-26",
+          "kind": "匿名二手面試討論／研究缺口",
+          "sourceId": "SE855BAC9"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027 JUPAS：40學額及四／五年出口",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6810/"
+        },
+        {
+          "title": "PPA 官方課程",
+          "url": "https://ppa.hku.hk/undergraduate/bachelor-of-social-sciences-government-and-laws-bachelor-of-laws-bsocsc-gl-llb/"
+        },
+        {
+          "title": "HKU PCLL 正式招生及IELTS條件",
+          "url": "https://www.ple.hku.hk/the-pcll"
+        },
+        {
+          "title": "HK Bar 法律專業路徑",
+          "url": "https://www.hkba.org/content/becoming-barristers/general-admission"
+        },
+        {
+          "title": "HKU CEDARS 2025 畢業生調查",
+          "url": "https://www.cedars.hku.hk/careers/graduate-employment-survey"
+        }
+      ],
+      "advice": "只有你願意長時間英文閱讀、寫作、論證及關注公共議題時才前置。你目前希望保留數學／編程／商科彈性，沒有法律志向時不宜只因專業地位或想像收入選五年法律雙學位。",
+      "caveats": [
+        "按 2027 入學規劃；2026–27 課綱只作目前可得參考，2027 最終規例需重核。",
+        "公民科按用戶指示假設Attained；假設本地JUPAS、單次應考。",
+        "5*+ 以正式 5* 保守計；預測分數不代表錄取承諾。",
+        "實習、交換、課位及第二主修均有條件；申報第二主修不保證必修課位。",
+        "PCLL、training contract 或 pupillage 均不是隨 LLB 自動取得。"
+      ],
+      "field": "law",
+      "fieldLabel": "法律與公共事務",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SF466C11A",
+        "S0C09DBC7",
+        "SBEE8064B",
+        "S241ECC64",
+        "SA2D55E99",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 36,
+        "median": 38,
+        "uq": 39,
+        "page": 4,
+        "formulaOriginal": "Best 6 Subjects",
+        "formulaType": "six",
+        "year": 2026,
+        "formula": "最佳六科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 40.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          },
+          {
+            "subject": "chinese",
+            "label": "中文",
+            "grade": "4",
+            "points": 4,
+            "weight": 1,
+            "value": 4
+          }
+        ],
+        "differenceFromMedian": 2.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6200",
+      "name": "計算與數據科學（港滬科技菁英）",
+      "englishName": "Computing and Data Science (Delta+)",
+      "years": 4,
+      "quota": "2027：128（與 JS6999 共用；2026-10-15 更新，不能相加）",
+      "eligibility": "數學／M1 5**、ICT 5*／Econ 4 符合已公布科目門檻；英語至少 3。本路線須願意赴上海 1.5 年。",
+      "secondAs": "Delta+ 是入學／跨地域路線，不是可申報的第二主修。CS 第二主修現行名單只列 2025–26 或以前 cohort，2027 不應當作可用；CS／AI&DS 副修另有選拔。",
+      "secondWith": "可探索數學、經濟、金融等互補領域，但上海授課、6 個月 Co-op 及僅約 30 自選學分令第二主修更難排課；宜先看副修方案。CS／AI&DS 不可配 Decision Analytics major。",
+      "curriculum": [
+        "首 2.5 年香港、末 1.5 年上海；六個月 Co-operative Placement",
+        "Year 1 後選 BEng Computer Science 或 BEng AI and Data Science",
+        "CS：演算法、作業系統、軟件工程；AI&DS：概率、機器學習、深度學習及資料庫"
+      ],
+      "careers": [
+        "軟件／資料工程",
+        "AI／機器學習工程",
+        "金融科技開發；上海科技公司實習提供接觸，非保證聘用"
+      ],
+      "postgraduate": [
+        "官方列 Year 4 兩科 MSc 課及 MSc(CompSc) conditional offer，可能五年完成 BEng+MSc",
+        "MPhil/PhD 仍需研究經驗與獨立申請"
+      ],
+      "salary": "無 Delta+ 畢業 cohort 薪酬；不可把全校或舊 CS 數字當本課程預期薪金。",
+      "reviews": [
+        {
+          "summary": "2026 新路線，未找到已完成香港＋上海＋Co-op 全流程的第一手本科評論。舊 CS 經驗僅可參考共同技術課。",
+          "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6200-computing-and-data-science-delta/",
+          "date": "截至 2026-10-22",
+          "kind": "研究缺口",
+          "sourceId": "S7F7A25A5"
+        },
+        {
+          "summary": "自稱四年級 CS 學生：畢業與爭取 A 的難度不同；部分課堂令人失望，需要自學。其他留言提及演算法／離散數學及評分壓力。身份和代表性未核實，並非 Delta+ 或新 AI&DS 畢業生。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1qkqaxe/is_hkus_computer_science_program_really_that/",
+          "date": "2026-01-23 至 2026-01-26",
+          "kind": "匿名自述在讀生／其他匿名留言",
+          "sourceId": "S98267CAA"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6200/"
+        },
+        {
+          "title": "Delta+ 現行頁（含 2027 資助註解）",
+          "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6200-computing-and-data-science-delta/"
+        },
+        {
+          "title": "2026–27 及以後 CS 規例",
+          "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C48_0626_amended_BEng(CompSc)%20Regulations%20&%20syllabus%202026-27_Oct2026_For%20website.pdf"
+        },
+        {
+          "title": "2026–27 及以後 AI&DS 規例",
+          "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+        }
+      ],
+      "advice": "只有確實想赴上海、能接受生活與實習安排時才優先；若首要是保留香港修課及第二主修彈性，JS6999 較合適。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "現行頁列 HK$150,000 上海 fellowship（住宿／生活／機票），另 2027 入學獎學金 HK$50,000／100,000／200,000 須符合條件；不要理解為人人現金 HK$350,000。",
+        "官方頁明示其他 HKU 課程不能內部轉入 JS6200。",
+        "MSc 學費、續獎條件、實習待遇及公司分配未找到完整保證條款。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SB9C4FA4C",
+        "S7F7A25A5",
+        "SBC78E193",
+        "SA8D097F2",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 35,
+        "median": 35,
+        "uq": 37,
+        "page": 4,
+        "formulaOriginal": "Eng + Math + Best 3 Subjects",
+        "formulaType": "engmath",
+        "year": 2026,
+        "formula": "英文 + 數學 + 最佳三科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 36.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 1.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6224",
+      "name": "應用人工智能（2027 併入 JS6999）",
+      "englishName": "Bachelor of Arts and Sciences in Applied Artificial Intelligence",
+      "years": 4,
+      "quota": "2027 不再當作獨立 JS 選擇；轉由 JS6999 common admission（共享 128）。",
+      "eligibility": "2027 應查看 JS6999 科目要求和計分，不能沿用獨立 JS6224 舊收分。",
+      "secondAs": "未查得 Applied AI 對外開放的正式第二主修；BASc 是學位課程。可另看 AI&DS minor，但它與 AppliedAI 本身不相容。",
+      "secondWith": "2025–26/2026–27 架構有 84 自選學分供第二主修／副修；數學、經濟、金融或相關領域可作規劃方向，須依 2027 規例。不可配 DA major；CS 第二主修不能依舊 cohort 假設。",
+      "curriculum": [
+        "AI foundations、跨學科問題解決、哲學與倫理",
+        "五個方向：AI Technology、Business and Finance、Medicine、Smart City、Neurocognitive Science",
+        "現行架構：48 基礎＋18 進階＋24 concentration＋6 capstone；另 BASc core 18"
+      ],
+      "careers": [
+        "AI 應用／資料分析",
+        "跨領域 AI 產品與顧問",
+        "研究助理；高階 ML research 通常要更深數學／研究訓練"
+      ],
+      "postgraduate": [
+        "AI／Data Science／Statistics／CS 研究或授課碩士",
+        "研究取向需補證明、線性代數、概率、最佳化及研究專題"
+      ],
+      "salary": "未取得公開且可核實的 AppliedAI 專屬畢業薪酬；2027 合併 admission 沒有畢業 cohort。",
+      "reviews": [
+        {
+          "summary": "2026-02 自稱 NYU CS 新生獲 HKU AppliedAI offer，指出網上課程經驗少；屬申請人疑問，不是在讀評價。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1qwyhn4/got_offer_for_basc_applied_ai_hku_students_please/",
+          "date": "2026-02-05",
+          "kind": "申請人討論；非課程評價",
+          "sourceId": "SBBA684F9"
+        },
+        {
+          "summary": "2023 課程比較串討論 CS 較廣與 AppliedAI 專門化；屬舊課程架構，不能證實 2027 學分／轉科安排。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/12r0k7i/",
+          "date": "2023-04",
+          "kind": "匿名舊制討論",
+          "sourceId": "S8F7BE0C1"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6999/"
+        },
+        {
+          "title": "AppliedAI 官方課程頁",
+          "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6224-bachelor-of-arts-sciences-in-applied-artificial-intelligence/"
+        },
+        {
+          "title": "正式第二主修名單",
+          "url": "https://aas.hku.hk/list-of-major/"
+        },
+        {
+          "title": "AI&DS minor 相容性規例",
+          "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+        }
+      ],
+      "advice": "保留此方向在研究清單，但 2027 JUPAS 排位應用 JS6999。先讀共同首年再比較 CS／AI&DS／AppliedAI，更符合尚未定向的你。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "JS6999 三課程 common admission 的 JUPAS 描述仍附 Subject to University approval。",
+        "舊 JS6224 分數與 37 名額不應直接當 2027 獨立選擇。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "S2B32F896",
+        "S19BD6B25",
+        "S03F49CEF",
+        "SA8D097F2",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 31,
+        "median": 32,
+        "uq": 34,
+        "page": 4,
+        "formulaOriginal": "Eng + Math + Best 3 Subjects",
+        "formulaType": "engmath",
+        "year": 2026,
+        "formula": "英文 + 數學 + 最佳三科（2026獨立代碼）",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 36.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 4.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6248",
+      "name": "金融科技",
+      "englishName": "Bachelor of Arts and Sciences in Financial Technology",
+      "years": 4,
+      "quota": "2027：24（獨立課程 indicative intake）",
+      "eligibility": "英語要求 4、數學 3；你的預測符合；M1 有助數學基礎。",
+      "secondAs": "未查得 FinTech 對外開放的正式第二主修；不能把 BASc(FinTech) 當任何學位可加的 major。",
+      "secondWith": "84 自選學分；官方提供 Finance 第二主修計劃。CS 第二主修樣本只適用 2025/26 intake；2027 應考慮 CS minor（42 學分＋選拔），或 Statistics／Mathematics 等並核對相容性。",
+      "curriculum": [
+        "240 學分：FinTech core 54、electives 30、capstone 12、BASc core 18、UG5 42、自選 84",
+        "程式設計、FinTech programming、區塊鏈",
+        "財務會計、微觀經濟、企業金融、金融市場監管",
+        "可選資料庫、ML、衍生工具、數理金融、NLP、電子支付"
+      ],
+      "careers": [
+        "銀行數碼產品／系統開發",
+        "FinTech／RegTech 分析",
+        "資料分析、軟件開發、金融科技創業"
+      ],
+      "postgraduate": [
+        "MSc FinTech / Financial Technology and Data Analytics",
+        "MSc CS／Data Science／Finance（核對數理先修）",
+        "Quant 研究需補概率、最佳化與較深程式能力"
+      ],
+      "salary": "官方課程頁報 2025 大學調查：FinTech 畢業生平均 gross monthly HK$34,023、最高 HK$60,600；未公開樣本數／中位數，最高值不可作預期。",
+      "reviews": [
+        {
+          "summary": "留言者稱朋友畢業走 project manager／software engineering，並承認不了解課堂內容；只能當二手職涯線索。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/15y7zdk/hku_fintech/",
+          "date": "2023-08-22",
+          "kind": "匿名二手評論",
+          "sourceId": "S5EDE6895"
+        },
+        {
+          "summary": "獲取錄申請人詢問課程及就業，公開頁沒有可核實的在讀生實質回覆。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1s9p6qh/hku_fintech_program/",
+          "date": "2026-04（搜尋日期）",
+          "kind": "申請人討論；非課程評價",
+          "sourceId": "S6CF954F8"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6248/"
+        },
+        {
+          "title": "FinTech 最新 curriculum",
+          "url": "https://cs.hku.hk/programmes/basc-fintech/curriculum"
+        },
+        {
+          "title": "2026 advising／second-major plans",
+          "url": "https://www.cs.hku.hk/programmes/basc-fintech/academic-advising"
+        },
+        {
+          "title": "FinTech 官方薪酬及課程頁",
+          "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6248-bachelor-of-arts-and-sciences-in-financial-technology/"
+        }
+      ],
+      "advice": "對數學＋編程＋商科均有興趣時是值得比較的折衷方案；若你其實更想深入軟件系統，先比較 CS 的必修深度，不要單憑 FinTech 名稱以為等於 CS＋Finance 雙學位。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "2026：Band A 73 人，主輪 offer 24；比例不是個人取錄率。",
+        "金融科技課程不保證投行或量化交易職位。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "S95AD817D",
+        "SB9517317",
+        "S6EE4855D",
+        "S667E9581",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 34,
+        "median": 34,
+        "uq": 35,
+        "page": 4,
+        "formulaOriginal": "Eng + Math + Best 3 Subjects",
+        "formulaType": "engmath",
+        "year": 2026,
+        "formula": "英文 + 數學 + 最佳三科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 36.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 2.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6729",
+      "name": "精算學",
+      "englishName": "Bachelor of Science in Actuarial Science",
+      "years": 4,
+      "quota": "2027：50（獨立課程 indicative intake）",
+      "eligibility": "數學 core 至少 4、M1/M2 至少 4；你的雙 5** 符合並匹配，但數學強不等於喜歡保險風險工作。",
+      "secondAs": "Actuarial Science 學位未見開放作第二主修；對外有 Actuarial Studies 副修，不能視為同等專業訓練或同等豁免。",
+      "secondWith": "官方容許另加 science／non-science major，但需符合要求及處理學分；可優先核對 Finance／Mathematics／Statistics，或 CS minor；2027 不能照舊建議 CS 第二主修。",
+      "curriculum": [
+        "概率、統計、金融數學、精算模型",
+        "保險、投資、會計、經濟及法律",
+        "專業考試對接：IFoA 及 SOA 相關課程豁免有指定成績門檻"
+      ],
+      "careers": [
+        "精算分析：定價／準備金／資產負債管理",
+        "保險／再保險／精算顧問",
+        "風險分析；轉資料工作需相應程式實作"
+      ],
+      "postgraduate": [
+        "Actuarial Science／Statistics／Financial Mathematics",
+        "MPhil/PhD 需研究成績與先修；專業精算晉升亦需持續考試／資格"
+      ],
+      "salary": "官方引用 2024 大學調查：精算 fresh graduates 平均月總收入 HK$31,144、最高 HK$70,000。不是合資格資深精算師薪金；樣本數／中位數未列。",
+      "reviews": [
+        {
+          "summary": "2025 精算畢業生 XIAO Fanju Sean 肯定課程結構、教師支援、導師及實習把課堂連到實務；是校方挑選的具名宣傳訪談。",
+          "url": "https://saasweb.hku.hk/current/student-sharing/XIAO-Fanju-Sean",
+          "date": "2025 畢業；頁面未列發佈日",
+          "kind": "具名校友／官方精選分享",
+          "sourceId": "S00CEA178"
+        },
+        {
+          "summary": "Dcard 申請人數學/M1 預測 5*–5**，擔心精算數學及 workload；此帖呈現選科焦慮，不能當已證實課程難度。",
+          "url": "https://www.dcard.tw/f/hkfreshmen/p/255402941",
+          "date": "頁面日期未核實",
+          "kind": "匿名申請人討論",
+          "sourceId": "S0F6A91AC"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6729/"
+        },
+        {
+          "title": "精算官方課程／豁免／薪酬",
+          "url": "https://www.cds.hku.hk/prospective-students/undergraduate-old-2026/6729-bachelor-of-science-in-actuarial-science/"
+        },
+        {
+          "title": "第二主修現行名單",
+          "url": "https://aas.hku.hk/list-of-major/"
+        },
+        {
+          "title": "Actuarial Studies minor 官方記錄",
+          "url": "https://ugaa.hku.hk/showonemm.php?acad_year=2024&mm_code=SI032"
+        }
+      ],
+      "advice": "若享受概率、長期風險及保險決策，而且願意在工作後持續專業考試，它很合理；若仍想廣泛探索，SDS／CDS 通常較少把早期學習集中於保險。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "IFoA／SOA exemptions 不是自動取得完整精算資格；須達指定課程分數。",
+        "2026 Band A 132、主輪 offer 48；不可由此推個人機率。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SFB8EBB65",
+        "S5E1477FA",
+        "S03F49CEF",
+        "S728D13BF",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 36,
+        "median": 36,
+        "uq": 38,
+        "page": 4,
+        "formulaOriginal": "1.2 x Eng + 1.2 x Math + 1.2 x M1 / M2 + Best 2 Subjects",
+        "formulaType": "actuarial",
+        "year": 2026,
+        "formula": "1.2×英文 + 1.2×數學 + 1.2×M1 + 最佳兩科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 41,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1.2,
+            "value": 6.6
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.2,
+            "value": 10.2
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.2,
+            "value": 10.2
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6779",
+      "name": "統計決策科學",
+      "englishName": "Statistical Decision Sciences (Bachelor of Statistics)",
+      "years": 4,
+      "quota": "2027：30（整個 BStat 三個 professional cores 共用）",
+      "eligibility": "數學 core 要求 4；你的 core/M1 5** 非常契合定量基礎。可用數學強項，但須願意讀概率推導及統計模型。",
+      "secondAs": "SDS 是 admission umbrella；對外正式第二主修是 Decision Analytics 96 學分、Risk Management 90、Statistics 96（現頁適用 2025/2026 cohort）。DA 不可搭 CS／AI&DS／AppliedAI；三者不可互配或搭 BStat。2027 規例待重核。",
+      "secondWith": "BStat 有 66 自選學分；可規劃 Mathematics／Economics／Finance，但完整 major 可能需超修及先修安排。不能用 DA＋ST／RM 包裝第二主修。DA core 不可加 CS／AI&DS minor；ST／RM 可再核對 CS minor 選拔。",
+      "curriculum": [
+        "入學選 DA／RM／ST professional core，可按興趣轉換（JUPAS）",
+        "DA：程式、資料結構、統計 ML、可解釋機器學習、高維資料",
+        "RM：投資風險、衍生工具、時間序列、信用／市場風險",
+        "ST：統計推斷、隨機過程、非參數、Bayesian、多變量分析"
+      ],
+      "careers": [
+        "資料／商業／風險分析",
+        "Statistician／統計研究",
+        "市場風險／信用風險；軟件或資料工程須加強工程技能"
+      ],
+      "postgraduate": [
+        "Statistics／Data Science／Biostatistics",
+        "Quantitative Finance／Risk／Operations Research",
+        "理論研究宜補 real analysis、概率及線性代數，累積專題與推薦信"
+      ],
+      "salary": "2025-10-25 官方講座列 2024 舊 BSc majors 平均月薪：DA HK$24,259、RM HK$25,314、ST HK$32,812；新 BStat 2025 首屆未有畢業 cohort。不能把差異當 ST 保證更高薪。",
+      "reviews": [
+        {
+          "summary": "GALINA Chakheeva（2025–26 首屆 BStat 在讀生）因 DA 結合資料與商業決策而選課；屬早期期待，未反映完整四年成果。",
+          "url": "https://saasweb.hku.hk/current/student-sharing/GALINA-Chakheeva",
+          "date": "2025–26 cohort；頁面未列發佈日",
+          "kind": "具名在讀生／官方精選分享",
+          "sourceId": "S86291A5A"
+        },
+        {
+          "summary": "Dcard B1 帶「香港大學 理學院」標籤留言不推薦 stat/rm，但沒有提出原因；身份未核實，不能推廣為課程品質結論。其餘留言未完整讀取。",
+          "url": "https://www.dcard.tw/f/hkfreshmen/p/260280421/b/1",
+          "date": "搜尋約 2025-11；精確日期未核實",
+          "kind": "匿名負面評論／無理由",
+          "sourceId": "SE17C6281"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6779/"
+        },
+        {
+          "title": "BStat handbook／course／student sharing",
+          "url": "https://saasweb.hku.hk/current/bstat"
+        },
+        {
+          "title": "DA 第二主修限制",
+          "url": "https://saasweb.hku.hk/courses/Major_DA_2025.html"
+        },
+        {
+          "title": "RM 第二主修限制",
+          "url": "https://saasweb.hku.hk/courses/Major_RM_2025.html"
+        },
+        {
+          "title": "ST 第二主修限制",
+          "url": "https://saasweb.hku.hk/courses/Major_ST_2025.html"
+        },
+        {
+          "title": "2025 Info Day 第31頁薪酬",
+          "url": "https://www.cds.hku.hk/wp-content/uploads/2025/10/6779_Info_Day_ppt.pdf"
+        }
+      ],
+      "advice": "非常值得列入核心候選：保留統計、資料與金融風險三條線。若喜歡建立模型多於軟件系統，優先比較此課程與 JS6999；不必先承諾精算職涯。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "學位為 BStat，DA/RM/ST 為 professional core；不要寫成取得三個學位或三個 major。",
+        "2026 Band A 196、主輪 offer 23；小 cohort 年度波動較大。",
+        "第二主修頁仍明列 2025/2026；2027 應再核對。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": true,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SBFCB65F5",
+        "S89A44F53",
+        "S81CAA608",
+        "SB3EC8374",
+        "SB187AEA7",
+        "S64DEA4A1",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 36,
+        "median": 36,
+        "uq": 37,
+        "page": 4,
+        "formulaOriginal": "1.5 x Math + Best 4 Subjects",
+        "formulaType": "stats",
+        "year": 2026,
+        "formula": "1.5×數學 + 最佳四科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 40.75,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1.5,
+            "value": 12.75
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          }
+        ],
+        "differenceFromMedian": 4.75,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6999",
+      "name": "計算與數據科學",
+      "englishName": "Computing and Data Science",
+      "years": 4,
+      "quota": "2027：128（與 JS6200 共用；不是各 128）",
+      "eligibility": "你的 ICT／Econ 滿足指定選修要求；core Math／M1 強。2027 英語門檻 3、core Math 3。",
+      "secondAs": "CDS 是 admission umbrella，不是第二主修名稱。2027 CS 第二主修未列為可用；現有 CS／AI&DS minor 是 42 學分且需選拔／符合相容性。",
+      "secondWith": "BEng CS／AI&DS 2026–27 及後架構只 42 自選學分；完整第二主修通常要精密安排／超修，Finance／Economics／Mathematics／Statistics 可先核對。不可 DA major。AppliedAI 現行有 84 自選學分，較寬。",
+      "curriculum": [
+        "2027 common admission 三選一：BEng CS、BEng AI&DS、BASc AppliedAI；Year 1 結束可自由選",
+        "CS：資料結構、離散數學、作業系統、演算法、軟件工程及 ML",
+        "AI&DS：概率 I/II、AI、資料庫、法律倫理、ML／deep learning",
+        "BEng 240 學分：foundation36、discipline core54、discipline electives36、capstone18、自選42、UG5 54"
+      ],
+      "careers": [
+        "Software engineer／systems／cybersecurity",
+        "AI／ML／data engineer",
+        "金融科技開發及 technology consulting"
+      ],
+      "postgraduate": [
+        "CS／AI／Data Science 授課碩士",
+        "MPhil/PhD：研究專題、進階數學、導師推薦較重要",
+        "現行 BEng 可經批准修最多三科 6-credit 研究生課程"
+      ],
+      "salary": "新 common-admission 三課程並無統一畢業薪酬。舊 BEng CS 數據只能作歷史 proxy；不以全校 HK$33,338 平均冒充課程薪酬。",
+      "reviews": [
+        {
+          "summary": "自稱四年級 CS 學生：畢業與爭取 A 的難度不同；部分課堂令人失望，需要自學。其他留言提及演算法／離散數學及評分壓力。身份和代表性未核實，並非 Delta+ 或新 AI&DS 畢業生。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1qkqaxe/is_hkus_computer_science_program_really_that/",
+          "date": "2026-01-23 至 2026-01-26",
+          "kind": "匿名自述在讀生／其他匿名留言",
+          "sourceId": "S98267CAA"
+        },
+        {
+          "summary": "2026-10 有申請人發現 JS6224 不見了，留言引述官方合併至 JS6999；此處只作變更線索，變更本身由 JUPAS 官方驗證。",
+          "url": "https://www.reddit.com/r/HKUniversity/comments/1x4k6ok/why_is_this_program_missing/",
+          "date": "2026-10（搜尋約一週前）",
+          "kind": "申請人討論；非在讀評價",
+          "sourceId": "S26D776ED"
+        }
+      ],
+      "sources": [
+        {
+          "title": "JUPAS 2027 課程頁",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6999/"
+        },
+        {
+          "title": "CS 2026–27 及以後規例",
+          "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C48_0626_amended_BEng(CompSc)%20Regulations%20&%20syllabus%202026-27_Oct2026_For%20website.pdf"
+        },
+        {
+          "title": "AI&DS 2026–27 及以後規例",
+          "url": "https://csai.cds.hku.hk/RegulationAndSyllabus/C47_0626_amended_BEng(AI&DataSc)%20Regulations%20&%20Syllabus%202026-27_Oct2026_For%20website.pdf"
+        },
+        {
+          "title": "正式第二主修名單",
+          "url": "https://aas.hku.hk/list-of-major/"
+        },
+        {
+          "title": "CS 第二主修限 cohort 的交叉證據",
+          "url": "https://www.cs.hku.hk/programmes/basc-fintech/academic-advising"
+        }
+      ],
+      "advice": "以尚未定向、想保留數學／編程／商業彈性的目標，應優先深入研究。先建立可轉移的 CS 基礎，再用金融／經濟副修或選修試水；若偏應用 AI 可在共同首年後比較。",
+      "caveats": [
+        "查核日 2026-10-22；2027 入學規例仍可更新。",
+        "預測分數不是錄取承諾；公民與社會發展科按用戶指示假設Attained。",
+        "2027 三課程方案仍標 subject to University approval。",
+        "BEng AI&DS 是新學位；官方計劃首屆畢業時申請 HKIE，不應寫成已認證。",
+        "2026 CS-only／兩課程收生歷史不能直接預測合併 AppliedAI 後的 2027 收分。"
+      ],
+      "field": "computing",
+      "fieldLabel": "計算與數據",
+      "priority": true,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "S2B32F896",
+        "SBC78E193",
+        "SA8D097F2",
+        "S03F49CEF",
+        "S6EE4855D",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 32,
+        "median": 33,
+        "uq": 34,
+        "page": 4,
+        "formulaOriginal": "Eng + Math + Best 3 Subjects",
+        "formulaType": "engmath",
+        "year": 2026,
+        "formula": "英文 + 數學 + 最佳三科",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 36.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 1,
+            "value": 5.5
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 1,
+            "value": 8.5
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1,
+            "value": 7
+          }
+        ],
+        "differenceFromMedian": 3.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    },
+    {
+      "code": "JS6602",
+      "name": "創新與科技",
+      "englishName": "Bachelor of Science in Innovation and Technology",
+      "years": 4,
+      "quota": "現行2027聯招頁：25；2026主輪offer19（不同口徑）",
+      "eligibility": "核心數學須4；ICT接受作指定科技科且須4。你的預測達標；公民科假設Attained，面試及項目表現重要。",
+      "secondAs": "未見Innovation and Technology開放作正式第二主修；Innovation and Design minor是另一項資格，不能混稱。",
+      "secondWith": "官方有自訂technology focus及外系選修，但未找到2027正式第二主修規章／學分保證。先問能否完成CS／Math／Statistics／Finance major及co-op撞課。",
+      "curriculum": [
+        "年一：人本創新、Physical Computing、計算解難、建模、感測",
+        "年二：未來創新、創業、Making Sciences、Forms and Materials",
+        "年三：社會影響創新＋6–8個月全職co-op；年四capstone",
+        "項目工作坊主導，自訂技術深度；可在企業、初創或研究室實作"
+      ],
+      "careers": [
+        "科技產品、原型設計、創新專案、技術商業化",
+        "企業內創業或創辦公司（收入高度不穩定）",
+        "技術focus夠深時申請相關研發／工程職，不能只依學位名稱"
+      ],
+      "postgraduate": [
+        "Innovation／Technology Management",
+        "按tech focus補先修後申請CS／Engineering／Design等MSc",
+        "有研究作品、數理課及導師契合才考慮MPhil／PhD"
+      ],
+      "salary": "未找到本課程獨立畢業薪酬。2024僱主調查香港學士起薪：IT HK$20,300／月、工程HK$21,974／月（跨院校職能代理，不是HKU此課程均薪，也不是2031–32薪酬預測）。 2025首屆四年本科尚未有完整畢業cohort，無本課程畢業薪酬可查。",
+      "reviews": [
+        {
+          "summary": "官方2026單張兩位匿名Year1學生表示期待結合科技、設計、商業及團隊多元背景；沒有具體批評、評分或就業驗證，屬宣傳中選錄的早期感受。",
+          "url": "https://admissions.hku.hk/sites/default/files/2025-10/I-School_Leaflet_2026.pdf",
+          "date": "2026招生單張；檔案路徑2025-10",
+          "kind": "官方匿名Year1見證",
+          "sourceId": "SAF078A72"
+        }
+      ],
+      "sources": [
+        {
+          "title": "2027周期JUPAS：25學額、ICT門檻",
+          "url": "https://www.jupas.edu.hk/en/programme/hku/JS6602/"
+        },
+        {
+          "title": "I-School官方課程及co-op",
+          "url": "https://i-school.hku.hk/programmes/undergraduate/"
+        },
+        {
+          "title": "官方逐科描述",
+          "url": "https://i-school.hku.hk/courses/"
+        },
+        {
+          "title": "官方2026單張與Year1見證",
+          "url": "https://admissions.hku.hk/sites/default/files/2025-10/I-School_Leaflet_2026.pdf"
+        },
+        {
+          "title": "2025首屆入學報道",
+          "url": "https://www.hk01.com/article/1100351"
+        },
+        {
+          "title": "2026-10-24官方Info Day",
+          "url": "https://i-school.hku.hk/news-event/hku-information-day-2026-discover-i-school/"
+        },
+        {
+          "title": "2024香港僱主薪酬調查",
+          "url": "https://www.hkbu.edu.hk/content/dam/hongkongbaptistuniversity/hkbu-assets/doc/press-release/2024/1024/2024_GBA_Pay_Benefits_Survey_e_final.pdf"
+        }
+      ],
+      "advice": "適合願意反覆做原型、訪談用戶、團隊協作及pitch的人。若你希望先有可辨識的數學／程式主修再探索商業，務必驗證技術focus深度和正式第二主修，不能把「自由」理解為所有專業都可達。面試可準備真實項目的問題、迭代、失敗、自己的貢獻與反思。",
+      "caveats": [
+        "新課程無成熟畢業結果；2027 syllabus尚待最終核實",
+        "未找到獨立、身份可核的在讀教學長評",
+        "co-op佔6–8個月，需問學費／薪酬／安排名額及跨系課時",
+        "科技focus不等同已核准的第二主修"
+      ],
+      "field": "engineering",
+      "fieldLabel": "工程與創新",
+      "priority": false,
+      "targetEntry": "2027–28",
+      "checkedAt": "2026-10-22 to 2026-10-23",
+      "adviceEvidenceType": "advisor_inference_from_curriculum_and_user_preferences",
+      "sourceIds": [
+        "SB94586E6",
+        "S67BE534E",
+        "S7DA18FE4",
+        "SAF078A72",
+        "S86A36A35",
+        "SBF51821F",
+        "S1E7FAABC",
+        "S640789D1"
+      ],
+      "admission2026": {
+        "lq": 52,
+        "median": 53,
+        "uq": 55,
+        "page": 5,
+        "formulaOriginal": "2 x Eng + 2 x Math + Best 3 Subjects with [Weighting 6]",
+        "formulaType": "innovation",
+        "year": 2026,
+        "formula": "2×英文 + 2×數學 + 最佳三科（M1／ICT×2，其他×1.5）",
+        "source": "data/hku26.pdf",
+        "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+        "sourceId": "S640789D1",
+        "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+        "currentScoreAchieved": 69.5,
+        "scoreBasis": "supplied_predicted_grades_CSD_attained",
+        "calculation": [
+          {
+            "subject": "english",
+            "label": "英文",
+            "grade": "5",
+            "points": 5.5,
+            "weight": 2,
+            "value": 11
+          },
+          {
+            "subject": "math",
+            "label": "數學必修",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 2,
+            "value": 17
+          },
+          {
+            "subject": "m1",
+            "label": "M1",
+            "grade": "5**",
+            "points": 8.5,
+            "weight": 2,
+            "value": 17
+          },
+          {
+            "subject": "ict",
+            "label": "ICT",
+            "grade": "5*",
+            "points": 7,
+            "weight": 2,
+            "value": 14
+          },
+          {
+            "subject": "bafs",
+            "label": "BAFS 會計",
+            "grade": "5*",
+            "points": 7,
+            "weight": 1.5,
+            "value": 10.5
+          }
+        ],
+        "differenceFromMedian": 16.5,
+        "targetEntryCaveat": "2026 historical observations; not 2027 cut-offs or individual admission probabilities"
+      }
+    }
+  ]
+}

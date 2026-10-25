@@ -35,6 +35,9 @@ ApplicationWindow {
         property string noteExportUrl: ""
         property bool darkInk: false
         property string textColorHex: ""
+        property int flowHistorySeconds: 30
+        property int flowRefreshMs: 200
+        property int audioRefreshMs: 100
         property string cpuFlowColor: ""
         property string ramFlowColor: ""
         property string gpuFlowColor: ""
@@ -49,6 +52,8 @@ ApplicationWindow {
         property int cavaOpacity: 40
         property int terminalHeight: 230
         property int terminalFontSize: 11
+        property string countdownShortcut: "Meta+Ctrl+Alt+C"
+        property string stopwatchShortcut: "Meta+Ctrl+Alt+S"
         property int countdownSeconds: 300
         property int stopwatchSeconds: 0
         property string countdownColor: ""
@@ -65,10 +70,10 @@ ApplicationWindow {
     function syncConfiguration(save) {
         transfer(modulesPage, ["moduleOrder", "enabledModules", "columns"], save)
         transfer(appearancePage, ["textColorHex", "borderColorHex", "backgroundColorHex", "borderWidth", "backgroundOpacity", "darkInk"], save)
-        transfer(flowsPage, ["cpuFlowColor", "ramFlowColor", "gpuFlowColor", "pingFlowColor", "cavaFlowColor"], save)
+        transfer(flowsPage, ["flowHistorySeconds", "flowRefreshMs", "audioRefreshMs", "cpuFlowColor", "ramFlowColor", "gpuFlowColor", "pingFlowColor", "cavaFlowColor"], save)
         transfer(pingPage, ["targetsText"], save)
         transfer(mediaPage, ["mediaService", "cavaEnabled", "cavaOpacity"], save)
-        transfer(timersPage, ["countdownSeconds", "stopwatchSeconds", "countdownColor", "stopwatchColor", "countdownStyle", "stopwatchStyle"], save)
+        transfer(timersPage, ["countdownShortcut", "stopwatchShortcut", "countdownSeconds", "stopwatchSeconds", "countdownColor", "stopwatchColor", "countdownStyle", "stopwatchStyle"], save)
         transfer(todosPage, ["todoEnabled", "todoPendingTitle", "todoUrgentTitle", "todoPendingColor", "todoUrgentColor", "todoFontSize", "todoHeight", "todoItems"], save)
         transfer(terminalPage, ["terminalHeight", "terminalFontSize"], save)
     }
@@ -104,7 +109,7 @@ ApplicationWindow {
             id: tabs
             TabButton { text: "Modules" }
             TabButton { text: "Appearance" }
-            TabButton { text: "Flow colors" }
+            TabButton { text: "Flows" }
             TabButton { text: "Ping" }
             TabButton { text: "Media" }
             TabButton { text: "Terminal" }

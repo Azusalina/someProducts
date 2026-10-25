@@ -1,0 +1,171 @@
+{
+  "year": 2026,
+  "title": "2026 JUPAS Admissions Scores",
+  "source": "data/hku26.pdf",
+  "sourceSha256": "bcbd66d07058cd68762c368d27b16ad6e44ba1473823f9e777de1df5354a5107",
+  "verifiedAt": "2026-10-23",
+  "sourceColumnOrder": [
+    "uq",
+    "median",
+    "lq"
+  ],
+  "displayColumnOrder": [
+    "lq",
+    "median",
+    "uq"
+  ],
+  "benchmarkKind": "observed_admission_quartiles_not_minimum_or_expected_score",
+  "conversion": {
+    "5**": 8.5,
+    "5*": 7,
+    "5": 5.5,
+    "4": 4,
+    "3": 3,
+    "2": 2,
+    "1": 1
+  },
+  "weightings": {
+    "2": {
+      "codes": [
+        "JS6298"
+      ],
+      "multiplier": 1.5,
+      "subjects": [
+        "Biology",
+        "Chemistry",
+        "Economics",
+        "ICT",
+        "M1/M2",
+        "Physics"
+      ]
+    },
+    "6": {
+      "codes": [
+        "JS6602"
+      ],
+      "preferredMultiplier": 2,
+      "otherMultiplier": 1.5,
+      "preferredSubjects": [
+        "Biology",
+        "Chemistry",
+        "Combined Science",
+        "Design and Applied Technology",
+        "ICT",
+        "Integrated Science",
+        "M1/M2",
+        "Physics",
+        "Technology and Living"
+      ]
+    }
+  },
+  "programmes": {
+    "JS6298": {
+      "lq": 44,
+      "median": 45,
+      "uq": 47,
+      "page": 1,
+      "formulaOriginal": "2 x Eng + 1.5 x Math + Best 2 Subjects with [Weighting 2] + Best Subject",
+      "formulaType": "artsai",
+      "year": 2026
+    },
+    "JS6755": {
+      "lq": 37,
+      "median": 38,
+      "uq": 38,
+      "page": 1,
+      "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+      "formulaType": "business",
+      "year": 2026
+    },
+    "JS6767": {
+      "lq": 40,
+      "median": 41,
+      "uq": 42,
+      "page": 1,
+      "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+      "formulaType": "business",
+      "year": 2026
+    },
+    "JS6793": {
+      "lq": 35,
+      "median": 35,
+      "uq": 37,
+      "page": 2,
+      "formulaOriginal": "1.5 x Eng + 1.5 x Math + Best 3 Subjects + 0.2 x 6th Best Subject",
+      "formulaType": "business",
+      "year": 2026
+    },
+    "JS6810": {
+      "lq": 36,
+      "median": 38,
+      "uq": 39,
+      "page": 4,
+      "formulaOriginal": "Best 6 Subjects",
+      "formulaType": "six",
+      "year": 2026
+    },
+    "JS6200": {
+      "lq": 35,
+      "median": 35,
+      "uq": 37,
+      "page": 4,
+      "formulaOriginal": "Eng + Math + Best 3 Subjects",
+      "formulaType": "engmath",
+      "year": 2026
+    },
+    "JS6224": {
+      "lq": 31,
+      "median": 32,
+      "uq": 34,
+      "page": 4,
+      "formulaOriginal": "Eng + Math + Best 3 Subjects",
+      "formulaType": "engmath",
+      "year": 2026
+    },
+    "JS6248": {
+      "lq": 34,
+      "median": 34,
+      "uq": 35,
+      "page": 4,
+      "formulaOriginal": "Eng + Math + Best 3 Subjects",
+      "formulaType": "engmath",
+      "year": 2026
+    },
+    "JS6729": {
+      "lq": 36,
+      "median": 36,
+      "uq": 38,
+      "page": 4,
+      "formulaOriginal": "1.2 x Eng + 1.2 x Math + 1.2 x M1 / M2 + Best 2 Subjects",
+      "formulaType": "actuarial",
+      "year": 2026
+    },
+    "JS6779": {
+      "lq": 36,
+      "median": 36,
+      "uq": 37,
+      "page": 4,
+      "formulaOriginal": "1.5 x Math + Best 4 Subjects",
+      "formulaType": "stats",
+      "year": 2026
+    },
+    "JS6999": {
+      "lq": 32,
+      "median": 33,
+      "uq": 34,
+      "page": 4,
+      "formulaOriginal": "Eng + Math + Best 3 Subjects",
+      "formulaType": "engmath",
+      "year": 2026
+    },
+    "JS6602": {
+      "lq": 52,
+      "median": 53,
+      "uq": 55,
+      "page": 5,
+      "formulaOriginal": "2 x Eng + 2 x Math + Best 3 Subjects with [Weighting 6]",
+      "formulaType": "innovation",
+      "year": 2026
+    }
+  }
+}

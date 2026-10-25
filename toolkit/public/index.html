@@ -20,10 +20,10 @@
     <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
   </aside>
   <main>
-    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
+    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
+    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown / TeX to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
     <section class="file-panel" aria-label="Open local file">
-      <label for="filepath">Markdown file</label>
+      <label for="filepath">Markdown or TeX file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
       <p id="path-help">Save changes in your editor to update the preview.</p>
     </section>
@@ -32,9 +32,14 @@
       <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><button id="zen-button" aria-pressed="false" aria-controls="preview" title="Show only the document. Press Esc to exit." disabled>Zen mode</button><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
       <div class="document-meta"><span id="filename">No file open</span><span id="updated">Waiting for your document</span></div>
       <div class="preview-area" id="preview-area">
-        <div class="empty-state" id="empty"><p>Open a Markdown file to preview it.</p><button id="example-button">Open example</button></div>
+        <div class="empty-state" id="empty"><p>Open a Markdown or TeX file to preview it.</p><button id="example-button">Open example</button></div>
         <iframe id="preview" title="Formatted Markdown preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" hidden></iframe>
-        <pre id="source" tabindex="0" aria-label="Saved Markdown source" hidden></pre>
+        <a id="tex-open-preview" target="_blank" rel="noopener" hidden>Open PDF preview in new tab</a>
+        <section id="tex-preview" aria-label="Live TeX PDF preview" tabindex="0" hidden>
+          <div class="tex-pagination"><button id="tex-previous" type="button" disabled>Previous page</button><span id="tex-page" role="status">Rendering PDF…</span><button id="tex-next" type="button" disabled>Next page</button></div>
+          <div id="tex-canvas"></div>
+        </section>
+        <pre id="source" tabindex="0" aria-label="Saved document source" hidden></pre>
       </div>
     </section>
     <section id="pdf-pages-workspace" aria-label="PDF page editor" hidden>

@@ -56,6 +56,9 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_note.qml >> ../docs/qml-tests.log 2>&1
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_todos.qml >> ../docs/qml-tests.log 2>&1
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_resize.qml >> ../docs/qml-tests.log 2>&1
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl "$monitor_qt_bin/qmltestrunner" -input tests/tst_audio_visual.qml >> ../docs/qml-tests.log 2>&1
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software "$monitor_qt_bin/qmltestrunner" -input tests/tst_flows.qml >> ../docs/qml-tests.log 2>&1
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software "$monitor_qt_bin/qmltestrunner" -input tests/tst_native.qml >> ../docs/qml-tests.log 2>&1
 "$monitor_python" tests/focus_mode.py > ../docs/focus-mode-test.log 2>&1
 "$monitor_python" tests/preview_configuration.py > ../docs/preview-configuration-test.log 2>&1
 "$monitor_python" tests/keep_awake_fixture.py > ../docs/keep-awake-test.log 2>&1

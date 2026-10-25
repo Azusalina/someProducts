@@ -18,6 +18,7 @@ def evaluate(script):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--package', type=Path, help='Safely upgrade this package while Plasma is stopped')
     parser.add_argument('--reveal-media-terminal', action='store_true',
                         help='Place media immediately after Terminal in existing instances')
     parser.add_argument('--reveal-power-timers', action='store_true',
@@ -31,7 +32,7 @@ def main():
             rows.push({desktop:d.id,id:w.id,version:w.version,settings:settings,
                 geometry:{x:w.geometry.x,y:w.geometry.y,width:w.geometry.width,height:w.geometry.height}});
         } print(JSON.stringify(rows));''')
-    if not records:
+    if not records and not args.package:
         print('No desktop someProducts-monitor instance to refresh.')
         return
     state = Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state')))/'monitor-dashboard'
@@ -60,7 +61,15 @@ def main():
                 for(var key of ["battery","timers"]) if(enabled.indexOf(key)<0) enabled.push(key);
                 w.writeConfig("enabledModules",enabled.join(",")); changed.push(w.id);
             } print(JSON.stringify(changed));''')
-    subprocess.run(['systemctl', '--user', 'restart', 'plasma-plasmashell.service'], check=True)
+    if args.package:
+        # Replacing a mapped native .so while Plasma is running can crash it.
+        subprocess.run(['systemctl', '--user', 'stop', 'plasma-plasmashell.service'], check=True)
+        try:
+            subprocess.run(['kpackagetool6', '--type', 'Plasma/Applet', '--upgrade', str(args.package.resolve())], check=True)
+        finally:
+            subprocess.run(['systemctl', '--user', 'start', 'plasma-plasmashell.service'], check=True)
+    else:
+        subprocess.run(['systemctl', '--user', 'restart', 'plasma-plasmashell.service'], check=True)
     print(f'Reloaded Plasma for {len(records)} monitor instance(s). Private settings backup: {backup}')
 
 

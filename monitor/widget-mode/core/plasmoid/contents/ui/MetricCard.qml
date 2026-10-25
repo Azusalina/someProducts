@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls
 Item {
     id: card
+    property var timeSamples: null
+    property int historySeconds: 30
+    property int refreshInterval: 200
     property color ink: "#f5f5f4"
     property color flowInk: ink
     property var value: null
@@ -17,7 +20,10 @@ Item {
         anchors.topMargin: 12
         ink: card.flowInk
         values: card.history
-        sampleCount: Math.max(2, Math.min(40, card.history.length))
+        timeSamples: card.timeSamples
+        historySeconds: card.historySeconds
+        sampleCount: 40
+        transitionDuration: Math.round(card.refreshInterval * 0.9)
     }
     Text {
         id: number

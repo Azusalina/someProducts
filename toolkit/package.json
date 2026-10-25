@@ -22,7 +22,8 @@
     "autostart:remove": "python3 scripts/autostart.py uninstall",
     "test:pdfmd": "node tests/pdfmd-browser.js",
     "formats:setup": "python3 scripts/setup-formats.py",
-    "test:formats": "node tests/formats-browser.js"
+    "test:formats": "node tests/formats-browser.js",
+    "test:tex": "node tests/tex-browser.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",
@@ -30,6 +31,7 @@
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^12.1.0",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.4.299",
     "playwright-core": "^1.56.0"
   }
 }

@@ -1,0 +1,8 @@
+module Monitor.Native
+linktarget monitornativeplugin
+optional plugin monitornativeplugin
+classname Monitor_NativePlugin
+typeinfo monitornative.qmltypes
+prefer :/Monitor/Native/
+depends QtQuick
+

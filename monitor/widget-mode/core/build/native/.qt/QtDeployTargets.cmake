@@ -1,0 +1,5 @@
+set(__QT_DEPLOY_TARGETS "monitornative;monitornativeplugin")
+set(__QT_DEPLOY_TARGET_monitornative_FILE /home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/native/libmonitornative.so)
+set(__QT_DEPLOY_TARGET_monitornative_TYPE SHARED_LIBRARY)
+set(__QT_DEPLOY_TARGET_monitornativeplugin_FILE /home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/native/libmonitornativeplugin.so)
+set(__QT_DEPLOY_TARGET_monitornativeplugin_TYPE MODULE_LIBRARY)

@@ -1,10 +1,12 @@
 const $ = id => document.getElementById(id);
+import { showTexPreview } from './tex-preview.js';
 const headers = { 'Content-Type': 'application/json' };
 let viewId;
 let state = null, sourceView = false, opening = false, exporting = false, style = '';
 let streamError = '', actionError = '', info;
 let previousFilename;
 let zenMode = false, focusBeforeZen;
+let texPreviewUrl;
 
 function setZenMode(active) {
   if (active && state?.html === undefined) return;
@@ -14,7 +16,7 @@ function setZenMode(active) {
   document.body.classList.toggle('zen-mode', active);
   $('zen-button').setAttribute('aria-pressed', String(active));
   updateViews();
-  if (active) $('preview').focus();
+  if (active) (state?.module === 'tex' ? $('tex-preview') : $('preview')).focus();
   else (focusBeforeZen?.isConnected ? focusBeforeZen : $('zen-button')).focus();
 }
 function exitZenOnEscape(event) {
@@ -53,6 +55,13 @@ function updateViews() {
   const showSource = sourceView && !zenMode;
   $('empty').hidden = Boolean(state?.html !== undefined);
   $('preview').hidden = !state || state.html === undefined || showSource;
+  const tex = state?.module === 'tex';
+  if (tex) $('preview').hidden = true;
+  $('tex-preview').hidden = !tex || !state?.pdf || showSource;
+  $('tex-open-preview').hidden = !tex || !texPreviewUrl || showSource || zenMode;
+  $('paper').disabled = tex;
+  $('pdf-background').disabled = tex;
+  if (!exporting) $('export-button').textContent = tex ? 'Save PDF' : 'Export PDF';
   $('source').hidden = !state || state.html === undefined || !showSource;
   $('preview-tab').classList.toggle('selected', !sourceView);
   $('source-tab').classList.toggle('selected', sourceView);
@@ -74,6 +83,20 @@ function draw(next) {
   $('source').textContent = state.source || '';
   // Keep reading position when a new save arrives.
   const frame = $('preview');
+  if (state.module === 'tex' && state.pdf) {
+    const bytes = Uint8Array.from(atob(state.pdf), c => c.charCodeAt(0));
+    const previous = texPreviewUrl;
+    texPreviewUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    $('tex-preview').dataset.source = texPreviewUrl;
+    showTexPreview(state.pdf, { reset: frame.dataset.filename !== state.filename }).catch(error => {
+      actionError = `PDF preview: ${error.message}. Use Open PDF preview in new tab.`; message();
+    });
+    $('tex-open-preview').href = texPreviewUrl;
+    if (previous) URL.revokeObjectURL(previous);
+  } else if (state.module !== 'tex' && texPreviewUrl) {
+    URL.revokeObjectURL(texPreviewUrl); texPreviewUrl = null;
+    delete $('tex-preview').dataset.source;
+  }
   const sameFile = frame.dataset.filename === state.filename;
   const scroll = sameFile ? (frame.contentWindow?.scrollY || 0) : 0;
   frame.dataset.filename = state.filename;
@@ -126,7 +149,7 @@ $('sidebar-toggle').addEventListener('click', () => {
 });
 $('export-button').addEventListener('click', async () => {
   if (!state || exporting) return;
-  const filename = state.filename.split(/[\\/]/).pop().replace(/\.(md|markdown)$/i, '.pdf');
+  const filename = state.filename.split(/[\\/]/).pop().replace(/\.(md|markdown|tex)$/i, '.pdf');
   exporting = true; actionError = ''; message(); updateViews();
   $('export-button').textContent = 'Exporting…';
   try {

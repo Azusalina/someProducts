@@ -1,9 +1,11 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import "AudioTools.js" as AudioTools
 
 Item {
     id: card
+    property int audioRefreshInterval: 100
     property color ink: "#f5f5f4"
     property color flowInk: ink
     property var players: []
@@ -12,6 +14,7 @@ Item {
     property bool cavaEnabled: true
     property real cavaOpacity: 0.4
     property var audioBars: []
+    readonly property var audioLevels: AudioTools.enhance(audioBars)
     property var audioRequest: null
     property real clock: Date.now() / 1000
     readonly property real position: {
@@ -30,7 +33,7 @@ Item {
         audioRequest = xhr
         audioTimeout.restart()
         xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return
+            if (xhr.readyState !== XMLHttpRequest.DONE || card.audioRequest !== xhr) return
             audioTimeout.stop()
             audioRequest = null
             try { audioBars = xhr.status === 200 ? JSON.parse(xhr.responseText).bars || [] : [] }
@@ -42,32 +45,49 @@ Item {
     }
     Timer { interval: 100; running: !!card.player && card.player.status === "Playing"; repeat: true; onTriggered: card.clock = Date.now() / 1000 }
     Timer {
-        interval: 100
-        running: card.visible && card.cavaEnabled && !!card.player && card.player.status === "Playing"
+        interval: card.audioRefreshInterval
+        running: card.visible && card.cavaEnabled
         repeat: true
         onTriggered: card.pollAudio()
-        onRunningChanged: if (!running) card.audioBars = []
+        onRunningChanged: if (!running) {
+            const pending = card.audioRequest; card.audioRequest = null
+            audioTimeout.stop(); if (pending) pending.abort()
+            card.audioBars = []
+        }
     }
     Timer {
         id: audioTimeout
         interval: 2000
-        onTriggered: { if (card.audioRequest) card.audioRequest.abort(); card.audioRequest = null; card.audioBars = [] }
+        onTriggered: { const pending = card.audioRequest; card.audioRequest = null; if (pending) pending.abort(); card.audioBars = [] }
     }
     Component.onDestruction: if (audioRequest) audioRequest.abort()
     Item {
         objectName: "cavaBackground"
         anchors.fill: parent
-        visible: card.cavaEnabled && !!card.player && card.player.status === "Playing"
+        visible: card.cavaEnabled && card.audioBars.length > 0
         opacity: card.cavaOpacity
+        Repeater {
+            model: card.audioLevels
+            Rectangle {
+                required property int index
+                required property real modelData
+                x: index * card.width / Math.max(1, card.audioLevels.length)
+                anchors.bottom: parent.bottom
+                width: Math.max(1, card.width / Math.max(1, card.audioLevels.length) - 1)
+                height: card.height * modelData
+                color: card.flowInk; opacity: 0.35
+                Behavior on height { NumberAnimation { duration: Math.round(card.audioRefreshInterval * 0.8) } }
+            }
+        }
         Sparkline {
             objectName: "cavaFlow"
             anchors.fill: parent
             ink: card.flowInk
-            values: card.audioBars
+            values: card.audioLevels
             sampleCount: 0
             maximum: 1
-            strokeWidth: 2
-            transitionDuration: 100
+            strokeWidth: 2.5
+            transitionDuration: Math.round(card.audioRefreshInterval * 0.9)
         }
     }
     RowLayout {

@@ -1,0 +1,9 @@
+test_fast_view_interrupts_slow_sample_wait (test_refresh_rates.RefreshRateTests.test_fast_view_interrupts_slow_sample_wait) ... ok
+test_fastest_active_client_and_per_target_ping_period (test_refresh_rates.RefreshRateTests.test_fastest_active_client_and_per_target_ping_period) ... ok
+test_invalid_requests_and_persisted_config_bounds (test_refresh_rates.RefreshRateTests.test_invalid_requests_and_persisted_config_bounds) ... ok
+test_same_view_can_slow_down_and_clients_are_bounded (test_refresh_rates.RefreshRateTests.test_same_view_can_slow_down_and_clients_are_bounded) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.111s
+
+OK

@@ -35,14 +35,14 @@ class TelemetryTests(unittest.TestCase):
                 telemetry.ping_thread.join(timeout=1)
             self.assertEqual(len(observed), 3)
             for before, after in zip(observed, observed[1:]):
-                self.assertGreaterEqual(after - before, 0.45)
-                self.assertLess(after - before, 0.9)
+                self.assertGreaterEqual(after - before, 0.18)
+                self.assertLess(after - before, 0.5)
         finally:
             telemetry.stop.set()
             telemetry.pool.shutdown()
             telemetry.terminals.shutdown()
 
-    def test_half_second_stats_do_not_wait_for_media_bus(self):
+    def test_five_hz_stats_do_not_wait_for_media_bus(self):
         telemetry = m.Telemetry()
         observed = []
         def sample():
@@ -56,14 +56,14 @@ class TelemetryTests(unittest.TestCase):
                 media.assert_not_called()
             self.assertEqual(len(observed), 3)
             for before, after in zip(observed, observed[1:]):
-                self.assertGreaterEqual(after - before, 0.45)
-                self.assertLess(after - before, 0.9)
+                self.assertGreaterEqual(after - before, 0.18)
+                self.assertLess(after - before, 0.5)
         finally:
             telemetry.stop.set()
             telemetry.pool.shutdown()
             telemetry.terminals.shutdown()
 
-    def test_ping_half_second_deadline_and_no_overlapping_probe(self):
+    def test_ping_five_hz_deadline_and_no_overlapping_probe(self):
         telemetry = m.Telemetry()
         telemetry.pool.shutdown()
         telemetry.pool = MagicMock()
@@ -76,10 +76,10 @@ class TelemetryTests(unittest.TestCase):
             entry = telemetry.pings['example.com']
             with patch.object(m, 'ping_target', return_value={'ms': 12, 'checked_at': 100}):
                 telemetry.update_ping('example.com', entry)
-            with patch.object(m.time, 'monotonic', return_value=10.49):
+            with patch.object(m.time, 'monotonic', return_value=10.19):
                 telemetry.get(['example.com'])
             self.assertEqual(telemetry.pool.submit.call_count, 1)
-            with patch.object(m.time, 'monotonic', return_value=10.5):
+            with patch.object(m.time, 'monotonic', return_value=10.21):
                 telemetry.get(['example.com'])
             self.assertEqual(telemetry.pool.submit.call_count, 2)
         finally:
@@ -138,6 +138,17 @@ class ApiTests(unittest.TestCase):
     def request(self, path, data=None, headers=None):
         return urlopen(Request(self.base + path, data=data,
                               headers=headers or {'X-Monitor-Client': 'plasma-widget'}), timeout=2)
+
+    def test_snapshot_refresh_parameters_are_validated_and_applied(self):
+        result=json.load(self.request('/snapshot?interval_ms=100&client=rate-api'))
+        self.assertEqual(result['sampling_interval_ms'],100)
+        for query in ('interval_ms=99','interval_ms=5001','interval_ms=200.5','interval_ms=&client=x','client=bad/client'):
+            with self.assertRaises(HTTPError) as error:
+                self.request('/snapshot?'+query)
+            self.assertEqual(error.exception.code,400)
+            error.exception.close()
+        with self.telemetry.lock:
+            self.telemetry.sample_clients.pop('rate-api',None)
 
     def test_snapshot_does_not_wait_for_ping(self):
         with patch.object(m, 'ping_target', return_value={'ms': 12, 'status': 'reachable'}):

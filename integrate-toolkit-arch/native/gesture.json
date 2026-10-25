@@ -1,0 +1,12 @@
+{
+  "KPackageStructure": "KWin/Effect",
+  "X-Plasma-API": "declarativescript",
+  "KPlugin": {
+    "Id": "toolkitgesture",
+    "Name": "Toolkit file gesture",
+    "Description": "Hold Super+Alt and click a local file to open Toolkit",
+    "Category": "Tools",
+    "License": "GPL-2.0-or-later",
+    "EnabledByDefault": false
+  }
+}

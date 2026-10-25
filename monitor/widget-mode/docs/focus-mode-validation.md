@@ -81,3 +81,48 @@ visually inspected: [render](preview-stopwatch-focus.png).
 Installed files match source; widget 163 retained all settings and geometry.
 Bridge and Plasma services are active. No Git actions were performed.
 Physical Wayland compositor behavior remains a manual check.
+
+## 1.16.0 — corner media and audio breathing background
+
+Validated and installed on 2026-10-20. Moving the pointer in either fullscreen
+clock reveals a bottom-right progress/play-pause control. It fades after three
+seconds of inactivity; hover pins it. Media selection/toggle uses the existing
+Dashboard snapshot and MPRIS route. Empty player lists show No active media.
+Revealing media does not request focus, and Space still controls the timer.
+
+FocusAmbient uses real system playback CAVA frames for a smooth, fading spectrum
+and energy-dependent breathing opacity. Existing CAVA enable/opacity, flow color
+and selected media settings apply. The desktop media visualizer now draws filled
+columns plus a thicker line, uses a shared quiet-signal gain curve, and samples
+audio even without a Playing MPRIS player. Silence stays zero. No backend or
+capture-source changes were needed. Live /audio returned 32 available bands.
+
+Validation:
+
+- 60 backend and 68 QML checks passed. The Dashboard MPRIS test additionally
+  controlled the isolated test player from the fullscreen corner control.
+- Focus integration passed for both clocks: pointer reveal including over the
+  clock, hover pin, inactivity hide, media toggle routing, quiet gain, and all
+  prior timer editing/Space/Escape/completion regressions. No QML warnings.
+- Quiet gain/noise-floor bounds, sampling with no MPRIS player, and disabling
+  CAVA with request cancellation passed in tst_audio_visual.qml.
+- Five changed/new QML components have no lint diagnostics. Whole-package lint
+  retains the existing static main.qml KConfigPropertyMap settingsProfile warning.
+- Real CAVA responded to an isolated silent playback sink (peak 0.137), without
+  changing default audio routing. Preview configuration and five alpha/background
+  checks passed.
+- The unrelated existing keep-awake lifecycle check timed out twice. Existing
+  same-application inhibition records were present, preventing its expected
+  set-difference increase; this check remains inconclusive. No power code changed.
+  The full verification script stopped there; the audio and alpha checks were
+  completed separately.
+
+Inspected [focus render](preview-focus-media.png); this render uses deterministic
+audio sample amplitudes and a synthetic player for repeatable visual inspection.
+Real CAVA capture and MPRIS control were tested separately above. Physical native
+Wayland mouse/compositor behavior remains a desktop confirmation boundary.
+
+Installed version 1.16.0 matches source; widget settings and geometry are
+preserved, and Plasma/bridge services are active. No Git actions were performed.
+Logs: [QML](qml-tests.log), [focus](focus-mode-test.log),
+[CAVA playback](cava-playback-test.log), [lint](focus-mode-qmllint.log).

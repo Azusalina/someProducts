@@ -1,6 +1,6 @@
 import {TOOL_PREFS_KEY,normalizeTools} from './tool-preferences.js';
 const tools=[
- ['markdown-tab','Markdown to PDF','markdown'],
+ ['markdown-tab','Markdown / TeX to PDF','markdown'],
  ['pdfmd-tab','PDF to Markdown','pdfmd'],
  ['pdf-pages-tab','PDF pages','pdf'],
  ['photos-tab','Photos to PDF','photos'],

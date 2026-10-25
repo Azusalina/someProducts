@@ -20,6 +20,9 @@ Item {
         property string noteExportUrl: ""
         property bool darkInk: false
         property string textColorHex: ""
+        property int flowHistorySeconds: 30
+        property int flowRefreshMs: 200
+        property int audioRefreshMs: 100
         property string cpuFlowColor: ""
         property string ramFlowColor: ""
         property string gpuFlowColor: ""
@@ -51,6 +54,7 @@ Item {
             board.width = 580
             board.height = 680
             prefs.textColorHex = ""
+            prefs.flowRefreshMs = 200; prefs.audioRefreshMs = 100; prefs.flowHistorySeconds = 30
             prefs.cpuFlowColor = ""; prefs.ramFlowColor = ""; prefs.gpuFlowColor = ""; prefs.pingFlowColor = ""; prefs.cavaFlowColor = ""
             prefs.backgroundOpacity = 0
             prefs.borderWidth = 0
@@ -152,6 +156,26 @@ Item {
             prefs.cpuFlowColor = "invalid"
             compare(findChild(findChild(board, "tile_cpu"), "metricFlow").ink, board.ink)
         }
+        function test_0435_refreshIntervalsReachGraphs() {
+            prefs.flowRefreshMs=750; prefs.audioRefreshMs=50; prefs.flowHistorySeconds=60
+            compare(board.flowRefreshInterval,750)
+            compare(findChild(board,"metricFlow").historySeconds,60)
+            verify(findChild(board,"metricFlow").timeHistory)
+            compare(findChild(board,"metricFlow").transitionDuration,675)
+            compare(findChild(board,"mediaCard").audioRefreshInterval,50)
+            prefs.targetsText="Local | 127.0.0.1 | "
+            tryVerify(() => findChild(board,"pingFlow") !== null,1000)
+            compare(findChild(board,"pingFlow").transitionDuration,675)
+        }
+        function test_0436_timeBuffersAreBoundedAndResetOnClockRollback() {
+            let points=[]
+            for(let i=0;i<2000;i++)points=board.appendTimed(points,i/10,20)
+            verify(points.length <= 1302)
+            verify(points[0].at >= 199.9-130)
+            points=board.appendTimed(points,1,90)
+            compare(points.length,1)
+            compare(points[0].value,90)
+        }
         function test_044_radioPairInSingleColumn() {
             prefs.columns = 1
             prefs.enabledModules = "wifi,bluetooth"
@@ -235,6 +259,21 @@ Item {
             tryVerify(() => board.snapshot.media.players.find(p => p.service === "org.mpris.MediaPlayer2.MonitorTest").status === "Paused", 7000)
             mouseClick(button)
             tryVerify(() => board.snapshot.media.players.find(p => p.service === "org.mpris.MediaPlayer2.MonitorTest").status === "Playing", 7000)
+            // The corner player routes through the same production MPRIS control.
+            prefs.mediaService = "org.mpris.MediaPlayer2.MonitorTest"
+            prefs.moduleOrder = "timers"; prefs.enabledModules = "timers"
+            const timers = findChild(board, "timersCard").owner
+            tryVerify(() => timers.session.length > 0, 5000)
+            timers.openFocus("stopwatch")
+            const focus = timers.focusWindow
+            focus.wakeMedia()
+            const toggle = findChild(focus, "mediaToggle")
+            verify(toggle && toggle.enabled)
+            toggle.clicked()
+            tryVerify(() => board.snapshot.media.players.find(p => p.service === prefs.mediaService).status === "Paused", 7000)
+            toggle.clicked()
+            tryVerify(() => board.snapshot.media.players.find(p => p.service === prefs.mediaService).status === "Playing", 7000)
+            timers.focusOpen = false
         }
         function test_075_retiredModules() {
             prefs.moduleOrder = "cpu,codex,claude,resets,media,terminal"

@@ -1,0 +1,215 @@
+{
+    "classes": [
+        {
+            "classInfos": [
+                {
+                    "name": "QML.Element",
+                    "value": "auto"
+                }
+            ],
+            "className": "DesktopBridge",
+            "lineNumber": 9,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "module",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "globalPosition",
+                            "type": "QPointF"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 29,
+                    "name": "release",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 30,
+                    "name": "refresh",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 12,
+                    "name": "root",
+                    "notify": "topologyChanged",
+                    "override": false,
+                    "read": "root",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QQuickItem*",
+                    "user": false,
+                    "virtual": false,
+                    "write": "setRoot"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 13,
+                    "name": "detachedModule",
+                    "notify": "topologyChanged",
+                    "override": false,
+                    "read": "detachedModule",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "virtual": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 14,
+                    "name": "detachedModules",
+                    "notify": "topologyChanged",
+                    "override": false,
+                    "read": "detachedModules",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QStringList",
+                    "user": false,
+                    "virtual": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 15,
+                    "name": "parentRoot",
+                    "notify": "topologyChanged",
+                    "override": false,
+                    "read": "parentRoot",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QQuickItem*",
+                    "user": false,
+                    "virtual": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 16,
+                    "member": "countdownShortcut",
+                    "name": "countdownShortcut",
+                    "notify": "shortcutsChanged",
+                    "override": false,
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "virtual": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 17,
+                    "member": "stopwatchShortcut",
+                    "name": "stopwatchShortcut",
+                    "notify": "shortcutsChanged",
+                    "override": false,
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "virtual": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "lineNumber": 18,
+                    "name": "error",
+                    "notify": "errorChanged",
+                    "override": false,
+                    "read": "error",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "virtual": false
+                }
+            ],
+            "qualifiedClassName": "DesktopBridge",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 32,
+                    "name": "initialized",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 33,
+                    "name": "topologyChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 34,
+                    "name": "shortcutsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 35,
+                    "name": "errorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "kind",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 36,
+                    "name": "focusRequested",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "desktopbridge.h",
+    "outputRevision": 69
+}

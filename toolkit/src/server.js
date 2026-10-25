@@ -3,7 +3,7 @@ import { FORMAT_OPTIONS, formatOption } from '../public/format-options.js';
 import { convertFormat } from './formats/service.js';
 import { convertPdfMarkdown, abortPdfMarkdown } from './pdfmd/service.js';
 import path from 'node:path';
-import { readFile, open } from 'node:fs/promises';
+import { readFile, open, readdir } from 'node:fs/promises';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -23,6 +23,13 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   const initialPath = filename ? path.resolve(baseDir, filename.startsWith('~/') ? path.join(process.env.HOME, filename.slice(2)) : filename) : null;
   if (initialPath) { registry.forFile(initialPath); await readSource(initialPath); }
   const publicFiles = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']], ['/document.css', ['document.css', 'text/css']], ['/media.js', ['media.js', 'text/javascript']], ['/pdfmd.js', ['pdfmd.js', 'text/javascript']], ['/tool-preferences.js', ['tool-preferences.js', 'text/javascript']], ['/formats.js', ['formats.js', 'text/javascript']], ['/format-options.js', ['format-options.js', 'text/javascript']], ['/tools.js', ['tools.js', 'text/javascript']], ['/photos.js', ['photos.js', 'text/javascript']], ['/photo-pdf.js', ['photo-pdf.js', 'text/javascript']], ['/pdf-pages.js', ['pdf-pages.js', 'text/javascript']], ['/pdf-selection.js', ['pdf-selection.js', 'text/javascript']], ['/omr.js', ['omr.js', 'text/javascript']], ['/lib/pdf-lib.js', ['../node_modules/pdf-lib/dist/pdf-lib.esm.min.js', 'text/javascript']]]);
+  publicFiles.set('/tex-preview.js', ['tex-preview.js', 'text/javascript']);
+  for (const name of ['pdf.mjs', 'pdf.worker.mjs']) publicFiles.set(`/lib/pdfjs/${name}`, [`../node_modules/pdfjs-dist/build/${name}`, 'text/javascript']);
+  for (const folder of ['cmaps', 'standard_fonts', 'wasm']) {
+    for (const name of await readdir(new URL(`../node_modules/pdfjs-dist/${folder}/`, import.meta.url))) {
+      publicFiles.set(`/lib/pdfjs/${folder}/${name}`, [`../node_modules/pdfjs-dist/${folder}/${name}`, name.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream']);
+    }
+  }
   const details = (view, viewId) => ({ modules: registry.list(), baseDir, interval, state: view?.state ?? null, viewId, examplePath: new URL('../examples/welcome.md', import.meta.url).pathname });
   // Retain disconnected views briefly for reload/duplicate, then release memory
   // and watchers. No page IDs, paths or document data are written to disk.
@@ -173,8 +180,13 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         const target = view.state.filename;
         view.exporting = true;
         try {
-          const snapshot = await registry.forFile(target).render(await readSource(target), { filename: target });
-          const buffer = await exportPdf(snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
+          const source = await readSource(target);
+          const dependenciesFresh = view.state.module === 'tex' && await Promise.all(
+            [...view.watcher.dependencies].map(async ([file, signature]) => await view.watcher.signature(file) === signature)
+          ).then(values => values.every(Boolean));
+          const snapshot = dependenciesFresh && !view.state.error && view.state.source === source
+            ? view.state : await registry.forFile(target).render(source, { filename: target });
+          const buffer = snapshot.pdf ? Buffer.from(snapshot.pdf, 'base64') : await exportPdf(snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
           const download = `${path.basename(target, path.extname(target))}.pdf`;
           res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="document.pdf"; filename*=UTF-8''${encodeURIComponent(download)}` });
           return res.end(buffer);

@@ -1,0 +1,14 @@
+[
+  {
+    "path": "data/sources/hku-2026-formulas.pdf",
+    "sha256": "b637b698612da3c03ad6a10b9391d8f4fae89fa3e875a06673a5e4c95c1ff443",
+    "bytes": 3465278,
+    "downloadedAt": "2026-10-22"
+  },
+  {
+    "path": "data/sources/hkust-2027-requirements.pdf",
+    "sha256": "2efb767e68c15d765e35760785b4e2e67481941ac8e24c657a86bf6a2d8c6d39",
+    "bytes": 223016,
+    "downloadedAt": "2026-10-23"
+  }
+]
