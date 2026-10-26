@@ -14,7 +14,7 @@ for sy in systems:
     if only_sys is not None and sy.index != only_sys:
         continue
     compute_pitches(sy)
-    print(f"== p{pi+1} system {sy.index} bars={sy.barlines} ks={[(k[0], k[1]) for k in sy.ks.values()]}")
+    print(f"== p{pi+1} system {sy.index} bars={sy.barlines} ks={[[(round(x), k, n) for x, k, n, _ in segs] for segs in sy.ks.values()]}")
     for m in range(len(sy.barlines) - 1):
         print(f" -- measure idx {m}")
         evs = sorted([e for e in sy.events if e.measure == m], key=lambda e: (e.x, e.staff))

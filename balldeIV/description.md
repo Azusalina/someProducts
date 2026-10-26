@@ -1,9 +1,20 @@
-# Ballade IV Waterfall — description
+# Piano Waterfall (balldeIV) — description
 
-## Method
+## Pieces
+- `web/data/pieces.json` lists the pieces; each has a score `data/<id>.json` and page images. The first entry is the default.
+- **Ballade No. 4, coda** (m.168–239, 6/8, 2146 notes): pitch and notation from the PDF, rhythm from a MIDI file. Default tempo 84.
+- **Liebestraum No. 3** (whole piece, 6/4, 1890 notes, 88 measure entries, 544 quarter notes): everything from the PDF, because no MIDI of this edition is available. Default tempo 92. See the Liebestraum sections below.
+
+## Method (Ballade)
 - The PDF is a Sibelius vector export (Opus fonts, no images). `omr/` reads glyphs and paths with PyMuPDF: staves, clefs, key signature, accidentals, noteheads, stems, beams, flags, dots, rests, ties, 8va lines. Pages are analysed in parallel on all CPU cores (about 1 s for 21 pages).
 - **Pitch/hand/position/ties** come from the PDF. **Rhythm** comes from the Mutopia MIDI (Joseffy edition), matched head-by-head by pitch and order within the bar. The RH track drifts a constant −30 ticks against the LH, which is corrected per bar from columns the PDF shows as simultaneous. Onsets are snapped to 1/24 beat.
 - `web/` is a static app: Canvas waterfall, pre-rendered pages with percentage-positioned highlights, and WebAudio. Microphone audio goes AudioWorklet → MessagePort → Web Worker. The worker does FFT calibration (f0, inharmonicity, partial amplitudes per note), joint non-negative fitting of expected notes, iterative cancellation for unexpected ones, and spectral-flux/amplitude-rise onset detection.
+
+## Liebestraum No. 3: rhythm from the PDF alone
+- **Source and extractor.** `sheet-pdf/liebestraum3.pdf` is a Sibelius vector export from mfiles.co.uk (6 pages, 6/4, A♭ major). It differs from the Ballade PDF in ways the extractor now handles: glyphs are reported as private-use codes carrying the Mac Roman byte, noteheads are 17.3 pt (sizes are relative to the page's full size), flat beams are filled rectangles, 8va lines are chains of short strokes (and run between the staves for the left hand), whole-note heads and the double sharp have their own glyphs, and the half and whole rest glyphs are told apart by code. Key signatures are read per staff after the clef and after every double barline (four flats, five sharps at m.32, none at m.43, four flats at m.56). Parsing the Ballade again gives the same notes as before.
+- **Rhythm.** `omr/rhythm.py` solves each bar. Events at the same x form a column; a beam search chooses the onset of every column. A column may start where an earlier note ends, at the previous column's time (a note head engraved sideways), or at an unwritten rest (costly). A path is scored by how well one engraving layout explains the gaps between columns (gap proportional to time^0.6, extra room before accidentals, fitted per bar with robust residuals), by a note starting on a multiple of its own value, by dangling or skipped note ends, by overrunning the bar, and by uncovered time on a staff. Tuplets (scale 2/3) are chosen per beam group; a whole-bar rest spans the bar wherever it is centred. `omr/build_pdf.py` runs the bars in parallel (about 30 s), lays the measures on one time axis, merges ties and writes the score. A bar is `normal` (6 quarters), `pickup` (m.1: one quarter, the sum of its notated values) or `free`.
+- **Free-time bars.** m.26–28, 29–31, 65–68, 69–72 and m.73 are cadenzas written in small notes with hidden barlines. Each is one engraved row; its columns are spread by x at a fixed speed (four column spacings per quarter note). That speed is an assumption, not a reading of the score. The measure menu names such a row by its printed numbers (for example 26–28).
+- **Web app.** Measures carry their own start and length, so the bar lines, the measure menu and the sheet highlights work for a pickup, a 6/4 metre and free rows. The sheet view uses each page's real size.
 
 ## Piano sound
 - Display mode plays recorded grand-piano samples, not a synthesizer. `web/assets/piano/` holds 30 MP3s (A0, then C, D#, F# and A of each octave, up to C8, about 2 MB). `web/js/synth.js` decodes them once at page load and plays each note by resampling the nearest sample (at most a minor third away, so at most ±1.5 semitones of stretch).
@@ -11,19 +22,30 @@
 - There is one velocity layer and no pedal, so sustained passages are as long as the score says, not as long as a pedalled performance. If the samples fail to load, `synth.js` falls back to the old additive oscillator voice.
 - Samples: Salamander Grand Piano V3 by Alexander Holm, licensed CC BY 3.0 (<https://creativecommons.org/licenses/by/3.0/>), in the MP3 conversion distributed with Tone.js (<https://tonejs.github.io/audio/salamander/>). Changes: none to the audio; pitches between samples are produced by playback-rate resampling.
 
-## Validation (coda m.168–239, 2146 notes)
+## Validation of the Ballade coda (m.168–239, 2146 notes)
 - Pitch vs the independent MIDI: 2090 of 2143 PDF notes are identical (97.5%). 44 of 72 bars are identical.
 - Remaining differences were inspected visually for m.172–226 and m.234. They are edition differences (the printed sheet contains notes, octaves or accidentals the MIDI lacks) or ornament placement at barlines. The PDF is treated as authoritative.
 - Bugs found and fixed through this audit: tie detection (dots, cross-system, wrong chord tone), 8va line owned by the wrong staff, bass notes shifted −12.
 - Microphone, synthetic piano audio (different timbre, +6 cent tuning): calibration recovers the tuning exactly; sparse steps 24/24 with no false onsets; dense 5–9 note chords about 85% (octave doubles are inferred from the lower note).
-- `tests/browser.mjs`: 16/16 checks including piano-sample loading, note triggering, pause silencing and a live fake-microphone session (22 steps advanced). The tests confirm the audio graph runs; they do not judge how the piano sounds.
+- `tests/browser.mjs`: 24/24 checks for both pieces, 27/27 with `--mic` (the live fake-microphone session advanced 23 steps). 16 of them are Ballade and audio checks: piano-sample loading, note triggering, pause silencing. The tests confirm the audio graph runs; they do not judge how the piano sounds.
+
+## Validation of the Liebestraum
+- **Known onsets.** In 65 bars one voice adds up to exactly 6 quarters, so its onsets follow from the notated values alone. The solver is run on the whole bar without that information: 933 of 936 events agree (99.7%) and 64 of 65 bars are exact (`tools/validate_rhythm.py`). The differing bar (m.20) is a flaw of the reference: its stem-direction "voice" mixes two voices. The solver's costs were tuned on this set, so the figure is optimistic, and the set holds the easy bars; the bars with hidden rests have no such proof.
+- **Consistency of all bars.** In all 82 normal bars the notes and rests cover both staves from start to end, except m.90 (a run that crosses from the bass staff to the treble staff, so each staff has a gap). No note starts left of a note to its right (displaced heads aside) and every note lies inside its measure (`tools/audit_pdf.py`, and the gap list that `tools/export_piece.py` prints).
+- **By eye.** `tools/review.py` draws every note's name and onset on the page. I looked through all 31 systems (pitch and rhythm alignment, clefs, 8va, ties, the triplet in m.58, both cadenzas). That is a plausibility check, not a note-by-note proof. Bugs it exposed and that are fixed: no ottava was applied at all, whole-note chords were missing (m.95, 99), dotted half rests were taken for whole-bar rests, a head engraved sideways split a chord in time, and runs preceded by hidden rests were shifted by half a beat (m.47, 64).
+- **Pitch.** 74.8% of all notes belong to the key in force. The bars with the fewest are chromatic harmony in the score, not errors (for example m.41 is F major written with naturals inside five sharps). Range E1–G7.
+- `tests/browser.mjs` also loads the Liebestraum: both pieces listed, 88 measure entries, a pickup of one quarter, five free-time rows, every ordinary bar 6 quarters, every note inside its measure, playback and sheet highlights on the A4 page, learn steps for the whole piece.
 
 ## Limitations / not done
+- **Liebestraum timing has no independent reference** (the MIDI that matches this edition is a paid download). It is a reading of the engraving. Where a voice has hidden rests (for example the left-hand runs in m.47–49) the solver infers them from the layout; a wrong choice would move a run by half a beat.
+- Tempo is constant: ritardando, accelerando and fermatas are not modelled (a fermata note lasts its written value). Cadenza speed is an assumption (see above). The tempo slider changes everything at once.
+- Hands are staves. A melody written in the bass staff (the dotted cross-staff lines) is shown as left hand. Rolled-chord signs and pedal marks are not modelled; the Liebestraum has no grace notes.
+- The Liebestraum PDF and its page images are © Music Files Ltd (free for personal use); keep them out of any public deployment unless the licence allows it.
 - **Timing is not independently verified.** 63 notes (about 3%) have no MIDI partner and use interpolated timing. Notated durations are from the PDF with a 1 or 2/3 tuplet scale guessed from beam groups; tied notes are merged.
-- m.172, 173, 188–193, 200–214, 218–225 and the m.163–167 cadenza were not all reviewed visually. Only m.168–239 is exported. The solver in `omr/timing.py` (PDF-only rhythm) is incomplete and unused by the build.
+- m.172, 173, 188–193, 200–214, 218–225 and the m.163–167 cadenza were not all reviewed visually. Only m.168–239 is exported. `omr/timing.py` (an earlier PDF-only solver) is unused by the Ballade build; only its `beam_groups` helper is shared with `omr/rhythm.py`.
 - Grace notes and ornaments (trills, arpeggio marks) are shown as plain notes. Only 3 grace notes are flagged in the coda.
 - Tested only with synthetic audio, not a real piano. GPU: this machine has no usable GPU driver, so the processing is CPU-parallel only and the waterfall uses Canvas 2D (browser-accelerated).
 - The MIDI and any third-party material are used under their own licences; licensing is left to the owner.
 
 ## Files
-`omr/` extractor and score builder · `tools/` build, export and audit scripts · `web/` the app, data and piano samples (`web/assets/piano/`) · `tests/` browser, offline-audio and synthetic-audio tests · `sheet-pdf/` source PDF.
+`omr/` extractor, `rhythm.py` (bar solver), `build_pdf.py` (PDF-only builder) and the MIDI-timed `build_score.py` · `tools/` build, export (`export_web.py` Ballade, `export_piece.py` PDF-only), audit (`audit_pdf.py`, `validate_rhythm.py`, `review.py`) and debug scripts · `web/` the app, data (`pieces.json`, one JSON per piece), page images (`assets/pages`, `assets/liebestraum3`) and piano samples (`assets/piano`) · `tests/` browser, offline-audio and synthetic-audio tests · `sheet-pdf/` source PDFs.

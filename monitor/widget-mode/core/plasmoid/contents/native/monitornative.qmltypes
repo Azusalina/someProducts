@@ -75,13 +75,13 @@ Module {
             lineNumber: 18
             isReadonly: true
         }
-        Signal { name: "initialized"; lineNumber: 32 }
-        Signal { name: "topologyChanged"; lineNumber: 33 }
-        Signal { name: "shortcutsChanged"; lineNumber: 34 }
-        Signal { name: "errorChanged"; lineNumber: 35 }
+        Signal { name: "initialized"; lineNumber: 36 }
+        Signal { name: "topologyChanged"; lineNumber: 37 }
+        Signal { name: "shortcutsChanged"; lineNumber: 38 }
+        Signal { name: "errorChanged"; lineNumber: 39 }
         Signal {
             name: "focusRequested"
-            lineNumber: 36
+            lineNumber: 40
             Parameter { name: "kind"; type: "QString" }
         }
         Method {
@@ -91,5 +91,23 @@ Module {
             Parameter { name: "globalPosition"; type: "QPointF" }
         }
         Method { name: "refresh"; lineNumber: 30 }
+        Method {
+            name: "prepareFreeHost"
+            type: "bool"
+            lineNumber: 31
+            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
+        }
+        Method {
+            name: "rememberFreePosition"
+            lineNumber: 32
+            Parameter { name: "position"; type: "QPointF" }
+        }
+        Method { name: "freePosition"; type: "QVariantMap"; isMethodConstant: true; lineNumber: 33 }
+        Method {
+            name: "mergeAt"
+            type: "bool"
+            lineNumber: 34
+            Parameter { name: "globalPosition"; type: "QPointF" }
+        }
     }
 }

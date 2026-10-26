@@ -99,12 +99,7 @@ void DesktopBridge::release(const QString& module,const QPointF& position) {
     auto containment=m_applet->containment();
     if(m_applet->immutability()!=Plasma::Types::Mutable) {fail("Unlock desktop widgets before splitting or moving");return;}
     if(!detachedModule().isEmpty()) {
-        auto parent=parentRoot();
-        if(parent && QRectF(0,0,parent->width(),parent->height()).contains(parent->mapFromGlobal(position))) {
-            // The shared profile/owners remain in the parent. Destruction flushes edits.
-            auto applet=m_applet;
-            QTimer::singleShot(0,this,[applet]{if(applet)applet->destroy();});
-        } else QMetaObject::invokeMethod(m_root,"moveNativeHost",Q_ARG(QVariant,QVariant(position)));
+        if (!mergeAt(position)) QMetaObject::invokeMethod(m_root,"moveNativeHost",Q_ARG(QVariant,QVariant(position)));
         return;
     }
     if(QRectF(0,0,m_root->width(),m_root->height()).contains(m_root->mapFromGlobal(position)))return;
@@ -130,4 +125,47 @@ void DesktopBridge::release(const QString& module,const QPointF& position) {
     }
     child->configChanged();emit child->configNeedsSaving();
     refresh();fail(QString());
+}
+
+bool DesktopBridge::mergeAt(const QPointF& position) {
+    if (!m_applet || !m_root || detachedModule().isEmpty()
+        || m_applet->immutability()!=Plasma::Types::Mutable
+        || !std::isfinite(position.x()) || !std::isfinite(position.y())) return false;
+    auto parent=parentRoot();
+    if (!parent || !QRectF(0,0,parent->width(),parent->height()).contains(parent->mapFromGlobal(position))) return false;
+    auto applet=m_applet;
+    QTimer::singleShot(0,this,[applet]{if(applet)applet->destroy();});
+    return true;
+}
+
+bool DesktopBridge::prepareFreeHost(QQuickItem* item) {
+    if (!m_applet || !m_root || detachedModule().isEmpty() || !item) return false;
+    bool ancestor=false;
+    for (auto parent=m_root->parentItem();parent;parent=parent->parentItem()) if(parent==item){ancestor=true;break;}
+    if (!ancestor) return false;
+    // Desktopcontainment adds Behaviors on x/y. Disable only those on this
+    // child's native container; otherwise every pointer update eases behind it.
+    for (auto object:item->findChildren<QObject*>()) {
+        if (!object->inherits("QQuickBehavior")) continue;
+        const auto property=object->property("targetProperty").value<QQmlProperty>();
+        if (property.object()==item && (property.name()=="x" || property.name()=="y")) {
+            object->setProperty("enabled",false);
+            if (auto animation=object->property("animation").value<QObject*>()) animation->setProperty("running",false);
+        }
+    }
+    return true;
+}
+void DesktopBridge::rememberFreePosition(const QPointF& position) {
+    if (!m_applet || detachedModule().isEmpty() || !std::isfinite(position.x()) || !std::isfinite(position.y())) return;
+    auto config=m_applet->config().group("FreePlacement");
+    config.writeEntry("x",position.x());config.writeEntry("y",position.y());config.sync();
+    emit m_applet->configNeedsSaving();
+}
+QVariantMap DesktopBridge::freePosition() const {
+    if (!m_applet || detachedModule().isEmpty()) return {};
+    const auto config=m_applet->config().group("FreePlacement");
+    if (!config.hasKey("x") || !config.hasKey("y")) return {};
+    const qreal x=config.readEntry("x",0.0),y=config.readEntry("y",0.0);
+    if (!std::isfinite(x) || !std::isfinite(y)) return {};
+    return {{"x",x},{"y",y}};
 }

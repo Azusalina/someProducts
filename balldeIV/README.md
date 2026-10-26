@@ -1,8 +1,8 @@
-# Ballade IV Waterfall
+# Piano Waterfall (balldeIV)
 
 ## What is it?
 
-A web app for learning the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-pdf/ballde4.pdf`). The left pane shows the sheet music with the current notes highlighted, and the right pane shows a falling-notes waterfall above a piano keyboard. It has a **Display** mode and a **Learn** mode, where your piano is recognised through the microphone and the waterfall advances as you play. Notes are read from the PDF's vector data, not from images. Details are in [description.md](description.md).
+A web app for learning piano pieces from their printed score: the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-pdf/ballde4.pdf`) and the whole of Liszt's Liebestraum No. 3 (from `sheet-pdf/liebestraum3.pdf`). The left pane shows the sheet music with the current notes highlighted, and the right pane shows a falling-notes waterfall above a piano keyboard. It has a **Display** mode and a **Learn** mode, where your piano is recognised through the microphone and the waterfall advances as you play. Notes are read from the PDF's vector data, not from images. Details are in [description.md](description.md).
 
 ## How to use
 
@@ -11,6 +11,7 @@ A web app for learning the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-p
 **Run:** `python3 -m http.server 4310 --directory web`, then open <http://localhost:4310> in Chrome or Chromium. The microphone needs `localhost` or https.
 
 **Controls**
+- **Piece** menu (top left): switch between the Ballade coda and the Liebestraum. The choice, and the tempo of each piece, are remembered.
 - **Display / Learn:** Display plays the waterfall with real grand-piano samples (loaded from `web/assets/piano/`; the 🔊 button mutes). Learn waits for you.
 - **Left / Both / Right:** choose which hand is played or required, in both modes.
 - **Space:** play or pause. In Learn mode, ← and → step back and forward.
@@ -18,6 +19,8 @@ A web app for learning the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-p
 - **⚙ settings:** hand colours, keyboard height, waterfall zoom, key range, learn strictness, and sheet pages.
 - **Learn mode:** press 🎤 and then **Calibrate**. Play the C-major scale shown, one note at a time, so the app learns your piano's tone and tuning. Then play the highlighted notes. The profile is saved in the browser.
 
-**Rebuild the data:** `python3 -m venv .venv && .venv/bin/pip install pymupdf pillow numpy`, then `.venv/bin/python tools/export_web.py sheet-pdf/ballde4.pdf <ballade-4.mid> web 168 239`. The MIDI is the Mutopia Project file, used for rhythm only.
+**Rebuild the data:** `python3 -m venv .venv && .venv/bin/pip install pymupdf pillow numpy`, then
+- Ballade: `.venv/bin/python tools/export_web.py sheet-pdf/ballde4.pdf <ballade-4.mid> web 168 239`. The MIDI is the Mutopia Project file, used for rhythm only.
+- Liebestraum (rhythm from the PDF alone, about a minute): `.venv/bin/python tools/export_piece.py sheet-pdf/liebestraum3.pdf web liebestraum3 "Liebestraum No. 3" "Liszt · Notturno in A♭ major" --time 6/4 --bar 6 --tempo 92`. It prints the bars worth a look.
 
-**Tests:** `npm install && node tests/browser.mjs` (add `--mic --wav tests/audio/short --octs 2` for the live microphone test).
+**Tests:** `npm install && node tests/browser.mjs` covers both pieces (add `--mic --wav tests/audio/short --octs 2` for the live microphone test, which uses the Ballade). `tools/validate_rhythm.py` and `tools/audit_pdf.py` check a PDF-built score; see the description.

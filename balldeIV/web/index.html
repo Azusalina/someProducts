@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ballade IV Waterfall</title>
+<title>Piano Waterfall</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header id="bar">
-  <div class="brand"><b>Ballade No. 4</b><span>Chopin · Op. 52 · coda</span></div>
+  <div class="brand"><select id="selPiece" aria-label="Piece"></select><span id="brandSub"></span></div>
 
   <div class="seg" id="modeSeg" role="radiogroup" aria-label="Mode">
     <button data-v="display" class="on" role="radio" aria-checked="true">Display</button>
@@ -52,8 +52,8 @@
       <option value="0.5">At least half</option>
     </select>
   </label>
-  <label>Sheet pages
-    <select id="selPages"><option value="coda">Coda only (p.12–21)</option><option value="all">Whole piece</option></select>
+  <label id="lblPages">Sheet pages
+    <select id="selPages"><option value="coda">Coda only</option><option value="all">Whole piece</option></select>
   </label>
   <button id="btnReset">Reset settings</button>
 </section>

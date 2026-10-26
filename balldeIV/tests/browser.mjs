@@ -104,6 +104,45 @@ try {
     if (process.argv.includes('--log')) console.log(JSON.stringify(await B(() => window.__log)));
     await page.screenshot({ path: 'tests/out-mic.png' });
   }
+  // ---- second piece: Liebestraum No. 3 (rhythm solved from the PDF, 6/4, pickup, free-time cadenzas) ----
+  const p2 = await ctx.newPage();
+  p2.on('pageerror', e => errors.push('liebestraum: ' + e.message));
+  p2.on('console', m => { if (m.type() === 'error') errors.push('liebestraum: ' + m.text()); });
+  await p2.goto(`http://127.0.0.1:${port}/?piece=liebestraum3`);
+  await p2.waitForFunction(() => window.ballade);
+  const Q = (fn, arg) => p2.evaluate(fn, arg);
+  const L = await Q(() => { const b = window.ballade, sc = b.score; return {
+    title: document.title, pieces: [...document.getElementById('selPiece').options].map(o => o.value),
+    ts: sc.meta.timeSignature, n: sc.notes.length, measures: sc.measures.length, pickup: sc.measures[0].length,
+    sel: document.getElementById('selMeasure').options.length, pages: sc.pages.length,
+    pagesHidden: document.getElementById('lblPages').hidden, tempo: b.S.bpm,
+    free: sc.measures.filter(m => m.kind === 'free').map(m => m.label) }; });
+  ok('piece selector lists both pieces', L.pieces.length === 2 && /Liebestraum/.test(L.title), JSON.stringify(L.pieces));
+  ok('Liebestraum score loaded', L.ts === '6/4' && L.n > 1700 && L.measures === 88 && L.sel === 88 && L.pages === 6 && L.pagesHidden && L.tempo === 92, JSON.stringify(L));
+  ok('pickup bar is one quarter, cadenzas are free-time rows', L.pickup === 1 && L.free.join() === '26–28,29–31,65–68,69–72,73', L.free.join());
+  // every ordinary bar is 6 quarters, notes sit inside their measure and never earlier than their column neighbours
+  const A = await Q(() => { const sc = window.ballade.score; let bad = 0;
+    for (const n of sc.notes) { const m = sc.measureByNumber.get(n.measure); if (n.t < m.start - 1e-6 || n.t >= m.start + m.length - 1e-6) bad++; }
+    const odd = sc.measures.filter(m => m.kind === 'normal' && m.length !== 6).length;
+    return { bad, odd }; });
+  ok('all notes lie inside their measure; normal bars last 6 quarters', A.bad === 0 && A.odd === 0, JSON.stringify(A));
+  await Q(() => window.ballade.seek(window.ballade.score.measureByNumber.get(2).start + 0.1));
+  ok('measure menu follows the time axis (bar 2 starts after the pickup)', (await Q(() => document.getElementById('selMeasure').value)) === '2');
+  await Q(() => window.ballade.seek(window.ballade.score.measureByNumber.get(27) ? 0 : window.ballade.score.measureByNumber.get(26).start + 1));
+  ok('a cadenza row is selected by its first number', (await Q(() => document.getElementById('selMeasure').value)) === '26');
+  // playback across the pickup into bar 2, sheet highlights on the A4 page
+  await Q(() => window.ballade.seek(-0.4));
+  await p2.click('#btnPlay');
+  await p2.waitForTimeout(2200);
+  const run = await Q(() => ({ t: window.ballade.S.t, m: document.getElementById('selMeasure').value, hl: document.querySelectorAll('.hl-note').length,
+    maxLeft: Math.max(0, ...[...document.querySelectorAll('.hl-note')].map(e => parseFloat(e.style.left))) }));
+  await p2.click('#btnPlay');
+  ok('Liebestraum plays and highlights notes on the sheet', run.t > 2 && run.hl > 0 && run.maxLeft < 100, JSON.stringify(run));
+  await Q(() => window.ballade.setMode('learn'));
+  await Q(() => window.ballade.seek(window.ballade.score.measureByNumber.get(5).start));
+  const ls = await Q(() => { const S = window.ballade.S; return { steps: S.steps.length, m: S.steps[S.idx].notes[0].measure }; });
+  ok('learn mode builds steps for the whole piece', ls.steps > 800 && ls.m === 5, JSON.stringify(ls));
+  await p2.screenshot({ path: 'tests/out-liebestraum.png' });
   ok('no console / page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } catch (e) {
   console.error('TEST CRASH', e);

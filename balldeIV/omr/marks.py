@@ -1,31 +1,51 @@
 """Ottava lines and ties."""
+import collections
 import pymupdf
 
 OTTAVA_DASH = (2.9, 2.5)
 
 
+def dashed_lines(doc, page_index, page):
+    """Horizontal dashed ottava lines as (x0, x1, y). Two encodings occur: one stroked path with the dash pattern
+    (Sibelius via some exporters) or a chain of short separate strokes at one y (mfiles.co.uk)."""
+    out = []
+    for dr in doc[page_index].get_drawings():
+        if "2.945" in (dr.get("dashes") or ""):
+            r = dr["rect"]
+            out.append((r.x0, r.x1, r.y0))
+    segs = collections.defaultdict(list)
+    for sg in page.hlines:
+        if 1.5 <= abs(sg.x1 - sg.x0) <= 4.0 and 0.6 <= sg.w <= 0.9:
+            segs[round(sg.y0, 1)].append((min(sg.x0, sg.x1), max(sg.x0, sg.x1)))
+    for y, lst in segs.items():
+        lst.sort()
+        run = [lst[0]]
+        for sg in lst[1:] + [(1e9, 1e9)]:
+            if sg[0] - run[-1][1] <= 3.2:
+                run.append(sg)
+                continue
+            if len(run) >= 6:
+                out.append((run[0][0], run[-1][1], y))
+            run = [sg]
+    return out
+
+
 def ottava_spans(doc, page_index, page, systems):
     """Return {system index: [(staff, x0, x1, shift)]} for the dashed ottava lines of a page.
-    Each dashed line is owned by exactly one staff: the nearest staff edge (a line just above a treble staff
-    is an 8va for that staff; a line just below a bass staff is an 8vb)."""
-    p = doc[page_index]
-    labels = [g for g in page.glyphs if g.u == 8220 and g.size > 15]
+    Each dashed line is owned by exactly one staff: a line above a staff is an 8va for that staff (the lower staff
+    included: its line runs in the gap between the staves); a line just below a bass staff is an 8vb."""
+    labels = [g for g in page.glyphs if g.u == 8220 and g.size > page.full * 0.75]
     out = {sy.index: [] for sy in systems}
-    for dr in p.get_drawings():
-        ds = dr.get("dashes") or ""
-        if "2.945" not in ds:
-            continue
-        r = dr["rect"]
-        xa, xb, y = r.x0, r.x1, r.y0
+    for xa, xb, y in dashed_lines(doc, page_index, page):
         best = None
         for sy in systems:
             for si, st in enumerate(sy.staves):
                 if si == 0 and st.top - 70 <= y <= st.top + 2:
-                    d = st.top - y
-                    cand = (abs(d), sy, si, 12)
+                    cand = (abs(st.top - y), sy, si, 12)
+                elif si == 1 and st.top - 45 <= y <= st.top + 2:
+                    cand = (abs(st.top - y), sy, si, 12)
                 elif si == 1 and st.bottom - 2 <= y <= st.bottom + 45:
-                    d = y - st.bottom
-                    cand = (abs(d), sy, si, -12)
+                    cand = (abs(y - st.bottom), sy, si, -12)
                 else:
                     continue
                 if best is None or cand[0] < best[0]:

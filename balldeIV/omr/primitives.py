@@ -9,18 +9,18 @@ import pymupdf
 # Opus glyph codes (unicode as reported by the font's ToUnicode map)
 U = dict(
     TREBLE=38, BASS=63, TS6=54, TS8=56,
-    HEAD=339, HEAD_HALF=729,
-    FLAT=98, NATURAL=110, SHARP=35, DFLAT=8747,
+    HEAD=339, HEAD_HALF=729, HEAD_WHOLE=119,
+    FLAT=98, NATURAL=110, SHARP=35, DFLAT=8747, DSHARP=8249,
     DOT=46, DOT_SPECIAL=8482,
     ACCENT=62,
     FLAG_UP8=74, FLAG_DN8=106, FLAG_16=114,
-    REST_Q=338, REST_8=8240, REST_16=8776, REST_32=174, REST_HALF=8721, REST_WHOLE=211,
+    REST_Q=338, REST_8=8240, REST_16=8776, REST_32=174, REST_HALF=211, REST_WHOLE=8721,       # Opus: 0xEE half rest, 0xB7 whole rest
     FERMATA=85, TRILL_A=126, TRILL_B=376, ARPEGGIO=8719,
     BRACE=123, LEDGER_E=101,
     PAREN_L=60, PAREN_R=62, OTTAVA_8=8220, OTTAVA_VA=8221,
 )
-ACCIDENTALS = {U["FLAT"]: -1, U["NATURAL"]: 0, U["SHARP"]: 1, U["DFLAT"]: -2}
-HEADS = (U["HEAD"], U["HEAD_HALF"])
+ACCIDENTALS = {U["FLAT"]: -1, U["NATURAL"]: 0, U["SHARP"]: 1, U["DFLAT"]: -2, U["DSHARP"]: 2}
+HEADS = (U["HEAD"], U["HEAD_HALF"], U["HEAD_WHOLE"])
 
 
 @dataclass
@@ -67,6 +67,20 @@ class Page:
     slants: list = field(default_factory=list)   # other straight strokes (hairpins ...)
     beams: list = field(default_factory=list)    # filled polygons
     curves: list = field(default_factory=list)   # slurs/ties (bbox + endpoints)
+    full: float = 19.8                            # point size of ordinary (full-size) noteheads on this page
+
+    @property
+    def small_below(self):
+        """glyphs smaller than this are grace / cue size"""
+        return self.full * 0.85
+
+
+def opus_code(uni):
+    """Some exports (e.g. mfiles.co.uk) report Opus glyphs as private-use 0xF0xx where xx is the Mac Roman byte;
+    others already give the decoded character. Normalise both to the decoded code point used in U."""
+    if 0xF020 <= uni <= 0xF0FF:
+        return ord(bytes([uni & 0xFF]).decode("mac_roman"))
+    return uni
 
 
 def load_page(doc, index):
@@ -78,7 +92,12 @@ def load_page(doc, index):
         for uni, gid, origin, bbox in tr["chars"]:
             if uni == 32:
                 continue
-            pg.glyphs.append(Glyph(uni, tr["font"], round(tr["size"], 1), origin[0], origin[1], tuple(bbox)))
+            pg.glyphs.append(Glyph(opus_code(uni), tr["font"], round(tr["size"], 1), origin[0], origin[1], tuple(bbox)))
+    sizes = [g.size for g in pg.glyphs if g.u == U["HEAD"]]
+    if sizes:
+        # full size is the largest notehead size that occurs more than a stray few times (grace/cue notes are smaller)
+        common = [s for s in set(sizes) if sizes.count(s) >= 8]
+        pg.full = max(common) if common else max(set(sizes), key=sizes.count)
     for dr in p.get_drawings():
         items = dr["items"]
         w = dr.get("width") or 0
@@ -93,6 +112,11 @@ def load_page(doc, index):
                 pg.vlines.append(s)
             else:
                 pg.slants.append(s)
+        elif fill is not None and len(items) == 1 and items[0][0] == "re":
+            r = items[0][1]                      # flat beams drawn as filled rectangles
+            if r.height < 4.0 and r.width > 3.0:
+                pg.beams.append(Poly([(r.x0, r.y0), (r.x1, r.y0), (r.x1, r.y1), (r.x0, r.y1)],
+                                     (r.x0, r.y0, r.x1, r.y1)))
         elif fill is not None and all(i[0] in ("l",) for i in items):
             pts = []
             for i in items:

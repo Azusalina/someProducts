@@ -35,6 +35,7 @@ class System:
     index: int
     staves: list                       # [treble, bass]
     barlines: list = field(default_factory=list)   # sorted x of system barlines
+    double: list = field(default_factory=list)     # x of barlines drawn as a pair (double / final bar)
     y0: float = 0
     y1: float = 0
 
@@ -84,6 +85,7 @@ def build_systems(page):
         for x in xs:
             if out and x - out[-1] < 4.0:
                 out[-1] = x
+                sy.double.append(x)
             else:
                 out.append(x)
         sy.barlines = out

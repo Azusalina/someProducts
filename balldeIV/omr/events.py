@@ -12,20 +12,21 @@ DOT_GLYPHS = (U["DOT"], U["DOT_SPECIAL"])
 
 def attach_accidentals(sy, gl, heads):
     ks_ids = set()
-    for si, (_, _, seq) in sy.ks.items():
-        for g in seq:
-            ks_ids.add(id(g))
+    for segs in sy.ks.values():
+        for _, _, _, seq in segs:
+            for g in seq:
+                ks_ids.add(id(g))
     for g in gl:
         if g.u not in ACCIDENTALS or id(g) in ks_ids:
             continue
-        if g.size < 11:
+        if g.size < sy.full * 0.55:
             continue
         si = staff_for(sy, g.y)
         best = None
         for h in heads:
             if h.staff != si and abs(h.y - g.y) > 0.7:
                 continue
-            if (h.grace) != (g.size < 15):
+            if (h.grace) != (g.size < sy.small):
                 continue
             dy = abs(h.y - g.y)
             dx = h.x - g.x
@@ -149,20 +150,17 @@ def build_rests(sy, gl):
             e.rest_up = (g.bbox[1] + g.bbox[3]) / 2 < st.lines[2]
             if g.u in REST_BASE:
                 e.dur = REST_BASE[g.u]
+            elif g.u == U["REST_HALF"]:
+                e.dur = Fraction(1, 2)
             else:
-                # block rest: sits on a line -> half rest; hangs from a line -> whole (= full bar here)
-                on_line = any(abs(g.bbox[3] - ly) < 0.7 for ly in st.lines)
-                hang = any(abs(g.bbox[1] - ly) < 0.7 for ly in st.lines)
-                if on_line and not hang:
-                    e.dur = Fraction(1, 2)
-                else:
-                    e.dur = BAR
+                e.dur = BAR              # whole rest: lasts the whole bar, whatever the metre
+                e.bar_rest = True
             out.append(e)
     return out
 
 
 def attach_dots(sy, gl, events):
-    dots = [g for g in gl if g.u in DOT_GLYPHS and g.size > 15]
+    dots = [g for g in gl if g.u in DOT_GLYPHS and g.size > sy.small]
     heads = [(h, e) for e in events if e.kind == "note" for h in e.heads]
     for d in dots:
         best = None
@@ -194,9 +192,6 @@ def attach_dots(sy, gl, events):
 
 def finish_duration(e):
     if e.kind == "note":
-        if e.grace:
-            e.dur = Fraction(0)
-            return
         e.dots = max([h.dots for h in e.heads] or [0])
         hollow = any(h.hollow for h in e.heads)
         n = e.beams + e.flags if e.beams < 1 else e.beams
@@ -205,6 +200,9 @@ def finish_duration(e):
         else:
             base = Fraction(1, 4) / (2 ** n)
         e.dur = base * (2 - Fraction(1, 2 ** e.dots))
+        if e.grace:
+            e.nominal = e.dur            # small notes: real notes in cadenzas, zero-length otherwise (caller decides)
+            e.dur = Fraction(0)
     else:
         if e.rest_glyph is not None and e.rest_glyph.u in REST_BASE:
             e.dur = e.dur * (2 - Fraction(1, 2 ** e.dots))

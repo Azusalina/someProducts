@@ -67,7 +67,7 @@ test_saved_profile_survives_new_store_and_has_private_permissions (test_widget_c
 test_xdg_config_directory (test_widget_config.ConfigTests.test_xdg_config_directory) ... ok
 
 ----------------------------------------------------------------------
-Ran 67 tests in 4.303s
+Ran 67 tests in 4.049s
 
 OK
-Reloaded Plasma for 1 monitor instance(s). Private settings backup: /tmp/tmpl4m0mjwq/monitor-dashboard/widget-refresh-20261025-141339-948942.json
+Reloaded Plasma for 1 monitor instance(s). Private settings backup: /tmp/tmpysn82f8q/monitor-dashboard/widget-refresh-20261025-232820-652312.json

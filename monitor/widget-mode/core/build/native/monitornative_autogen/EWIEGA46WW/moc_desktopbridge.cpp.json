@@ -33,6 +33,53 @@
                     "lineNumber": 30,
                     "name": "refresh",
                     "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "item",
+                            "type": "QQuickItem*"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 31,
+                    "name": "prepareFreeHost",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "position",
+                            "type": "QPointF"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 32,
+                    "name": "rememberFreePosition",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "isConst": true,
+                    "lineNumber": 33,
+                    "name": "freePosition",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "globalPosition",
+                            "type": "QPointF"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 34,
+                    "name": "mergeAt",
+                    "returnType": "bool"
                 }
             ],
             "object": true,
@@ -163,28 +210,28 @@
                 {
                     "access": "public",
                     "index": 0,
-                    "lineNumber": 32,
+                    "lineNumber": 36,
                     "name": "initialized",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
                     "index": 1,
-                    "lineNumber": 33,
+                    "lineNumber": 37,
                     "name": "topologyChanged",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
                     "index": 2,
-                    "lineNumber": 34,
+                    "lineNumber": 38,
                     "name": "shortcutsChanged",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
                     "index": 3,
-                    "lineNumber": 35,
+                    "lineNumber": 39,
                     "name": "errorChanged",
                     "returnType": "void"
                 },
@@ -197,7 +244,7 @@
                         }
                     ],
                     "index": 4,
-                    "lineNumber": 36,
+                    "lineNumber": 40,
                     "name": "focusRequested",
                     "returnType": "void"
                 }

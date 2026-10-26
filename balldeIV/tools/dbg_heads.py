@@ -9,7 +9,7 @@ for ss in pages:
             if sy.first_measure + k != m:
                 continue
             for si, st in enumerate(sy.staves):
-                print("staff", si, "lines", [round(v, 1) for v in st.lines], "clefs", [(round(x), c) for x, c in sy.clefs[si]], "ks", sy.ks[si][:2])
+                print("staff", si, "lines", [round(v, 1) for v in st.lines], "clefs", [(round(x), c) for x, c in sy.clefs[si]], "ks", [(round(x), k, n) for x, k, n, _ in sy.ks[si]])
             for e in sorted([e for e in sy.events if e.measure == k and e.kind == "note"], key=lambda e: e.x)[:int(sys.argv[3]) if len(sys.argv) > 3 else 12]:
                 for h in e.heads:
                     print(f"  x={h.x:.1f} y={h.y:.1f} staff={h.staff} step={h.step:.1f} dia={h.dia} clef={h.clef} alter={h.alter} midi={h.midi} {h.name()} shift={h.shift}")

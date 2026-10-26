@@ -1,0 +1,20 @@
+[
+ {
+  "id": "ballade4-coda",
+  "title": "Ballade No. 4",
+  "composer": "Chopin \u00b7 Op. 52 \u00b7 coda",
+  "data": "data/score.json",
+  "sheetFrom": 11,
+  "section": "Coda",
+  "tempo": 84
+ },
+ {
+  "id": "liebestraum3",
+  "title": "Liebestraum No. 3",
+  "composer": "Liszt \u00b7 Notturno in A\u266d major",
+  "data": "data/liebestraum3.json",
+  "sheetFrom": 0,
+  "section": "",
+  "tempo": 92
+ }
+]

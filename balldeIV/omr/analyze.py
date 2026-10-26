@@ -62,6 +62,8 @@ class Event:
     onset: Fraction = None
     scale: Fraction = Fraction(1)
     hidden: bool = False
+    bar_rest: bool = False        # whole-bar rest: lasts the measure whatever its length
+    nominal: Fraction = Fraction(0)  # notated value of a small-size note (its dur is 0 unless it is a real cadenza note)
 
     @property
     def length(self):
@@ -144,18 +146,20 @@ def analyze_system(page, sy, gl):
     # --- heads ---
     heads = []
     for g in gl:
-        if g.u in (U["HEAD"], U["HEAD_HALF"]):
+        if g.u in (U["HEAD"], U["HEAD_HALF"], U["HEAD_WHOLE"]):
             si = staff_for(sy, g.y)
             st = sy.staves[si]
-            h = Head(g=g, staff=si, step=st.step_of(g.y), grace=g.size < 15, hollow=g.u == U["HEAD_HALF"],
+            h = Head(g=g, staff=si, step=st.step_of(g.y), grace=g.size < page.small_below, hollow=g.u in (U["HEAD_HALF"], U["HEAD_WHOLE"]),
                      x=g.x, y=g.y)
             h.clef = clef_at(clefs[si], g.x, st.kind)
             h.dia = CLEF_BOTTOM[h.clef] + int(round(h.step))
             heads.append(h)
+    sy.full = page.full
+    sy.small = page.small_below
     sy.clefs = clefs
     sy.glyphs = gl
     sy.heads = heads
-    sy.ks = key_signature(sy, gl, clefs)
+    sy.ks = key_signature(sy, gl, clefs, heads)
     from . import events as ev
     ev.attach_accidentals(sy, gl, heads)
     stems = ev.find_stems(page, sy)
@@ -185,24 +189,51 @@ def clef_at(clef_list, x, default):
     return cur
 
 
-def key_signature(sy, gl, clefs):
-    """Count key-signature accidentals directly after the system's first clef on each staff."""
+def key_signature(sy, gl, clefs, heads):
+    """Key signature segments per staff: {staff: [(x_from, kind, count, glyphs)]}.
+
+    One segment sits after the system's first clef; more follow each double barline when the key changes mid-system.
+    A cluster is a run of full-size accidentals (spacing <= 0.36 x notehead size) whose letters follow the flat/sharp order, optionally
+    led by naturals that cancel the previous key. A cluster of naturals only means C major. Accidentals past the
+    matching prefix, and a lone accidental that belongs to a notehead, are not part of the signature."""
     res = {}
     for si, st in enumerate(sy.staves):
         clef_x = min([c[0] for c in clefs[si]] or [st.x0])
-        accs = sorted([g for g in gl if g.u in ACCIDENTALS and g.size > 19 and staff_for(sy, g.y) == si
-                       and clef_x < g.x < clef_x + 60], key=lambda g: g.x)
-        kind = None
-        seq = []
-        for g in accs:
-            if kind is None:
-                kind = g.u
-            if g.u != kind:
-                break
-            if seq and g.x - seq[-1].x > 9.5:
-                break
-            if not seq and g.x - clef_x > 32:
-                break
-            seq.append(g)
-        res[si] = (ACCIDENTALS[kind] if kind else 0, len(seq), seq)
+        accs = sorted([g for g in gl if g.u in ACCIDENTALS and g.size > sy.full * 0.95 and staff_for(sy, g.y) == si],
+                      key=lambda g: g.x)
+        segs = []
+        for anchor, limit in [(clef_x, 32)] + [(x, 14) for x in sy.double]:
+            run = []
+            for g in accs:
+                if g.x <= anchor + 0.5 or g.x > anchor + 75:
+                    continue
+                if not run and g.x - anchor > limit:
+                    break
+                if run and g.x - run[-1].x > sy.full * 0.36:
+                    break
+                run.append(g)
+            naturals = []
+            for g in run:
+                if g.u != U["NATURAL"]:
+                    break
+                naturals.append(g)
+            body = run[len(naturals):]
+            kind = ACCIDENTALS[body[0].u] if body else 0
+            order = FLAT_ORDER if kind < 0 else SHARP_ORDER
+            kept = []
+            for g in body:
+                letter = (CLEF_BOTTOM[clef_at(clefs[si], g.x, st.kind)] + int(round(st.step_of(g.y)))) % 7
+                if ACCIDENTALS[g.u] != kind or len(kept) >= 7 or letter != order[len(kept)]:
+                    break
+                kept.append(g)
+            if len(kept) == 1 and any(h.staff == si and abs(h.y - kept[0].y) < 0.7 and 0 < h.x - kept[0].x < 26
+                                      for h in heads):
+                kept = []
+            if kept:
+                segs.append((anchor, kind, len(kept), naturals + kept))
+            elif len(naturals) >= 2 or (naturals and anchor == clef_x):
+                segs.append((anchor, 0, 0, naturals))
+            elif anchor == clef_x:
+                segs.append((anchor, 0, 0, []))
+        res[si] = sorted(segs, key=lambda t: t[0])
     return res

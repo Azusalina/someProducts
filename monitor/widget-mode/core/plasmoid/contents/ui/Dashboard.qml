@@ -20,6 +20,10 @@ Item {
     readonly property var terminalControls: inheritedTerminalOwner || localTerminalOwner
     readonly property var powerControls: inheritedPowerOwner || localPowerOwner
     signal moduleReleased(string module, point globalPosition)
+    signal freeMoveStarted(point position)
+    signal freeMoveUpdated(point position)
+    signal freeMoveFinished(point position)
+    signal freeMoveCanceled()
     function acknowledgeCountdown() { return timerControls.acknowledgeCountdown() }
     Keys.onPressed: event => {
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && board.acknowledgeCountdown()) event.accepted = true
@@ -283,6 +287,11 @@ Item {
                                 model: tile.modelData === "powertimers" ? ["battery", "timers"] : tile.modelData === "radios" ? ["wifi", "bluetooth"] : [tile.modelData]
                                 DragGrip {
                                     required property string modelData
+                                    detached: !!board.detachedModule
+                                    onMoveStarted: position => board.freeMoveStarted(position)
+                                    onMoveUpdated: position => board.freeMoveUpdated(position)
+                                    onMoveFinished: position => board.freeMoveFinished(position)
+                                    onMoveCanceled: board.freeMoveCanceled()
                                     module: modelData; ink: board.ink; height: tile.metric ? 12 : 16
                                     onReleased: position => board.moduleReleased(module, position)
                                 }

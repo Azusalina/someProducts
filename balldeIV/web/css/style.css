@@ -18,6 +18,8 @@ select { background: var(--panel2); border: 1px solid var(--line); border-radius
   border-bottom: 1px solid var(--line); flex-wrap: wrap; row-gap: 6px; }
 .brand { display: flex; flex-direction: column; line-height: 1.1; margin-right: 6px; }
 .brand span { color: var(--dim); font-size: 11px; }
+.brand select { font-weight: 700; font-size: 15px; padding: 1px 4px; background: transparent; border-color: transparent; }
+.brand select:hover { border-color: var(--line); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
 .seg button { border: 0; border-radius: 0; background: transparent; padding: 6px 14px; }
 .seg button.on { background: #234a86; }

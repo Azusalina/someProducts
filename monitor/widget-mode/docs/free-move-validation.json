@@ -1,0 +1,19 @@
+{
+  "widgets": [
+    {
+      "id": 163,
+      "version": "1.20.0",
+      "settings_preserved": true,
+      "geometry_preserved": true
+    }
+  ],
+  "installed_matches_source": true,
+  "services": [
+    "active",
+    "active"
+  ],
+  "backend_tests_passed": 67,
+  "qml_checks_passed": 94,
+  "native_free_move_cancel_restore_merge": "passed",
+  "physical_wayland_gesture": "manual validation boundary"
+}

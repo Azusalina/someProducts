@@ -1,4 +1,4 @@
-import { loadScore, lowerBound, buildSteps, stepIndexAtOrAfter } from './score.js';
+import { loadScore, lowerBound, buildSteps, stepIndexAtOrAfter, measureAtTime } from './score.js';
 import { Waterfall } from './waterfall.js';
 import { PdfView } from './pdfview.js';
 import { Synth } from './synth.js';
@@ -6,7 +6,7 @@ import { rangeFor, noteName } from './piano.js';
 import { Ear, calibrationScale } from './mic.js';
 
 const $ = id => document.getElementById(id);
-const DEFAULTS = { colR: '#ff8a3d', colL: '#2fc9b0', kb: 130, zoom: 110, tempo: 84, range: 'fit', strict: '0.75', pages: 'coda' };
+const DEFAULTS = { colR: '#ff8a3d', colL: '#2fc9b0', kb: 130, zoom: 110, tempos: {}, range: 'fit', strict: '0.75', pages: 'coda' };
 const store = {
   get() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('ballade4.settings') || '{}') }; } catch { return { ...DEFAULTS }; } },
   set(o) { try { localStorage.setItem('ballade4.settings', JSON.stringify(o)); } catch { /* private mode */ } },
@@ -17,7 +17,23 @@ const S = {
   steps: [], idx: 0, satisfied: new Set(), stepStart: 0, anim: null, scheduled: 0, lastSig: '',
 };
 
-const score = await loadScore('data/score.json');
+/* ---------- which piece ---------- */
+const pieces = await (await fetch('data/pieces.json')).json();
+const lastPiece = (() => { try { return localStorage.getItem('balldeIV.piece'); } catch { return null; } })();
+const piece = pieces.find(p => p.id === new URLSearchParams(location.search).get('piece'))
+  || pieces.find(p => p.id === lastPiece) || pieces[0];
+for (const p of pieces) $('selPiece').append(new Option(p.title, p.id));
+$('selPiece').value = piece.id;
+$('brandSub').textContent = piece.composer;
+document.title = `${piece.title} · Piano Waterfall`;
+$('selPiece').onchange = e => {
+  try { localStorage.setItem('balldeIV.piece', e.target.value); } catch { /* private mode */ }
+  location.search = '?piece=' + encodeURIComponent(e.target.value);
+};
+const score = await loadScore(piece.data);
+const defaultTempo = piece.tempo ?? score.meta.defaultTempo ?? 84;
+S.cfg.tempos ??= {};
+S.bpm = S.cfg.tempos[piece.id] ?? (piece.id === 'ballade4-coda' ? S.cfg.tempo : undefined) ?? defaultTempo;
 const cv = $('cv');
 const wf = new Waterfall(cv, score);
 const synth = new Synth();
@@ -26,7 +42,7 @@ const ear = new Ear();
 let pdf = null;
 
 function buildPdf() {
-  pdf = new PdfView($('pages'), score, S.cfg.pages === 'all' ? 0 : 11);
+  pdf = new PdfView($('pages'), score, S.cfg.pages === 'all' ? 0 : (piece.sheetFrom ?? 0));
   pdf.setColors({ R: S.cfg.colR, L: S.cfg.colL });
   S.lastSig = '';
 }
@@ -56,7 +72,7 @@ $('rngZoom').oninput = e => upd('zoom', +e.target.value);
 $('selRange').onchange = e => upd('range', e.target.value);
 $('selStrict').onchange = e => upd('strict', e.target.value);
 $('selPages').onchange = e => { upd('pages', e.target.value); buildPdf(); };
-$('btnReset').onclick = () => { S.cfg = { ...DEFAULTS }; store.set(S.cfg); buildPdf(); applyCfg(); setTempo(DEFAULTS.tempo); };
+$('btnReset').onclick = () => { S.cfg = { ...DEFAULTS, tempos: {} }; store.set(S.cfg); buildPdf(); applyCfg(); setTempo(defaultTempo); };
 $('btnSettings').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; layout(); };
 
 /* ---------- layout ---------- */
@@ -85,13 +101,9 @@ addEventListener('resize', layout);
 }
 
 /* ---------- measures / tempo ---------- */
-for (const m of score.measures) {
-  const o = document.createElement('option');
-  o.value = m.n; o.textContent = m.n;
-  $('selMeasure').append(o);
-}
-const measureStart = n => (n - 1) * 3;
-function setTempo(v) { S.bpm = +v; $('rngTempo').value = v; $('outTempo').value = v; S.cfg.tempo = +v; store.set(S.cfg); }
+for (const m of score.measures) $('selMeasure').append(new Option(m.label, m.n));
+const measureStart = n => score.measureByNumber.get(n).start;
+function setTempo(v) { S.bpm = +v; $('rngTempo').value = v; $('outTempo').value = v; S.cfg.tempos[piece.id] = +v; store.set(S.cfg); }
 $('rngTempo').oninput = e => setTempo(e.target.value);
 
 /* ---------- transport ---------- */
@@ -99,8 +111,7 @@ function seek(t) {
   synth.silence();
   S.t = t; S.scheduled = lowerBound(score.notes, t - 1e-6); S.lastSig = '';
   if (S.mode === 'learn') { S.idx = stepIndexAtOrAfter(S.steps, t); beginStep(true); }
-  const m = Math.floor(t / 3) + 1;
-  if (score.measureByNumber.has(m)) $('selMeasure').value = m;
+  $('selMeasure').value = measureAtTime(score, t).n;
 }
 function play(on) {
   S.playing = on && S.mode === 'display';
@@ -267,8 +278,8 @@ function frame(now) {
         synth.note(n.midi, delay, n.d * 60 / S.bpm, 0.75);
       }
       if (S.t > score.t1 + 1) play(false);
-      const m = Math.floor(S.t / 3) + 1;
-      if (score.measureByNumber.has(m) && $('selMeasure').value != m) $('selMeasure').value = m;
+      const m = measureAtTime(score, S.t).n;
+      if ($('selMeasure').value != m) $('selMeasure').value = m;
     }
   } else if (S.anim) {
     const a = S.anim, p = Math.min(1, (now - a.t0) / a.dur);
@@ -298,7 +309,7 @@ function updateHighlights() {
     cur = active;
     wf.sounding = new Set(active);
   }
-  const m = score.measures[Math.max(0, Math.min(score.measures.length - 1, Math.floor(S.t / 3 + 1e-6) - score.meta.firstMeasure + 1))];
+  const m = measureAtTime(score, S.t);
   const sig = cur.map(n => n.id).join(',') + '|' + ghost.length + '|' + (m && m.n);
   if (sig !== S.lastSig) {
     S.lastSig = sig;
@@ -306,10 +317,16 @@ function updateHighlights() {
   }
 }
 
+if (piece.sheetFrom > 0) {
+  $('selPages').options[0].textContent = `${piece.section || 'Section'} only (p.${piece.sheetFrom + 1}–${score.pages.length})`;
+} else {
+  $('lblPages').hidden = true;                      // the sheet is short enough to always show whole
+  S.cfg.pages = 'all';
+}
 applyCfg();
 buildPdf();
 applyCfg();
-setTempo(S.cfg.tempo);
+setTempo(S.bpm);
 layout();
 seek(measureStart(score.meta.firstMeasure) - 0.4);
 requestAnimationFrame(frame);

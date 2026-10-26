@@ -53,8 +53,15 @@ template <> constexpr inline auto DesktopBridge::qt_create_metaobjectdata<qt_met
         "QPointF",
         "globalPosition",
         "refresh",
-        "root",
+        "prepareFreeHost",
         "QQuickItem*",
+        "item",
+        "rememberFreePosition",
+        "position",
+        "freePosition",
+        "QVariantMap",
+        "mergeAt",
+        "root",
         "detachedModule",
         "detachedModules",
         "parentRoot",
@@ -82,22 +89,36 @@ template <> constexpr inline auto DesktopBridge::qt_create_metaobjectdata<qt_met
         }}),
         // Method 'refresh'
         QtMocHelpers::MethodData<void()>(14, 4, QMC::AccessPublic, QMetaType::Void),
+        // Method 'prepareFreeHost'
+        QtMocHelpers::MethodData<bool(QQuickItem *)>(15, 4, QMC::AccessPublic, QMetaType::Bool, {{
+            { 0x80000000 | 16, 17 },
+        }}),
+        // Method 'rememberFreePosition'
+        QtMocHelpers::MethodData<void(const QPointF &)>(18, 4, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 12, 19 },
+        }}),
+        // Method 'freePosition'
+        QtMocHelpers::MethodData<QVariantMap() const>(20, 4, QMC::AccessPublic, 0x80000000 | 21),
+        // Method 'mergeAt'
+        QtMocHelpers::MethodData<bool(const QPointF &)>(22, 4, QMC::AccessPublic, QMetaType::Bool, {{
+            { 0x80000000 | 12, 13 },
+        }}),
     };
     QtMocHelpers::UintData qt_properties {
         // property 'root'
-        QtMocHelpers::PropertyData<QQuickItem*>(15, 0x80000000 | 16, QMC::DefaultPropertyFlags | QMC::Writable | QMC::EnumOrFlag | QMC::StdCppSet, 1),
+        QtMocHelpers::PropertyData<QQuickItem*>(23, 0x80000000 | 16, QMC::DefaultPropertyFlags | QMC::Writable | QMC::EnumOrFlag | QMC::StdCppSet, 1),
         // property 'detachedModule'
-        QtMocHelpers::PropertyData<QString>(17, QMetaType::QString, QMC::DefaultPropertyFlags, 1),
+        QtMocHelpers::PropertyData<QString>(24, QMetaType::QString, QMC::DefaultPropertyFlags, 1),
         // property 'detachedModules'
-        QtMocHelpers::PropertyData<QStringList>(18, QMetaType::QStringList, QMC::DefaultPropertyFlags, 1),
+        QtMocHelpers::PropertyData<QStringList>(25, QMetaType::QStringList, QMC::DefaultPropertyFlags, 1),
         // property 'parentRoot'
-        QtMocHelpers::PropertyData<QQuickItem*>(19, 0x80000000 | 16, QMC::DefaultPropertyFlags | QMC::EnumOrFlag, 1),
+        QtMocHelpers::PropertyData<QQuickItem*>(26, 0x80000000 | 16, QMC::DefaultPropertyFlags | QMC::EnumOrFlag, 1),
         // property 'countdownShortcut'
-        QtMocHelpers::PropertyData<QString>(20, QMetaType::QString, QMC::DefaultPropertyFlags | QMC::Writable, 2),
+        QtMocHelpers::PropertyData<QString>(27, QMetaType::QString, QMC::DefaultPropertyFlags | QMC::Writable, 2),
         // property 'stopwatchShortcut'
-        QtMocHelpers::PropertyData<QString>(21, QMetaType::QString, QMC::DefaultPropertyFlags | QMC::Writable, 2),
+        QtMocHelpers::PropertyData<QString>(28, QMetaType::QString, QMC::DefaultPropertyFlags | QMC::Writable, 2),
         // property 'error'
-        QtMocHelpers::PropertyData<QString>(22, QMetaType::QString, QMC::DefaultPropertyFlags, 3),
+        QtMocHelpers::PropertyData<QString>(29, QMetaType::QString, QMC::DefaultPropertyFlags, 3),
     };
     QtMocHelpers::UintData qt_enums {
     };
@@ -130,7 +151,26 @@ void DesktopBridge::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         case 4: _t->focusRequested((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
         case 5: _t->release((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QPointF>>(_a[2]))); break;
         case 6: _t->refresh(); break;
+        case 7: { bool _r = _t->prepareFreeHost((*reinterpret_cast<std::add_pointer_t<QQuickItem*>>(_a[1])));
+            if (_a[0]) *reinterpret_cast<bool*>(_a[0]) = std::move(_r); }  break;
+        case 8: _t->rememberFreePosition((*reinterpret_cast<std::add_pointer_t<QPointF>>(_a[1]))); break;
+        case 9: { QVariantMap _r = _t->freePosition();
+            if (_a[0]) *reinterpret_cast<QVariantMap*>(_a[0]) = std::move(_r); }  break;
+        case 10: { bool _r = _t->mergeAt((*reinterpret_cast<std::add_pointer_t<QPointF>>(_a[1])));
+            if (_a[0]) *reinterpret_cast<bool*>(_a[0]) = std::move(_r); }  break;
         default: ;
+        }
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        switch (_id) {
+        default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
+        case 7:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
+            case 0:
+                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QQuickItem* >(); break;
+            }
+            break;
         }
     }
     if (_c == QMetaObject::IndexOfMethod) {
@@ -202,14 +242,14 @@ int DesktopBridge::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 11;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
-            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 7;
+        if (_id < 11)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 11;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty

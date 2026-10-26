@@ -49,3 +49,16 @@ function resizeHost(applet,edge,delta) {
     layout.save()
     return true
 }
+
+// Register occupied space with Plasma, but retain the requested pixel geometry.
+// positionItem() normally aligns it to the desktop grid (and nearby items).
+function placeFree(item,x,y) {
+    const layout=item.layout
+    const exactX=Math.max(0,Math.min(Math.max(0,layout.width-item.width),x))
+    const exactY=Math.max(0,Math.min(Math.max(0,layout.height-item.height),y))
+    layout.releaseSpace(item)
+    item.x=exactX;item.y=exactY
+    layout.positionItem(item)
+    item.x=exactX;item.y=exactY
+    layout.save()
+}

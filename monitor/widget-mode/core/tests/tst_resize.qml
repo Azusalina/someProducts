@@ -42,6 +42,15 @@ Item {
             const rectangle=ResizeTools.rectangle(host,"bottom",10000,1000,800)
             compare(rectangle.height,800);compare(rectangle.y,0)
         }
+        function test_025_free_placement_overrides_snap_without_resizing() {
+            let saved=false
+            const host={x:0,y:0,width:203,height:121,layout:{width:1000,height:800,
+                releaseSpace:()=>{}, positionItem:item=>{item.x=120;item.y=80}, save:()=>saved=true}}
+            ResizeTools.placeFree(host,137,93)
+            compare(host.x,137);compare(host.y,93)
+            compare(host.width,203);compare(host.height,121)
+            verify(saved)
+        }
         function test_03_drag_split_preserves_rectangular_bounds() {
             const divider=findChild(notes,"todoDivider")
             const initial=divider.mapToItem(root,3,20)

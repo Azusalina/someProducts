@@ -106,10 +106,33 @@ int main(int argc,char** argv){
     const auto before=childRoot->mapToGlobal(QPointF(0,0));
     childBridge->release("cpu",window.mapToGlobal(QPoint(750,500)));
     CHECK(until([&]{return (childRoot->mapToGlobal(QPointF(0,0))-before).manhattanLength()>20;}));
+    // Free movement preserves the press offset and exact non-grid deltas.
+    QThread::msleep(350);QCoreApplication::processEvents();
+    const auto freeBefore=childRoot->mapToGlobal(QPointF(0,0));
+    const auto press=childRoot->mapToGlobal(QPointF(37,23));
+    const auto drop=press+QPointF(37,29);
+    CHECK(QMetaObject::invokeMethod(childRoot,"beginFreeMove",Q_ARG(QVariant,QVariant(press))));
+    CHECK(QMetaObject::invokeMethod(childRoot,"updateFreeMove",Q_ARG(QVariant,QVariant(drop))));
+    CHECK((childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01);
+    CHECK(QMetaObject::invokeMethod(childRoot,"finishFreeMove",Q_ARG(QVariant,QVariant(drop)),Q_ARG(QVariant,QVariant(false))));
+    CHECK((childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01);
+    // A cancellation restores the previous geometry.
+    CHECK(QMetaObject::invokeMethod(childRoot,"beginFreeMove",Q_ARG(QVariant,QVariant(drop))));
+    CHECK(QMetaObject::invokeMethod(childRoot,"updateFreeMove",Q_ARG(QVariant,QVariant(drop+QPointF(13,17)))));
+    CHECK(QMetaObject::invokeMethod(childRoot,"finishFreeMove",Q_ARG(QVariant,QVariant(drop)),Q_ARG(QVariant,QVariant(true))));
+    CHECK((childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01);
+    // KDE may grid-align its own restored layout; our per-child saved point
+    // restores the exact placement after the native container is initialized.
+    const auto savedPoint=childBridge->freePosition();
+    CHECK(savedPoint.contains("x") && savedPoint.contains("y"));
+    childRoot->parentItem()->setPosition(QPointF(640,480));
+    CHECK(QMetaObject::invokeMethod(childRoot,"restoreFreePlacement"));
+    CHECK((childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01);
+    CHECK(child->config().group("FreePlacement").readEntry("x",-1.0)==savedPoint.value("x").toReal());
     childBridge->release("cpu",root->mapToGlobal(QPointF(50,50)));
     CHECK(until([&]{return child->destroyed();}));bridge->refresh();
     CHECK(!bridge->detachedModules().contains("cpu"));
     CHECK(timer->property("session").toString()==session);
-    std::cout<<"Native desktop split/move/merge, shortcut registration and fullscreen dispatch, module routing and shared timer session passed."<<std::endl;
+    std::cout<<"Native desktop split/free-move/cancel/merge, shortcut registration and fullscreen dispatch, module routing and shared timer session passed."<<std::endl;
     return 0;
 }

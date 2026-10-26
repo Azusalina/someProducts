@@ -1,6 +1,7 @@
-// Canvas waterfall: falling notes above a piano keyboard. Time is in beats (quarter notes); one 6/8 bar = 3 beats.
+// Canvas waterfall: falling notes above a piano keyboard. Time is in beats (quarter notes); bar lines come from the
+// score's measures (a pickup or a free-time cadenza is not a full bar).
 import { layoutKeyboard, isBlack } from './piano.js';
-import { lowerBound } from './score.js';
+import { lowerBound, measureIndexAt } from './score.js';
 
 const rr = (ctx, x, y, w, h, r) => {
   r = Math.min(r, w / 2, h / 2);
@@ -83,22 +84,24 @@ export class Waterfall {
   }
 
   drawGrid(nowY) {
-    const { ctx } = this;
+    const { ctx, score } = this;
     const tTop = this.t + nowY / this.pxPerBeat;
-    const first = Math.ceil(this.t - 0.5);
+    const ms = score.measures;
     ctx.font = '11px system-ui, sans-serif';
     ctx.textBaseline = 'top';
-    for (let b = first; b <= tTop; b++) {
-      const y = Math.round(this.yOf(b)) + .5;
-      if (y > nowY || y < 0) continue;
-      const bar = (b % 3 === 0);
-      ctx.strokeStyle = bar ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.08)';
+    const line = (t, strong, label) => {
+      const y = Math.round(this.yOf(t)) + .5;
+      if (y > nowY || y < 0) return;
+      ctx.strokeStyle = strong ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.w, y); ctx.stroke();
-      if (bar) {
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.fillText('m.' + (b / 3 + 1), 6, y + 3);
-      }
+      if (label) { ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillText(label, 6, y + 3); }
+    };
+    for (let i = Math.max(0, measureIndexAt(score, this.t - 0.5) - 1); i < ms.length && ms[i].start <= tTop; i++) {
+      const m = ms[i];
+      line(m.start, true, 'm.' + m.label);
+      if (m.kind === 'free') continue;                       // no metre inside a cadenza
+      for (let b = 1; b < m.length - 1e-6; b++) line(m.start + b, false);
     }
   }
 

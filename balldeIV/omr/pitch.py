@@ -19,6 +19,15 @@ def key_alters(kind, count):
     return alt
 
 
+def key_at(segs, x):
+    """(kind, count) of the key signature in force at x, from a staff's key segments [(x_from, kind, count, glyphs)]."""
+    cur = segs[0]
+    for sg in segs:
+        if sg[0] <= x + 0.5:
+            cur = sg
+    return cur[1], cur[2]
+
+
 def midi_of(dia, alter):
     return 12 * (dia // 7 + 1) + LETTER_SEMI[dia % 7] + alter
 
@@ -28,8 +37,7 @@ def compute_pitches(sy, carry=None):
     (applied by the caller after tie detection)."""
     bars = sy.barlines
     for si in (0, 1):
-        kind, count, _ = sy.ks[si]
-        ka = key_alters(kind, count)
+        segs = sy.ks[si]
         hs = sorted([h for h in sy.heads if h.staff == si], key=lambda h: (h.x, h.y))
         state = {}
         cur_m = None
@@ -45,5 +53,5 @@ def compute_pitches(sy, carry=None):
             elif h.dia in state:
                 h.alter = state[h.dia]
             else:
-                h.alter = ka.get(h.dia % 7, 0)
+                h.alter = key_alters(*key_at(segs, h.x)).get(h.dia % 7, 0)
             h.midi = midi_of(h.dia, h.alter) + h.shift

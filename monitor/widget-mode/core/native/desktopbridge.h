@@ -28,6 +28,10 @@ public:
     QString countdownShortcut, stopwatchShortcut;
     Q_INVOKABLE void release(const QString& module, const QPointF& globalPosition);
     Q_INVOKABLE void refresh();
+    Q_INVOKABLE bool prepareFreeHost(QQuickItem* item);
+    Q_INVOKABLE void rememberFreePosition(const QPointF& position);
+    Q_INVOKABLE QVariantMap freePosition() const;
+    Q_INVOKABLE bool mergeAt(const QPointF& globalPosition);
 signals:
     void initialized();
     void topologyChanged();
