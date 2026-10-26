@@ -36,9 +36,9 @@
 ## Limitations
 
 - A complete drag into a browser was not exercised automatically: Wayland does not let a test synthesise the compositor's press serial, so the drop itself needs a manual check.
-- Building the standalone repository needs `fileX` checked out next to it (`../fileX`); release archives contain a prebuilt binary.
+- Building needs `fileX` next to this folder (`../fileX`); the product is kept in the someProducts hub only, without its own repository or GitHub release.
 - Real mouse/keyboard input under X11 and other compositors untested; IME composition tested only through code paths, not live.
 
 ## History
 
-- v1.0 (2026-10-26): first release: GUI, outbound drag, launcher entry, `filex --gui`.
+- v1.0 (2026-10-26): GUI, outbound drag, launcher entry, `filex --gui`; committed to the hub (no GitHub release).
