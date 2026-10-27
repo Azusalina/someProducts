@@ -39,6 +39,10 @@ local data; live mode was not started.
 
 ## Website additions
 
+- Count Month: built and initially deployed from `count-month`, then renamed
+  to `d-count-month` after live verification; public `/someProducts/count-month/`.
+  Mobile accounting practice uses inclusive months, exact financial-year splits,
+  saved credits, trophy milestones and a right-side arithmetic calculator.
 - Ballade IV / Liebestraum: source `balldeIV` becomes `d-balladeIV-liebe`, runtime
   `web/`, public `/someProducts/balladeIV-liebe/`.
 - HKU workbench: source `hku` becomes `d-hku`, public `/someProducts/hku/`.

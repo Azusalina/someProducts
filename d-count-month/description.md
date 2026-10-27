@@ -79,6 +79,8 @@ credits, trophy unlocks (including the final trophy), reload without duplicate
 credit, six-term answers, retained credits after settings changes, wrong and
 correct developer passwords, confirmed reset and relocking, calculator
 precedence and division-by-zero feedback, and blocked storage fallback.
+First submissions in a fresh browser and after settings changes are explicitly
+checked; progress comparison uses field values rather than JSON property order.
 Viewports checked: 320×568, 360×640, 390×844, 430×932, 768×1024 and 1440×900.
 Every checked viewport fits the keypad and Submit without page overflow.
 These are automated Chromium checks, not physical iOS/Safari device tests.
@@ -88,3 +90,11 @@ Optional browser QA uses a local Playwright installation and Chromium:
 Its temporary loopback server closes when the checks finish. Screenshots are
 written to `/tmp/count-month-mobile.png`, `/tmp/count-month-small-phone.png`
 and `/tmp/count-month-calculator.png`.
+
+## Publication history
+
+2026-10-28: Built directly in `count-month/` and deployed through the existing
+Pages hub. Initial commit `5b4e56e` passed Actions run `40540261911`; the live
+entry returned HTTP 200 and `deployment.json` confirmed that revision. Only
+after this verification was the source renamed to `d-count-month/`. The public
+path and browser progress key remain unchanged.

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { STORAGE_KEY } from '../model.mjs';
+import { STORAGE_KEY, expectedParts } from '../model.mjs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = new URL('../', import.meta.url);
 const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.css': 'text/css' };
@@ -16,7 +16,7 @@ const server = createServer(async (req, res) => {
   } catch { res.writeHead(500).end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const base = `http://127.0.0.1:${server.address().port}/`;
+const base = process.argv[2] || `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 const page = await context.newPage();
@@ -33,6 +33,10 @@ async function typeAnswer(text) {
 }
 try {
   await page.goto(base);
+  const first = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), STORAGE_KEY);
+  await typeAnswer(expectedParts(first.question).join('+'));
+  await page.locator('#submit').click();
+  assert.equal(await page.locator('#credits').innerText(), '1', 'first submission on a fresh browser earns credit');
   await seed(progress(9));
   assert.equal(await page.locator('#date-start').innerText(), '01 Oct 2000');
   assert.equal(await page.locator('#date-end').innerText(), '31 Jul 2002');
@@ -72,17 +76,20 @@ try {
   assert.equal(await page.locator('#fiscal-range').innerText(), '01 Sep – 31 Aug');
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), STORAGE_KEY);
   assert.ok(saved.question.length <= 12);
+  await typeAnswer(expectedParts(saved.question).join('+'));
+  await page.locator('#submit').click();
+  assert.equal(await page.locator('#credits').innerText(), '11', 'first submission after changing settings earns credit');
 
   await page.locator('#settings-open').click();
   await page.locator('summary').click();
   await page.locator('#developer-password').fill('1234');
   await page.getByRole('button', { name: 'Unlock', exact: true }).click();
   assert.equal(await page.locator('#developer-controls').isVisible(), false);
-  assert.equal(await page.locator('#credits').innerText(), '10');
+  assert.equal(await page.locator('#credits').innerText(), '11');
   await page.locator('#developer-password').fill('0000');
   await page.getByRole('button', { name: 'Unlock', exact: true }).click();
   await page.locator('#reset-credits').click();
-  assert.equal(await page.locator('#credits').innerText(), '10');
+  assert.equal(await page.locator('#credits').innerText(), '11');
   await page.locator('#reset-credits').click();
   assert.equal(await page.locator('#credits').innerText(), '0');
   assert.equal(await page.locator('#trophy-count').innerText(), '0 / 6');

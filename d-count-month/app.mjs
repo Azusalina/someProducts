@@ -64,7 +64,10 @@ function next() {
 function submit() {
   // Reconcile another tab before awarding a point.
   const latest = load();
-  if (latest && JSON.stringify(latest) !== JSON.stringify(state)) {
+  const sameProgress = latest && latest.credits === state.credits && latest.solved === state.solved
+    && ['start', 'length', 'fiscalStart'].every(key => latest.question[key] === state.question[key])
+    && ['max', 'fiscalStart'].every(key => latest.settings[key] === state.settings[key]);
+  if (latest && !sameProgress) {
     state = latest;
     answer = '';
     feedback('Progress updated in another tab.');
