@@ -36,12 +36,19 @@
 ## Limitations
 
 - A complete drag into a browser was not exercised automatically: Wayland does not let a test synthesise the compositor's press serial, so the drop itself needs a manual check.
-- Building needs `fileX` next to this folder (`../fileX`); the product is kept in the someProducts hub only, without its own repository or GitHub release.
+- Building needs `fileX` next to this folder (`../fileX`). Independent clones must place `Azusalina/fileX` and `Azusalina/filex-linux-gui` side by side; this repository does not vendor the shared TUI modules. Repository publication does not create a GitHub binary release.
 - Real mouse/keyboard input under X11 and other compositors untested; IME composition tested only through code paths, not live.
 
 ## History
 
 - v1.0 (2026-10-26): GUI, outbound drag, launcher entry, `filex --gui`; committed to the hub (no GitHub release).
+- 2026-10-27: Changed distribution from hub-only to the independent public
+  `Azusalina/filex-linux-gui` repository. `products.json` registers this folder
+  with the existing root pre-push coordinator. Product history is preserved;
+  ordinary hub pushes publish committed GUI changes and skip an unchanged tip.
+  Source remains in the parent repository, with no nested `.git`, and shared
+  sibling `fileX` compilation remains unchanged. No runtime code or installed
+  application is modified by this repository split.
 
 
 ## Feature extensions (2026-10-26)

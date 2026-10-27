@@ -2,15 +2,30 @@
 
 ## What is it?
 
-filex 的 Linux 图形界面版本：与 [fileX](../fileX/README.md) 相同的横向目录树、快捷键和 `filex.conf`，以 Rust 软件渲染窗口呈现（无 GPU 上下文、无 GUI 工具包），支持系统文件拖放、内嵌终端和图片 / PDF 预览。架构、验证结果和限制见 [description.md](description.md)。
+filex 的 Linux 图形界面版本：与 [fileX](https://github.com/Azusalina/fileX) 相同的横向目录树、快捷键和 `filex.conf`，以 Rust 软件渲染窗口呈现（无 GPU 上下文、无 GUI 工具包），支持系统文件拖放、内嵌终端和图片 / PDF 预览。架构、验证结果和限制见 [description.md](description.md)。
 
 ## How to use
 
-需要 Rust / Cargo 1.88+，以及与本目录并列的 `../fileX`（模型和文件操作直接从其源码编译）。安装命令、应用搜索入口和图标（只写入 `~/.local`）：
+需要 Rust / Cargo 1.88+，以及与本目录并列的 `../fileX`（模型和文件操作直接从其源码编译）。
+
+若使用独立仓库，在同一父目录内克隆两个项目，再进入 GUI 目录：
+
+```bash
+git clone https://github.com/Azusalina/fileX.git
+git clone https://github.com/Azusalina/filex-linux-gui.git
+cd filex-linux-gui
+```
+
+已在 `someProducts` 工作区内则直接进入本目录。安装命令、应用搜索入口和图标（只写入 `~/.local`）：
 
 ```bash
 ./scripts/install.sh
 ```
+
+源码发布到 [Azusalina/filex-linux-gui](https://github.com/Azusalina/filex-linux-gui)。
+在 `someProducts` 工作区内照常从根目录 `git add`、`git commit`、`git push`；
+push hook 会在本产品的已提交内容有变化时自动同步独立仓库。两处源码均保留，
+本地 Git 元数据统一放在母仓库的 `.git` 内。
 
 之后可在应用搜索（Kickoff / KRunner）输入 filex 打开，或在终端运行：
 

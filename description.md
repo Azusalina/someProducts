@@ -15,6 +15,7 @@ and are excluded from independent publication:
 | Folder / repository | Historical folder names |
 | --- | --- |
 | fileX | — |
+| filex-linux-gui | — |
 | win-filex | — |
 | mediator | — |
 | monitor | — |
@@ -27,7 +28,7 @@ the original Yupi reference files, generated `.pages-dist`, and tool metadata ar
 
 ## Setup status
 
-All six registered products (`fileX`, `win-filex`, `mediator`, `monitor`, `toolkit`, and
+All seven registered products (`fileX`, `filex-linux-gui`, `win-filex`, `mediator`, `monitor`, `toolkit`, and
 `track`) have public GitHub repositories and publish their product histories to
 `master`. Monitor contains both `widget-mode`
 and `cli-mode`; the previous `monitor-cli` destination is archived after merging
@@ -191,6 +192,12 @@ including files already tracked in that source.
 - [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
 ## History
+
+2026-10-27: Registered `filex-linux-gui` as a seventh independent public product
+repository under `Azusalina`. Root `git push` projects its committed folder history
+and updates its `master` branch only when the product tip changes. The existing
+parent workspace, sole local `.git`, Pages deployment, and sibling `fileX` source
+dependency remain unchanged.
 
 2026-10-25: Simplified the Pages landing page to names and links only. Tools
 (`graphVis` and HKDSE Cutoffs) appear first. Cost / Logic, Gitpop, Data / Logic,

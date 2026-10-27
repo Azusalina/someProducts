@@ -23,8 +23,8 @@ git push
 ```
 
 `git commit` records changes locally. `git push` publishes the committed changes
-to the hub and automatically synchronizes the six registered product repositories:
-`fileX`, `win-filex`, `mediator`, `monitor`, `toolkit`, and `track`.
+to the hub and automatically synchronizes the seven registered product repositories:
+`fileX`, `filex-linux-gui`, `win-filex`, `mediator`, `monitor`, `toolkit`, and `track`.
 
 The pre-push hook synchronizes changed products to their registered
 repositories before pushing `master` to `origin`. The root `.git` owns all
