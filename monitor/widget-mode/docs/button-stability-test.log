@@ -1,0 +1,11 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
+PASS   : qmltestrunner::ButtonStability::initTestCase()
+PASS   : qmltestrunner::ButtonStability::test_01_pollDoesNotFlashButtons()
+PASS   : qmltestrunner::ButtonStability::test_02_clickDuringPollIsAppliedOnce()
+PASS   : qmltestrunner::ButtonStability::test_03_heartbeatDoesNotFlashAndClickIsRetained()
+PASS   : qmltestrunner::ButtonStability::test_04_profileChangeDuringHeartbeatIsRetained()
+PASS   : qmltestrunner::ButtonStability::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 7985ms
+********* Finished testing of qmltestrunner *********
+Delayed polls/heartbeats keep buttons stable; queued clicks execute exactly once. No real power changes.

@@ -26,17 +26,29 @@ Item {
     }
     readonly property bool countdownFinished: readings.countdown.finished === true
     onCountdownFinishedChanged: if (!countdownFinished) completionAcknowledged = false
+    property string serviceUrl: "http://127.0.0.1:17341"
     property var request: null
-    readonly property bool busy: request !== null
+    property string operation: ""
+    property var pendingControl: null
+    // Polling is background work, not a disabled/low-opacity UI state.
+    readonly property bool busy: (request !== null && operation === "command") || pendingControl !== null
+    function dispatchPending() {
+        if (request || !pendingControl) return
+        const command=pendingControl
+        pendingControl=null
+        if (active && session) control(command.kind,command.action,command.seconds)
+    }
     readonly property int duration: preferences.countdownSeconds === undefined ? 300 : preferences.countdownSeconds
     readonly property int offset: preferences.stopwatchSeconds || 0
     function send(path, payload) {
         if (request) return
         const xhr = new XMLHttpRequest()
+        operation=payload === null ? "poll" : "command"
         request = xhr; timeout.restart()
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE || request !== xhr) return
-            timeout.stop(); request = null
+            timeout.stop(); request = null; operation=""
+            Qt.callLater(dispatchPending)
             if (xhr.status !== 200) {
                 if (xhr.status === 410) session = ""
                 error = "Timers unavailable · retrying"
@@ -51,13 +63,13 @@ Item {
                 if (!active) close()
             } catch (e) { error = "Invalid timer response" }
         }
-        xhr.open(payload === null ? "GET" : "POST", "http://127.0.0.1:17341" + path)
+        xhr.open(payload === null ? "GET" : "POST", owner.serviceUrl + path)
         xhr.setRequestHeader("X-Monitor-Client", "plasma-widget")
         if (payload !== null) xhr.setRequestHeader("Content-Type", "application/json")
         xhr.send(payload === null ? null : JSON.stringify(payload))
     }
     function poll() {
-        if (!active || request) return
+        if (!active || request || pendingControl) return
         if (!session) send("/timers/create", {duration: duration, offset: offset})
         else if (timeEdits.countdown !== undefined) control("countdown", "configure", timeEdits.countdown)
         else if (timeEdits.stopwatch !== undefined) control("stopwatch", "configure", timeEdits.stopwatch)
@@ -80,19 +92,26 @@ Item {
     }
     function control(kind, action, seconds) {
         if (!session) return
+        if (request) {
+            // Keep the first click during an in-flight poll, and execute it
+            // immediately after that read finishes. Never drop it silently.
+            if (operation === "poll" && !pendingControl) pendingControl={kind:kind,action:action,seconds:seconds}
+            return
+        }
         send("/timers/control", {session: session, kind: kind, action: action, seconds: seconds})
     }
     function close() {
+        pendingControl=null
         if (!session) return
         const previous = session; session = ""; timeEdits = ({}); readings = {countdown: {}, stopwatch: {}}
         const xhr = new XMLHttpRequest()
-        xhr.open("POST", "http://127.0.0.1:17341/timers/close")
+        xhr.open("POST", owner.serviceUrl + "/timers/close")
         xhr.setRequestHeader("X-Monitor-Client", "plasma-widget")
         xhr.setRequestHeader("Content-Type", "application/json")
         xhr.send(JSON.stringify({session: previous}))
     }
     Timer { interval: owner.error ? 2000 : 250; running: owner.active; repeat: true; onTriggered: owner.poll() }
-    Timer { id: timeout; interval: 6000; onTriggered: { const xhr = owner.request; owner.request = null; if (xhr) xhr.abort(); owner.error = "Timer bridge timed out" } }
+    Timer { id: timeout; interval: 6000; onTriggered: { const xhr = owner.request; owner.request = null; owner.operation=""; owner.pendingControl=null; if (xhr) xhr.abort(); owner.error = "Timer bridge timed out" } }
     onActiveChanged: { if (active) Qt.callLater(poll); else { focusOpen = false; close() } }
     Component.onDestruction: { if (request) request.abort(); close() }
 }

@@ -27,6 +27,7 @@ PlasmoidItem {
         }
     }
     property var freeMove: null
+    property var detachedHost: null
     function beginFreeMove(position) {
         const item=ResizeTools.host(appletRoot)
         if (!item || !desktopBridge.detachedModule || Plasmoid.immutable) return
@@ -62,6 +63,7 @@ PlasmoidItem {
     function configureDetachedHost() {
         const item=ResizeTools.host(appletRoot)
         if (!item || !desktopBridge.detachedModule) return
+        detachedHost=item
         desktopBridge.prepareFreeHost(item)
         // Our hold gesture replaces Plasma's edit-mode hold/overlay for children.
         item.editModeCondition=0 // ItemContainer.Locked
@@ -71,7 +73,17 @@ PlasmoidItem {
     function restoreFreePlacement() {
         configureDetachedHost()
         const item=ResizeTools.host(appletRoot), saved=desktopBridge.freePosition()
-        if (item && saved.x !== undefined) ResizeTools.placeFree(item,saved.x,saved.y)
+        if (!item || saved.x === undefined || freeMove) return
+        const x=Math.max(0,Math.min(Math.max(0,item.layout.width-item.width),saved.x))
+        const y=Math.max(0,Math.min(Math.max(0,item.layout.height-item.height),saved.y))
+        if (Math.abs(item.x-x)>0.001 || Math.abs(item.y-y)>0.001) ResizeTools.placeFree(item,x,y)
+    }
+    Connections {
+        target: appletRoot.detachedHost
+        // Plasma can finish its layout after our initial restore. Reapply the
+        // saved pixel coordinates after that pass, not during the user's drag.
+        function onXChanged() { if (!appletRoot.freeMove) Qt.callLater(appletRoot.restoreFreePlacement) }
+        function onYChanged() { if (!appletRoot.freeMove) Qt.callLater(appletRoot.restoreFreePlacement) }
     }
     Timer {
         id: restoreFreePosition

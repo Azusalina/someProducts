@@ -49,6 +49,12 @@ output { min-width: 2.2em; color: var(--text); font-variant-numeric: tabular-num
   border: 1.5px solid var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 30%, transparent); }
 .hl-note.off { opacity: .25; }
 .hl-ghost { position: absolute; border-radius: 3px; border: 1px dashed var(--c); opacity: .6; }
+.pat-band { position: absolute; border-radius: 4px; background: color-mix(in srgb, var(--c) 17%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--c) 70%, transparent); }
+.pat-band span { position: absolute; left: -1px; min-width: 16px; padding: 0 4px; border-radius: 4px; text-align: center; font: 700 11px/15px system-ui, sans-serif;
+  background: var(--c); color: #0b0f14; white-space: nowrap; }
+.pat-band span.above { bottom: 100%; margin-bottom: 1px; } .pat-band span.below { top: 100%; margin-top: 1px; }
+.no-pat .pat-band { display: none; }
 .hl-measure { position: absolute; background: rgba(106, 165, 255, .10); border-left: 2px solid rgba(106, 165, 255, .55);
   border-right: 2px solid rgba(106, 165, 255, .55); }
 
@@ -62,6 +68,15 @@ output { min-width: 2.2em; color: var(--text); font-variant-numeric: tabular-num
 .meter > div { height: 100%; width: 0; background: linear-gradient(90deg, #36c28e, #e8c547 75%, #ef5a5a); transition: width .06s linear; }
 .meter.big { height: 12px; }
 .hudbtns { display: flex; gap: 6px; }
+#patLegend { position: absolute; right: 12px; top: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  pointer-events: none; }
+#patLegend:empty { display: none; }
+#patLegend .pl { display: flex; gap: 5px; align-items: center; background: rgba(19, 25, 34, .86); border: 1px solid var(--line);
+  border-radius: 9px; padding: 4px 8px; font-size: 12px; color: var(--dim); }
+#patLegend b { color: var(--text); }
+#patLegend .chip { min-width: 22px; text-align: center; padding: 1px 6px; border-radius: 6px; font-weight: 700; color: var(--c);
+  border: 1.5px solid color-mix(in srgb, var(--c) 60%, transparent); opacity: .65; }
+#patLegend .chip.on { background: var(--c); color: #0b0f14; opacity: 1; }
 #toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1b2433; border: 1px solid #36507e;
   padding: 8px 14px; border-radius: 10px; max-width: 80%; }
 #toast[hidden] { display: none; }

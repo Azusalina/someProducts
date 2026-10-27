@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Id": "local.filex.navigator",
+    "Name": "filex",
+    "Description": "Transparent, persistent FileX folder navigation",
+    "Icon": "system-file-manager",
+    "Category": "File System",
+    "Version": "0.1.0",
+    "License": "MIT",
+    "Authors": [{"Name": "someProducts"}]
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

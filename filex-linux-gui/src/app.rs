@@ -23,9 +23,10 @@ use std::{
 use winit::event_loop::EventLoopProxy;
 
 pub enum UserEvent {
-    /// A terminal window or background step finished: re-read the tree.
-    Refresh(String),
     Message(String),
+    TerminalOutput(u64, Vec<u8>),
+    TerminalEnded(u64),
+    PreviewReady(u64, Result<crate::preview::Preview, String>),
 }
 
 pub struct Pending {
@@ -134,8 +135,12 @@ pub struct App {
     node_budget: usize,
     pub config_path: PathBuf,
     pub dashboard: bool,
+    pub terminal_page: Option<crate::terminal::Terminal>,
+    pub terminal_visible: bool,
     pub meta_path: Option<PathBuf>,
     pub meta: Dash,
+    pub info_path: Option<PathBuf>,
+    pub preview: crate::preview::State,
     pub message: String,
     pub exit_directory: Option<PathBuf>,
     pub modal: Option<Modal>,
@@ -168,9 +173,13 @@ impl App {
             pending: None,
             node_budget: budget,
             config_path,
-            dashboard: false,
+            dashboard: true,
+            terminal_page: None,
+            terminal_visible: false,
             meta_path: None,
             meta: Dash::default(),
+            info_path: None,
+            preview: Default::default(),
             message: String::new(),
             exit_directory: None,
             modal: None,
@@ -213,6 +222,8 @@ impl App {
         self.browser.root.borrow().path == path
     }
     pub fn refresh_panes(&mut self) {
+        self.preview.invalidate();
+        self.info_path = None;
         self.browser.refresh();
         self.link_target = None;
         self.meta_path = None;
@@ -268,6 +279,60 @@ impl App {
     }
 
     // ---- copy / move -------------------------------------------------------------
+    /// Drops use exactly the keyboard transfer planner and replacement prompts.
+    pub fn drop_paths(
+        &mut self,
+        mut sources: Vec<PathBuf>,
+        directory: &Path,
+        moving: bool,
+    ) -> Result<(), String> {
+        if self.modal.is_some() || self.pending.is_some() || self.terminal_visible {
+            return Err("Finish or cancel the current operation before dropping files".into());
+        }
+        if sources.is_empty() {
+            return Err("No local files in drop".into());
+        }
+        sources.sort_by_key(|p| p.components().count());
+        let mut unique = Vec::<PathBuf>::new();
+        for path in sources {
+            std::fs::symlink_metadata(&path).map_err(ioerr)?;
+            if moving && self.protected_root(&path) {
+                return Err("Cannot move the displayed root".into());
+            }
+            if !unique.iter().any(|p| path.starts_with(p)) {
+                unique.push(path);
+            }
+        }
+        let total = unique.len();
+        self.pending = Some(Pending {
+            sources: unique,
+            moving,
+        });
+        let result = self.transfer_to(directory);
+        if result.is_err() && self.pending.as_ref().is_some_and(|p| p.sources.len() == total) {
+            self.cancel_transfer();
+        }
+        result
+    }
+    fn start_terminal(
+        &mut self,
+        cwd: &Path,
+        script: &std::ffi::OsStr,
+        pause: bool,
+        title: String,
+    ) -> Result<(), String> {
+        if self.terminal_page.is_some() {
+            self.terminal_visible = true;
+            return Err("A terminal is already running; exit it before starting another".into());
+        }
+        let proxy = self.proxy.clone().ok_or("Window event loop is not ready")?;
+        self.terminal_page = Some(crate::terminal::Terminal::spawn(
+            cwd, script, pause, title, proxy,
+        )?);
+        self.terminal_visible = true;
+        self.message = "Terminal · Ctrl+Shift+Tab switches to the tree".into();
+        Ok(())
+    }
     fn begin_transfer(&mut self, moving: bool) -> Result<(), String> {
         let sources = self.sources()?;
         if moving && sources.iter().any(|p| self.protected_root(p)) {
@@ -484,15 +549,6 @@ impl App {
     }
 
     // ---- external programs -------------------------------------------------------
-    fn watch(&self, mut child: std::process::Child, done: String) {
-        let proxy = self.proxy.clone();
-        std::thread::spawn(move || {
-            let _ = child.wait();
-            if let Some(proxy) = proxy {
-                let _ = proxy.send_event(UserEvent::Refresh(done));
-            }
-        });
-    }
     fn run_foreground(&mut self, text: &str) -> Result<(), String> {
         let directory = self.selection_path();
         if text.trim().is_empty() {
@@ -505,9 +561,7 @@ impl App {
         script.push(launch::quote(std::ffi::OsStr::new(&clean(text))));
         script.push("\n");
         script.push(launch::command_line(&command));
-        let child = launch::run_script(&self.gui.terminal, &directory, &script, true)?;
-        self.watch(child, "Command window closed".into());
-        self.message = format!("Running in terminal: {}", clean(text));
+        self.start_terminal(&directory, &script, true, clean(text))?;
         Ok(())
     }
     fn git_menu(&mut self) -> Result<(), String> {
@@ -544,7 +598,11 @@ impl App {
     ) -> Result<(), String> {
         let action = git_action(action);
         let commands = git_actions::commands(&root, &selected, action, message)?;
-        let title = format!("{}  {}", action.description(), clean(&root.to_string_lossy()));
+        let title = format!(
+            "{}  {}",
+            action.description(),
+            clean(&root.to_string_lossy())
+        );
         self.confirm(title, ConfirmKind::Git { commands, root });
         Ok(())
     }
@@ -561,9 +619,7 @@ impl App {
             );
         }
         script.push("printf '\\nGit operation completed\\n'");
-        let child = launch::run_script(&self.gui.terminal, root, &script, true)?;
-        self.watch(child, "Git window closed; tree status refreshed".into());
-        self.message = "Git running in terminal".into();
+        self.start_terminal(root, &script, true, "Git".into())?;
         Ok(())
     }
     fn open(&mut self, method: &str) -> Result<(), String> {
@@ -593,9 +649,7 @@ impl App {
                 .map(Path::to_path_buf)
                 .unwrap_or_else(|| path.parent().unwrap_or(Path::new("/")).to_path_buf());
             let script = launch::command_line(&command);
-            let child =
-                launch::run_script(&self.gui.terminal, &cwd, &script, opener.pause_on_exit)?;
-            self.watch(child, format!("{} closed", opener.label));
+            self.start_terminal(&cwd, &script, opener.pause_on_exit, opener.label.clone())?;
         } else if command
             .get_args()
             .any(|arg| arg.as_bytes().ends_with(b"/scripts/open_markdown.mjs"))
@@ -633,10 +687,18 @@ impl App {
             .rule(&path, &conf.defaults, dir)
             .cloned()
             .unwrap_or("system".into());
-        if !conf.openers.get(&default).is_some_and(|o| o.supports(&path)) {
+        if !conf
+            .openers
+            .get(&default)
+            .is_some_and(|o| o.supports(&path))
+        {
             default = "system".into();
         }
-        if !conf.openers.get(&default).is_some_and(|o| o.supports(&path)) {
+        if !conf
+            .openers
+            .get(&default)
+            .is_some_and(|o| o.supports(&path))
+        {
             default = "@preview".into();
         }
         let mut ids = vec![default.clone()];
@@ -728,7 +790,11 @@ impl App {
         }
         match action {
             "trash" => {
-                let title = ui_format!("送入回收站 {}", "Trash {}", clean(&source.to_string_lossy()));
+                let title = ui_format!(
+                    "送入回收站 {}",
+                    "Trash {}",
+                    clean(&source.to_string_lossy())
+                );
                 self.confirm(title, ConfirmKind::Trash(source));
             }
             "new_file" => self.prompt(label("新文件", "New file"), "", PromptKind::NewFile),
@@ -810,7 +876,10 @@ impl App {
             files::copy_path(&path)?;
             self.message = label("已复制绝对路径", "Absolute path copied").into();
         } else {
-            self.message = format!("Path copied (Ctrl+V in prompts): {}", clean(&self.clipboard));
+            self.message = format!(
+                "Path copied (Ctrl+V in prompts): {}",
+                clean(&self.clipboard)
+            );
         }
         Ok(())
     }
@@ -880,6 +949,7 @@ impl App {
     // ---- input -------------------------------------------------------------------
     /// The TUI main loop body: focus follows the cursor, messages clear, errors report.
     pub fn handle_key(&mut self, key: &str) {
+        self.info_path = None;
         self.focus = true;
         if !["H", "L"].contains(&key) {
             self.message.clear()
@@ -915,6 +985,7 @@ impl App {
         }
     }
     pub fn select(&mut self, node: &NodeRef) {
+        self.info_path = None;
         self.browser.selected = node.clone();
         self.link_target = None;
         self.meta_path = None;
@@ -930,7 +1001,13 @@ impl App {
             .output()
             .ok()
             .filter(|o| o.status.success())
-            .map(|o| String::from_utf8_lossy(&o.stdout).lines().next().unwrap_or("").to_owned())
+            .map(|o| {
+                String::from_utf8_lossy(&o.stdout)
+                    .lines()
+                    .next()
+                    .unwrap_or("")
+                    .to_owned()
+            })
             .unwrap_or_default()
     }
     fn modal_key(&mut self, modal: Modal, key: &str) -> Result<(), String> {
@@ -949,7 +1026,11 @@ impl App {
                     Ok(())
                 }
                 _ => {
-                    let clip = if key == "\x16" { self.paste_source() } else { String::new() };
+                    let clip = if key == "\x16" {
+                        self.paste_source()
+                    } else {
+                        String::new()
+                    };
                     edit.key(key, &clip);
                     self.modal = Some(Modal::Prompt {
                         title,
@@ -1025,7 +1106,8 @@ impl App {
                 "enter" => self.confirmed(kind),
                 "escape" | "\x03" => {
                     if matches!(kind, ConfirmKind::Replace { .. }) {
-                        self.message = "Replacement cancelled; choose destination or press Esc".into();
+                        self.message =
+                            "Replacement cancelled; choose destination or press Esc".into();
                     }
                     Ok(())
                 }
@@ -1072,7 +1154,9 @@ impl App {
     /// Pointer selection inside list modals.
     pub fn modal_pick(&mut self, index: usize, activate: bool) {
         match &mut self.modal {
-            Some(Modal::Choose { selected, options, .. }) if index < options.len() => {
+            Some(Modal::Choose {
+                selected, options, ..
+            }) if index < options.len() => {
                 *selected = index;
                 if activate {
                     self.handle_key("enter");
@@ -1085,11 +1169,15 @@ impl App {
     pub fn modal_scroll(&mut self, rows: isize) {
         let body = self.view_rows.saturating_sub(4).max(1);
         match &mut self.modal {
-            Some(Modal::Pager { rows: lines, top, .. }) => {
-                *top = (*top as isize + rows).clamp(0, lines.len().saturating_sub(body) as isize) as usize
+            Some(Modal::Pager {
+                rows: lines, top, ..
+            }) => {
+                *top = (*top as isize + rows).clamp(0, lines.len().saturating_sub(body) as isize)
+                    as usize
             }
             Some(Modal::Help { rows: lines, top }) => {
-                *top = (*top as isize + rows).clamp(0, lines.len().saturating_sub(body) as isize) as usize
+                *top = (*top as isize + rows).clamp(0, lines.len().saturating_sub(body) as isize)
+                    as usize
             }
             _ => {}
         }
@@ -1249,7 +1337,11 @@ impl App {
                 }
                 "t" => {
                     let initial = self.browser.target().to_string_lossy().into_owned();
-                    self.prompt(label("目标路径", "Destination"), &initial, PromptKind::TransferPath);
+                    self.prompt(
+                        label("目标路径", "Destination"),
+                        &initial,
+                        PromptKind::TransferPath,
+                    );
                     return Ok(());
                 }
                 "+" => {
@@ -1300,7 +1392,11 @@ impl App {
             })
             .to_string();
         if self.pending.is_some() && action == "new_folder" {
-            self.prompt(label("新目标目录", "New folder"), "", PromptKind::Destination);
+            self.prompt(
+                label("新目标目录", "New folder"),
+                "",
+                PromptKind::Destination,
+            );
             return Ok(());
         }
         if self.pending.is_some()
@@ -1443,7 +1539,11 @@ impl App {
                 if !self.selection_path().is_dir() {
                     return Err("Select a folder to run a background command".into());
                 }
-                self.prompt(label("后台执行", "Run in background"), "", PromptKind::Background)
+                self.prompt(
+                    label("后台执行", "Run in background"),
+                    "",
+                    PromptKind::Background,
+                )
             }
             "copy_path" => self.copy_path()?,
             "refresh" => {
@@ -1459,7 +1559,13 @@ impl App {
                 self.message = label("配置已重新读取", "Config reloaded").into()
             }
             "goto" => {
-                let path = self.browser.root.borrow().path.to_string_lossy().into_owned();
+                let path = self
+                    .browser
+                    .root
+                    .borrow()
+                    .path
+                    .to_string_lossy()
+                    .into_owned();
                 self.prompt(label("进入目录", "Go to"), &path, PromptKind::Goto)
             }
             "search" => {
@@ -1491,7 +1597,8 @@ impl App {
             }
             "link_info" => {
                 let path = self.selection_path();
-                let text = files::dashboard(&path, &self.browser.root.borrow().path, &self.browser.conf);
+                let text =
+                    files::dashboard(&path, &self.browser.root.borrow().path, &self.browser.conf);
                 self.pager(label("文件 / 链接信息", "Information"), &text);
             }
             "preview" => {
@@ -1532,11 +1639,36 @@ impl App {
     }
 
     /// Structured dashboard for the selected path (q).
+    pub fn pump_preview(&mut self) {
+        if !self.dashboard
+            || self.terminal_visible
+            || self.preview.busy
+            || self.preview.image.is_some()
+            || !self.preview.error.is_empty()
+            || Instant::now() < self.preview.due
+        {
+            return;
+        }
+        let (Some(path), Some(proxy)) = (self.preview.path.clone(), self.proxy.clone()) else {
+            return;
+        };
+        let page = self.preview.page;
+        let generation = self.preview.generation;
+        self.preview.busy = true;
+        std::thread::spawn(move || {
+            let result = crate::preview::load(&path, page);
+            let _ = proxy.send_event(UserEvent::PreviewReady(generation, result));
+        });
+    }
     pub fn update_dash(&mut self) {
-        let path = self.selection_path();
+        let path = self
+            .info_path
+            .clone()
+            .unwrap_or_else(|| self.selection_path());
         if self.meta_path.as_ref() == Some(&path) {
             return;
         }
+        self.preview.request(&path);
         self.meta = dash(&path, &self.browser.root.borrow().path, &self.browser.conf);
         self.meta_path = Some(path);
     }
@@ -1597,7 +1729,12 @@ pub fn human(bytes: u64) -> String {
 fn dash(path: &Path, root: &Path, conf: &Config) -> Dash {
     use std::os::unix::fs::MetadataExt;
     let mut d = Dash {
-        name: clean(&path.file_name().unwrap_or(path.as_os_str()).to_string_lossy()),
+        name: clean(
+            &path
+                .file_name()
+                .unwrap_or(path.as_os_str())
+                .to_string_lossy(),
+        ),
         ..Default::default()
     };
     let info = match std::fs::symlink_metadata(path) {
@@ -1618,7 +1755,8 @@ fn dash(path: &Path, root: &Path, conf: &Config) -> Dash {
     }
     .into();
     d.rows.push(("Modified".into(), date(info.mtime())));
-    d.rows.push(("Created".into(), birth(path).map_or("-".into(), date)));
+    d.rows
+        .push(("Created".into(), birth(path).map_or("-".into(), date)));
     d.rows.push((
         "Size".into(),
         if info.is_dir() {
@@ -1627,7 +1765,8 @@ fn dash(path: &Path, root: &Path, conf: &Config) -> Dash {
             format!("{}  ·  {} bytes", human(info.len()), info.len())
         },
     ));
-    d.rows.push(("Mode".into(), format!("{:o}", info.mode() & 0o7777)));
+    d.rows
+        .push(("Mode".into(), format!("{:o}", info.mode() & 0o7777)));
     // "Key: value" lines from the shared link report become rows; the rest
     // (hard-link peers, scan notes) stay as plain lines. The directory note
     // explaining link counts is dropped.
@@ -1644,9 +1783,11 @@ fn dash(path: &Path, root: &Path, conf: &Config) -> Dash {
         }
     }
     d.rows.push(("Path".into(), clean(&path.to_string_lossy())));
-    if conf.preview_lines > 0 && info.is_file() {
+    if conf.preview_lines > 0 && info.is_file() && !crate::preview::supported(path) {
         let preview = files::preview(path, conf.preview_bytes);
-        let body = preview.split_once("\n\n").map_or(preview.as_str(), |(_, b)| b);
+        let body = preview
+            .split_once("\n\n")
+            .map_or(preview.as_str(), |(_, b)| b);
         d.preview = body
             .lines()
             .take(conf.preview_lines)

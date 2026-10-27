@@ -79,7 +79,7 @@ impl<'a> Canvas<'a> {
         self.px.fill(color);
     }
     #[inline]
-    fn put(&mut self, x: i32, y: i32, color: u32, a: u32) {
+    pub(crate) fn put(&mut self, x: i32, y: i32, color: u32, a: u32) {
         let (cx0, cy0, cx1, cy1) = self.clip;
         if x < cx0 || y < cy0 || x >= cx1 || y >= cy1 || a == 0 {
             return;

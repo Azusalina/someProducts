@@ -6,13 +6,13 @@
 - `app.rs`: non-blocking port of the TUI `Ui`. Key → action resolution is copied from `tui.rs`; the TUI's blocking prompt / choose / confirm / pager / reorder loops are modals with continuations (copy/move replacement confirmations, Git menu → message → confirm, open-with, hidden items, trash).
 - `layout.rs`: pixel version of `model::Layout` (classic and grouped `v`), plus the ancestor route.
 - `view.rs`: header (breadcrumb, mode chips, client-side window controls), tree, dashboard (`q`), status line, modals. `paint.rs`: software painter on the 0RGB framebuffer. `font.rs`: embedded Geist / Geist Mono (SIL OFL, `assets/fonts/OFL.txt`) with fontconfig fallbacks (CJK etc.) memory-mapped on demand.
-- `main.rs`: winit 0.30 + softbuffer, `ControlFlow::Wait` (redraw only on input, brief 200 ms polling while Git snapshots finish, short eased animations). `launch.rs`: terminal programs run in `[gui] terminal` / `$TERMINAL` / first detected emulator; the tree refreshes when that window closes.
-- `dnd.rs`: outbound drag-and-drop. winit cannot be a drag source, so a private Wayland event queue on winit's own connection (`Backend::from_foreign_display`) binds `wl_seat` and `wl_data_device_manager`; a second `wl_pointer` records the button-press serial that `start_drag` needs. A press on a node that moves 8 px starts the drag; the source offers `text/uri-list` (RFC 8089 `file://` URIs, percent-encoded bytes) and `text/plain`, action copy. Marked items travel together when the dragged node is marked. X11 sessions report that dragging needs Wayland.
+- `main.rs`: winit 0.30 + softbuffer, `ControlFlow::Wait` (redraw only on input, brief 200 ms polling while Git snapshots finish, short eased animations). `terminal.rs`: terminal programs run on a real PTY with a vt100 screen inside the same window. Reader events wake the window; exit refreshes the tree. `launch.rs` retains external shell detection and byte-exact POSIX command quoting.
+- `dnd.rs`: outbound drag-and-drop. winit cannot be a drag source, so a private Wayland event queue on winit's own connection (`Backend::from_foreign_display`) binds `wl_seat` and `wl_data_device_manager`; a second `wl_pointer` records the button-press serial that `start_drag` needs. A press on a node that moves 8 px starts the drag; the source offers `text/uri-list` (RFC 8089 `file://` URIs, percent-encoded bytes) and `text/plain`, action copy. Marked items travel together when the dragged node is marked. The receiver accepts local URI lists, reads bounded payloads off the UI thread, and maps logical Wayland drop coordinates to physical node/breadcrumb hits. Internal drops move (Ctrl copies); external drops copy. All use the existing transfer planner and replacement confirmations. Outbound X11 drags remain unsupported.
 - Design: constructivist minimalism, graphite / paper palettes with one red accent; configured filex colours are harmonised into the palette; clean Git states (P/C) are muted.
 
 ## Differences from the TUI
 
-- Terminal openers, `@`, Git actions open a terminal emulator window instead of suspending the screen; tmux right-pane reuse does not apply.
+- Terminal openers, `@`, Git actions use one embedded PTY page; Ctrl+Shift+Tab switches between it and the tree without stopping the process. tmux right-pane reuse does not apply.
 - `x` writes `FILEX_CWD_FILE` if set; started from a terminal it then opens `$SHELL` in the folder, otherwise it opens a terminal emulator there.
 - Fcitx auto-English is replaced by enabling the input method only inside prompts.
 - Search runs on Enter (not incrementally), like the TUI.
@@ -42,3 +42,29 @@
 ## History
 
 - v1.0 (2026-10-26): GUI, outbound drag, launcher entry, `filex --gui`; committed to the hub (no GitHub release).
+
+
+## Feature extensions (2026-10-26)
+
+- Fullscreen is the default (`[gui] fullscreen = true`); F11 switches modes. On a window-mode transition the existing information dashboard expands in fullscreen and collapses when windowed. Its manual q toggle remains available.
+- Hover updates dashboard metadata without changing selection. Supported photos render below metadata, with EXIF orientation. PDFs render one page at a time through Poppler with previous/next controls. Normal files keep their existing text preview.
+- `preview.rs` has a 150 ms hover debounce, one background render at a time, stale-result rejection by path/page, a 1400 px preview bound and bounded decoder allocation. Preview pixels remain in memory; no exports, persistent caches or source-file modifications. PDF processes time out after 20 seconds. Hidden dashboard does not schedule previews. Encrypted/damaged PDFs and missing Poppler report an inline error.
+- `terminal.rs` owns the PTY session/process group, handles resize/SIGWINCH, VT colours/cursor/alternate screen, Unicode/IME and editor control keys. Normal exit restores the tree. Closing the GUI ends its PTY session. Terminal output and PDF loading do not block the GUI event loop.
+- Optional `widget/` provides a transparent Plasma directory navigator, filesystem-notification updates, explicit GUI/TUI launchers and hover-folder x → external terminal. See its own description for differences from the full FileX model.
+- Existing GUI palettes, typography, decoration, layout and animations are retained. Changes add only requested interactions and content in the existing dashboard / new terminal page.
+
+### Current validation
+
+Rust tests cover drop moves/copies, duplicate paths, replacement cancellation, recursive/root move rejection, byte-preserving local URI decoding, PTY input/resizing, actual Vim and Nano save/exit, photo pixels, two distinct rendered PDF pages, hover/selection independence, fullscreen config and existing shared FileX behavior. Widget native and QML checks are documented in `widget/description.md`.
+
+Earlier RSS/CPU/screenshot measurements above describe the original build and have not been remeasured for these extensions. Native Wayland drag negotiation and final Firefox drops still require a live pointer gesture. X11 inbound file drops are supported by winit; outbound X11 remains unavailable. PDF viewing here is raster page navigation, without text selection/search or interactive PDF forms.
+
+### Implementation references
+
+- [Wayland data-device protocol](https://wayland.freedesktop.org/docs/html/apa.html)
+- [vt100 terminal parser](https://docs.rs/vt100/0.18.1/vt100/)
+- [image decoder](https://docs.rs/image/0.25.6/image/)
+
+2026-10-26 extension validation: all 36 Rust tests passed, including real Vim/Nano save-and-exit and Poppler page rendering. The optional widget's native CTest, Qt 6 QML tests/lint, and isolated Plasma-host load passed. Both READMEs retain exactly the two required content sections.
+
+The rebuilt release binary also passed an isolated Xvfb window boot/render smoke test (1360×860 frame). This checks startup and software rendering on X11; it does not verify Wayland pointer serials or a physical Firefox drop.

@@ -9,7 +9,7 @@ PASS   : qmltestrunner::Configuration::test_046_profileSelectionIsStagedAndValid
 PASS   : qmltestrunner::Configuration::test_04_pingDraft()
 PASS   : qmltestrunner::Configuration::test_05_configurationPreviews()
 PASS   : qmltestrunner::Configuration::cleanupTestCase()
-Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 1662ms
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 2082ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -36,7 +36,7 @@ PASS   : qmltestrunner::Dashboard::test_085_embeddedTerminal()
 PASS   : qmltestrunner::Dashboard::test_08_previewAndTransparency()
 PASS   : qmltestrunner::Dashboard::test_09_coloredPreview()
 PASS   : qmltestrunner::Dashboard::cleanupTestCase()
-Totals: 23 passed, 0 failed, 0 skipped, 0 blacklisted, 14666ms
+Totals: 23 passed, 0 failed, 0 skipped, 0 blacklisted, 15859ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -50,7 +50,7 @@ PASS   : qmltestrunner::PowerTimers::test_03_styleColorAndNarrowLayout()
 PASS   : qmltestrunner::PowerTimers::test_04_moduleHideReleasesOwnedResources()
 PASS   : qmltestrunner::PowerTimers::test_05_configureDraftsAndValidation()
 PASS   : qmltestrunner::PowerTimers::cleanupTestCase()
-Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 19493ms
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 9085ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -61,7 +61,7 @@ PASS   : qmltestrunner::SettingsFile::test_03_fileDeletionRecreatesCurrentSettin
 PASS   : qmltestrunner::SettingsFile::test_04_namedProfilesKeepSplitWidgetsIndependent()
 PASS   : qmltestrunner::SettingsFile::test_05_conflictMergeAndSameKeyFilePriority()
 PASS   : qmltestrunner::SettingsFile::cleanupTestCase()
-Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7880ms
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 8176ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -71,7 +71,7 @@ PASS   : qmltestrunner::NoteControls::test_02_longTextScrollAndExternalNoteEdit(
 PASS   : qmltestrunner::NoteControls::test_03_saveDialogAcceptanceExportsPendingInput()
 PASS   : qmltestrunner::NoteControls::test_04_cancelAndSaveErrorRetainText()
 PASS   : qmltestrunner::NoteControls::cleanupTestCase()
-Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1200ms
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1521ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -82,7 +82,7 @@ PASS   : qmltestrunner::Todos::test_035_inlineAddEditDeleteAndCompletion()
 PASS   : qmltestrunner::Todos::test_03_config_edits_preserve_completion_and_duplicates()
 PASS   : qmltestrunner::Todos::test_04_render()
 PASS   : qmltestrunner::Todos::cleanupTestCase()
-Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 490ms
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 671ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -92,7 +92,7 @@ PASS   : qmltestrunner::RectangularResize::test_025_free_placement_overrides_sna
 PASS   : qmltestrunner::RectangularResize::test_02_outer_rectangles_and_native_host_contract()
 PASS   : qmltestrunner::RectangularResize::test_03_drag_split_preserves_rectangular_bounds()
 PASS   : qmltestrunner::RectangularResize::cleanupTestCase()
-Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 87ms
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 108ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -100,7 +100,7 @@ PASS   : qmltestrunner::PlaybackAudioVisual::initTestCase()
 PASS   : qmltestrunner::PlaybackAudioVisual::test_01_quietGainAndSilence()
 PASS   : qmltestrunner::PlaybackAudioVisual::test_02_playbackWithoutMprisAndDisable()
 PASS   : qmltestrunner::PlaybackAudioVisual::cleanupTestCase()
-Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 209ms
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 238ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -115,7 +115,7 @@ PASS   : qmltestrunner::SmoothHistory::test_061_delayedReplyDoesNotJumpOrCatchUp
 PASS   : qmltestrunner::SmoothHistory::test_062_hiddenHistoryCatchesUpAndSourceResetReplacesData()
 PASS   : qmltestrunner::SmoothHistory::test_06_audioBinsStillInterpolateAmplitude()
 PASS   : qmltestrunner::SmoothHistory::cleanupTestCase()
-Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 3127ms
+Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 3151ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
@@ -127,12 +127,12 @@ PASS   : qmltestrunner::HoldToMove::test_holdAndDragAcrossPanel()
 PASS   : qmltestrunner::HoldToMove::test_movingHostDoesNotAccumulateOffset()
 PASS   : qmltestrunner::HoldToMove::test_shortDragIsNotMovement()
 PASS   : qmltestrunner::HoldToMove::cleanupTestCase()
-Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1087ms
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1118ms
 ********* Finished testing of qmltestrunner *********
 ********* Start testing of qmltestrunner *********
 Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
 PASS   : qmltestrunner::NativePlugin::initTestCase()
 PASS   : qmltestrunner::NativePlugin::test_01_missingHostIsSafe()
 PASS   : qmltestrunner::NativePlugin::cleanupTestCase()
-Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 9ms
 ********* Finished testing of qmltestrunner *********

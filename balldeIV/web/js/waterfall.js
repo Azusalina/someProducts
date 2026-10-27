@@ -24,6 +24,7 @@ export class Waterfall {
     this.pxPerBeat = 110;
     this.colors = { R: '#ff8a3d', L: '#2fc9b0' };
     this.hands = new Set(['R', 'L']);
+    this.patterns = true;          // colour repeated figures by cell
     this.t = 0;
     this.targets = new Set();      // note ids the learner must play now
     this.heard = new Set();        // midi numbers currently detected by the microphone
@@ -105,6 +106,9 @@ export class Waterfall {
     }
   }
 
+  /** colour of a note: its figure's cell colour, else its hand's */
+  colorOf(n) { return this.patterns && n.cell ? n.cell.color[n.hand] : this.colors[n.hand]; }
+
   drawNotes(nowY) {
     const { ctx, score } = this;
     const tTop = this.t + nowY / this.pxPerBeat + 0.2;
@@ -122,7 +126,8 @@ export class Waterfall {
       const x = k.x + (k.black ? 1 : 1.5);
       const wd = k.w - (k.black ? 2 : 3);
       const hh = Math.max(4, yBot - yTop);
-      const base = this.colors[n.hand];
+      const cell = this.patterns ? n.cell : null;
+      const base = this.colorOf(n);
       const target = this.targets.has(n.id);
       const active = this.t >= n.t - 1e-6 && this.t < n.end;
       ctx.save();
@@ -142,6 +147,18 @@ export class Waterfall {
         rr(ctx, x, yTop, wd, hh, Math.min(5, wd / 2));
         ctx.stroke();
       }
+      if (cell && cell.tag && n === cell.anchor) {         // the letter of the cell, on its first note
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#0d1117';
+        ctx.strokeText(cell.tag, x + wd / 2, yBot - 3);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(cell.tag, x + wd / 2, yBot - 3);
+        ctx.textAlign = 'start';
+      }
       ctx.restore();
     }
   }
@@ -160,10 +177,10 @@ export class Waterfall {
     const targetHands = new Map();
     for (const id of this.targets) {
       const n = this.score.notes[id];
-      if (n) targetHands.set(n.midi, n.hand);
+      if (n) targetHands.set(n.midi, this.colorOf(n));
     }
     const activeHands = new Map();
-    for (const m of this.sounding) activeHands.set(m.midi, m.hand);
+    for (const m of this.sounding) activeHands.set(m.midi, this.colorOf(m));
     // white keys
     for (const k of this.kb.keys) {
       if (k.black) continue;
@@ -189,8 +206,8 @@ export class Waterfall {
     let accent = null;
     const th = targetHands.get(k.midi);
     const ah = activeHands.get(k.midi);
-    if (ah) accent = this.colors[ah];
-    if (th) accent = this.colors[th];
+    if (ah) accent = ah;
+    if (th) accent = th;
     if (this.heard.has(k.midi)) accent = '#4ade80';
     const wr = this.wrong.get(k.midi);
     if (wr && wr > now) accent = '#ef4444';

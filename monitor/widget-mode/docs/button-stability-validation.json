@@ -1,0 +1,26 @@
+{
+  "widgets": [
+    {
+      "id": 163,
+      "version": "1.20.1",
+      "settings_preserved": true,
+      "geometry_preserved": true
+    },
+    {
+      "id": 167,
+      "version": "1.20.1",
+      "settings_preserved": true,
+      "geometry_preserved": true
+    }
+  ],
+  "installed_matches_source": true,
+  "services": [
+    "active",
+    "active"
+  ],
+  "backend_checks": 67,
+  "main_qml_checks": 94,
+  "delayed_button_checks": 6,
+  "late_layout_recovery": "passed native fixture",
+  "keep_awake_lifecycle": "inconclusive: existing desktop inhibition state did not settle"
+}

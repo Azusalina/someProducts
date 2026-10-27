@@ -30,6 +30,7 @@ pub struct Hits {
     pub rows: Vec<(Rect, usize)>,
     pub tree: Rect,
     pub caret: Option<Rect>,
+    pub preview_buttons: Vec<(Rect, i32)>,
 }
 
 pub struct ViewState {
@@ -364,7 +365,7 @@ pub fn draw(
         canvas.vline(p.x, p.y, p.bottom(), thin, theme.hair, 255);
         app.update_dash();
         canvas.set_clip(p);
-        draw_dash(canvas, &mut cx, app, p);
+        draw_dash(canvas, &mut cx, app, p, &mut hits);
         canvas.reset_clip();
     }
 
@@ -562,7 +563,7 @@ pub fn draw(
     (hits, animating)
 }
 
-fn draw_dash(canvas: &mut Canvas, cx: &mut Ctx, app: &App, p: Rect) {
+fn draw_dash(canvas: &mut Canvas, cx: &mut Ctx, app: &App, p: Rect, hits: &mut Hits) {
     let (s, t) = (cx.s, cx.t);
     let x = p.x + 24.0 * s;
     let inner = p.w - 48.0 * s;
@@ -588,6 +589,26 @@ fn draw_dash(canvas: &mut Canvas, cx: &mut Ctx, app: &App, p: Rect) {
         };
         cx.text(canvas, x, y, 18.0 * s, &v, Face::Mono, 12.0 * s, t.text);
         y += 30.0 * s;
+    }
+    if app.preview.path.is_some() {
+        if app.preview.path.as_deref().is_some_and(crate::preview::is_pdf) {
+            let label = format!("PDF {}/{}", app.preview.page, app.preview.pages);
+            cx.caps(canvas, x, y, 22.0 * s, &label, t.dim);
+            for (offset, step, text) in [(inner - 56.0 * s, -1, "‹"), (inner - 24.0 * s, 1, "›")] {
+                let r = Rect::new(x + offset, y, 24.0 * s, 22.0 * s);
+                cx.text(canvas, r.x, r.y, r.h, text, Face::Mono, 17.0 * s, t.text);
+                hits.preview_buttons.push((r, step));
+            }
+            y += 28.0 * s;
+        }
+        if let Some(image) = &app.preview.image {
+            crate::preview::draw(canvas, image, Rect::new(x, y, inner, (p.bottom() - y - 16.0 * s).max(0.0)));
+        } else {
+            let status = if app.preview.error.is_empty() { "Loading preview…" } else { &app.preview.error };
+            let status = cx.fonts.clip(status, Face::Mono, 11.0 * s, inner);
+            cx.text(canvas, x, y, 20.0 * s, &status, Face::Mono, 11.0 * s, t.dim);
+        }
+        return;
     }
     if !d.preview.is_empty() {
         let lh = 18.0 * s;

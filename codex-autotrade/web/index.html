@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Autotrade — crypto portfolio control</title>
+  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">a<span>.</span></span>autotrade</a>
+    <div class="workspace-label">CRYPTO WORKSPACE</div>
+    <nav aria-label="Main navigation">
+      <a href="#overview" data-page="overview" class="active"><span>01</span> Overview</a>
+      <a href="#markets" data-page="markets"><span>02</span> Markets</a>
+      <a href="#orders" data-page="orders"><span>03</span> Orders & activity</a>
+      <a href="#settings" data-page="settings"><span>04</span> Strategy settings</a>
+    </nav>
+    <div class="side-bottom">
+      <div class="engine-state"><i id="engine-dot"></i><strong id="engine-label">Connecting</strong></div>
+      <p id="engine-copy">Connecting to the local engine.</p>
+      <div class="side-rule"></div>
+      <button class="theme-button" id="theme">Switch to dark</button>
+      <div class="local-label">LOCAL ENGINE <span>127.0.0.1</span></div>
+    </div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar"><span>Workspace <span class="slash">/</span> <strong id="breadcrumb">Overview</strong></span>
+      <div class="top-status"><span id="mode" class="tag">CONNECTING</span><span id="connection">Connecting…</span></div>
+    </header>
+    <main>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <div id="error" class="error" role="alert" hidden></div>
+      <section id="page-overview" class="page">
+        <div class="page-heading"><div><div class="eyebrow">YOUR WALLET. YOUR TRADING MANDATE.</div><h1>Portfolio overview<span>.</span></h1><p>Crypto markets, autonomous swaps, and a clear view of your funds.</p></div>
+          <div class="heading-actions"><button data-action="scan" class="secondary">Scan now <span>↻</span></button><button id="primary-toggle" class="primary">Start automation <span>↗</span></button></div>
+        </div>
+        <div id="source-note" class="source-note">Loading account…</div>
+        <div class="metrics">
+          <article class="metric main-metric"><span>Allocated portfolio equity</span><strong id="equity">—</strong><div id="total-return">Waiting for first scan</div></article>
+          <article class="metric"><span>Available allocation cash</span><strong id="cash">—</strong><div id="cash-detail">Uninvested capital</div></article>
+          <article class="metric"><span>Open positions</span><strong id="position-count">—</strong><div id="exposure">—</div></article>
+          <article class="metric"><span>Drawdown from peak</span><strong id="drawdown">—</strong><div id="drawdown-limit">—</div></article>
+        </div>
+        <div class="overview-grid">
+          <article class="panel equity-panel">
+            <div class="panel-title"><div><h2>Capital over time</h2><p>Recorded portfolio equity since your first scan</p></div><div class="segmented" role="group" aria-label="Equity chart period"><button class="selected" data-range="all">All</button><button data-range="day">Today</button></div></div>
+            <div class="chart-box" id="equity-chart" role="img" aria-label="Portfolio equity history"></div>
+            <div class="chart-footer"><span><i class="legend-line"></i>Allocated portfolio</span><span id="chart-count">No observations yet</span></div>
+          </article>
+          <article class="panel allocation-panel"><div class="panel-title"><h2>Trading mandate</h2><span class="tiny-label">BASE / SPOT</span></div>
+            <div class="mandate-capital"><span>Initial capital</span><strong id="mandate-capital">—</strong></div>
+            <div class="allocation-bar"><div id="allocation-fill"></div></div><div class="allocation-labels"><span id="invested-label">Invested —</span><span id="available-label">Cash —</span></div>
+            <dl class="mandate-list"><div><dt>Entry rule</dt><dd id="entry-rule">—</dd></div><div><dt>Position allocation</dt><dd id="position-rule">—</dd></div><div><dt>Stop / take profit</dt><dd id="exit-rule">—</dd></div><div><dt>Next scan</dt><dd id="next-scan">—</dd></div></dl>
+            <a class="text-link" href="#settings">Review your strategy <span>↗</span></a>
+          </article>
+        </div>
+        <article class="panel positions-panel"><div class="panel-title"><div><h2>Holdings</h2><p id="holdings-caption">Positions opened by this app</p></div><button class="text-button" id="flatten">Close to USDC ↗</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Asset</th><th>Quantity</th><th>Average entry</th><th>Reference price</th><th>Market value</th><th>Unrealized return</th></tr></thead><tbody id="holdings"></tbody></table></div>
+        </article>
+        <div class="section-heading"><h2>On your radar</h2><a class="text-link" href="#markets">View all markets ↗</a></div><div id="radar" class="radar-grid"></div>
+      </section>
+      <section id="page-markets" class="page" hidden>
+        <div class="page-heading"><div><div class="eyebrow">WATCH THE RULES IN MOTION</div><h1>Market monitor<span>.</span></h1><p>Inspect crypto reference prices, completed hourly averages, and each entry decision.</p></div><button data-action="scan" class="secondary">Scan now ↻</button></div>
+        <div class="markets-layout"><article class="panel"><div class="panel-title"><h2>Watchlist</h2><a href="#settings" class="text-link">Edit symbols</a></div><div class="table-wrap"><table><thead><tr><th>Asset</th><th>Price</th><th>24h reference change</th><th>Decision</th></tr></thead><tbody id="watchlist"></tbody></table></div></article>
+          <article class="panel market-detail"><div class="panel-title"><div><div class="eyebrow" id="selected-source">—</div><h2 id="selected-symbol">—</h2></div><strong id="selected-price">—</strong></div><div class="chart-box" id="price-chart" role="img" aria-label="Selected crypto hourly reference prices"></div><dl id="signal-detail" class="mandate-list"></dl></article></div>
+        <div class="footnote">Signals use completed hourly ETH/USD and BTC/USD reference candles. USDC is assumed near USD; DEX quotes may differ. Execution checks the quoted output before signing.</div>
+      </section>
+      <section id="page-orders" class="page" hidden>
+        <div class="page-heading"><div><div class="eyebrow">EVERY SWAP LEAVES A RECORD</div><h1>Orders & activity<span>.</span></h1><p>Track approvals, swaps, confirmations, and the reason behind every decision.</p></div><button id="export" class="secondary">Export all orders ↓</button></div>
+        <div class="small-metrics"><div><span>Realized P&L</span><strong id="realized">—</strong></div><div><span>Orders today</span><strong id="orders-today">—</strong></div><div><span id="fees-title">Modeled fees</span><strong id="fees">—</strong></div></div>
+        <article class="panel"><div class="panel-title"><h2>Recent orders</h2><span class="tiny-label">LATEST 100</span></div><div class="table-wrap"><table><thead><tr><th>Time</th><th>Asset</th><th>Side</th><th>Filled quantity</th><th>Average fill</th><th>Status</th><th>Reason</th></tr></thead><tbody id="orders"></tbody></table></div></article>
+        <article class="panel activity-panel"><div class="panel-title"><h2>Engine journal</h2><span class="tiny-label">LATEST 100</span></div><div id="events"></div></article>
+      </section>
+      <section id="page-settings" class="page" hidden>
+        <div class="page-heading"><div><div class="eyebrow">DEFINE THE MANDATE</div><h1>Strategy settings<span>.</span></h1><p>Set the USDC budget, trading rules, and execution limits.</p></div><span class="tag" id="settings-status">PAUSE TO EDIT</span></div>
+        <form id="settings-form">
+          <article class="settings-section"><div><span class="section-number">01 / CAPITAL</span><h2>Choose the allocation</h2><p>Fund a dedicated Base wallet with USDC and native ETH for gas. This budget defines the strategy’s initial USDC allocation.</p></div><div class="form-fields"><label>Initial capital · USDC<input name="capital" type="number" min="25" max="100000000" step="0.01" required><small>Fixed after the first start. Use a new data directory for a new mandate.</small></label><label>Token universe<input name="symbols" type="text" placeholder="WETH, CBBTC" required><small>WETH and CBBTC on Base. Removed holdings remain exit-managed.</small></label><div class="field-row"><label>Maximum total investment · %<input name="invested_pct" type="number" min="1" max="100" step="0.1" required></label><label>Maximum per position · %<input name="position_pct" type="number" min="1" max="100" step="0.1" required></label></div><small>Set both to 100 to permit use of the full allocation. A small execution reserve still applies. Spot swaps only. Native ETH for gas stays outside this budget.</small></div></article>
+          <article class="settings-section"><div><span class="section-number">02 / ENTRY & EXIT</span><h2>Follow an hourly trend</h2><p>Buy when the fast average is above the slow average and the current price is above the slow average. Exit on a trend reversal, stop loss, or take profit.</p></div><div class="form-fields"><div class="field-row"><label>Fast average · hours<input name="fast" type="number" min="2" max="50" step="1" required></label><label>Slow average · hours<input name="slow" type="number" min="3" max="100" step="1" required></label></div><div class="field-row"><label>Stop loss · %<input name="stop_pct" type="number" min="0.1" max="50" step="0.1" required></label><label>Take profit · %<input name="take_pct" type="number" min="0.1" max="200" step="0.1" required></label></div><div class="inline-note">Crypto markets run 24/7. Exits run on scan intervals with minimum-output protection. They can fail during RPC outages or fast moves. Keep the engine running.</div></div></article>
+          <article class="settings-section"><div><span class="section-number">03 / OPERATING LIMITS</span><h2>Know when to stop</h2><p>Loss limits pause automation and leave holdings open. You can review and close holdings separately.</p></div><div class="form-fields"><div class="field-row"><label>Daily loss pause · %<input name="daily_loss_pct" type="number" min="0.1" max="50" step="0.1" required></label><label>Peak drawdown pause · %<input name="drawdown_pct" type="number" min="0.1" max="80" step="0.1" required></label></div><div class="field-row"><label>Daily transaction cap for entries<input name="max_orders_day" type="number" min="1" max="100" step="1" required></label><label>Scan interval · seconds<input name="interval" type="number" min="15" max="3600" step="1" required></label></div><small>At most one entry per symbol per UTC date. Exits can exceed the daily order cap.</small></div></article>
+          <div class="form-footer"><p id="settings-hint">Pause automation before saving changes.</p><button type="submit" class="primary" id="save-settings">Save strategy ↗</button></div>
+        </form>
+        <article class="settings-section"><div><span class="section-number">04 / ON-CHAIN EXECUTION</span><h2>Bound every swap</h2><p>Only the allowlisted Base tokens and fixed Uniswap router can be used. The recipient is always your trading wallet. Gas is paid in native ETH, outside the USDC equity chart.</p></div><div class="form-fields"><div class="field-row"><label>Slippage tolerance · basis points<input form="settings-form" name="slippage_bps" type="number" min="1" max="300" step="1" required></label><label>Maximum quote deviation · bps<input form="settings-form" name="max_deviation_bps" type="number" min="10" max="500" step="1" required></label></div><div class="field-row"><label>Estimated gas cap · ETH / tx<input form="settings-form" name="max_gas_eth" type="number" min="0.000001" max="0.01" step="0.000001" required></label><label>Daily gas budget · ETH<input form="settings-form" name="daily_gas_eth" type="number" min="0.000001" max="0.1" step="0.000001" required></label></div><small>100 bps = 1%. Gas estimates include a reserve for Base L1 fees; actual fees can vary. Native gas is reported separately.</small></div></article><article class="panel connection-panel"><div><h2 id="broker-heading">Trading wallet</h2><p id="broker-detail">Loading…</p><code id="wallet-address"></code><button class="text-button" id="copy-wallet" hidden>Copy wallet address</button></div><div class="connection-meta" id="broker-meta"></div></article>
+        <article class="danger-zone"><div><h2>Stop new transactions</h2><p>Stop new signatures and broadcasts. Transactions already broadcast may still confirm; holdings remain in the wallet.</p></div><button data-action="stop" class="danger-button">Stop new transactions orders</button></article>
+        <article class="danger-zone"><div><h2>Reset risk baseline</h2><p>Acknowledge a latched loss stop and start measuring daily loss and drawdown from the current equity. Previous losses remain in the journal.</p></div><button id="reset-risk" class="secondary">Review risk stop</button></article>
+      </section>
+      <footer class="footer"><span>Autotrade <span class="footer-separator">/</span> Local control. Public-chain transactions.</span><span id="last-scan">Awaiting first scan</span></footer>
+    </main>
+  </div>
+  <dialog id="confirm-dialog"><form method="dialog"><div class="eyebrow" id="dialog-label">REVIEW YOUR MANDATE</div><h2 id="dialog-title">Start automation</h2><p id="dialog-copy"></p><dl id="dialog-summary" class="mandate-list"></dl><label id="confirmation-label" hidden>Type the phrase to continue<input id="confirmation-input" autocomplete="off" spellcheck="false"></label><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="confirm-button" value="confirm" class="primary">Confirm</button></div></form></dialog>
+</body>
+</html>

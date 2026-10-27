@@ -52,6 +52,9 @@
       <option value="0.5">At least half</option>
     </select>
   </label>
+  <label id="lblPat">Repeated figures
+    <select id="selPat"><option value="on">Colour by cell (A, B, C…)</option><option value="off">Off</option></select>
+  </label>
   <label id="lblPages">Sheet pages
     <select id="selPages"><option value="coda">Coda only</option><option value="all">Whole piece</option></select>
   </label>
@@ -70,6 +73,7 @@
       <div class="meter"><div id="meterFill"></div></div>
       <div class="hudbtns"><button id="btnPrev">◀ Back</button><button id="btnSkip">Skip ▶</button><button id="btnCal">Calibrate</button></div>
     </div>
+    <div id="patLegend" aria-live="polite"></div>
     <div id="toast" hidden></div>
   </section>
 </main>

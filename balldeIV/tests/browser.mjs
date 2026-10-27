@@ -138,6 +138,36 @@ try {
     maxLeft: Math.max(0, ...[...document.querySelectorAll('.hl-note')].map(e => parseFloat(e.style.left))) }));
   await p2.click('#btnPlay');
   ok('Liebestraum plays and highlights notes on the sheet', run.t > 2 && run.hl > 0 && run.maxLeft < 100, JSON.stringify(run));
+  // repeated figures of the cadenzas: cells A, B, C ... an octave apart, coloured differently
+  const P = await Q(() => { const sc = window.ballade.score, ps = sc.patterns;
+    const oct = ps.filter(p => p.shift).map(p => p.cells.slice(0, 2).map(c => c.list.map(n => n.midi)));
+    const lastR = ps.find(p => p.hand === 'R' && p.shift === -12 && p.length === 8 && p.cells[0].list[0].measure === 69);   // m.69: F7 C7 C#7 ... E6, then the same 8va lower, twice
+    return { n: ps.length, cells: ps.reduce((a, p) => a + p.cells.length, 0), inRange: ps.every(p => p.cells.every(c => c.list.every(n => (n.measure >= 23 && n.measure <= 31) || (n.measure >= 64 && n.measure <= 73)))),
+      oct: oct.every(([a, b]) => b.filter((m, i) => a[i] !== undefined && (m - a[i]) % 12 === 0).length >= 0.6 * Math.min(a.length, b.length)),
+      m69: lastR && lastR.cells.map(c => c.list.map(n => n.midi).join()).join(' | '),
+      colours: lastR && new Set(lastR.cells.map(c => c.base)).size, letters: lastR && lastR.cells.map(c => c.letter).join(''),
+      lblPat: document.getElementById('lblPat').hidden }; });
+  ok('repeated figures found only in the cadenza bars', P.n >= 10 && P.cells >= 40 && P.inRange, JSON.stringify({ n: P.n, cells: P.cells }));
+  ok('each repeat is the previous cell moved by whole octaves', P.oct);
+  ok('m.69 descent: three cells, each 8 notes an octave lower (A has C#7 where B, C have D), A B C in three colours',
+    P.m69 === '101,96,97,93,94,90,91,88 | 89,84,86,81,82,78,79,76 | 77,72,74,69,70,66,67,64' && P.colours === 3 && P.letters === 'ABC', `${P.m69} ${P.colours} ${P.letters}`);
+  await Q(() => window.ballade.seek(window.ballade.score.patterns.find(p => p.hand === 'R' && p.length === 24).cells[1].t0 + 0.3));
+  await p2.waitForTimeout(300);
+  const V = await Q(() => { const b = window.ballade, wf = b.wf, ps = b.score.patterns; const p = ps.find(p => p.hand === 'R' && p.length === 24);
+    const a = p.cells[0].list[3], c = p.cells[1].list[3];
+    const on = [wf.colorOf(a), wf.colorOf(c)];
+    return { on, legend: document.getElementById('patLegend').innerText, bands: document.querySelectorAll('.pat-band').length,
+      shown: getComputedStyle(document.querySelector('.pat-band')).display }; });
+  ok('waterfall colours differ between cells A and B', V.on[0] !== V.on[1] && V.on[0] !== '#ff8a3d' && V.on[1] !== '#ff8a3d', V.on.join(' '));
+  ok('legend names the sounding figure; sheet shows a band per cell', /Right/.test(V.legend) && /octave lower/.test(V.legend) && V.bands >= 50 && V.shown !== 'none', `${V.bands} bands: ${V.legend.replace(/\n/g, ' ')}`);
+  await p2.screenshot({ path: 'tests/out-patterns.png' });
+  await Q(() => { const s = document.getElementById('selPat'); s.value = 'off'; s.dispatchEvent(new Event('change')); });
+  await p2.waitForTimeout(300);
+  const W = await Q(() => ({ c: window.ballade.wf.colorOf(window.ballade.score.patterns[0].cells[0].list[0]), hand: window.ballade.wf.colors.L,
+    hidden: getComputedStyle(document.querySelector('.pat-band')).display, legend: document.getElementById('patLegend').innerText }));
+  ok('pattern colours can be switched off (hand colours, no bands, no legend)', W.c === W.hand && W.hidden === 'none' && W.legend === '', JSON.stringify(W));
+  await Q(() => { const s = document.getElementById('selPat'); s.value = 'on'; s.dispatchEvent(new Event('change')); });
+  ok('the Ballade has no repeated-figure setting', P.lblPat === false && await B(() => document.getElementById('lblPat').hidden && !window.ballade.score.patterns));
   await Q(() => window.ballade.setMode('learn'));
   await Q(() => window.ballade.seek(window.ballade.score.measureByNumber.get(5).start));
   const ls = await Q(() => { const S = window.ballade.S; return { steps: S.steps.length, m: S.steps[S.idx].notes[0].measure }; });

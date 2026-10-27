@@ -1,4 +1,5 @@
 // Score data: loading, indexing and "steps" (groups of notes the player must strike together).
+import { indexPatterns } from './patterns.js';
 
 export async function loadScore(url) {
   const s = await (await fetch(url)).json();
@@ -19,6 +20,7 @@ export async function loadScore(url) {
     m.length = m.length ?? (s.measures[i + 1] ? s.measures[i + 1].start - m.start : bpm);
     m.label = m.n2 && m.n2 !== m.n ? `${m.n}–${m.n2}` : `${m.n}`;
   });
+  indexPatterns(s);
   return s;
 }
 

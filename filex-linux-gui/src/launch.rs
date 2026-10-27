@@ -1,5 +1,5 @@
 //! Programs that need a terminal (editors, scripts, `@` commands, Git) run in
-//! a terminal emulator window; the tree refreshes when that window closes.
+//! the embedded terminal page. External shells still use an emulator.
 use std::{
     ffi::{OsStr, OsString},
     os::unix::ffi::{OsStrExt, OsStringExt},
@@ -35,7 +35,9 @@ pub fn terminal(configured: &[String]) -> Result<Vec<OsString>, String> {
     candidates.extend(KNOWN.iter().map(|(name, _)| name.to_string()));
     for name in candidates {
         if crate::files::available(&name) {
-            let base = Path::new(&name).file_name().map(|n| n.to_string_lossy().into_owned());
+            let base = Path::new(&name)
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned());
             let flags = KNOWN
                 .iter()
                 .find(|(known, _)| Some(*known) == base.as_deref())
@@ -80,35 +82,6 @@ pub fn command_line(command: &Command) -> OsString {
         out.push(quote(arg));
     }
     out
-}
-
-/// Run a shell script in a terminal window. `pause` keeps the window open so
-/// output and exit status can be read, matching the TUI's "Enter to return".
-pub fn run_script(
-    configured: &[String],
-    cwd: &Path,
-    script: &OsStr,
-    pause: bool,
-) -> Result<std::process::Child, String> {
-    let argv = terminal(configured)?;
-    let mut body = OsString::from(script);
-    if pause {
-        body.push(
-            "\nstatus=$?\nprintf '\\n\\033[2m[exit %s] Enter closes\\033[0m ' \"$status\"\nread -r _\n",
-        );
-    }
-    Command::new(&argv[0])
-        .args(&argv[1..])
-        .arg("sh")
-        .arg("-c")
-        .arg(body)
-        .current_dir(cwd)
-        .env_remove("FILEX_CWD_FILE")
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| format!("{}: {e}", argv[0].to_string_lossy()))
 }
 
 /// Open a plain interactive terminal in a directory.

@@ -126,8 +126,7 @@ int main(int argc,char** argv){
     const auto savedPoint=childBridge->freePosition();
     CHECK(savedPoint.contains("x") && savedPoint.contains("y"));
     childRoot->parentItem()->setPosition(QPointF(640,480));
-    CHECK(QMetaObject::invokeMethod(childRoot,"restoreFreePlacement"));
-    CHECK((childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01);
+    CHECK(until([&]{return (childRoot->mapToGlobal(QPointF(0,0))-freeBefore-QPointF(37,29)).manhattanLength()<0.01;}));
     CHECK(child->config().group("FreePlacement").readEntry("x",-1.0)==savedPoint.value("x").toReal());
     childBridge->release("cpu",root->mapToGlobal(QPointF(50,50)));
     CHECK(until([&]{return child->destroyed();}));bridge->refresh();

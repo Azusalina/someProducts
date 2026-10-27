@@ -1,1 +1,3 @@
 target/
+widget/build/
+widget/plasmoid/contents/native/

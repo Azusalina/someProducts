@@ -30,7 +30,46 @@ export class PdfView {
       this.el.append(wrap);
       this.pages.set(p.index, { wrap, layer, pw: p.w / p.scale, ph: p.h / p.scale });   // page size in PDF points
     }
+    this.buildPatterns();
   }
+
+  /** a tinted band behind every cell of a repeated figure, with its letter (right hand above, left hand below) */
+  buildPatterns() {
+    const byNum = this.score.measureByNumber;
+    for (const p of this.score.patterns || []) {
+      for (const c of p.cells) {
+        const parts = new Map();                              // one band per system the cell touches
+        for (const n of c.list) {
+          const m = byNum.get(n.measure);
+          const key = n.page + ':' + (m ? m.system : 0);
+          const b = parts.get(key) || { page: n.page, x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
+          b.x0 = Math.min(b.x0, n.x); b.x1 = Math.max(b.x1, n.x);
+          b.y0 = Math.min(b.y0, n.y); b.y1 = Math.max(b.y1, n.y);
+          parts.set(key, b);
+        }
+        for (const b of parts.values()) {
+          const pg = this.pages.get(b.page);
+          if (!pg) continue;
+          const d = document.createElement('div');
+          d.className = 'pat-band';
+          d.style.setProperty('--c', c.base);
+          d.style.left = ((b.x0 - 3) / pg.pw * 100) + '%';
+          d.style.top = ((b.y0 - 7) / pg.ph * 100) + '%';
+          d.style.width = ((b.x1 - b.x0 + 12) / pg.pw * 100) + '%';
+          d.style.height = ((b.y1 - b.y0 + 14) / pg.ph * 100) + '%';
+          if (c.tag) {
+            const t = document.createElement('span');
+            t.textContent = c.tag;
+            t.className = p.hand === 'L' ? 'below' : 'above';
+            d.append(t);
+          }
+          pg.layer.prepend(d);
+        }
+      }
+    }
+  }
+
+  setPatterns(on) { this.el.classList.toggle('no-pat', !on); }
 
   setColors(c) { this.colors = c; }
 

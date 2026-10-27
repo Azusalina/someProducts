@@ -11,6 +11,7 @@ pub struct GuiConfig {
     pub terminal: Vec<String>,
     pub animations: bool,
     pub font_size: f32,
+    pub fullscreen: bool,
     pub width: f64,
     pub height: f64,
 }
@@ -25,6 +26,7 @@ impl Default for GuiConfig {
             terminal: vec![],
             animations: true,
             font_size: 13.5,
+            fullscreen: true,
             width: 1360.0,
             height: 860.0,
         }
@@ -73,6 +75,7 @@ impl GuiConfig {
                         .map(|v| v.as_str().map(str::to_owned).ok_or_else(bad))
                         .collect::<Result<_, _>>()?;
                 }
+                "fullscreen" => conf.fullscreen = value.as_bool().ok_or_else(bad)?,
                 "animations" => conf.animations = value.as_bool().ok_or_else(bad)?,
                 "font_size" => {
                     conf.font_size = number(value).ok_or_else(bad)?.clamp(9.0, 24.0) as f32
@@ -87,7 +90,9 @@ impl GuiConfig {
 }
 
 fn number(value: &Value) -> Option<f64> {
-    value.as_float().or_else(|| value.as_integer().map(|v| v as f64))
+    value
+        .as_float()
+        .or_else(|| value.as_integer().map(|v| v as f64))
 }
 
 /// Persist one `[gui]` value, keeping the rest of the file and its comments.
@@ -123,7 +128,10 @@ pub fn desktop_prefers_dark() -> Option<bool> {
             } else if section == "[Colors:Window]"
                 && let Some(value) = line.strip_prefix("BackgroundNormal=")
             {
-                let parts: Vec<f32> = value.split(',').filter_map(|v| v.trim().parse().ok()).collect();
+                let parts: Vec<f32> = value
+                    .split(',')
+                    .filter_map(|v| v.trim().parse().ok())
+                    .collect();
                 if parts.len() >= 3 {
                     let luma = 0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2];
                     return Some(luma < 128.0);
@@ -133,7 +141,10 @@ pub fn desktop_prefers_dark() -> Option<bool> {
     }
     if let Ok(text) = fs::read_to_string(config.join("gtk-3.0/settings.ini")) {
         for line in text.lines() {
-            if let Some(v) = line.trim().strip_prefix("gtk-application-prefer-dark-theme") {
+            if let Some(v) = line
+                .trim()
+                .strip_prefix("gtk-application-prefer-dark-theme")
+            {
                 return Some(v.contains('1') || v.contains("true"));
             }
         }

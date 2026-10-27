@@ -4,9 +4,10 @@ import { PdfView } from './pdfview.js';
 import { Synth } from './synth.js';
 import { rangeFor, noteName } from './piano.js';
 import { Ear, calibrationScale } from './mic.js';
+import { activePatterns } from './patterns.js';
 
 const $ = id => document.getElementById(id);
-const DEFAULTS = { colR: '#ff8a3d', colL: '#2fc9b0', kb: 130, zoom: 110, tempos: {}, range: 'fit', strict: '0.75', pages: 'coda' };
+const DEFAULTS = { colR: '#ff8a3d', colL: '#2fc9b0', kb: 130, zoom: 110, tempos: {}, range: 'fit', strict: '0.75', pages: 'coda', patterns: 'on' };
 const store = {
   get() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('ballade4.settings') || '{}') }; } catch { return { ...DEFAULTS }; } },
   set(o) { try { localStorage.setItem('ballade4.settings', JSON.stringify(o)); } catch { /* private mode */ } },
@@ -51,6 +52,8 @@ function buildPdf() {
 function applyCfg() {
   const c = S.cfg;
   wf.colors = { R: c.colR, L: c.colL };
+  wf.patterns = c.patterns !== 'off';
+  pdf?.setPatterns(wf.patterns);
   wf.kbHeight = +c.kb;
   wf.pxPerBeat = +c.zoom;
   const [lo, hi] = c.range === 'full' ? [21, 108] : rangeFor(score.minMidi, score.maxMidi);
@@ -61,7 +64,7 @@ function applyCfg() {
   $('colR').value = c.colR; $('colL').value = c.colL;
   $('rngKb').value = c.kb; $('outKb').value = c.kb;
   $('rngZoom').value = c.zoom; $('outZoom').value = c.zoom;
-  $('selRange').value = c.range; $('selStrict').value = c.strict; $('selPages').value = c.pages;
+  $('selRange').value = c.range; $('selStrict').value = c.strict; $('selPat').value = c.patterns; $('selPages').value = c.pages;
   S.lastSig = '';
 }
 const upd = (k, v) => { S.cfg[k] = v; store.set(S.cfg); applyCfg(); };
@@ -71,6 +74,7 @@ $('rngKb').oninput = e => upd('kb', +e.target.value);
 $('rngZoom').oninput = e => upd('zoom', +e.target.value);
 $('selRange').onchange = e => upd('range', e.target.value);
 $('selStrict').onchange = e => upd('strict', e.target.value);
+$('selPat').onchange = e => { upd('patterns', e.target.value); S.lastSig = ''; };
 $('selPages').onchange = e => { upd('pages', e.target.value); buildPdf(); };
 $('btnReset').onclick = () => { S.cfg = { ...DEFAULTS, tempos: {} }; store.set(S.cfg); buildPdf(); applyCfg(); setTempo(defaultTempo); };
 $('btnSettings').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; layout(); };
@@ -293,6 +297,21 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+/** which repeated figures are sounding now, and which cell of each */
+let legendSig = '';
+function showLegend(notes) {
+  const act = wf.patterns ? activePatterns(notes.filter(n => S.hands.has(n.hand))) : [];
+  const sig = act.map(a => a.p.index + ':' + a.cell.i).join(',');
+  if (sig === legendSig) return;
+  legendSig = sig;
+  $('patLegend').innerHTML = act.map(({ p, cell }) => {
+    const chips = p.shift
+      ? p.cells.map(c => `<span class="chip${c === cell ? ' on' : ''}" style="--c:${c.base}">${c.tag}</span>`).join('')
+      : `<span class="chip on" style="--c:${cell.base}">${cell.i + 1} / ${p.cells.length}</span>`;
+    return `<div class="pl"><b>${p.hand === 'R' ? 'Right' : 'Left'}</b>${chips}<span>${p.desc}</span></div>`;
+  }).join('');
+}
+
 function updateHighlights() {
   let cur = [], ghost = [];
   if (S.mode === 'learn') {
@@ -310,6 +329,7 @@ function updateHighlights() {
     wf.sounding = new Set(active);
   }
   const m = measureAtTime(score, S.t);
+  showLegend(cur);
   const sig = cur.map(n => n.id).join(',') + '|' + ghost.length + '|' + (m && m.n);
   if (sig !== S.lastSig) {
     S.lastSig = sig;
@@ -323,6 +343,7 @@ if (piece.sheetFrom > 0) {
   $('lblPages').hidden = true;                      // the sheet is short enough to always show whole
   S.cfg.pages = 'all';
 }
+$('lblPat').hidden = !score.patterns?.length;       // only pieces with detected repeats
 applyCfg();
 buildPdf();
 applyCfg();

@@ -2,7 +2,7 @@
 
 ## What is it?
 
-filex 的 Linux 图形界面版本：与 [fileX](../fileX/README.md) 相同的横向目录树、快捷键和 `filex.conf`，以 Rust 软件渲染窗口呈现（无 GPU 上下文、无 GUI 工具包），空闲时零 CPU，常驻内存约 23–29 MB。架构、验证结果和限制见 [description.md](description.md)。
+filex 的 Linux 图形界面版本：与 [fileX](../fileX/README.md) 相同的横向目录树、快捷键和 `filex.conf`，以 Rust 软件渲染窗口呈现（无 GPU 上下文、无 GUI 工具包），支持系统文件拖放、内嵌终端和图片 / PDF 预览。架构、验证结果和限制见 [description.md](description.md)。
 
 ## How to use
 
@@ -22,7 +22,13 @@ filex-gui ~/Documents --config ~/.config/fileX/filex.conf
 
 代码更新后用 `./scripts/install.sh --rebuild` 重新编译安装；`./scripts/install.sh --remove` 移除命令、启动项和图标（保留配置）。
 
-全部 fileX 快捷键照常可用（`?` 查看）；另有 `Ctrl+=` / `Ctrl+-` / `Ctrl+0` 缩放、`F12` 切换明暗主题（写入配置）。鼠标：单击选择、双击等同 Enter、右键打开方式、中键标记、滚轮平移，点击顶部路径段即设为根。按住文件或文件夹拖出窗口，可放进浏览器上传框、聊天窗口或文件管理器（作为附件 / 复制）；拖动已标记项目时一次带出全部标记项（需 Wayland 会话）。终端程序（Vim、`@` 命令、Git）在终端模拟器窗口中运行。
+全部 fileX 快捷键照常可用（`?` 查看）；另有 `Ctrl+=` / `Ctrl+-` / `Ctrl+0` 缩放、`F12` 切换明暗主题（写入配置）。鼠标：单击选择、双击等同 Enter、右键打开方式、中键标记、滚轮平移，点击顶部路径段即设为根。按住文件或文件夹拖出窗口，可放进浏览器上传框、聊天窗口或文件管理器（作为附件 / 复制）；拖动已标记项目时一次带出全部标记项（需 Wayland 会话）。在 GUI 内把文件拖到另一文件夹或顶部路径段，默认移动；按住 `Ctrl` 放下则复制。外部程序拖入的文件默认复制，同名文件沿用原有替换确认。拖入目标须为已显示的文件夹或顶部路径段。
+
+默认以全屏启动并展开信息面板；`F11` 切换全屏，退出全屏时面板自动折叠，`q` 仍可手动切换。鼠标悬停图片或 PDF，信息面板在元数据下显示预览；PDF 用 `‹` / `›` 翻页。支持 PNG、JPEG、GIF 首帧、WebP、BMP、TIFF；PDF 预览另需 Poppler 的 `pdfinfo` / `pdftoppm`（Arch：`poppler` 包）。
+
+终端程序（Vim、Nano、`@` 命令、Git）直接在 GUI 的终端页运行。正常退出程序后返回目录树；`Ctrl+Shift+Tab` 可在仍在运行的终端与目录树之间切换，一次保留一个终端会话。`[gui] terminal` 只用于新开外部 shell。
+
+透明 KDE 桌面导航部件是独立的可选功能，安装和鼠标悬停文件夹后按 `x` 打开终端的方法见 [widget/README.md](widget/README.md)。
 
 可选的 `[gui]` 配置（TUI 会忽略该区段）：
 
@@ -33,6 +39,7 @@ zoom = 1.0
 decorations = "client"  # client / system
 language = "en"         # en / zh（提示信息语言）
 terminal = ["konsole", "-e"]  # 默认自动检测
+fullscreen = true       # false：窗口启动并折叠信息面板
 animations = true
 font_size = 13.5
 ```
