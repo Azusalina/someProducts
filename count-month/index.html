@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f5f0">
+  <meta name="description" content="A month-counting practice game for accounting students.">
+  <title>Count Month</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <main class="game">
+    <header>
+      <h1>Count Month<span class="title-dot">.</span></h1>
+      <button id="settings-open" class="text-button" aria-label="Open settings">Settings</button>
+    </header>
+    <div class="account">
+      <div><span class="micro">Credits</span><strong id="credits">0</strong></div>
+      <button id="trophies-open" class="trophy-button" aria-label="View trophies">Trophies <span id="trophy-count">0 / 6</span></button>
+    </div>
+    <section class="question" aria-label="Month-counting question">
+      <div class="financial-year"><span class="micro">Financial year</span><span id="fiscal-range"></span></div>
+      <div class="date-row"><span class="micro">From</span><time id="date-start"></time></div>
+      <div class="date-row"><span class="micro">To</span><time id="date-end"></time></div>
+    </section>
+    <section class="entry" aria-label="Your answer">
+      <div class="entry-heading"><label id="answer-label" for="answer">Total months</label><button id="clear" class="text-button">Clear</button></div>
+      <input id="answer" type="text" readonly inputmode="none" autocomplete="off" aria-describedby="answer-hint feedback" placeholder="…">
+      <div class="answer-meta"><span id="answer-hint">Count both months.</span><button id="calculator-open" class="text-button">Calculator ↗</button></div>
+      <p id="feedback" role="status" aria-live="polite"></p>
+    </section>
+    <div class="controls">
+      <div id="keypad" class="keypad" aria-label="Answer keypad">
+        <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+        <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+        <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+        <button data-key="+" aria-label="Plus">+</button><button data-key="0">0</button><button data-key="backspace" aria-label="Delete last digit">⌫</button>
+      </div>
+      <button id="submit" class="primary" disabled>Submit <span aria-hidden="true">↵</span></button>
+    </div>
+    <p id="storage-warning" role="status" hidden>Storage unavailable. Progress lasts for this session only.</p>
+  </main>
+
+  <dialog id="trophies-dialog" aria-labelledby="trophies-title">
+    <div class="dialog-heading"><h2 id="trophies-title">Trophies</h2><button class="close" aria-label="Close trophies">×</button></div>
+    <p id="trophy-progress" class="muted"></p>
+    <ol id="trophy-list"></ol>
+  </dialog>
+
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <div class="dialog-heading"><h2 id="settings-title">Settings</h2><button class="close" aria-label="Close settings">×</button></div>
+    <label class="setting">Financial year starts<select id="fiscal-select"><option value="random">Random month</option></select></label>
+    <label class="setting">Maximum duration<select id="duration-select"><option value="12">1 year</option><option value="24">2 years</option><option value="36">3 years</option><option value="60">5 years</option></select></label>
+    <button id="apply-settings" class="primary">Apply & new question</button>
+    <details class="developer"><summary>Developer mode</summary>
+      <form id="developer-form"><label class="setting">Password<input id="developer-password" type="password" inputmode="numeric" autocomplete="off" maxlength="20" required></label><button class="secondary" type="submit">Unlock</button></form>
+      <p id="developer-feedback" role="status"></p>
+      <div id="developer-controls" hidden><button id="reset-credits" class="danger">Reset credits & trophies</button><p id="reset-note" class="muted">Select twice to confirm.</p></div>
+    </details>
+  </dialog>
+
+  <dialog id="calculator-dialog" class="calculator" aria-labelledby="calculator-title">
+    <div class="dialog-heading"><h2 id="calculator-title">Calculator</h2><button class="close" aria-label="Close calculator">×</button></div>
+    <output id="calculator-display" aria-live="polite">0</output>
+    <p id="calculator-error" role="status"></p>
+    <div id="calculator-keypad" class="calculator-keypad">
+      <button data-calc="clear">C</button><button data-calc="backspace" aria-label="Delete last calculator digit">⌫</button><button data-calc="/" aria-label="Divide">÷</button><button data-calc="*" aria-label="Multiply">×</button>
+      <button data-calc="7">7</button><button data-calc="8">8</button><button data-calc="9">9</button><button data-calc="-" aria-label="Subtract">−</button>
+      <button data-calc="4">4</button><button data-calc="5">5</button><button data-calc="6">6</button><button data-calc="+" aria-label="Add">+</button>
+      <button data-calc="1">1</button><button data-calc="2">2</button><button data-calc="3">3</button><button data-calc="=" class="equals" aria-label="Equals">=</button>
+      <button data-calc="0" class="zero">0</button><button data-calc=".">.</button>
+    </div>
+  </dialog>
+</body>
+</html>

@@ -14,6 +14,7 @@ The public landing page is https://azusalina.github.io/someProducts/.
 | `d-balladeIV-liebe/` | `/someProducts/balladeIV-liebe/` |
 | `d-hku/` | `/someProducts/hku/` |
 | `d-ict-notes/` | `/someProducts/ict-notes/` |
+| `count-month/` (then `d-count-month/`) | `/someProducts/count-month/` |
 
 `node scripts/build-pages.mjs` runs the existing checks and produces `.pages-dist/` using explicit runtime file lists. Little Algebra includes its reference PDFs and downloadable examples. Development servers, tests, node_modules, and the monitor/mediator tools are not included in the website artifact.
 

@@ -15,7 +15,8 @@ const sites = {
   'yupi-econ': ['claude-product/study-site'],
   'balladeIV-liebe': ['web'],
   hku: ['index.html', 'app.js', 'model.js', 'style.css', 'data'],
-  'ict-notes': ['learn']
+  'ict-notes': ['learn'],
+  'count-month': ['index.html', 'style.css', 'app.mjs', 'model.mjs']
 };
 
 function run(cwd, args) {
@@ -29,7 +30,10 @@ await mkdir(output, { recursive: true });
 for (const [name, files] of Object.entries(sites)) {
   const original = name === 'balladeIV-liebe' ? 'balldeIV' : name;
   const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : original);
-  if (['balladeIV-liebe', 'hku', 'ict-notes'].includes(name)) {
+  if (name === 'count-month') {
+    for (const file of ['app.mjs', 'model.mjs']) run(source, ['--check', file]);
+    run(source, ['--test', 'tests/model.test.mjs']);
+  } else if (['balladeIV-liebe', 'hku', 'ict-notes'].includes(name)) {
     run(root, ['scripts/check-additional-sites.mjs', name, source]);
     if (name === 'hku') run(source, ['--test', 'tests/model.test.cjs']);
   } else if (name === 'yupi-econ') {

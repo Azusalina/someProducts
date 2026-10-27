@@ -23,6 +23,8 @@ on:
       - 'd-hku/**'
       - 'ict-notes/**'
       - 'd-ict-notes/**'
+      - 'count-month/**'
+      - 'd-count-month/**'
       - 'scripts/check-additional-sites.mjs'
       - 'scripts/check-yupi-econ.mjs'
       - 'scripts/build-pages.mjs'
