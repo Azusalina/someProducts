@@ -2,55 +2,48 @@
 
 ## What is it?
 
-A local product workspace with one Git repository for everyday work. Each
-registered desktop/local product folder is also published to its own public
-GitHub repository, with its product history preserved. Website products remain
-managed by this hub. GitHub Pages continues to deploy from this
-hub. See [description.md](description.md) for architecture and maintenance details.
+A GitHub Pages hub for deployed learning websites and visual tools. Published
+product folders use the `d-` prefix. Independent desktop/local products live in
+`/home/a/Documents/products/`, outside this repository. Architecture, exceptions,
+migration history, and validation are in [description.md](description.md).
 
 ## How to use
 
-Use Git and Python 3.10+ on Linux. Open each product's existing README for its
-own prerequisites and instructions.
-
-Work and commit in this workspace as usual:
+Build all websites with Node.js 22+:
 
 ```sh
-cd /home/a/Documents/someProducts
-git add <changed-files>
-git commit -m "Describe the change"
+node scripts/build-pages.mjs
+```
+
+Commit website changes here and push `master` to deploy through GitHub Actions:
+
+```sh
+git add <website-and-deployment-files>
+git commit -m "Describe the website change"
 git push
 ```
 
-`git commit` records changes locally. `git push` publishes the committed changes
-to the hub and automatically synchronizes the seven registered product repositories:
-`fileX`, `filex-linux-gui`, `win-filex`, `mediator`, `monitor`, `toolkit`, and `track`.
+Open the [published hub](https://azusalina.github.io/someProducts/) or see
+[DEPLOYMENT.md](DEPLOYMENT.md) for individual website URLs. Website runtime assets
+are assembled into the ignored `.pages-dist/` folder.
 
-The pre-push hook synchronizes changed products to their registered
-repositories before pushing `master` to `origin`. The root `.git` owns all
-objects, commits, and synchronization state; product folders have no nested
-`.git` directories. Only committed changes are published.
+The independent projects below each own their `.git`: open their directory under
+`/home/a/Documents/products/` and commit/push there. Hub pushes do not publish them.
 
-Automatic synchronization is enabled in this workspace. Hooks are local Git
-settings and are not installed by `git clone`: install the hook once in each new
-Linux clone. Installation checks that all registered destinations are accessible:
+1. [filex](https://github.com/Azusalina/filex)
+2. [filex-win](https://github.com/Azusalina/filex-win)
+3. [filex-linux-gui](https://github.com/Azusalina/filex-linux-gui)
+4. [toolkit](https://github.com/Azusalina/toolkit)
+5. [integrate-toolkit-arch](https://github.com/Azusalina/integrate-toolkit-arch)
+6. [mediator](https://github.com/Azusalina/mediator)
+7. [monitor](https://github.com/Azusalina/monitor)
+8. [mouse](https://github.com/Azusalina/mouse)
+9. [c-autotrade](https://github.com/Azusalina/c-autotrade)
 
-```sh
-python3 scripts/product-sync.py install
-```
+Keep `filex` beside `filex-linux-gui` for compilation and Toolkit beside its Arch
+integration. Existing terminals may need `source ~/.bashrc` after the Filex move.
 
-Configure product folders, historical names, and remote destinations in
-[products.json](products.json). A new product needs an empty GitHub repository
-and a registry entry before its first push. `crawlers/` and the original Yupi
-reference files remain ignored. Deployed websites stay in the parent repository.
-
-```sh
-python3 scripts/product-sync.py plan          # Inspect product commits locally
-python3 scripts/product-sync.py sync --dry-run # Check remotes without publishing
-python3 scripts/product-sync.py sync          # Retry product synchronization
-python3 scripts/product-sync.py uninstall     # Remove only the managed push hook
-```
-
-If synchronization fails, resolve the reported issue and retry `git push`.
-`git push --dry-run` never publishes product repositories. Existing website
-URLs and deployment commands remain in [DEPLOYMENT.md](DEPLOYMENT.md).
+By request, `track`, `Visualize-sheet`, `skill-manager`, `crawlers`, and `roughwork`
+remain here for now. Only retained `track` uses the legacy root push hook. On a
+fresh clone, `python3 scripts/product-sync.py install` enables that optional
+legacy sync; it does not manage the independent repositories above.

@@ -1,6 +1,69 @@
-# someProducts workspace management
+# someProducts workspace and deployment
 
-## Repository layout
+## Current arrangement (2026-10-27)
+
+The website hub keeps deployed products in `d-*` directories and its Pages
+infrastructure. Nine local products moved into `/home/a/Documents/products/`,
+each with a real independent `.git`, preserved product history, and GitHub remote:
+
+| Independent folder / repository | Former hub folder |
+| --- | --- |
+| filex | fileX |
+| filex-win | win-filex |
+| filex-linux-gui | filex-linux-gui |
+| toolkit | toolkit |
+| integrate-toolkit-arch | integrate-toolkit-arch |
+| mediator | mediator |
+| monitor | monitor |
+| mouse | mouse |
+| c-autotrade | codex-autotrade |
+
+Commit and push within each independent repository. Mother-repository pushes no
+longer publish these nine products. The earlier source-copy projection was used
+to preserve each history, including Monitor's combined CLI/widget ancestry; the
+new independent tips advance those histories without force-pushing.
+
+By explicit exception, `track`, `Visualize-sheet`, `skill-manager`, `crawlers`,
+and `roughwork` remain here for now. `track` retains its prior root-managed sync;
+`products.json` now registers only that retained product. Ignored working copies
+under `.claude` are left alone. Historical commits/releases of the hub remain
+available; only the current source tree removes the migrated product folders.
+
+`filex-linux-gui` now compiles adjacent `../filex` sources. The Arch integration
+uses adjacent Toolkit. Existing shell launchers and user service references are
+updated to the new paths; runtime configuration directories stay unchanged.
+The system Mediator service was updated by the owner with administrator rights.
+Monitor's backend was not restarted, preserving current timer state. Autotrade's
+existing default demo process was restarted explicitly in demo with its moved
+local data; live mode was not started.
+
+## Website additions
+
+- Ballade IV / Liebestraum: source `balldeIV` becomes `d-balladeIV-liebe`, runtime
+  `web/`, public `/someProducts/balladeIV-liebe/`.
+- HKU workbench: source `hku` becomes `d-hku`, public `/someProducts/hku/`.
+- ICT Unit C notes: source `ict-notes` becomes `d-ict-notes`, runtime `learn/`,
+  public `/someProducts/ict-notes/`.
+
+The three source folders now use their prefixed names. The builder also accepts
+the former names for compatibility. Checks verify score data, audio/sheet assets, 12 HKU
+records and its admissions PDF hash, all ICT chapters, syntax, links and imports.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for all current URLs and build instructions.
+
+## Repository presentation
+
+The products workspace README and public landing page list `filex`, `filex-win`,
+`filex-linux-gui`, `toolkit`, `integrate-toolkit-arch` in the requested order.
+GitHub's overall repository list has built-in sorts; fixed manual presentation
+uses the profile Pinned section (up to six items), not a repository setting.
+See [GitHub's pinning instructions](https://docs.github.com/en/account-and-profile/how-tos/profile-customization/pinning-items-to-your-profile).
+
+## Earlier configuration (historical)
+
+The following retained notes describe the earlier shared-source arrangement and
+its staged evolution. They do not override the independent repository layout above.
+
+### Repository layout
 
 `someProducts` remains the source workspace and GitHub Pages deployment hub.
 Every product stays in its existing folder and is committed through the root
@@ -26,13 +89,13 @@ Workspace infrastructure such as `pages`, `scripts`, `.github`, `AGENTS.md`,
 and the root documentation remains in the hub. Ignored folders `crawlers` and
 the original Yupi reference files, generated `.pages-dist`, and tool metadata are excluded.
 
-## Setup status
+### Setup status
 
 All seven registered products (`fileX`, `filex-linux-gui`, `win-filex`, `mediator`, `monitor`, `toolkit`, and
 `track`) have public GitHub repositories and publish their product histories to
 `master`. Monitor contains both `widget-mode`
 and `cli-mode`; the previous `monitor-cli` destination is archived after merging
-its history into Monitor. See [Monitor's description](monitor/description.md).
+its history into Monitor. See [Monitor's description](https://github.com/Azusalina/monitor/blob/master/description.md).
 
 On 2026-10-15, debugging confirmed that `.git/hooks/pre-push` had never been
 installed: its activation was deferred on 2026-10-12 because GitHub temporarily
@@ -55,7 +118,7 @@ refs. At that point their original source folders, parent history, and deploymen
 remained intact. On 2026-10-23, `d-jupasanalysis` was subsequently removed from
 the local workspace, current hub source, and deployed website at the user's request.
 
-## History projection
+### History projection
 
 `scripts/product-sync.py` traverses the selected hub revision's ancestry in
 topological order and projects each commit's product tree to a standalone root
@@ -83,7 +146,7 @@ process lock live in `.git/product-sync/`; deleting caches causes a deterministi
 rebuild. This does not change the hub's index, working tree, or commit ancestry.
 Do not use a mirror push from the hub: it would include internal product refs.
 
-## Push coordination
+### Push coordination
 
 The locally installed `.git/hooks/pre-push` runs the tracked script when pushing
 the configured `hubBranch` (`master`) to `hubRemote` (`origin`). It projects the
@@ -119,7 +182,7 @@ every registered destination is accessible and lists failures before writing
 the hook. Uninstallation removes only a hook
 with this tool's ownership marker; it does not delete repositories or exports.
 
-## Configuration and maintenance
+### Configuration and maintenance
 
 `products.json` is the tracked source of folder mappings. `owner` supplies the
 default GitHub owner; repository names default to `folder`, and the destination
@@ -151,7 +214,7 @@ those edits and integrate them into the hub product before resuming; do not
 force-push away remote work. A product-only clone does not install this hub's
 synchronization hook.
 
-## Deployment preservation
+### Deployment preservation
 
 The existing `.github/workflows/pages.yml`, `scripts/build-pages.mjs`,
 `pages/index.html`, and `DEPLOYMENT.md` are unchanged. The hub keeps full product
@@ -160,7 +223,7 @@ paths. Product repositories do not receive a new deployment workflow. Existing
 `/someProducts/<site>/` URLs stay in use. See [DEPLOYMENT.md](DEPLOYMENT.md) for
 the existing source-to-URL mapping.
 
-## Validation
+### Validation
 
 Run the isolated local integration suite without network access:
 
@@ -184,14 +247,14 @@ and 5 for `track`. Root trees are checked against the corresponding hub subtrees
 before any publication. This reflects the committed source at migration time,
 including files already tracked in that source.
 
-## Sources
+### Sources
 
 - [Git hook interface and pre-push exit behavior](https://git-scm.com/docs/githooks)
 - [Git commit-tree plumbing](https://git-scm.com/docs/git-commit-tree)
 - [Git revision traversal](https://git-scm.com/docs/git-rev-list)
 - [GitHub secondary rate limits and retry behavior](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit)
 
-## History
+### History
 
 2026-10-27: Registered `filex-linux-gui` as a seventh independent public product
 repository under `Azusalina`. Root `git push` projects its committed folder history

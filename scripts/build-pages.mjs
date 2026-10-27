@@ -12,7 +12,10 @@ const sites = {
   la: ['index.html', 'notes.html', 'playground.html', 'styles.css', 'assets', 'js', 'vendor', 'examples', 'ref'],
   'Visualize-graph': ['index.html', 'style.css', 'app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js', 'vendor'],
   todos: ['product1'],
-  'yupi-econ': ['claude-product/study-site']
+  'yupi-econ': ['claude-product/study-site'],
+  'balladeIV-liebe': ['web'],
+  hku: ['index.html', 'app.js', 'model.js', 'style.css', 'data'],
+  'ict-notes': ['learn']
 };
 
 function run(cwd, args) {
@@ -24,8 +27,12 @@ const exists = async file => !!(await stat(file).catch(() => null));
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const [name, files] of Object.entries(sites)) {
-  const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : name);
-  if (name === 'yupi-econ') {
+  const original = name === 'balladeIV-liebe' ? 'balldeIV' : name;
+  const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : original);
+  if (['balladeIV-liebe', 'hku', 'ict-notes'].includes(name)) {
+    run(root, ['scripts/check-additional-sites.mjs', name, source]);
+    if (name === 'hku') run(source, ['--test', 'tests/model.test.cjs']);
+  } else if (name === 'yupi-econ') {
     run(root, ['scripts/check-yupi-econ.mjs', source]);
   } else if (name === 'Visualize-graph') {
     for (const file of ['app.js', 'math.js', 'stats.js', 'complex.js', 'latex.js', 'editor.js', 'plot.js']) run(source, ['--check', file]);
@@ -42,7 +49,9 @@ for (const [name, files] of Object.entries(sites)) {
   }
   const target = path.join(output, name);
   await mkdir(target, { recursive: true });
-  if (name === 'yupi-econ') await cp(path.join(source, 'claude-product/study-site'), target, { recursive: true });
+  if (name === 'balladeIV-liebe') await cp(path.join(source, 'web'), target, { recursive: true });
+  else if (name === 'ict-notes') await cp(path.join(source, 'learn'), target, { recursive: true });
+  else if (name === 'yupi-econ') await cp(path.join(source, 'claude-product/study-site'), target, { recursive: true });
   else if (name === 'todos') await cp(path.join(source, 'product1'), target, { recursive: true });
   else if (name === 'gitpop') await cp(path.join(source, 'dist'), target, { recursive: true });
   else for (const file of files) await cp(path.join(source, file), path.join(target, file), { recursive: true });

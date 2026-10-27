@@ -4,14 +4,8 @@
   "hubBranch": "master",
   "owner": "Azusalina",
   "products": [
-    {"folder": "fileX"},
-    {"folder": "filex-linux-gui"},
-    {"folder": "win-filex"},
-    {"folder": "mediator"},
-    {"folder": "monitor", "historyImports": [
-      {"path": "cli-mode", "commit": "fa81bb9867073818e83e6d5801f200762abe8c6d"}
-    ]},
-    {"folder": "toolkit"},
-    {"folder": "track"}
+    {
+      "folder": "track"
+    }
   ]
 }

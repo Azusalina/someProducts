@@ -1,4 +1,0 @@
-{
-  "status": "unavailable",
-  "reason": "The standalone focus probe aborted in the PySide/Shiboken binding layer. No fullscreen resource result is claimed; see gui-focus.log."
-}

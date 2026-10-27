@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/home/a/Documents/someProducts/monitor/widget-mode/core/tests/keep_awake_fixture.py", line 31, in <module>
-    eventually(lambda: len(monitor_inhibitions() - baseline) >= 1)
-    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/a/Documents/someProducts/monitor/widget-mode/core/tests/keep_awake_fixture.py", line 24, in eventually
-    raise AssertionError('Inhibition lifecycle did not settle')
-AssertionError: Inhibition lifecycle did not settle

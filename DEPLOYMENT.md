@@ -11,6 +11,9 @@ The public landing page is https://azusalina.github.io/someProducts/.
 | `d-todos/` | `/someProducts/todos/` |
 | `d-Visualize-graph/` | `/someProducts/Visualize-graph/` |
 | `d-yupi-econ/` | `/someProducts/yupi-econ/` |
+| `d-balladeIV-liebe/` | `/someProducts/balladeIV-liebe/` |
+| `d-hku/` | `/someProducts/hku/` |
+| `d-ict-notes/` | `/someProducts/ict-notes/` |
 
 `node scripts/build-pages.mjs` runs the existing checks and produces `.pages-dist/` using explicit runtime file lists. Little Algebra includes its reference PDFs and downloadable examples. Development servers, tests, node_modules, and the monitor/mediator tools are not included in the website artifact.
 
@@ -27,3 +30,10 @@ Yupi Economics publishes `claude-product/study-site/` at the site root, includin
 its local fonts, chapter data, and source-page JPEGs. Original references in
 `yupi/` are ignored and are not uploaded. The build checks every chapter and
 runtime asset before packaging; the public URL remains stable after renaming.
+
+Ballade IV / Liebestraum publishes prebuilt `web/` data, sheet images, piano
+samples, and browser modules. Microphone learning uses HTTPS on Pages. Rebuilding
+the OMR/vector data remains a local development step; no Python server is required
+on the published site. HKU publishes its offline app and referenced research/PDF
+data; ICT notes publishes `learn/`. Original names are accepted until initial live
+publication is verified, then sources gain their requested `d-` prefixes.

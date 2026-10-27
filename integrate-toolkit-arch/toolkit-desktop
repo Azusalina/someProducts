@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-toolkit_desktop_root="$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")"
-exec python3 "$toolkit_desktop_root/app.py" "$@"

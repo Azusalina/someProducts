@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/Monitor/Native">
-    <file alias="qmldir">/home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/native/qmldir</file>
-  </qresource>
-</RCC>
-

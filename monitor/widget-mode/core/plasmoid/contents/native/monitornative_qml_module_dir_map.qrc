@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/Monitor/Native">/home/a/Documents/someProducts/monitor/widget-mode/core/plasmoid/contents/native</file>
-
-  </qresource>
-</RCC>

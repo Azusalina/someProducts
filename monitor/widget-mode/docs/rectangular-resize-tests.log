@@ -1,9 +1,0 @@
-********* Start testing of qmltestrunner *********
-Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.2.1 20260810), arch unknown
-PASS   : qmltestrunner::RectangularResize::initTestCase()
-PASS   : qmltestrunner::RectangularResize::test_01_column_constraints()
-PASS   : qmltestrunner::RectangularResize::test_02_outer_rectangles_and_native_host_contract()
-PASS   : qmltestrunner::RectangularResize::test_03_drag_split_preserves_rectangular_bounds()
-PASS   : qmltestrunner::RectangularResize::cleanupTestCase()
-Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 95ms
-********* Finished testing of qmltestrunner *********
