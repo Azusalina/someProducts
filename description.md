@@ -56,8 +56,10 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for all current URLs and build instructions.
 
 ## Repository presentation
 
-The products workspace README and public landing page list `filex`, `filex-win`,
-`filex-linux-gui`, `toolkit`, `integrate-toolkit-arch` in the requested order.
+The products workspace README lists `filex`, `filex-win`, `filex-linux-gui`,
+`toolkit`, `integrate-toolkit-arch` in the requested order. Since 2026-10-28,
+the public landing page lists deployed websites only; links to these five
+independent, non-deployed products have been removed.
 GitHub's overall repository list has built-in sorts; fixed manual presentation
 uses the profile Pinned section (up to six items), not a repository setting.
 See [GitHub's pinning instructions](https://docs.github.com/en/account-and-profile/how-tos/profile-customization/pinning-items-to-your-profile).
