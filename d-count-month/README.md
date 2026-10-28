@@ -16,6 +16,13 @@ Count both the first and last month. Use the keypad and Submit. For periods over
 `6+12+4`. Each correct question earns one credit; Next question continues.
 Wrong answers allow another attempt without losing credits.
 
+The upper timeline shows calendar years; the lower line shows financial years.
+Drag the lower line left or right to align its starting month with the financial
+year given in the question. It starts at January for each question and snaps to
+whole months. This visual tool does not change the question or your answer.
+Scroll the timeline sideways to see more years. With the lower line focused,
+arrow keys adjust it, Home selects January and End selects December.
+
 Settings chooses a financial-year starting month and a maximum duration of up
 to five years. Calculator opens a basic calculator on the right. Desktop users
 can also type digits, `+`, Backspace, Delete and Enter.

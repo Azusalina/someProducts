@@ -24,6 +24,14 @@
       <div class="financial-year"><span class="micro">Financial year</span><span id="fiscal-range"></span></div>
       <div class="date-row"><span class="micro">From</span><time id="date-start"></time></div>
       <div class="date-row"><span class="micro">To</span><time id="date-end"></time></div>
+      <div class="timeline-labels"><span>Calendar years</span><span id="timeline-fiscal-label">Financial years · Jan ↔</span></div>
+      <div id="timeline-scroll" class="timeline-scroll" tabindex="0" aria-label="Timeline. Scroll horizontally to view more years.">
+        <div id="timeline" class="timeline">
+          <div id="calendar-years" class="calendar-years" aria-label="Calendar years"></div>
+          <div id="question-span" class="question-span" aria-label="Question date span"></div>
+          <div id="financial-years" class="financial-years" role="slider" tabindex="0" aria-label="Financial-year starting month. Drag or use arrow keys." aria-valuemin="1" aria-valuemax="12"></div>
+        </div>
+      </div>
     </section>
     <section class="entry" aria-label="Your answer">
       <div class="entry-heading"><label id="answer-label" for="answer">Total months</label><button id="clear" class="text-button">Clear</button></div>

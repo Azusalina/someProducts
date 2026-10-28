@@ -53,6 +53,21 @@ invalid expressions and division by zero without evaluating JavaScript.
 Dialogs support Escape, explicit close controls, focus management through
 native HTML dialog, and backdrop dismissal. Reduced-motion preference is honored.
 
+The question has a horizontally scrollable timeline. Calendar years occupy the
+upper row with January–December date ranges. The lower financial-year guide
+uses the same 16-pixel-per-month scale and displays exact inclusive date ranges,
+including leap days. A dark span between the rows marks the question's dates.
+One extra calendar year on either side keeps full fiscal periods available.
+
+The guide starts at January for each question. Students drag it to match the
+unchanged financial-year start stated in the generated question. It snaps to
+whole months and wraps December/January. Touch and mouse dragging use Pointer
+Events and capture; vertical page scrolling remains available. Arrow keys,
+Home and End offer keyboard control. The tool's chosen month is announced by
+the slider accessibility value and shown above the line. Moving it never changes
+question data, settings, typed answers, correctness, credits or trophies; solved
+questions stay locked. Guide position is temporary and resets on reload.
+
 ## Files and maintenance
 
 - `index.html`: semantic interface, keypad and dialogs.
@@ -82,7 +97,9 @@ precedence and division-by-zero feedback, and blocked storage fallback.
 First submissions in a fresh browser and after settings changes are explicitly
 checked; progress comparison uses field values rather than JSON property order.
 Viewports checked: 320×568, 360×640, 390×844, 430×932, 768×1024 and 1440×900.
-Every checked viewport fits the keypad and Submit without page overflow.
+Every checked viewport avoids horizontal page overflow and keeps keypad targets
+at least 44 pixels high. Short screens scroll vertically to accommodate the
+timeline, with Submit reachable without shrinking the keypad.
 These are automated Chromium checks, not physical iOS/Safari device tests.
 
 Optional browser QA uses a local Playwright installation and Chromium:
@@ -98,3 +115,8 @@ Pages hub. Initial commit `5b4e56e` passed Actions run `40540261911`; the live
 entry returned HTTP 200 and `deployment.json` confirmed that revision. Only
 after this verification was the source renamed to `d-count-month/`. The public
 path and browser progress key remain unchanged.
+
+2026-10-28: Added the independent calendar/fiscal timeline guide. Model checks
+cover all twelve fiscal offsets and shared calendar coordinates. Browser checks
+cover mouse and touch dragging, month snapping, keyboard wraparound, date-range
+labels, unchanged question/answer/progress, and continued solved-state locking.

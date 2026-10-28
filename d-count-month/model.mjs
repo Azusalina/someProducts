@@ -55,6 +55,16 @@ export function fiscalLabel(start) {
   return `01 ${MONTHS[start]} – ${end === 1 ? '28/29' : day} ${MONTHS[end]}`;
 }
 
+export function timelineData(question) {
+  const start = Math.floor(question.start / 12) * 12 - 12;
+  const end = Math.ceil((question.start + question.length) / 12) * 12 + 12;
+  const calendar = [];
+  const financial = [];
+  for (let month = start; month < end; month += 12) calendar.push({ start: month, end: month + 11 });
+  for (let month = start + question.fiscalStart - 12; month < end; month += 12) financial.push({ start: month, end: month + 11 });
+  return { start, end, calendar, financial };
+}
+
 export function readProgress(raw) {
   try {
     const state = JSON.parse(raw);

@@ -1,4 +1,4 @@
-import { MONTHS, TROPHIES, STORAGE_KEY, makeQuestion, expectedParts, checkAnswer, dateLabel, fiscalLabel, readProgress, calculate } from './model.mjs';
+import { MONTHS, TROPHIES, STORAGE_KEY, makeQuestion, expectedParts, checkAnswer, dateLabel, fiscalLabel, readProgress, calculate, timelineData } from './model.mjs';
 
 const $ = id => document.getElementById(id);
 let storageAvailable = true;
@@ -12,6 +12,80 @@ let developer = false;
 let resetArmed = false;
 let calc = '';
 let calcResult = false;
+const MONTH_WIDTH = 16;
+let timelineQuestion = '';
+let timelineDrag = null;
+let timelineFiscalStart = 0;
+
+function numericDate(month, end = false) {
+  const year = Math.floor(month / 12);
+  const day = end ? new Date(Date.UTC(year, month % 12 + 1, 0)).getUTCDate() : 1;
+  return `${String(day).padStart(2, '0')}.${String(month % 12 + 1).padStart(2, '0')}.${String(year).slice(-2)}`;
+}
+function renderTimeline() {
+  const q = state.question;
+  const key = `${q.start}:${q.length}:${q.fiscalStart}`;
+  const changedQuestion = timelineQuestion !== key;
+  if (changedQuestion) timelineFiscalStart = 0;
+  const data = timelineData({ ...q, fiscalStart: timelineFiscalStart });
+  $('timeline').style.width = `${(data.end - data.start) * MONTH_WIDTH}px`;
+  for (const [id, periods] of [['calendar-years', data.calendar], ['financial-years', data.financial]]) {
+    $(id).replaceChildren(...periods.map(period => {
+      const item = document.createElement('span');
+      item.className = 'timeline-period';
+      item.style.left = `${(period.start - data.start) * MONTH_WIDTH}px`;
+      item.style.width = `${12 * MONTH_WIDTH}px`;
+      const year = Math.floor(period.start / 12);
+      const label = document.createElement('span');
+      label.className = 'timeline-year';
+      label.textContent = id === 'calendar-years' ? `'${String(year).slice(-2)}` : `${MONTHS[timelineFiscalStart]} '${String(year).slice(-2)}`;
+      const dates = document.createElement('span');
+      dates.className = 'timeline-dates';
+      dates.textContent = `${numericDate(period.start)} – ${numericDate(period.end, true)}`;
+      item.append(label, dates);
+      item.title = `${dateLabel(period.start)} – ${dateLabel(period.end, true)}`;
+      return item;
+    }));
+  }
+  $('financial-years').setAttribute('aria-valuenow', timelineFiscalStart + 1);
+  $('financial-years').setAttribute('aria-valuetext', `${MONTHS[timelineFiscalStart]}, ${fiscalLabel(timelineFiscalStart)}`);
+  $('timeline-fiscal-label').textContent = `Financial years · ${MONTHS[timelineFiscalStart]} ↔`;
+  $('question-span').style.left = `${(q.start - data.start) * MONTH_WIDTH}px`;
+  $('question-span').style.width = `${q.length * MONTH_WIDTH}px`;
+  $('question-span').title = `${dateLabel(q.start)} – ${dateLabel(q.start + q.length - 1, true)}`;
+  if (changedQuestion) {
+    $('timeline-scroll').scrollLeft = (Math.floor(q.start / 12) * 12 - data.start) * MONTH_WIDTH;
+    timelineQuestion = key;
+  }
+}
+
+function changeTimelineMonth(month) {
+  timelineFiscalStart = ((month % 12) + 12) % 12;
+  renderTimeline();
+}
+$('financial-years').addEventListener('pointerdown', event => {
+  if (!event.isPrimary || event.button !== 0) return;
+  timelineDrag = { id: event.pointerId, x: event.clientX, month: timelineFiscalStart };
+  $('financial-years').setPointerCapture(event.pointerId);
+  $('financial-years').classList.add('dragging');
+});
+$('financial-years').addEventListener('pointermove', event => {
+  if (timelineDrag?.id !== event.pointerId) return;
+  changeTimelineMonth(timelineDrag.month + Math.round((event.clientX - timelineDrag.x) / MONTH_WIDTH));
+});
+function endTimelineDrag(event) {
+  if (timelineDrag?.id !== event.pointerId) return;
+  timelineDrag = null;
+  $('financial-years').classList.remove('dragging');
+}
+for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) $('financial-years').addEventListener(event, endTimelineDrag);
+$('financial-years').addEventListener('keydown', event => {
+  const offset = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[event.key];
+  if (offset || ['Home', 'End'].includes(event.key)) {
+    event.preventDefault();
+    changeTimelineMonth(event.key === 'Home' ? 0 : event.key === 'End' ? 11 : timelineFiscalStart + offset);
+  }
+});
 
 function persist() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -42,6 +116,7 @@ function render() {
   }
   $('answer-label').textContent = q.length > 12 ? 'Months by financial year' : 'Total months';
   $('answer-hint').textContent = q.length > 12 ? 'One term per FY · e.g. 6+12+4' : 'Count both months.';
+  renderTimeline();
   renderEntry();
 }
 function input(key) {
@@ -54,6 +129,7 @@ function input(key) {
   renderEntry();
 }
 function next() {
+  timelineQuestion = '';
   state.question = makeQuestion(state.settings);
   state.solved = false;
   answer = '';

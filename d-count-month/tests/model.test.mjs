@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { splitMonths, expectedParts, checkAnswer, dateLabel, fiscalLabel, makeQuestion, readProgress, calculate, TROPHIES } from '../model.mjs';
+import { splitMonths, expectedParts, checkAnswer, dateLabel, fiscalLabel, makeQuestion, readProgress, calculate, TROPHIES, timelineData } from '../model.mjs';
 
 test('inclusive month counts and strict fiscal-year answers', () => {
   assert.equal(dateLabel(2000 * 12 + 3), '01 Apr 2000');
@@ -62,4 +62,18 @@ test('stored progress preserves credits, solved status and settings', () => {
 test('calculator supports four operations, precedence, decimals and negatives', () => {
   for (const [expression, result] of [['6+12+12+4', 34], ['2+3*4', 14], ['24/6-1', 3], ['-2*4+10', 2], ['0.1+0.2', .3], ['.5*8', 4], ['12/-3', -4], ['5--2', 7]]) assert.equal(calculate(expression), result);
   for (const invalid of ['', '1/0', '2**3', '2+', 'alert(1)', '1;2', '1 2', '1..2']) assert.throws(() => calculate(invalid));
+});
+
+test('timeline calendar and financial periods share a monthly scale and preserve the question', () => {
+  for (let month = 0; month < 12; month++) {
+    const question = { start: 2000 * 12 + 9, length: 60, fiscalStart: month };
+    const original = { ...question };
+    const data = timelineData(question);
+    assert.equal(data.start % 12, 0);
+    assert.equal(data.end % 12, 0);
+    assert.ok(data.start < question.start && data.end > question.start + question.length);
+    for (const year of data.calendar) { assert.equal(year.start % 12, 0); assert.equal(year.end - year.start, 11); }
+    for (const year of data.financial) { assert.equal(year.start % 12, month); assert.equal(year.end - year.start, 11); }
+    assert.deepEqual(question, original);
+  }
 });
