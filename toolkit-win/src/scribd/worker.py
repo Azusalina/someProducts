@@ -34,8 +34,10 @@ def export_document(source_url, output, repository, fixture=None):
             # neither existing profiles nor Scribd credentials are read.
             if '--no-sandbox' in options.arguments:
                 options.arguments.remove('--no-sandbox')
-            options.binary_location = os.environ['TOOLKIT_CHROMIUM']
             import shutil
+            browser = os.environ.get('TOOLKIT_CHROMIUM') or shutil.which('chromium') or shutil.which('google-chrome')
+            if browser:
+                options.binary_location = browser
             executable = os.environ.get('TOOLKIT_CHROMEDRIVER') or shutil.which('chromedriver')
             if not executable:
                 raise RuntimeError('Install matching ChromeDriver on PATH, or set TOOLKIT_CHROMEDRIVER to chromedriver.exe.')

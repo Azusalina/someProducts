@@ -885,3 +885,11 @@ conversion, and the actual Firefox SVG preview/download workflow. Optional
 Python converters, Scribd access and TeX/Poppler tools were not exercised on that
 Windows runner. The local Linux regression runs remain the evidence for those
 optional-tool pipelines.
+
+A second native Windows run also passed
+[40807391905](https://github.com/Azusalina/someProducts/actions/runs/40807391905),
+including actual PDF generation through the automatically discovered installed
+Edge/Chrome executable and stopping an owned process using Windows taskkill.
+The optional Scribd adapter retains ChromeDriver's default browser discovery
+when invoked directly without TOOLKIT_CHROMIUM; its offline Selenium and browser
+integration checks passed locally after this fallback adjustment.
