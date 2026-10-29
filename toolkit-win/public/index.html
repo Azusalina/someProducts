@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local Toolkit · Live Markdown</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+  <script type="module" src="/pdf-pages.js"></script>
+  <script type="module" src="/photos.js"></script>
+  <script type="module" src="/omr.js"></script>
+  <script type="module" src="/tools.js"></script>
+  <script type="module" src="/formats.js"></script>
+  <script type="module" src="/media.js"></script>
+  <script type="module" src="/scribd.js"></script>
+  <script type="module" src="/code-flowchart.js"></script>
+  <script type="module" src="/pdfmd.js"></script>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <h2>Outline</h2>
+    <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
+  </aside>
+  <main>
+    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
+    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown / TeX to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="code-flowchart-tab" aria-pressed="false">JS / MJS → SVG</button><button id="scribd-tab" aria-pressed="false">Scribd PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
+    <section class="file-panel" aria-label="Open local file">
+      <label for="filepath">Markdown or TeX file</label>
+      <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
+      <p id="path-help">Save changes in your editor to update the preview.</p>
+    </section>
+    <div id="message" role="status" aria-live="polite" hidden></div>
+    <section class="workspace" id="markdown-workspace">
+      <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><button id="zen-button" aria-pressed="false" aria-controls="preview" title="Show only the document. Press Esc to exit." disabled>Zen mode</button><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
+      <div class="document-meta"><span id="filename">No file open</span><span id="updated">Waiting for your document</span></div>
+      <div class="preview-area" id="preview-area">
+        <div class="empty-state" id="empty"><p>Open a Markdown or TeX file to preview it.</p><button id="example-button">Open example</button></div>
+        <iframe id="preview" title="Formatted Markdown preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" hidden></iframe>
+        <a id="tex-open-preview" target="_blank" rel="noopener" hidden>Open PDF preview in new tab</a>
+        <section id="tex-preview" aria-label="Live TeX PDF preview" tabindex="0" hidden>
+          <div class="tex-pagination"><button id="tex-previous" type="button" disabled>Previous page</button><span id="tex-page" role="status">Rendering PDF…</span><button id="tex-next" type="button" disabled>Next page</button></div>
+          <div id="tex-canvas"></div>
+        </section>
+        <pre id="source" tabindex="0" aria-label="Saved document source" hidden></pre>
+      </div>
+    </section>
+    <section id="pdf-pages-workspace" aria-label="PDF page editor" hidden>
+      <label for="pdf-file">Open PDF</label>
+      <input id="pdf-file" type="file" accept=".pdf,application/pdf" aria-describedby="pdf-file-help">
+      <p id="pdf-file-help">Choose a local PDF. Page numbers below refer to the original file.</p>
+      <p id="pdf-status" role="status" aria-live="polite">Open a PDF to edit its pages.</p>
+      <div class="pdf-edit-layout">
+        <div class="pdf-page-controls">
+          <fieldset id="pdf-editor-controls" disabled>
+            <legend>Pages</legend>
+            <label for="pdf-range">Page numbers / order</label>
+            <input id="pdf-range" placeholder="1-3, 7, 5" autocomplete="off" aria-describedby="pdf-range-help">
+            <p id="pdf-range-help" class="media-help">Press Enter to apply these pages and preview the result.</p>
+            <div class="pdf-range-controls">
+              <label class="sr-only" for="pdf-range-action">Page range action</label>
+              <select id="pdf-range-action"><option value="keep">Keep / reorder these pages</option><option value="delete">Delete these pages</option></select>
+              <button id="pdf-apply-range" type="button">Apply</button>
+              <button id="pdf-reset" type="button">Restore all pages</button>
+            </div>
+            <p id="pdf-selection-count" role="status">No PDF open</p>
+            <ol id="pdf-page-list" aria-label="Output page order"></ol>
+            <label for="pdf-output-name">New PDF filename</label>
+            <input id="pdf-output-name" value="edited.pdf" autocomplete="off">
+          </fieldset>
+          <div class="pdf-save-controls"><button id="pdf-preview-result" disabled>Preview result</button><button id="pdf-save" disabled>Save as new PDF</button></div>
+        </div>
+        <section class="pdf-result-preview" aria-label="PDF document preview">
+          <h2 id="pdf-preview-label">PDF preview</h2>
+          <a id="pdf-open-preview" target="_blank" rel="noopener" hidden>Open preview in new tab</a>
+          <iframe id="pdf-native-preview" title="PDF document preview" hidden></iframe>
+        </section>
+      </div>
+    </section>
+    <section id="photos-workspace" aria-label="Photos to PDF" hidden>
+      <label for="photos-files">Add photos</label>
+      <input id="photos-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif">
+      <p id="photos-status" role="status" aria-live="polite">Add photos to combine them into one PDF.</p>
+      <p id="photos-count">0 photos · one photo per PDF page</p>
+      <ol id="photos-list" aria-label="Photo page order"></ol>
+      <fieldset id="photos-options" disabled>
+        <legend>PDF options</legend>
+        <label for="photos-paper">Page size</label>
+        <select id="photos-paper"><option value="A4">A4 · fit without cropping</option><option value="Letter">Letter · fit without cropping</option><option value="photo">Fit photo · no margins</option></select>
+        <label for="photos-name">PDF filename</label>
+        <input id="photos-name" value="photos.pdf" autocomplete="off">
+      </fieldset>
+      <div class="pdf-save-controls"><button id="photos-save" disabled>Save photos as PDF</button><button id="photos-clear" disabled>Clear photos</button></div>
+    </section>
+    <section id="code-flowchart-workspace" hidden aria-label="JavaScript flowchart">
+      <input id="code-flowchart-file" type="file" accept=".js,.mjs" aria-label="JS or MJS file">
+      <textarea id="code-flowchart-source" aria-label="JavaScript code" spellcheck="false" placeholder="JavaScript…"></textarea>
+      <div class="code-flowchart-actions"><button id="code-flowchart-generate">Generate SVG</button><input id="code-flowchart-name" aria-label="SVG filename" value="flowchart.svg"><button id="code-flowchart-download" disabled>Download SVG</button></div>
+      <p id="code-flowchart-status" role="status" aria-live="polite" hidden></p>
+      <div id="code-flowchart-preview"><img id="code-flowchart-image" alt="Code flowchart" hidden></div>
+    </section>
+    <section id="scribd-workspace" aria-label="Scribd PDF" hidden>
+      <form id="scribd-form">
+        <label for="scribd-url">Scribd URL</label>
+        <div class="media-url-row"><input id="scribd-url" type="url" placeholder="https://www.scribd.com/document/…" autocomplete="off" required><button id="scribd-generate" type="submit">Generate PDF</button></div>
+        <label for="scribd-name">PDF filename</label><input id="scribd-name" placeholder="document.pdf" autocomplete="off">
+      </form>
+      <p id="scribd-status" role="status" aria-live="polite"></p>
+      <button id="scribd-cancel" hidden>Cancel</button>
+      <div id="scribd-result" hidden><a id="scribd-download">Download PDF</a><a id="scribd-open" target="_blank" rel="noopener">Open PDF</a><span>Link expires after 15 minutes.</span></div>
+      <iframe id="scribd-preview" title="Scribd PDF preview" hidden></iframe>
+    </section>
+    <section id="omr-workspace" aria-label="OMR scan preparation" hidden>
+      <label for="omr-file">Local score PDF</label>
+      <input id="omr-file" type="file" accept="application/pdf,.pdf">
+      <p id="omr-status" role="status" aria-live="polite">Choose a scanned score to inspect one page at a time.</p>
+      <fieldset id="omr-options" disabled>
+        <legend>Page preparation</legend>
+        <label for="omr-page">Page</label><input id="omr-page" type="number" min="1" value="1">
+        <label for="omr-profile">Operation</label><select id="omr-profile"><option value="preserve">Preserve pixels</option><option value="contrast">Contrast normalization</option><option value="deskew">Manual deskew</option></select>
+        <label for="omr-rotation">Rotation (degrees, −5 to 5)</label><input id="omr-rotation" type="number" min="-5" max="5" step="0.05" value="0">
+        <button id="omr-preview" type="button" disabled>Prepare comparison</button>
+      </fieldset>
+      <p id="omr-report" aria-live="polite"></p>
+      <div class="omr-comparison"><figure><figcaption>Original render</figcaption><img id="omr-before" alt="Original PDF page preview"></figure><figure><figcaption>Candidate</figcaption><img id="omr-after" alt="Prepared PDF page preview"></figure></div>
+      <div class="pdf-save-controls"><button id="omr-download" disabled>Save page as candidate PDF</button><button id="omr-report-download" disabled>Save processing report</button></div>
+    </section>
+    <section id="media-workspace" aria-label="URL audio extraction" hidden>
+      <form id="media-scan-form">
+        <label for="media-url">Video, audio or playlist URL</label>
+        <div class="media-url-row"><input id="media-url" type="url" required placeholder="https://…" autocomplete="off"><button id="media-scan">Find media</button></div>
+      </form>
+      <p id="media-status" role="status" aria-live="polite">Enter a public URL to list its audio or video items.</p>
+      <fieldset id="media-options">
+        <legend>Audio download</legend>
+        <label for="media-format">Audio format</label>
+        <select id="media-format"><option value="mp3">MP3 · high quality VBR</option><option value="flac">FLAC · lossless encoding</option><option value="original">Original audio · no re-encoding</option></select>
+        <p class="media-help">FLAC preserves decoded source quality; it cannot restore detail missing from the source. Multiple items download as one ZIP of audio files.</p>
+        <div class="pdf-save-controls"><button id="media-select-all" type="button" disabled>Select all</button><button id="media-select-none" type="button" disabled>Select none</button></div>
+        <p id="media-list-source" class="media-help"></p>
+        <ul id="media-list" aria-label="Discovered media"></ul>
+        <button id="media-download" type="button" disabled>Download selected audio</button>
+      </fieldset>
+      <fieldset id="media-local">
+        <legend>Convert local audio</legend>
+        <label for="media-local-file">Audio file</label><input id="media-local-file" type="file" accept="audio/*,.m4a,.mp3,.flac,.wav,.ogg,.opus,.aac">
+        <label for="media-local-format">Convert to</label><select id="media-local-format"><option value="mp3">MP3 · high quality VBR</option><option value="flac">FLAC · lossless encoding</option></select>
+        <button id="media-convert" type="button" disabled>Convert and download</button>
+      </fieldset>
+      <button id="media-cancel" type="button" hidden>Cancel</button>
+    </section>
+    <section id="pdfmd-workspace" aria-label="PDF to Markdown" hidden>
+      <label for="pdfmd-file">PDF file</label><input id="pdfmd-file" type="file" accept="application/pdf,.pdf">
+      <p class="pdfmd-help">MarkItDown extracts selectable text locally. Scanned image-only PDFs need OCR; complex layouts may need cleanup.</p>
+      <div class="pdf-save-controls"><button id="pdfmd-convert" disabled>Convert to Markdown</button><button id="pdfmd-download" disabled>Download Markdown</button><button id="pdfmd-cancel" hidden>Cancel</button></div>
+      <p id="pdfmd-status" role="status" aria-live="polite">Choose a PDF to convert.</p>
+      <pre id="pdfmd-output" tabindex="0" aria-label="Converted Markdown"></pre>
+    </section>
+    <section id="format-photo-workspace" class="format-workspace" aria-label="Photo formats" hidden>
+      <label for="format-photo-file">Local photo file</label><input id="format-photo-file" type="file">
+      <p class="format-help">JPG / PNG / WebP / AVIF. EXIF orientation is applied. Transparent areas become white in JPG; other targets preserve transparency. Animated inputs use the first frame.</p>
+      <p class="format-help">Local conversion · up to 25 MB · saves a new file</p>
+      <label for="format-photo-format">Convert photo to</label><select id="format-photo-format"></select>
+      <label for="format-photo-name">Output filename</label><input id="format-photo-name" value="converted.jpg" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-photo-convert" disabled>Convert photo and download</button><button id="format-photo-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-photo-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
+    </section>
+    <section id="format-audio-workspace" class="format-workspace" aria-label="Audio formats" hidden>
+      <label for="format-audio-file">Local audio file</label><input id="format-audio-file" type="file">
+      <p class="format-help">MP3 / FLAC / WAV / M4A / AAC / Opus / OGG. Lossless output cannot restore detail missing from a lossy source.</p>
+      <p class="format-help">Local conversion · up to 100 MB · saves a new file</p>
+      <label for="format-audio-format">Convert audio to</label><select id="format-audio-format"></select>
+      <label for="format-audio-name">Output filename</label><input id="format-audio-name" value="converted.mp3" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-audio-convert" disabled>Convert audio and download</button><button id="format-audio-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-audio-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
+    </section>
+    <section id="format-video-workspace" class="format-workspace" aria-label="Video formats" hidden>
+      <label for="format-video-file">Local video file</label><input id="format-video-file" type="file">
+      <p class="format-help">MP4 / WebM / MKV / MOV / AVI. Converts the first video stream and keeps audio when present. Output is re-encoded for compatibility.</p>
+      <p class="format-help">Local conversion · up to 250 MB · saves a new file</p>
+      <label for="format-video-format">Convert video to</label><select id="format-video-format"></select>
+      <label for="format-video-name">Output filename</label><input id="format-video-name" value="converted.mp4" autocomplete="off">
+      <div class="pdf-save-controls"><button id="format-video-convert" disabled>Convert video and download</button><button id="format-video-cancel" hidden>Cancel current conversion</button></div>
+      <p id="format-video-status" class="format-help" role="status" aria-live="polite">Choose a local file to convert.</p>
+    </section>
+    <dialog id="tools-dialog" aria-labelledby="tools-dialog-title">
+      <h2 id="tools-dialog-title">Customize tools</h2>
+      <p>Choose which tools to show and adjust their order. Hidden tools keep their current content.</p>
+      <ul id="tools-list"></ul>
+      <p id="tools-save-status" role="status">Changes are saved automatically in this browser. At least one tool stays visible.</p>
+      <div class="pdf-save-controls"><button id="tools-reset" type="button">Restore defaults</button><button id="tools-done" type="button">Done</button></div>
+    </dialog>
+  </main>
+</body>
+</html>

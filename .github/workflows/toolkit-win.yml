@@ -1,0 +1,30 @@
+name: Toolkit Windows compatibility
+on:
+  push:
+    paths:
+      - 'toolkit-win/**'
+      - '.github/workflows/toolkit-win.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: toolkit-win
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: toolkit-win/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=low
+      - run: npm run ffmpeg:setup
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: npx playwright-core install firefox
+      - run: node --test tests/windows.test.js tests/ffmpeg-local.test.js tests/pdf-pages.test.js tests/tool-preferences.test.js
+      - run: npm run test:firefox

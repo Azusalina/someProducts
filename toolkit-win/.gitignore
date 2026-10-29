@@ -1,0 +1,11 @@
+node_modules/
+.venv-media/
+__pycache__/
+.venv-markitdown/
+.venv-formats/
+
+.venv-scribd/
+/src/scribd-downloader/
+/tools/ffmpeg/
+.generated/
+/.venv-*
