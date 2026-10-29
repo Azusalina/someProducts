@@ -45,3 +45,19 @@ test('FFmpeg and ffprobe resolve inside the project, ignoring external overrides
  const before=process.env.TOOLKIT_FFMPEG;process.env.TOOLKIT_FFMPEG='C:\\system\\ffmpeg.exe';
  try{for(const name of ['ffmpeg','ffprobe'])assert.ok(nativeTool(name,'TOOLKIT_FFMPEG').includes(path.join('tools','ffmpeg',`${process.platform}-${process.arch}`,'bin')));}finally{if(before===undefined)delete process.env.TOOLKIT_FFMPEG;else process.env.TOOLKIT_FFMPEG=before;}
 });
+
+test('native Windows browser discovery exports PDF through installed Edge/Chrome',{skip:process.platform!=='win32'},async()=>{
+ const {exportPdf,findChromium}=await import('../src/core/pdf.js');
+ assert.match(await findChromium(),/\.exe$/i);
+ const bytes=await exportPdf('<h1>Windows PDF</h1>','',{paper:'A4',background:'white',title:'Windows PDF'});
+ assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
+});
+test('native Windows taskkill stops an owned background process',{skip:process.platform!=='win32'},async()=>{
+ const {spawn}=await import('node:child_process');
+ const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{windowsHide:true,stdio:'ignore'});
+ await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});
+ await new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>{child.kill();reject(new Error('Windows process did not stop.'));},5000);
+  child.once('close',()=>{clearTimeout(timer);resolve();});stopProcessTree(child);
+ });
+});

@@ -876,3 +876,12 @@ workflow succeeds, no native Windows end-to-end pass is claimed.
 References: [Mermaid browser API](https://mermaid.js.org/config/usage.html),
 [Playwright browsers](https://playwright.dev/docs/browsers),
 [Node subprocess behavior](https://nodejs.org/api/child_process.html).
+
+Native Windows validation subsequently passed in
+[GitHub Actions run 40806981427](https://github.com/Azusalina/someProducts/actions/runs/40806981427)
+for code commit `30dd60f`: clean npm ci/postinstall bundling, npm audit, local
+Windows FFmpeg download, compatibility/PDF core tests, a cleared-PATH audio
+conversion, and the actual Firefox SVG preview/download workflow. Optional
+Python converters, Scribd access and TeX/Poppler tools were not exercised on that
+Windows runner. The local Linux regression runs remain the evidence for those
+optional-tool pipelines.
