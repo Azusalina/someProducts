@@ -949,3 +949,11 @@ toolkit-win 46 Node tests passed with two Windows-only tests skipped on Linux.
 Both products passed the six real media-worker fixture tests. The toolkit-win
 Firefox UI and Linux toolkit Chromium UI passed. Native Windows execution of the
 new job/Firefox tests is covered by the updated Windows workflow.
+
+The first native Windows run caught a cleanup-test timing assumption: aborting an
+HTTP transfer can leave its server-side reader active briefly. Links are revoked
+immediately while files are intentionally retained until readers close. The test
+now waits (bounded to three seconds) for that asynchronous cleanup; recursive
+removal also retries transient Windows file locks. The Linux production service
+additionally completed the supplied source-audio download using the final 8 MiB
+HTTP chunks (213,796,221-byte Opus output), without another FLAC encode.

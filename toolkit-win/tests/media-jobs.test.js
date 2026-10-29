@@ -32,7 +32,14 @@ test('background audio survives polling disconnects, streams large files and sup
  // Abandon a full transfer, then retry without regenerating the FLAC.
  const interrupted=await fetch(url);await interrupted.body.cancel();
  const retry=await fetch(url,{headers:{Range:'bytes=0-3'}});assert.equal(await retry.text(),'fLaC');
- await jobs.clear(first);await assert.rejects(access(folder),{code:'ENOENT'});
+ await jobs.clear(first);
+ // An interrupted HTTP transfer can still hold a file reader briefly. Clearing
+ // revokes the link immediately; disk removal waits for that reader to close.
+ for(let attempt=0;attempt<150;attempt++){
+   if(await access(folder).then(()=>false,error=>error.code==='ENOENT'))break;
+   await new Promise(resolve=>setTimeout(resolve,20));
+ }
+ await assert.rejects(access(folder),{code:'ENOENT'});
  const expired=await fetch(url);assert.equal(expired.status,410);await expired.text();
 });
 

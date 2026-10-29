@@ -61,14 +61,14 @@ export class MediaJobs {
       }
     }catch(error){if(!job.deleted){job.state='error';job.message=error.message;}}
     finally {
-      if(job.state!=='ready'&&job.folder)await rm(job.folder,{recursive:true,force:true});
+      if(job.state!=='ready'&&job.folder)await rm(job.folder,{recursive:true,force:true,maxRetries:3,retryDelay:100});
       if(!job.deleted){job.expiry=setTimeout(()=>this.clearJob(view,job).catch(()=>{}),this.retention);job.expiry.unref();}
     }
   }
   async dispose(job) {
     job.deleted=true;clearTimeout(job.expiry);job.controller.abort();this.files.delete(job.id);
     if(job.state==='ready'){job.state='expired';job.message='This audio download expired. Download the selection again.';}
-    if(job.folder&&!job.readers)await rm(job.folder,{recursive:true,force:true});
+    if(job.folder&&!job.readers)await rm(job.folder,{recursive:true,force:true,maxRetries:3,retryDelay:100});
   }
   async clearJob(view,job) {
     // Wait for a running worker before removing its temporary files.
@@ -96,7 +96,7 @@ export class MediaJobs {
         'Content-Disposition':`attachment; filename="audio${path.extname(job.filename)}"; filename*=UTF-8''${encodeURIComponent(job.filename)}`});
       if(req.method==='HEAD')return res.end();
       await pipeline(createReadStream(filename,{start,end}),res);
-    }finally{job.readers--;if(job.deleted&&!job.readers&&job.folder)await rm(job.folder,{recursive:true,force:true});}
+    }finally{job.readers--;if(job.deleted&&!job.readers&&job.folder)await rm(job.folder,{recursive:true,force:true,maxRetries:3,retryDelay:100});}
   }
   async close(){this.closed=true;await Promise.all([...this.jobs].map(([view,job])=>this.clearJob(view,job)));}
 }
