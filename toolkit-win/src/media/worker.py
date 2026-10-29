@@ -10,8 +10,10 @@ from urllib.parse import urljoin, unquote
 from html.parser import HTMLParser
 from urllib.request import urlopen, Request
 import zipfile
+import time
 
-LIMIT = 250 * 1024 * 1024
+DOWNLOAD_LIMIT = 1024 ** 3
+OUTPUT_LIMIT = 2 * 1024 ** 3
 
 
 def validate_url(url):
@@ -83,17 +85,57 @@ def html_media_links(url):
 
 def options():
     return dict(quiet=True, no_warnings=True, logger=Logger(), cachedir=False,
-                socket_timeout=20, ffmpeg_location=os.environ.get('TOOLKIT_FFMPEG'), retries=1, fragment_retries=1, playlistend=100,
-                max_filesize=LIMIT, hls_prefer_native=True,
+                socket_timeout=30, ffmpeg_location=os.environ.get('TOOLKIT_FFMPEG'), retries=5, fragment_retries=5,
+                extractor_retries=3, file_access_retries=3, playlistend=100,
+                retry_sleep_functions={'http': lambda n: min(2 ** (n - 1), 16),
+                                       'fragment': lambda n: min(2 ** (n - 1), 16)},
+                continuedl=True, http_chunk_size=8 * 1024 * 1024,
+                concurrent_fragment_downloads=2, skip_unavailable_fragments=False,
+                max_filesize=DOWNLOAD_LIMIT, hls_prefer_native=True,
                 postprocessor_args={'ExtractAudio+ffmpeg_i': ['-protocol_whitelist', 'file,pipe']})
+
+
+def transient_error(error):
+    # Some extractors fail before yt-dlp's downloader retry loop starts.
+    # Authentication failures and permanent HTTP 4xx must remain actionable.
+    pending, seen = [error], set()
+    while pending:
+        item = pending.pop()
+        if id(item) in seen:
+            continue
+        seen.add(id(item))
+        status = getattr(item, 'status', None) or getattr(item, 'code', None)
+        if isinstance(status, int) and status in (408, 429, 500, 502, 503, 504):
+            return True
+        if isinstance(item, (TimeoutError, ConnectionError)):
+            return True
+        pending += [cause for cause in (getattr(item, 'cause', None), getattr(item, '__cause__', None)) if isinstance(cause, BaseException)]
+        info = getattr(item, 'exc_info', None)
+        if info and isinstance(info[1], BaseException):
+            pending.append(info[1])
+    return False
+
+
+def extract_media(url, opts, download=True, on_retry=lambda: None):
+    import yt_dlp
+    for attempt in range(3):
+        try:
+            # Re-extraction refreshes signed URLs after transient errors;
+            # yt-dlp continues any .part files inside this operation.
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                return ydl.extract_info(validate_url(url), download=download)
+        except yt_dlp.utils.DownloadError as error:
+            if attempt == 2 or not transient_error(error):
+                raise
+            on_retry()
+            time.sleep(2 ** attempt)
 
 
 def scan(url):
     import yt_dlp
     opts = options() | dict(extract_flat='in_playlist', skip_download=True)
     try:
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            result = ydl.extract_info(validate_url(url), download=False)
+        result = extract_media(url, opts, download=False)
     except Exception:
         fallback = html_media_links(validate_url(url))
         if fallback:
@@ -135,7 +177,7 @@ def scan(url):
     return output
 
 
-def download(entries, mode, folder):
+def download(entries, mode, folder, report=lambda **_data: None):
     import yt_dlp
     from yt_dlp.utils import sanitize_filename
     if mode not in ('mp3', 'flac', 'original'):
@@ -143,6 +185,8 @@ def download(entries, mode, folder):
     outputs = []
     for index, entry in enumerate(entries, 1):
         prefix = f'{index:02d}-'
+        report(stage='extracting', item=index, total=len(entries), title=entry['title'])
+        last_report = [0.0]
         opts = options() | dict(noplaylist=True,
             format='/'.join(f'{quality}[protocol={protocol}]' for quality in ('bestaudio', 'best')
                             for protocol in ('https', 'http', 'http_dash_segments', 'm3u8_native')),
@@ -151,23 +195,35 @@ def download(entries, mode, folder):
             postprocessors=[dict(key='FFmpegExtractAudio', preferredcodec='best' if mode == 'original' else mode,
                                  preferredquality='0')])
         def progress(data):
-            if data.get('downloaded_bytes', 0) > LIMIT:
-                raise ValueError('Media exceeds the 250 MB download limit.')
+            if data.get('downloaded_bytes', 0) > DOWNLOAD_LIMIT:
+                raise ValueError('Source audio exceeds the 1 GiB per-item download limit.')
+            now = time.monotonic()
+            if now - last_report[0] >= 1 or data.get('status') == 'finished':
+                last_report[0] = now
+                report(stage='downloading' if data.get('status') != 'finished' else 'converting',
+                       item=index, total=len(entries), downloaded=data.get('downloaded_bytes'),
+                       bytes=data.get('total_bytes') or data.get('total_bytes_estimate'),
+                       speed=data.get('speed'), eta=data.get('eta'))
         opts['progress_hooks'] = [progress]
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(validate_url(entry['url']), download=True)
+        opts['postprocessor_hooks'] = [lambda _data: report(stage='converting', item=index, total=len(entries))]
+        info = extract_media(entry['url'], opts, on_retry=lambda: report(stage='retrying', item=index, total=len(entries)))
         if not info:
             raise ValueError(f'Could not download item {index}.')
         files = [p for p in folder.iterdir() if p.name.startswith(prefix) and p.suffix not in ('.part', '.ytdl')]
         if len(files) != 1:
             raise ValueError(f'Audio extraction did not finish for item {index}.')
         outputs.append(files[0])
+        if sum(p.stat().st_size for p in outputs) > OUTPUT_LIMIT:
+            raise ValueError('Selected audio exceeds the 2 GiB result limit. Select fewer items or use MP3/original audio.')
     if len(outputs) == 1:
         return outputs[0].name
+    report(stage='packaging', item=len(entries), total=len(entries))
     archive = folder / 'selected-audio.zip'
     with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as zipped:
         for file in outputs:
             zipped.write(file, file.name)
+    for file in outputs:
+        file.unlink()
     return archive.name
 
 
@@ -177,7 +233,10 @@ def main():
     if data['action'] == 'scan':
         print(json.dumps(scan(data['url'])))
     elif data['action'] == 'download':
-        print(json.dumps(dict(filename=download(data['entries'], data['format'], Path(data['folder'])))))
+        def report(**value):
+            if data.get('progress'):
+                print(json.dumps(dict(type='progress', **value)), flush=True)
+        print(json.dumps(dict(filename=download(data['entries'], data['format'], Path(data['folder']), report))), flush=True)
     else:
         raise ValueError('Unknown media operation.')
 

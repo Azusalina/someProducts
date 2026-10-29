@@ -131,8 +131,8 @@ conversion workflow. Video input is capped at 250 MB and runs for at most
 
 Authenticated uploads stream into fresh temporary directories rather than being
 accumulated in Node memory. Media-processing limits remain one operation per page
-and two across the process. The existing URL-audio working-data default remains
-250 MB; format conversion can specify its own periodic quota (250 MB for
+and two across the process. URL audio uses its separate 4 GiB working-data limit;
+format conversion can specify its own periodic quota (250 MB for
 photo/audio, 1 GB for video, including input and output files). Binary results
 stream back with a matching MIME type; temporary work is deleted on completion,
 errors and cancellation. Source files are never rewritten. FFmpeg inputs restrict
@@ -194,18 +194,24 @@ post-processing reads local files, with protocol and local-conversion demuxer
 allowlists; browser-provided paths or shell commands are never executed.
 
 Each view runs one operation at a time, with two concurrent operations across the
-process. Scan timeout is 90 seconds; download/conversion timeout is 10 minutes.
-Temporary per-request work directories are capped at 250 MB, including sources,
-intermediate audio and ZIP data. A periodic quota check aborts oversized work.
-Binary results stream to the browser and temporary files are removed on success,
-failure or cancellation. Temporary media exists on disk while processing (unlike
+process. Scans time out after 90 seconds. URL audio uses a background job with
+incremental progress, a 60-minute processing deadline, a 1 GiB source limit per
+item, a 2 GiB result limit and a recursive 4 GiB working-directory quota. Local
+conversion retains its separate 10-minute/250 MB working limit. Completed URL
+results stay in temporary files for 15 minutes; at most four results are retained
+across pages, with oldest-result eviction. Failed/cancelled work is removed.
+Downloads stream directly through the browser download manager and support HEAD
+and single HTTP byte ranges, so an interrupted transfer can reuse the ready
+result without re-encoding. Polling disconnections do not cancel processing;
+Check progress reconnects within the same page. Files are removed on expiration,
+replacement and shutdown, after any in-flight reader finishes. Temporary media exists on disk while processing (unlike
 in-memory PDF/photo previews). Input local audio is sent only to the loopback
 server; remote media requests originate from this computer. No media library,
 persistent download cache, or browser storage is maintained. Ctrl+C/shutdown
 aborts active media subprocesses, including FFmpeg children.
 
 Implementation: `public/media.js`, shared `public/tools.js`, `src/media/service.js`
-and `src/media/worker.py`; optional dependency setup is `scripts/setup-media.py`.
+`src/media/jobs.js` and `src/media/worker.py`; optional dependency setup is `scripts/setup-media.py`.
 Run `npm test` for request/auth/conversion/process/temporary-file cleanup checks and
 `npm run test:media` for real local-HTML yt-dlp fixtures plus browser interaction.
 The browser test stubs external metadata/download responses, while the Python
@@ -893,3 +899,53 @@ Edge/Chrome executable and stopping an owned process using Windows taskkill.
 The optional Scribd adapter retains ChromeDriver's default browser discovery
 when invoked directly without TOOLKIT_CHROMIUM; its offline Selenium and browser
 integration checks passed locally after this fallback adjustment.
+
+
+## Long URL audio pipeline (2026-10-29)
+
+The former URL path kept download/conversion inside a single POST and buffered
+its result as a browser Blob. Its 250 MB working/output limits also counted source,
+FLAC and ZIP files together. For long recordings these limits could raise an
+exception, returned by the generic handler as HTTP 400. The supplied three-hour
+YouTube sample produced a 1,512,007,580-byte FLAC, making that limit insufficient.
+
+The current browser uses POST `/api/media/start` (202), GET `/api/media/status`
+and POST `/api/media/cancel`. Background tasks snapshot the selected rows, share
+the existing operation slots with scans/local conversions, and send incremental
+extraction/download/conversion/packaging/retry status. GET/HEAD
+`/api/media/file/<random-id>` uses the existing HttpOnly session plus an
+unguessable local link. Status and cancellation remain scoped to the page view;
+expired links return 410 and concurrent operations return 409. The synchronous
+`/api/media/audio` endpoint remains compatible with existing callers.
+
+Only audio streams are selected where available. HTTP downloads use 8 MiB ranges,
+resume yt-dlp partial files and retry network/fragment failures with bounded
+backoff. Native HLS/DASH uses two concurrent fragments and fails on missing
+fragments rather than silently producing incomplete audio. A separate three-attempt
+loop covers transient extraction errors (408/429/500/502/503/504, timeouts and
+connection failures); it refreshes extracted URLs on retries. Permanent 400/403
+errors are preserved. Completed batch files use ZIP_STORED to avoid recompressing
+already encoded audio, then remove individual working copies. FFmpeg/ffprobe
+remain strictly project-local. SSRF checks and local-file FFmpeg restrictions
+remain in effect. A retry uses the same format selection, not a quality downgrade.
+
+Validation: the supplied video `OMnCTAZz2-E` completed full source download,
+FLAC encoding and streamed result download on this Linux host. ffprobe verified
+10,965.205333 seconds, FLAC, 48 kHz stereo, 24-bit and 1,512,007,580 bytes (about
+1.41 GiB). FLAC preserves decoded source precision; it does not make YouTube's
+lossy source lossless. Local HTTP fixtures verify transient 503 recovery and no
+retry of permanent 400, multi-item ZIP, MP3/FLAC/original extraction and the
+production private-network guard. Node tests exercise a sparse result larger than
+250 MB, HEAD/ranges, interrupted-download retry, cancellation, slot release,
+retention/eviction, authentication and bounded progress parsing. Firefox tests
+exercise polling, native download links, repeated download, local conversion and
+cancellation. Windows CI runs the background-job tests and Firefox UI; the live
+YouTube conversion was performed on Linux, not on Windows. Upstream site changes,
+access restrictions, disk capacity and network availability can still cause
+failures, which retain their specific error text.
+
+Regression result for this change: Linux toolkit 39/39 Node tests passed;
+toolkit-win 46 Node tests passed with two Windows-only tests skipped on Linux.
+Both products passed the six real media-worker fixture tests. The toolkit-win
+Firefox UI and Linux toolkit Chromium UI passed. Native Windows execution of the
+new job/Firefox tests is covered by the updated Windows workflow.

@@ -98,3 +98,13 @@ outside the project are retained.
 On Linux use `npm` instead of `npm.cmd`; the same web application and optional
 setup commands work. KDE native desktop integration is a separate Linux product
 and is not installed by this Windows-oriented fork.
+
+
+**URL audio:** choose the listed items and MP3/FLAC/original, then download.
+Progress shows the background download and conversion stages; **Cancel** stops
+the task. The ready link downloads directly through your browser and stays
+available for 15 minutes, including retries. **Check progress** reconnects after
+a temporary status connection failure in the same page. Source limit: 1 GiB per
+item; result: 2 GiB; processing: 60 minutes; temporary working space: up to 4 GiB
+per active task. FLAC can be much larger than the source; choose original audio
+to avoid re-encoding or MP3 for a smaller file.

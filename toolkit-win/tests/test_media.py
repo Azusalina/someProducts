@@ -8,6 +8,7 @@ import http.server
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -21,7 +22,24 @@ spec = importlib.util.spec_from_file_location('media_worker', ROOT/'src/media/wo
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
 
+FFMPEG = ROOT/'tools/ffmpeg'/('win32-x64' if sys.platform == 'win32' else 'linux-x64')/'bin'/('ffmpeg.exe' if sys.platform == 'win32' else 'ffmpeg')
+FFPROBE = FFMPEG.with_name('ffprobe.exe' if sys.platform == 'win32' else 'ffprobe')
+os.environ['TOOLKIT_FFMPEG'] = str(FFMPEG)
+os.environ['TOOLKIT_FFPROBE'] = str(FFPROBE)
+
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    failures = 0
+    permanent_failures = 0
+    def do_GET(self):
+        if self.path == '/bad.wav':
+            type(self).permanent_failures += 1
+            self.send_error(400, 'Permanent fixture failure')
+            return
+        if self.path == '/retry.wav' and type(self).failures < 2:
+            type(self).failures += 1
+            self.send_error(503, 'Temporary fixture failure')
+            return
+        super().do_GET()
     def log_message(self, *_args): pass
 
 class MediaTests(unittest.TestCase):
@@ -29,8 +47,9 @@ class MediaTests(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory(prefix='toolkit-media-tests-')
         cls.root = Path(cls.tmp.name)
-        subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','sine=frequency=440:duration=0.4',str(cls.root/'tone.wav')],check=True)
-        subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','color=c=blue:s=64x64:d=0.4','-f','lavfi','-i','sine=frequency=660:duration=0.4','-c:v','libx264','-c:a','aac','-shortest',str(cls.root/'clip.mp4')],check=True)
+        subprocess.run([str(FFMPEG),'-v','error','-f','lavfi','-i','sine=frequency=440:duration=0.4',str(cls.root/'tone.wav')],check=True)
+        subprocess.run([str(FFMPEG),'-v','error','-f','lavfi','-i','color=c=blue:s=64x64:d=0.4','-f','lavfi','-i','sine=frequency=660:duration=0.4','-c:v','libx264','-c:a','aac','-shortest',str(cls.root/'clip.mp4')],check=True)
+        (cls.root/'retry.wav').write_bytes((cls.root/'tone.wav').read_bytes())
         (cls.root/'links.html').write_text('<a href="tone.wav" title="Linked audio">audio</a><a href="clip.mp4">video</a>')
         (cls.root/'multi.html').write_text('<title>Two media</title><video src="clip.mp4" controls></video><audio src="tone.wav" controls></audio>')
         cls.server = http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=cls.tmp.name))
@@ -48,10 +67,11 @@ class MediaTests(unittest.TestCase):
             name = worker.download(rows,'mp3',Path(folder))
             with zipfile.ZipFile(Path(folder)/name) as archive:
                 names=archive.namelist();self.assertEqual(len(names),2)
+                self.assertEqual([p.name for p in Path(folder).iterdir()],[name])
                 for item in names:
                     self.assertTrue(item.endswith('.mp3'))
                     archive.extract(item,folder)
-                    probe=subprocess.run(['ffprobe','-v','error','-show_entries','stream=codec_name,codec_type','-of','json',str(Path(folder)/item)],capture_output=True,text=True,check=True)
+                    probe=subprocess.run([str(FFPROBE),'-v','error','-show_entries','stream=codec_name,codec_type','-of','json',str(Path(folder)/item)],capture_output=True,text=True,check=True)
                     streams=json.loads(probe.stdout)['streams']
                     self.assertEqual([s['codec_type'] for s in streams],['audio'])
                     self.assertEqual(streams[0]['codec_name'],'mp3')
@@ -68,6 +88,29 @@ class MediaTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as folder:
                 name=worker.download(rows,mode,Path(folder))
                 self.assertTrue(name.endswith('.flac' if mode=='flac' else '.wav'))
+
+    def test_transient_source_failures_retry_and_report_conversion(self):
+        QuietHandler.failures = 0
+        rows = [dict(url=self.url+'/retry.wav', title='Retry audio', headers={})]
+        events = []
+        with tempfile.TemporaryDirectory() as folder:
+            name = worker.download(rows, 'flac', Path(folder), lambda **value: events.append(value))
+            self.assertTrue((Path(folder)/name).read_bytes().startswith(b'fLaC'))
+        self.assertEqual(QuietHandler.failures, 2)
+        self.assertIn('downloading', [event['stage'] for event in events])
+        self.assertIn('converting', [event['stage'] for event in events])
+        opts = worker.options()
+        self.assertTrue(opts['continuedl'])
+        self.assertFalse(opts['skip_unavailable_fragments'])
+        self.assertEqual(opts['concurrent_fragment_downloads'], 2)
+
+    def test_permanent_http_400_does_not_retry(self):
+        import yt_dlp
+        QuietHandler.permanent_failures = 0
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaises(yt_dlp.utils.DownloadError):
+                worker.download([dict(url=self.url+'/bad.wav', title='Bad audio')], 'flac', Path(folder))
+        self.assertEqual(QuietHandler.permanent_failures, 1)
 
     def test_production_guard_and_invalid_protocols(self):
         for url in ('file:///etc/passwd','ftp://example.com/a','https://user:pass@example.com/a'):

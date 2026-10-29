@@ -26,5 +26,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - run: npx playwright-core install firefox
-      - run: node --test tests/windows.test.js tests/ffmpeg-local.test.js tests/pdf-pages.test.js tests/tool-preferences.test.js
+      - run: node --test tests/windows.test.js tests/ffmpeg-local.test.js tests/pdf-pages.test.js tests/tool-preferences.test.js tests/media-jobs.test.js
       - run: npm run test:firefox
+      - run: node tests/media-browser.js --firefox

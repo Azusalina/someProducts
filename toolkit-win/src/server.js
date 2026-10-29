@@ -1,3 +1,4 @@
+import { MediaJobs } from './media/jobs.js';
 import {pythonExecutable,nativeTool,resolveUserFile} from './platform/runtime.js';
 import http from 'node:http';
 import { ScribdJobs } from './scribd/service.js';
@@ -19,8 +20,9 @@ import { readSource, documentStyle } from './core/files.js';
 import { exportPdf } from './core/pdf.js';
 import { scanMedia, withMediaWork, downloadMedia, convertMedia, sendMedia, mediaFormat, abortMedia } from './media/service.js';
 
-export async function createToolkit({ port = 4177, filename, interval = 300, baseDir = process.cwd(), scribdOptions } = {}) {
+export async function createToolkit({ port = 4177, filename, interval = 300, baseDir = process.cwd(), scribdOptions, mediaOptions } = {}) {
   const scribd = new ScribdJobs(scribdOptions);
+  const mediaJobs = new MediaJobs(mediaOptions);
   const registry = new ModuleRegistry();
   const token = randomBytes(24).toString('hex');
   const style = await documentStyle();
@@ -48,6 +50,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
     view.expiry = setTimeout(() => {
       if (view.clients.size || view.exporting) return scheduleExpiry(viewId, view);
       scribd.clear(viewId).catch(() => {});
+      mediaJobs.clear(view).catch(() => {});
       view.close(); views.delete(viewId);
     }, 30 * 60 * 1000);
     view.expiry.unref();
@@ -82,6 +85,8 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
       }
       if (!url.pathname.startsWith('/api/')) return json(res, { error: 'Not found.' }, 404);
       if (!(req.headers.cookie || '').split(';').some(cookie => cookie.trim() === sessionCookie)) return json(res, { error: 'Refresh the toolkit at its local address to start a session. Allow cookies for this local address.' }, 403);
+      const mediaFile = url.pathname.match(/^\/api\/media\/file\/([a-f0-9]{48})$/);
+      if(mediaFile&&['GET','HEAD'].includes(req.method))return await mediaJobs.send(mediaFile[1],req,res);
       const scribdFile = url.pathname.match(/^\/api\/scribd\/file\/([a-f0-9]{48})$/);
       if (scribdFile && req.method === 'GET') return await scribd.send(scribdFile[1], res, url.searchParams.get('download') === '1');
       if (req.method === 'POST' && url.pathname === '/api/views') {
@@ -156,11 +161,14 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
         try { return json(res, { items: await scanMedia(view, options.url, controller.signal) }); }
         finally { res.off('close', cancel); }
       }
+      if(req.method==='POST'&&url.pathname==='/api/media/start')return json(res,mediaJobs.start(view,await body(req)),202);
+      if(req.method==='GET'&&url.pathname==='/api/media/status')return json(res,mediaJobs.status(view));
+      if(req.method==='POST'&&url.pathname==='/api/media/cancel'){await mediaJobs.clear(view);return json(res,mediaJobs.status(view));}
       if (req.method === 'POST' && url.pathname === '/api/media/audio') {
         const options = await body(req);
         return await withMediaWork(view, res, async (folder, signal) => {
           const filename = await downloadMedia(view, options, folder, signal);
-          await sendMedia(res, folder, filename);
+          await sendMedia(res, folder, filename, {maxBytes:2*1024**3});
         });
       }
       if (req.method === 'POST' && url.pathname === '/api/media/convert') {
@@ -225,7 +233,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
       }
       return json(res, { error: 'Not found.' }, 404);
     } catch (error) {
-      if (!res.headersSent) json(res, { error: error.code === 'ENOENT' ? 'File not found. Check the local path.' : error.message }, 400);
+      if (!res.headersSent) json(res, { error: error.code === 'ENOENT' ? 'File not found. Check the local path.' : error.message }, error.status || 400);
       else res.end();
     }
   });
@@ -233,6 +241,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   const url = `http://127.0.0.1:${server.address().port}/`;
   const close = async () => {
+    await mediaJobs.close();
     await scribd.close();
     for (const view of views.values()) { abortMedia(view); abortPdfMarkdown(view); view.close(); }
     views.clear();
