@@ -103,3 +103,93 @@ python3 tests/test_interactive.py
 ```
 
 The browser checks use headless Chromium, available here as `chromium`.
+
+## Source folder rename (2026-11-05)
+
+The source directory was renamed from `d-todos` to `d-sba-cutoff`. The Pages
+builder and workflow use the new directory; the established public route remains
+`/someProducts/todos/`. Data, generated charts, and subject links are unchanged.
+
+## Cutoff tables and admissions reference (2026-11-05)
+
+The startup page explicitly uses a white background and a light browser color
+scheme. Each subject chart now has an observed-cutoff table immediately below
+the curve, before the existing forecast table. Rows are newest-first by year
+and series; columns follow the visible grade buttons. Values use the same
+percentage formatting as the plotted observations, and missing values show `—`.
+Forecasts stay in their separate estimate table.
+
+The startup page and all seven subject pages include **HKU JUPAS admission
+marks and offers**. A real button labeled **Show** reveals the reference; it
+changes to **Hide** while open. The reference starts hidden on every page load,
+with `aria-expanded` and `aria-controls` for assistive technology. The tables
+scroll horizontally within their region on small screens.
+
+`admissions.json` stores the manually checked official figures and source URLs.
+`admissions_reference.py` generates the source-linked table and toggle; Python
+embeds these in each HTML file so no fetch, server or internet is needed to
+read the reference. External source links require internet. Regeneration never
+silently refreshes admissions data: update the JSON and verification date after
+checking the sources, then run `python3 render_interactive.py`.
+
+Coverage is intake years **2022–2026** for JS6729 and **2025–2026** for JS6779
+and JS6298, matching the available recent JUPAS programme histories. The user
+confirmed JS6298 as the intended code instead of JS6289. JS6779 was new for
+2025; no predecessor programme's scores are substituted. The 2026 scores
+are historical intake figures printed under **With Reference to Admissions
+2026** in the **2027** admissions brochure, not predictions for 2027.
+
+### Sources checked 2026-11-05
+
+- Main-round offer totals: official JUPAS programme statistics for
+  [JS6729](https://www.jupas.edu.hk/en/programme/hku/JS6729/),
+  [JS6779](https://www.jupas.edu.hk/en/programme/hku/JS6779/), and
+  [JS6298](https://www.jupas.edu.hk/en/programme/hku/JS6298/).
+  Read **Offer Statistics (as at the Announcement of the Main Round Offer
+  Results)**, Total column; application counts and first-year intake quotas
+  are different measures.
+- [HKU 2022 admissions scores](https://www.jupas.edu.hk/f/page/13825/HKU_2022.pdf#page=4):
+  JS6729, UQ/median/LQ = 34/31/30.
+- [HKU 2023 admissions scores](https://www.jupas.edu.hk/f/page/13825/HKU_2023.pdf#page=4):
+  JS6729, UQ/median/LQ = 34/32/31.
+- [HKU 2024 admissions scores](https://www.jupas.edu.hk/f/page/3667/af_2024_JUPAS.pdf):
+  JS6729, UQ/median/LQ = 34/33/31.
+- [HKU 2025 admissions scores](https://www.jupas.edu.hk/f/page/3667/af_2025_JUPAS.pdf):
+  JS6729 = 36/35/35; JS6779 = 33/33/31; JS6298 = 44/42/42,
+  all in UQ/median/LQ order.
+- [HKU 2027 brochure, reference scores for 2026](https://admissions.hku.hk/sites/default/files/2026-09/HKU-JUPAS-Admissions-Information-2027.pdf):
+  JS6298, PDF page 2 = 47/45/44; JS6729 and JS6779, PDF page 6 =
+  38/36/36 and 37/36/36, respectively, in UQ/median/LQ order.
+
+The UI presents **LQ / median / UQ** in ascending order. These are weighted
+admission score quartiles, not exam percentages or the minimum score admitted.
+Scores remain as published, without trying to infer hidden decimals. Offer
+totals are not confirmed enrolment counts. Year-to-year deltas compare adjacent
+intakes within a programme and the historical formulas shown. Missing preceding
+years show `—`; missing numeric values show `Unavailable`, never zero.
+
+JS6298's published 2025–2026 formula weights English by 2, Mathematics by 1.5,
+and two eligible elective subjects by 1.5, plus one other subject. The eligible
+weighted subjects are Biology, Chemistry, Physics, Economics, ICT and M1/M2.
+Its 2027 formula is English + Mathematics + Best 3 Subjects. The table keeps
+the historical weighted scores and explicitly warns against comparing those
+values directly with scores computed under the new formula. Programme entry
+requirements and interviews remain separate from these reference statistics.
+
+### Validation
+
+The existing headless Chromium checks now also verify every cutoff table value
+against its plotted observation, cutoff placement and grade filtering, initial
+admissions hiding, repeated Show/Hide state and accessibility attributes,
+official source domains, all three 2026 rows and deltas, and the white startup
+background. Both closed and expanded references are checked for page overflow
+at desktop and mobile widths. Existing chart and interval checks are retained.
+
+Validation passed after regeneration: `node tests/check_static.mjs` checked all
+seven offline charts and static assets; `python3 tests/test_interactive.py`
+passed 16 page/viewport combinations (seven subjects plus startup page at
+1280px and an actual Chromium viewport of 500px). Chromium's minimum headless
+window width was 500px even though 420px was requested. Browser tests required
+running outside the filesystem sandbox because the sandboxed Chromium launch
+terminated with SIGTRAP. Python compilation checks also passed. No statistical
+model or source cutoff data was changed.

@@ -6,6 +6,7 @@ import html
 import json
 from pathlib import Path
 import subprocess
+from admissions_reference import ADMISSIONS_SCRIPT, render_admissions
 
 ROOT = Path(__file__).resolve().parent
 GRADES = ["5**", "5*", "5", "4", "3", "2"]
@@ -73,6 +74,8 @@ def main():
     forecasts = read_rows(output / f"forecast_{args.year}.csv")
     template = (ROOT / "chart_template.html").read_text(encoding="utf-8")
     template = template.replace("__STATISTICS_JS__", (ROOT / "statistics.js").read_text(encoding="utf-8"))
+    admissions = render_admissions(json.loads((ROOT / "admissions.json").read_text(encoding="utf-8")))
+    template = template.replace("__ADMISSIONS__", admissions).replace("__ADMISSIONS_SCRIPT__", ADMISSIONS_SCRIPT)
     subjects = list(dict.fromkeys(row["Subject"] for row in data))
     # Match R's filename normalization for the same subject.
     def filename(subject):
@@ -106,11 +109,20 @@ def main():
         print(f"Saved {path}")
     (output / "index.html").write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<title>HKDSE cutoff charts</title><style>body{font:17px system-ui;max-width:760px;margin:60px auto;padding:24px;color:#182230}'
-        'li{margin:16px 0}a{color:#365f9b}</style><h1>HKDSE cutoff charts</h1>'
+        '<title>HKDSE cutoff charts</title><style>html{background:#fff;color-scheme:light}'
+        'body{font:17px system-ui;max-width:760px;margin:60px auto;padding:24px;color:#182230;background:#fff}'
+        'li{margin:16px 0}a{color:#365f9b}.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:14px}'
+        'h2{font-size:19px}.card{margin-top:32px;border-top:1px solid #e4e7ec;padding-top:16px}'
+        '.preset{font:inherit;background:#fff;border:1px solid #d0d5dd;border-radius:6px;padding:6px 12px;cursor:pointer}'
+        '.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}'
+        'th,td{text-align:left;padding:12px;border-bottom:1px solid #e4e7ec;font-variant-numeric:tabular-nums}'
+        'th small{display:block;max-width:200px;white-space:normal;font-weight:400;color:#667085}'
+        '.note{font-size:12px;color:#667085;line-height:1.65}p{overflow-wrap:anywhere}'
+        '[hidden]{display:none!important}@media(max-width:600px){body{margin:22px auto;padding:12px}}</style><body><h1>HKDSE cutoff charts</h1>'
         f'<p>Hover over a node for its year and percentage. Each chart includes {args.year} estimates, '
         f'{args.level:.1%} initial confidence level, adjustable α, and prediction ranges. Works offline.</p><ul>'
-        + "".join(links) + '</ul><p>PNG and SVG copies and the forecast CSV are saved alongside these charts.</p></html>', encoding="utf-8")
+        + "".join(links) + '</ul><p>PNG and SVG copies and the forecast CSV are saved alongside these charts.</p>'
+        + admissions + ADMISSIONS_SCRIPT + '</body></html>', encoding="utf-8")
 
 
 if __name__ == "__main__":

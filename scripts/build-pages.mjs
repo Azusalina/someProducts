@@ -29,7 +29,8 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const [name, files] of Object.entries(sites)) {
   const original = name === 'balladeIV-liebe' ? 'balldeIV' : name;
-  const source = path.join(root, await exists(path.join(root, `d-${name}`)) ? `d-${name}` : original);
+  const folder = name === 'todos' ? 'd-sba-cutoff' : `d-${name}`;
+  const source = path.join(root, await exists(path.join(root, folder)) ? folder : original);
   if (name === 'count-month') {
     for (const file of ['app.mjs', 'model.mjs']) run(source, ['--check', file]);
     run(source, ['--test', 'tests/model.test.mjs']);

@@ -3,6 +3,8 @@
 HKDSE cutoff charts for seven subjects, with colored grade trends, interactive
 node tooltips, adjustable confidence intervals, and 2027 linear-regression
 estimates. Paper trends and weightings are included when supplied.
+Year-by-year cutoff tables sit below the curves. A collapsible reference shows
+HKU JS6729, JS6779, and JS6298 admission quartiles and main-round offer trends.
 
 See [description.md](description.md) for methods, assumptions, file structure,
 paper-data format, and validation details.
@@ -13,6 +15,9 @@ Open `product1/index.html` in a browser to choose a subject. Hover or focus a
 node for its percentage and year. Enter α (%) to recalculate confidence and
 prediction intervals, or use the 90%, 95%, and 99% buttons. Click grades to
 hide them and use the checkboxes to toggle intervals.
+Scroll below a curve for its cutoff reference table. Click **Show** beside
+**HKU JUPAS admission marks and offers** on the white startup page or any subject
+page to reveal the admissions table; click **Hide** to close it. It starts hidden.
 
 The public version is https://azusalina.github.io/someProducts/todos/.
 

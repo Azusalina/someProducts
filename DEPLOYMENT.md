@@ -8,7 +8,7 @@ The public landing page is https://azusalina.github.io/someProducts/.
 | `d-gitpop/` | `/someProducts/gitpop/` |
 | `d-ict/` | `/someProducts/ict/` |
 | `d-la/` | `/someProducts/la/` |
-| `d-todos/` | `/someProducts/todos/` |
+| `d-sba-cutoff/` | `/someProducts/todos/` |
 | `d-Visualize-graph/` | `/someProducts/Visualize-graph/` |
 | `d-yupi-econ/` | `/someProducts/yupi-econ/` |
 | `d-balladeIV-liebe/` | `/someProducts/balladeIV-liebe/` |

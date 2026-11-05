@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>M1 · HKDSE cutoffs</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f7f8fa;color:#182230;font:14px system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}html{color-scheme:light}body{margin:0;background:#f7f8fa;color:#182230;font:14px system-ui,-apple-system,sans-serif}
 main{max-width:1240px;margin:36px auto;padding:0 24px}nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}nav a{color:#475467;text-decoration:none;padding:8px 14px;border:1px solid #e4e7ec;border-radius:24px;background:white}nav a[aria-current]{background:#182230;color:white;border-color:#182230}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:-1px}.subtitle,.note{color:#667085;line-height:1.65}.subtitle{margin:0 0 22px}.card{background:white;border:1px solid #e4e7ec;border-radius:16px;padding:22px;margin-bottom:20px}
 .toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.toolbar label{display:flex;gap:6px;align-items:center;font-size:13px}input{accent-color:#365f9b}button{font:inherit;cursor:pointer}.grade-button{border:1px solid #e4e7ec;border-radius:20px;padding:7px 12px;background:white}.grade-button[aria-pressed=false]{opacity:.35}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}.hint{font-size:12px;color:#667085;margin:16px 0 0;line-height:1.8}
@@ -13,6 +13,7 @@ h1{font-size:34px;margin:0 0 8px;letter-spacing:-1px}.subtitle,.note{color:#6670
 svg{display:block;width:100%;height:auto;overflow:visible}svg text{font-family:system-ui,sans-serif}svg .node:focus{outline:none;stroke:#182230;stroke-width:2}.paper-key{display:flex;flex-wrap:wrap;gap:10px 24px;color:#667085;font-size:12px;margin-top:12px}.paper-key span::before{content:'';display:inline-block;width:26px;border-top:2px dashed #98a2b3;vertical-align:middle;margin-right:8px}
 svg .node{transition:filter 160ms ease}svg .node:is(:hover,:focus,.is-active){filter:brightness(1.14) drop-shadow(0 0 2px currentColor)}
 .table-wrap{overflow:auto}h2{font-size:19px;margin:0 0 10px}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}th{text-align:left;color:#667085;font-size:12px;font-weight:600;border-bottom:1px solid #e4e7ec;padding:13px 14px}td{border-bottom:1px solid #f0f2f5;padding:13px 14px;font-variant-numeric:tabular-nums}td small{display:block;font-size:11px;color:#667085;margin-top:4px}.estimate{font-weight:650}.note{font-size:12px;margin:14px 0 0}.tip{position:fixed;pointer-events:none;background:#182230;color:white;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.8;box-shadow:0 8px 24px #10182825;z-index:5;max-width:330px}.tip strong{font-size:13px}.tip[hidden]{display:none}
+[hidden]{display:none!important}th small{display:block;max-width:200px;white-space:normal;font-weight:400;margin-top:4px}.note{overflow-wrap:anywhere}.note a,td a{color:#365f9b}#admissions-heading{margin:0}
 @media(max-width:600px){main{padding:0 12px;margin:22px auto}.card{padding:14px}h1{font-size:28px}.toolbar{gap:7px}.grade-button{padding:5px 9px}.controls{width:100%;margin-top:7px}.hint{font-size:11px}}
 </style>
 </head>
@@ -30,11 +31,29 @@ svg .node{transition:filter 160ms ease}svg .node:is(:hover,:focus,.is-active){fi
 <div class="paper-key" id="papers"></div>
 </section>
 <section class="card">
+<h2 id="cutoff-heading">Cutoff reference table</h2>
+<div class="table-wrap" role="region" aria-labelledby="cutoff-heading" tabindex="0"><table>
+<thead id="cutoff-columns"></thead><tbody id="cutoff-table"></tbody>
+</table></div>
+<p class="note">Observed cutoff percentages, by year and series. Grade buttons also filter this table. — means no observed value was supplied; forecasts appear separately below.</p>
+</section>
+<section class="card">
 <h2 id="forecast-heading"></h2>
 <div class="table-wrap"><table><thead><tr><th>Grade / series</th><th>Observed range</th><th>Estimate</th><th id="ci-heading"></th><th id="pi-heading"></th><th>t(1 − α/2)</th><th>Years fitted</th></tr></thead><tbody id="forecast-table"></tbody></table></div>
 <p class="note" id="model-note"></p>
 <p class="note">The confidence interval describes the estimated mean cutoff. The prediction interval is the wider range for a future year's cutoff. These are linear extrapolations, rather than published future cutoffs. Intervals assume a stable linear trend and independent, normally distributed residuals with constant variance. Bounds are not clipped to 0–100%.</p>
 </section>
+<section class="card" aria-labelledby="admissions-heading">
+<div class="toolbar"><h2 id="admissions-heading">HKU JUPAS admission marks and offers</h2>
+<button class="preset" type="button" id="admissions-toggle" aria-expanded="false" aria-controls="admissions-reference">Show</button></div>
+<div id="admissions-reference" hidden>
+<p class="note">Main-round offers are offer counts at results announcement, not programme intake quotas or confirmed enrolments. LQ = lower quartile (25th percentile); median = 50th percentile; UQ = upper quartile (75th percentile). Scores are programme-weighted admission points, not percentages or minimum cutoffs.</p>
+<div class="table-wrap" role="region" aria-label="Admission history" tabindex="0"><table>
+<thead><tr><th scope="col">Programme</th><th scope="col">Intake year</th><th scope="col">Main-round offers</th><th scope="col">Δ offers</th><th scope="col">LQ</th><th scope="col">Median</th><th scope="col">UQ</th><th scope="col">Δ LQ / median / UQ</th><th scope="col">Sources</th></tr></thead>
+<tbody id="admissions-table"><tr><th scope="row">JS6729<small>BSc in Actuarial Science</small></th><td>2022</td><td>64</td><td>—</td><td>30</td><td>31</td><td>34</td><td>— / — / —</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6729/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/13825/HKU_2022.pdf#page=4" title="HKU 2022 admissions scores, page 4">Scores</a></td></tr><tr><th scope="row">JS6729<small>BSc in Actuarial Science</small></th><td>2023</td><td>74</td><td>+10</td><td>31</td><td>32</td><td>34</td><td>+1 / +1 / 0</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6729/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/13825/HKU_2023.pdf#page=4" title="HKU 2023 admissions scores, page 4">Scores</a></td></tr><tr><th scope="row">JS6729<small>BSc in Actuarial Science</small></th><td>2024</td><td>54</td><td>-20</td><td>31</td><td>33</td><td>34</td><td>0 / +1 / 0</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6729/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/3667/af_2024_JUPAS.pdf" title="HKU 2024 admissions scores, page 3">Scores</a></td></tr><tr><th scope="row">JS6729<small>BSc in Actuarial Science</small></th><td>2025</td><td>44</td><td>-10</td><td>35</td><td>35</td><td>36</td><td>+4 / +2 / +2</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6729/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/3667/af_2025_JUPAS.pdf" title="HKU 2025 admissions scores">Scores</a></td></tr><tr><th scope="row">JS6729<small>BSc in Actuarial Science</small></th><td>2026</td><td>48</td><td>+4</td><td>36</td><td>36</td><td>38</td><td>+1 / +1 / +2</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6729/">Offers</a> · <a href="https://admissions.hku.hk/sites/default/files/2026-09/HKU-JUPAS-Admissions-Information-2027.pdf#page=6" title="HKU 2027 brochure: reference admissions scores for intake 2026">Scores</a></td></tr><tr><th scope="row">JS6779<small>Statistical Decision Sciences</small></th><td>2025</td><td>38</td><td>—</td><td>31</td><td>33</td><td>33</td><td>— / — / —</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6779/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/3667/af_2025_JUPAS.pdf" title="HKU 2025 admissions scores">Scores</a></td></tr><tr><th scope="row">JS6779<small>Statistical Decision Sciences</small></th><td>2026</td><td>23</td><td>-15</td><td>36</td><td>36</td><td>37</td><td>+5 / +3 / +4</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6779/">Offers</a> · <a href="https://admissions.hku.hk/sites/default/files/2026-09/HKU-JUPAS-Admissions-Information-2027.pdf#page=6" title="HKU 2027 brochure: reference admissions scores for intake 2026">Scores</a></td></tr><tr><th scope="row">JS6298<small>BA &amp; BEng in Artificial Intelligence and Data Science</small></th><td>2025</td><td>12</td><td>—</td><td>42</td><td>42</td><td>44</td><td>— / — / —</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6298/">Offers</a> · <a href="https://www.jupas.edu.hk/f/page/3667/af_2025_JUPAS.pdf" title="HKU 2025 admissions scores">Scores</a></td></tr><tr><th scope="row">JS6298<small>BA &amp; BEng in Artificial Intelligence and Data Science</small></th><td>2026</td><td>11</td><td>-1</td><td>44</td><td>45</td><td>47</td><td>+2 / +3 / +3</td><td><a href="https://www.jupas.edu.hk/en/programme/hku/JS6298/">Offers</a> · <a href="https://admissions.hku.hk/sites/default/files/2026-09/HKU-JUPAS-Admissions-Information-2027.pdf#page=2" title="HKU 2027 brochure: reference admissions scores for intake 2026">Scores</a></td></tr></tbody></table></div>
+<p class="note">Δ compares the previous intake year within the same programme and historical formula. — means no comparable previous year is included. Historical scores are references, not admissions guarantees. The 2026 scores come from the “With Reference to Admissions 2026” columns in HKU’s 2027 brochure.</p>
+<p class="note"><strong>JS6729</strong>: 1.2 × English + 1.2 × Mathematics + 1.2 × M1/M2 + Best 2 Subjects. This historical formula applies to all listed years.</p><p class="note"><strong>JS6779</strong>: 1.5 × Mathematics + Best 4 Subjects. First intake in 2025; no earlier programme history is implied.</p><p class="note"><strong>JS6298</strong>: 2 × English + 1.5 × Mathematics + Best 2 Subjects with weighting + Best Subject. 2025–2026 historical formula: the weighted Best 2 subjects use ×1.5 for Biology, Chemistry, Physics, Economics, ICT or M1/M2. The 2027 formula is different (English + Mathematics + Best 3 Subjects); these historical scores are not converted to the new formula. JUPAS lists offer history from 2025.</p><p class="note">Official HKU / JUPAS sources checked 2026-11-05. This saved reference works offline; source links require internet.</p>
+</div></section>
 </main>
 <div class="tip" id="tooltip" role="status" hidden></div>
 <script>
@@ -194,11 +213,38 @@ function render(){
     const values=[`${grade} · ${DATA.labels[f.Series]}`,range(f.HistoricalLow,f.HistoricalHigh),pct(f.Estimate),range(f.ConfidenceLow,f.ConfidenceHigh),range(f.PredictionLow,f.PredictionHigh),f.CriticalValue.toPrecision(4),`${f.TrainingFrom}–${f.TrainingTo} (n=${f.Observations}, df=${f.DegreesFreedom})`];
     values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=value;if(i===0)td.style.color=DATA.colors[grade];if(i===2)td.className='estimate';row.append(td)});body.append(row);
   }}
+  const visibleGrades=DATA.grades.filter(grade=>!hidden.has(grade));
+  const columns=document.getElementById('cutoff-columns');columns.replaceChildren();
+  const headings=document.createElement('tr');
+  for(const label of ['Year','Series',...visibleGrades]){const th=document.createElement('th');th.scope='col';th.textContent=label;headings.append(th)}
+  columns.append(headings);
+  const cutoffBody=document.getElementById('cutoff-table');cutoffBody.replaceChildren();
+  const yearsObserved=[...new Set(observed.map(row=>row.year))].sort((a,b)=>b-a);
+  const values=new Map(observed.map(row=>[JSON.stringify([row.year,row.series,row.grade]),row.value]));
+  for(const year of yearsObserved){for(const series of DATA.series){
+    if(!observed.some(row=>row.year===year&&row.series===series))continue;
+    const tr=document.createElement('tr');tr.dataset.year=year;tr.dataset.series=series;
+    const yearCell=document.createElement('th');yearCell.scope='row';yearCell.textContent=year;tr.append(yearCell);
+    const seriesCell=document.createElement('td');seriesCell.textContent=DATA.labels[series];tr.append(seriesCell);
+    for(const grade of visibleGrades){const td=document.createElement('td');const value=values.get(JSON.stringify([year,series,grade]));td.textContent=value==null?'—':pct(value);td.dataset.grade=grade;tr.append(td)}
+    cutoffBody.append(tr);
+  }}
 }
 confidence.addEventListener('change',render);prediction.addEventListener('change',render);
 alphaInput.addEventListener('input',updateIntervals);
 document.querySelectorAll('[data-alpha]').forEach(button=>button.addEventListener('click',()=>{alphaInput.value=button.dataset.alpha;updateIntervals()}));
 updateIntervals();
+</script>
+<script>
+(() => {
+  const button = document.getElementById('admissions-toggle');
+  const reference = document.getElementById('admissions-reference');
+  button.addEventListener('click', () => {
+    reference.hidden = !reference.hidden;
+    button.textContent = reference.hidden ? 'Show' : 'Hide';
+    button.setAttribute('aria-expanded', String(!reference.hidden));
+  });
+})();
 </script>
 </body>
 </html>

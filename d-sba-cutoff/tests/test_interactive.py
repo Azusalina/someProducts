@@ -35,11 +35,20 @@ try {
   }
   const first=DATA.grades[0],button=[...document.querySelectorAll('.grade-button')].find(b=>b.textContent===first);
   button.click();check(![...svg.querySelectorAll('[data-grade]')].some(n=>n.dataset.grade===first),'Grade filter');
+  check(!document.querySelector(`#cutoff-table [data-grade="${first}"]`),'Cutoff table grade filter');
   button.click();check(button.getAttribute('aria-pressed')==='true','Grade restore');
   confidence.click();check(svg.querySelectorAll('[data-interval=confidence]').length===0,'CI toggle');
   confidence.click();check(svg.querySelectorAll('[data-interval=confidence]').length===DATA.forecasts.length,'CI restore');
   prediction.click();check(svg.querySelectorAll('[data-interval=prediction]').length===0,'Prediction toggle');prediction.click();
   check(document.querySelectorAll('#forecast-table tr').length===DATA.forecasts.length,'Forecast table count');
+  const expectedRows=new Set(DATA.observations.map(d=>JSON.stringify([d.year,d.series])));
+  check(document.querySelectorAll('#cutoff-table tr').length===expectedRows.size,'Cutoff table year/series count');
+  for(const observation of DATA.observations){
+    const row=[...document.querySelectorAll('#cutoff-table tr')].find(row=>Number(row.dataset.year)===observation.year&&row.dataset.series===observation.series);
+    const cell=[...row.querySelectorAll('[data-grade]')].find(cell=>cell.dataset.grade===observation.grade);
+    check(cell.textContent===(observation.value===null?'—':pct(observation.value)),'Cutoff table value matches plotted observation');
+  }
+  check(document.getElementById('chart').compareDocumentPosition(document.getElementById('cutoff-table'))&Node.DOCUMENT_POSITION_FOLLOWING,'Cutoff table below curve');
   const initialWidths=forecasts.map(f=>f.ConfidenceHigh-f.ConfidenceLow);
   alphaInput.value='10';alphaInput.dispatchEvent(new Event('input'));
   check(document.getElementById('ci-heading').textContent.startsWith('90%'),'Alpha updates labels');
@@ -69,21 +78,46 @@ try {
 </script>
 """
 
+REFERENCE_CHECKS = r"""
+  const reference=document.getElementById('admissions-reference'),toggle=document.getElementById('admissions-toggle');
+  check(reference.hidden&&getComputedStyle(reference).display==='none'&&toggle.textContent==='Show'&&toggle.getAttribute('aria-expanded')==='false','Admissions initially hidden');
+  toggle.click();
+  check(!reference.hidden&&getComputedStyle(reference).display!=='none'&&toggle.textContent==='Hide'&&toggle.getAttribute('aria-expanded')==='true','Admissions show');
+  check(document.querySelectorAll('#admissions-table tr').length===9,'Admissions nine sourced intake rows');
+  const admissionRows=[...document.querySelectorAll('#admissions-table tr')];
+  const row6729=admissionRows.find(row=>row.cells[0].textContent.startsWith('JS6729')&&row.cells[1].textContent==='2026');
+  check([...row6729.cells].slice(2,8).map(cell=>cell.textContent).join('|')==='48|+4|36|36|38|+1 / +1 / +2','2026 actuarial scores, offers and trend');
+  const row6779=admissionRows.find(row=>row.cells[0].textContent.startsWith('JS6779')&&row.cells[1].textContent==='2026');
+  check([...row6779.cells].slice(2,8).map(cell=>cell.textContent).join('|')==='23|-15|36|36|37|+5 / +3 / +4','2026 SDS scores, offers and trend');
+  const row6298=admissionRows.find(row=>row.cells[0].textContent.startsWith('JS6298')&&row.cells[1].textContent==='2026');
+  check([...row6298.cells].slice(2,8).map(cell=>cell.textContent).join('|')==='11|-1|44|45|47|+2 / +3 / +3','2026 AI scores, offers and trend');
+  check(reference.textContent.includes('2027 formula is different'),'Historical formula warning');
+  check([...reference.querySelectorAll('a')].every(link=>/^https:\/\/(www\.jupas\.edu\.hk|admissions\.hku\.hk)\//.test(link.href)),'Official source links');
+  check(document.documentElement.scrollWidth<=innerWidth,'Expanded admissions mobile overflow');
+  toggle.click();check(reference.hidden&&toggle.textContent==='Show'&&toggle.getAttribute('aria-expanded')==='false','Admissions hide');
+"""
+HARNESS = HARNESS.replace("  const instant=", REFERENCE_CHECKS + "\n  const instant=")
+INDEX_HARNESS = '<script>try {const check=(condition,message)=>{if(!condition)throw Error(message)};' + REFERENCE_CHECKS + r"""
+  check(getComputedStyle(document.body).backgroundColor==='rgb(255, 255, 255)'&&getComputedStyle(document.documentElement).backgroundColor==='rgb(255, 255, 255)','White startup background');
+  document.body.dataset.testResult=JSON.stringify({pass:true,subject:'index',width:innerWidth});
+} catch(error){document.body.dataset.testResult=JSON.stringify({pass:false,error:String(error)})}</script>
+"""
+
 with tempfile.TemporaryDirectory(prefix="todos-chart-tests-") as temp:
     temp = Path(temp)
     for file in sorted(OUTPUT.glob("*.html")):
         document = file.read_text(encoding="utf-8")
-        if "const DATA = " not in document:
-            continue
-        json_data = re.search(r"const DATA = (.*?);\n", document).group(1)
-        data = json.loads(json_data)
-        assert len(data["forecasts"]) == 6
-        script = re.search(r"<script>(.*?)</script>", document, re.S).group(1)
-        js_file = temp / "chart.js"
-        js_file.write_text(script, encoding="utf-8")
-        subprocess.run(["node", "--check", str(js_file)], check=True)
+        is_chart = "const DATA = " in document
+        if is_chart:
+            json_data = re.search(r"const DATA = (.*?);\n", document).group(1)
+            data = json.loads(json_data)
+            assert len(data["forecasts"]) == 6
+        for script in re.findall(r"<script>(.*?)</script>", document, re.S):
+            js_file = temp / "chart.js"
+            js_file.write_text(script, encoding="utf-8")
+            subprocess.run(["node", "--check", str(js_file)], check=True)
         test_page = temp / file.name
-        test_page.write_text(document.replace("</body>", HARNESS + "</body>"), encoding="utf-8")
+        test_page.write_text(document.replace("</body>", (HARNESS if is_chart else INDEX_HARNESS) + "</body>"), encoding="utf-8")
         for width in (1280, 420):
             result = subprocess.run([chromium, "--headless", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu",
                                      "--no-first-run", "--no-default-browser-check", f"--user-data-dir={temp / 'profile'}",
@@ -99,4 +133,4 @@ with tempfile.TemporaryDirectory(prefix="todos-chart-tests-") as temp:
         ET.parse(file)
     with (OUTPUT / "forecast_2027.csv").open(newline="") as stream:
         assert len(list(csv.DictReader(stream))) == 42
-print("PASS: seven charts, hover brightness, adjustable alpha/intervals, input validation, tooltips, filters, tables, and R-matching bounds.")
+print("PASS: seven charts and startup page; sourced admissions toggle/trends, cutoff tables, white startup background, hover, alpha/intervals, filters and R-matching bounds.")
