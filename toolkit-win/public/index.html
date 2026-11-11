@@ -15,6 +15,7 @@
   <script type="module" src="/scribd.js"></script>
   <script type="module" src="/code-flowchart.js"></script>
   <script type="module" src="/pdfmd.js"></script>
+  <script type="module" src="/office.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -23,7 +24,7 @@
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
-    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown / TeX to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="code-flowchart-tab" aria-pressed="false">JS / MJS → SVG</button><button id="scribd-tab" aria-pressed="false">Scribd PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
+    <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown / TeX to PDF</button><button id="office-tab" aria-pressed="false">Word / Excel to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="code-flowchart-tab" aria-pressed="false">JS / MJS → SVG</button><button id="scribd-tab" aria-pressed="false">Scribd PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown or TeX file</label>
       <form id="open-form"><input id="filepath" name="path" placeholder="/path/to/notes.md" autocomplete="off" spellcheck="false" required aria-describedby="path-help"><button id="open-button" type="submit">Open file</button></form>
@@ -42,6 +43,29 @@
           <div id="tex-canvas"></div>
         </section>
         <pre id="source" tabindex="0" aria-label="Saved document source" hidden></pre>
+      </div>
+    </section>
+    <section id="office-workspace" aria-label="Word and Excel to PDF" hidden>
+      <div class="office-layout">
+        <div class="office-controls">
+          <label for="office-file">Word or Excel file</label>
+          <input id="office-file" type="file" accept=".doc,.docx,.xls,.xlsx">
+          <label for="office-name">PDF filename</label><input id="office-name" value="converted.pdf" autocomplete="off">
+          <div id="office-layout-controls" hidden>
+            <label for="office-layout">Spreadsheet layout</label>
+            <select id="office-layout"><option value="print">Keep print settings</option><option value="single">One page per sheet</option></select>
+            <p id="office-layout-note" class="media-help" hidden>One page per sheet includes hidden sheets and ignores print ranges.</p>
+          </div>
+          <div class="pdf-save-controls"><button id="office-convert" disabled>Convert to PDF</button><button id="office-cancel" hidden>Cancel</button></div>
+          <p id="office-status" role="status" aria-live="polite">Choose a Word or Excel file.</p>
+          <button id="office-save" disabled>Download PDF</button>
+          <a id="office-open" target="_blank" rel="noopener" hidden>Open PDF</a>
+          <p class="media-help">DOC / DOCX / XLS / XLSX · up to 100 MB · local conversion with LibreOffice.</p>
+        </div>
+        <section class="office-preview" aria-label="Converted PDF preview">
+          <div id="office-pagination" hidden><button id="office-previous" disabled>Previous page</button><span id="office-page" role="status"></span><button id="office-next" disabled>Next page</button></div>
+          <div id="office-canvas"></div>
+        </section>
       </div>
     </section>
     <section id="pdf-pages-workspace" aria-label="PDF page editor" hidden>

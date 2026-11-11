@@ -187,3 +187,18 @@ body.zen-mode{overflow:hidden}
 #scribd-result a{color:#eee}#scribd-result span{color:#aaa}
 #scribd-preview{height:75vh;min-height:400px;width:100%;background:#262626}
 @media(max-width:700px){#scribd-url{flex-basis:100%}}
+
+.office-mode .sidebar,.office-mode #sidebar-toggle,.office-mode .file-panel,.office-mode #message,.office-mode #connection{display:none!important}
+.office-mode main{margin-left:0;width:100%}
+#office-workspace{border:1px solid #ffffff18;background:#191919a6;min-width:0}
+.office-layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:72vh}
+.office-controls{padding:16px;min-width:0;border-right:1px solid #333}
+.office-controls label{display:block;font-size:13px;margin:0 0 8px}
+.office-controls input,.office-controls select{max-width:100%;width:100%;margin-bottom:16px}
+#office-status{font-size:12px;line-height:1.6;color:#bbb;overflow-wrap:anywhere;white-space:pre-line}
+#office-open{display:block;margin-top:12px;font-size:13px;color:#ddd}
+.office-preview{min-width:0;height:78vh;overflow:auto;background:#111}
+#office-pagination{position:sticky;top:0;z-index:1;background:#111;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:12px;border-bottom:1px solid #333;font-size:12px}
+#office-canvas{width:100%;min-height:65vh;padding:12px;overflow:auto;text-align:center}
+#office-canvas canvas{display:block;margin:0 auto;max-width:100%;height:auto!important;background:white}
+@media(max-width:700px){.office-layout{grid-template-columns:minmax(0,1fr)}.office-controls{border-right:0;border-bottom:1px solid #333}}

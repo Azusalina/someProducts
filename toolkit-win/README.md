@@ -108,3 +108,26 @@ a temporary status connection failure in the same page. Source limit: 1 GiB per
 item; result: 2 GiB; processing: 60 minutes; temporary working space: up to 4 GiB
 per active task. FLAC can be much larger than the source; choose original audio
 to avoid re-encoding or MP3 for a smaller file.
+
+
+**Word / Excel to PDF:** select a `.doc`, `.docx`, `.xls` or `.xlsx` file, set the
+PDF filename, then **Convert to PDF**. Review pages in the right-hand preview and
+click **Download PDF** to save. Excel defaults to **Keep print settings**;
+**One page per sheet** includes hidden sheets and ignores print ranges. Each
+browser tab has its own file and result. **Cancel** stops the conversion.
+Input and output limit: 100 MB each; processing limit: 3 minutes.
+
+Install [LibreOffice](https://www.libreoffice.org/download/download-libreoffice/)
+with Writer and Calc for this optional tool. Linux packages: `libreoffice-fresh`
+on Arch, or `libreoffice-writer libreoffice-calc` on Debian/Ubuntu/Fedora.
+LibreOffice is already installed on this development machine. Windows detects
+`C:\Program Files\LibreOffice\program\soffice.com` (preferred for headless
+conversion) and `soffice.exe`; Linux searches PATH. If installed elsewhere, set
+`TOOLKIT_LIBREOFFICE` to the executable before starting toolkit. For PowerShell:
+
+```powershell
+$env:TOOLKIT_LIBREOFFICE = 'C:\Program Files\LibreOffice\program\soffice.com'
+npm.cmd start
+```
+
+Keep the fonts used by the document installed for the closest PDF layout.

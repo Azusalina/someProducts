@@ -1,3 +1,4 @@
+import {findOffice} from '../src/office/runtime.js';
 import {existsSync} from 'node:fs';
 import {findChromium} from '../src/core/pdf.js';
 import {pythonExecutable,nativeTool,venvPython,executableOnPath} from '../src/platform/runtime.js';
@@ -11,3 +12,5 @@ for(const name of ['ffmpeg','ffprobe','chromedriver','pdfinfo','pdfimages','pdft
 console.log('Python:',pythonExecutable('TOOLKIT_PYTHON'));
 for(const folder of ['.venv-media','.venv-formats','.venv-markitdown','.venv-scribd'])console.log(`${folder}: ${existsSync(venvPython(folder))?'installed':'optional; not installed'}`);
 console.log('TeX:',process.env.TOOLKIT_TEX_ENGINE||executableOnPath('xelatex')||'optional; install MiKTeX/TeX Live');
+
+try{console.log('Word/Excel to PDF:',findOffice());}catch(error){console.log('Word/Excel to PDF:',error.message);}

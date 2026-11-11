@@ -32,7 +32,8 @@
     "test:firefox": "node tests/flowchart-browser.js --firefox",
     "ffmpeg:setup": "node scripts/setup-ffmpeg.mjs",
     "postinstall": "node scripts/build-renderer.mjs",
-    "build:renderer": "node scripts/build-renderer.mjs"
+    "build:renderer": "node scripts/build-renderer.mjs",
+    "test:office": "node tests/office-browser.js"
   },
   "dependencies": {
     "acorn": "8.19.0",

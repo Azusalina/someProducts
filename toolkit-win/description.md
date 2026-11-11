@@ -957,3 +957,73 @@ now waits (bounded to three seconds) for that asynchronous cleanup; recursive
 removal also retries transient Windows file locks. The Linux production service
 additionally completed the supplied source-audio download using the final 8 MiB
 HTTP chunks (213,796,221-byte Opus output), without another FLAC encode.
+
+
+## Word and Excel to PDF (2026-11-11)
+
+The **Word / Excel to PDF** tool accepts DOC/DOCX/XLS/XLSX uploads and converts
+them locally using LibreOffice Writer/Calc. It has a PDF filename field, explicit
+Convert/Cancel/Download actions, a full right-column PDF.js canvas preview with
+page navigation, and a browser-native Open PDF link. Inputs, result Blob URLs
+and PDF preview state remain independent in each browser tab. The tool participates
+in existing navigation hide/reorder preferences. File/format changes clear stale
+results. Saving is explicit; source files are never rewritten.
+
+`src/office/runtime.js` discovers LibreOffice from TOOLKIT_LIBREOFFICE, Windows
+Program Files/LocalAppData, macOS's standard application directory, or PATH.
+Windows prefers soffice.com for console/headless operation. Each conversion uses
+an exclusive temporary directory, copied source, output subdirectory and a unique
+file-URL UserInstallation profile. It therefore does not send a conversion into
+an existing desktop LibreOffice session. The temporary profile disables macro
+execution, active OLE/DDE content and untrusted referer links. This is not an OS
+sandbox; linked resources and platform fonts can affect rendering.
+
+`src/office/service.js` streams the authenticated upload to disk, accepts fixed
+format names and verifies OOXML ZIP / legacy compound-file signatures. The fixed
+source filename and argument-array invocation avoid interpreting uploaded names
+as paths or shell commands. Limits: 100 MB input, 100 MB PDF, recursive 512 MB
+working-data quota, 180-second conversion deadline, one operation per view and
+two Office operations per server. Client disconnect, cancel, page expiration or
+shutdown aborts owned work. Process-group termination on Unix and taskkill /T on
+Windows stop the converter tree. Temporary files/profile are removed on success,
+failure and cancellation, with retries for Windows file locks. No result library
+or persistent document cache is created.
+
+POST `/api/office/convert?extension=docx&sheets=print` returns PDF bytes under the
+existing local cookie/Host/Origin/view checks. Errors retain useful messages;
+unsupported formats use 415, size/quota 413, busy 409, missing LibreOffice 503 and
+timeout 504. Failed/encrypted files that LibreOffice does not export produce an
+error rather than an empty download. Password entry is not supported.
+
+Excel uses calc_pdf_Export and the original print/page settings by default.
+The explicit One page per sheet mode sets SinglePageSheets: this deliberately
+includes hidden sheets and ignores print ranges/paper sizes, as stated beside
+the control. It can produce large custom-sized pages. Word uses writer_pdf_Export
+and its existing page settings. LibreOffice rendering and available fonts can
+produce differences from Microsoft Office. No cloud relay, Microsoft Office
+installation or Chromium server is required for this tool.
+
+Sources: [LibreOffice startup parameters](https://help.libreoffice.org/latest/en-US/text/shared/guide/start_parameters.html)
+and [PDF export parameters](https://help.libreoffice.org/latest/en-US/text/shared/guide/pdf_params.html).
+Tests use self-authored OOXML fixtures under tests/fixtures/office, reproducible
+with Python's standard-library generate.py. The Word fixture includes formatted
+text, Traditional Chinese, a table and a page break; the Excel fixture includes
+formulas, a wide multi-page sheet, another visible sheet and a hidden sheet.
+Legacy DOC/XLS fixtures are generated temporarily through LibreOffice itself.
+`npm test` covers real four-format conversion, PDF page counts/layout modes,
+original-byte preservation, profile cleanup, cancellation/timeouts and session
+checks. `npm run test:office` runs actual conversion and browser preview/download
+checks; use `node tests/office-browser.js --firefox` for Firefox. On Linux,
+LibreOffice 26.8.2.2 successfully converted all four formats. Extracted PDF text
+preserved Chinese/table content and spreadsheet formula values; first-page render
+and desktop/mobile screenshots were visually inspected. The Windows workflow
+installs LibreOffice and runs the same converter/API and Firefox checks.
+
+Regression validation for this feature: Linux toolkit 43/43 Node tests passed;
+toolkit-win 50 Node tests passed with two Windows-only checks skipped on Linux.
+The final Office API subset also passed two-view concurrency, a rejected third
+job and active-conversion shutdown cleanup. Actual Office browser workflows
+passed in Linux Chromium and Firefox, including PDF canvas/page controls,
+Unicode output filenames, per-tab isolation, mobile width, cancellation, stale
+result clearing and navigation customization. Windows native validation is
+run by `.github/workflows/toolkit-win.yml` in the someProducts repository.
