@@ -131,3 +131,12 @@ npm.cmd start
 ```
 
 Keep the fonts used by the document installed for the closest PDF layout.
+
+
+Markdown preview and PDF export render common HTML both inside table cells and
+outside tables: `<br>`, `<span>`, `<div>`, `<p>`, lists, `<sub>`/`<sup>`, and native
+HTML tables with `rowspan`/`colspan`. Inline colors, fonts, spacing, borders,
+dimensions and alignment are supported. For example, write
+`| Label | First<br>Second |` in a Markdown table row. Local HTML `<img>` sources
+use the same relative-image rules as Markdown images. Wrap HTML in backticks or
+a fenced code block when you want to display its source literally.

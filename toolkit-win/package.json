@@ -33,7 +33,8 @@
     "ffmpeg:setup": "node scripts/setup-ffmpeg.mjs",
     "postinstall": "node scripts/build-renderer.mjs",
     "build:renderer": "node scripts/build-renderer.mjs",
-    "test:office": "node tests/office-browser.js"
+    "test:office": "node tests/office-browser.js",
+    "test:html": "node tests/markdown-html-browser.js"
   },
   "dependencies": {
     "acorn": "8.19.0",
@@ -45,6 +46,7 @@
     "mermaid": "^12.2.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
-    "playwright-core": "^1.64.1"
+    "playwright-core": "^1.64.1",
+    "sanitize-html": "^2.18.2"
   }
 }

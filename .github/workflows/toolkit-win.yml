@@ -27,9 +27,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - run: choco install libreoffice-fresh --yes --no-progress --limit-output
       - run: npx playwright-core install firefox
-      - run: node --test tests/windows.test.js tests/ffmpeg-local.test.js tests/pdf-pages.test.js tests/tool-preferences.test.js tests/media-jobs.test.js tests/office.test.js
+      - run: node --test tests/windows.test.js tests/ffmpeg-local.test.js tests/pdf-pages.test.js tests/tool-preferences.test.js tests/media-jobs.test.js tests/office.test.js tests/markdown-html.test.js
         env:
           TOOLKIT_REQUIRE_OFFICE: 1
       - run: npm run test:firefox
       - run: node tests/media-browser.js --firefox
       - run: node tests/office-browser.js --firefox
+      - run: node tests/markdown-html-browser.js --firefox
