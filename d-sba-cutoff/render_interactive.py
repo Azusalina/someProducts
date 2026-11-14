@@ -74,6 +74,7 @@ def main():
     forecasts = read_rows(output / f"forecast_{args.year}.csv")
     template = (ROOT / "chart_template.html").read_text(encoding="utf-8")
     template = template.replace("__STATISTICS_JS__", (ROOT / "statistics.js").read_text(encoding="utf-8"))
+    template = template.replace("__CHART_INTERACTIONS__", (ROOT / "chart_interactions.js").read_text(encoding="utf-8"))
     admissions = render_admissions(json.loads((ROOT / "admissions.json").read_text(encoding="utf-8")))
     template = template.replace("__ADMISSIONS__", admissions).replace("__ADMISSIONS_SCRIPT__", ADMISSIONS_SCRIPT)
     subjects = list(dict.fromkeys(row["Subject"] for row in data))

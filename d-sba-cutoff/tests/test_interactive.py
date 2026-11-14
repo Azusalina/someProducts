@@ -18,6 +18,44 @@ HARNESS = r"""
 <script>
 try {
   const check=(condition,message)=>{if(!condition)throw Error(message)};
+  check([...document.querySelectorAll('.grade-button[aria-pressed="true"]')].map(b=>b.textContent).join(',')==='5**,5*,5','Default high grades only');
+  check(svg.querySelectorAll('circle[data-year]').length===DATA.observations.filter(d=>d.value!==null&&['5**','5*','5'].includes(d.grade)).length,'Default chart points');
+  check(document.querySelectorAll('#forecast-table tr').length===3,'Default forecast table');
+  check(document.querySelectorAll('#cutoff-columns th').length===5,'Default cutoff columns');
+  for(const button of document.querySelectorAll('.grade-button[aria-pressed="false"]'))button.click();
+  const originalView=[...currentViewport()];
+  document.querySelector('[data-axis="x"][data-zoom="0.8"]').click();
+  check(Math.abs((currentViewport()[1]-currentViewport()[0])/(originalView[1]-originalView[0])-0.8)<1e-8,'X independent zoom');
+  check(currentViewport()[2]===originalView[2]&&currentViewport()[3]===originalView[3],'X zoom preserves Y');
+  document.querySelector('[data-axis="y"][data-zoom="0.8"]').click();
+  check(Math.abs((currentViewport()[3]-currentViewport()[2])/(originalView[3]-originalView[2])-0.8)<1e-8,'Y independent zoom');
+  const validView=[...currentViewport()];
+  axisInputs[1].value=axisInputs[0].value;axisInputs[1].dispatchEvent(new Event('change'));
+  check(document.getElementById('view-error').textContent&&JSON.stringify(currentViewport())===JSON.stringify(validView),'Reject reversed/equal axis bounds');
+  document.getElementById('reset-view').click();
+  check(JSON.stringify(currentViewport())===JSON.stringify(originalView),'Reset axis ranges');
+  axisInputs[0].value=minYear+2;axisInputs[1].value=DATA.year;axisInputs[2].value=60;axisInputs[3].value=100;axisInputs[0].dispatchEvent(new Event('change'));
+  check(currentViewport()[0]===minYear+2&&currentViewport()[2]===60&&currentViewport()[3]===100,'Manual X/Y bounds');
+  check(svg.querySelector('g[clip-path="url(#plot-clip)"]'),'Zoomed plot clipping');
+  const beforeWheel=[...currentViewport()],rect=svg.getBoundingClientRect();
+  document.getElementById('wheel-axis').value='y';
+  svg.dispatchEvent(new WheelEvent('wheel',{deltaY:-100,clientX:rect.left+rect.width/2,clientY:rect.top+rect.height/2,cancelable:true}));
+  check(currentViewport()[0]===beforeWheel[0]&&currentViewport()[1]===beforeWheel[1]&&currentViewport()[3]-currentViewport()[2]<beforeWheel[3]-beforeWheel[2],'Pointer Y-only scroll zoom');
+  document.getElementById('wheel-axis').value='off';document.getElementById('reset-view').click();
+  const focusPath=[...svg.querySelectorAll('path[data-line]')].find(path=>path.getAttribute('stroke')!=='transparent');
+  focusPath.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+  check(focusLine.value===focusPath.dataset.line,'Click line focus');
+  check([...svg.querySelectorAll('path[data-line]')].some(path=>Number(path.getAttribute('opacity'))===0.12),'Other lines dimmed');
+  focusYear.value=String(maxYear);focusYear.dispatchEvent(new Event('change'));
+  check(svg.querySelector('[data-focus-year]')?.dataset.focusYear===String(maxYear),'Year focus guide');
+  check(document.querySelector('#cutoff-table tr.focused-year')?.dataset.year===String(maxYear),'Year focus table row');
+  const selectedPoint=svg.querySelector('circle[data-year]');
+  selectedPoint.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:250,clientY:250}));
+  check(focusYear.value===selectedPoint.dataset.year&&!tip.hidden,'Click point focuses year and preserves tooltip');
+  const keptFocus=focusLine.value;alphaInput.value='10';alphaInput.dispatchEvent(new Event('input'));
+  check(focusLine.value===keptFocus,'Focus survives alpha update');
+  document.querySelector('[data-alpha="5"]').click();document.getElementById('clear-focus').click();
+  check(!focusLine.value&&!focusYear.value&&!svg.querySelector('[data-focus-year]'),'Clear focus');
   const instant=document.createElement('style');instant.textContent='svg .node{transition:none!important}';document.head.append(instant);
   check(svg.querySelectorAll('circle[data-year]').length===DATA.observations.filter(d=>d.value!==null).length,'Historical point count');
   for(const d of DATA.observations.filter(d=>d.value!==null)){
@@ -133,4 +171,4 @@ with tempfile.TemporaryDirectory(prefix="todos-chart-tests-") as temp:
         ET.parse(file)
     with (OUTPUT / "forecast_2027.csv").open(newline="") as stream:
         assert len(list(csv.DictReader(stream))) == 42
-print("PASS: seven charts and startup page; sourced admissions toggle/trends, cutoff tables, white startup background, hover, alpha/intervals, filters and R-matching bounds.")
+print("PASS: seven charts and startup page; default grades, independent axis zoom, bounds validation, wheel zoom, curve/year focus, admissions toggle/trends, cutoff tables, white startup background, hover, alpha/intervals, filters and R-matching bounds.")

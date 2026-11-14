@@ -193,3 +193,45 @@ window width was 500px even though 420px was requested. Browser tests required
 running outside the filesystem sandbox because the sandboxed Chromium launch
 terminated with SIGTRAP. Python compilation checks also passed. No statistical
 model or source cutoff data was changed.
+
+
+## Default grades, axis zoom and focus (2026-11-14)
+
+Interactive charts now start with only `5**`, `5*` and `5` visible. All six
+grades remain available through their existing toggle buttons. Both reference
+tables follow the visible grades. Static PNG/SVG and forecast CSV outputs retain
+all generated grades; regression fits and admissions figures are unchanged.
+
+The X (year) and Y (percentage) bounds can be edited independently. X/Y + and −
+buttons zoom around the current axis midpoint. Scroll zoom is opt-in (Off by
+default, then X only, Y only or X + Y) and anchors the zoom to the pointer inside
+the plot. Editing the bounds also allows moving the viewed range. Reset zoom
+restores the full historical/forecast view, including currently computed
+intervals. Invalid, nonfinite, reversed or equal bounds are rejected while
+keeping the last valid chart. Manual axis spans must be 0.1–1,000,000. Plot
+contents are clipped to the viewing rectangle; ticks adapt to the selected
+range. Zoom changes only the viewport, never the observations or regression.
+
+Click a historical curve, or choose its grade/series in Focus line, to emphasize
+one line and dim the others. A transparent wider hit target makes thin curves
+easier to select. Choosing a hidden grade's curve makes that grade visible.
+Hiding the focused grade clears that line focus. Focus year highlights its
+points and draws a vertical guide, dims other years, and highlights the matching
+cutoff table rows. Select a year using the dropdown, a chart point, or a year
+axis label. Point clicks retain the tooltip. A year selected outside the
+current X window recenters that window without changing its span. Focus line
+and Focus year can be combined, survive interval changes, and are cleared by
+Clear focus. Reset zoom preserves focus and visible-grade choices.
+
+`chart_interactions.js` supplies view state and control handlers, embedded by
+`render_interactive.py` into each chart for offline use. The template renders
+scaled axes, clipped curves and focus emphasis. The startup page is unchanged.
+Browser regression checks cover default visibility, independent axis zoom,
+manual bounds and rejection, wheel zoom, reset, direct curve/point focus,
+year guides/table rows, tooltip continuity, and focus during alpha changes,
+alongside the existing chart and admissions interactions.
+
+Validation: all 16 Chromium page/viewport checks passed (seven subjects and the
+startup page, at actual widths 1280px and 500px); static validation also passed
+for all seven offline chart pages and their assets. The browser checks include
+the new zoom, focus and default-grade assertions. No deployment was performed.

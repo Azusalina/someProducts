@@ -14,7 +14,13 @@ paper-data format, and validation details.
 Open `product1/index.html` in a browser to choose a subject. Hover or focus a
 node for its percentage and year. Enter α (%) to recalculate confidence and
 prediction intervals, or use the 90%, 95%, and 99% buttons. Click grades to
-hide them and use the checkboxes to toggle intervals.
+show or hide them (only 5**, 5*, and 5 start visible), and use the checkboxes to
+toggle intervals. Set the X year / Y percentage bounds or use **X + / −** and
+**Y + / −** to zoom each axis independently. Optionally enable **Scroll zoom**
+for X, Y, or both, centered on the pointer. **Reset zoom** restores the full view.
+Click a curve or choose **Focus line** to emphasize it; click a point or year
+label, or choose **Focus year**, to emphasize a year. Both focus modes can be
+combined. **Clear focus** restores normal emphasis.
 Scroll below a curve for its cutoff reference table. Click **Show** beside
 **HKU JUPAS admission marks and offers** on the white startup page or any subject
 page to reveal the admissions table; click **Hide** to close it. It starts hidden.
