@@ -23,6 +23,20 @@ test('download filenames preserve Unicode, correct extensions and portable safe 
  assert.throws(()=>mediaDownloadName('x'.repeat(513),'source.flac'),/filename/);
 });
 
+test('Original Opus downloads preserve the exact extension across browsers',async t=>{
+ const jobs=new MediaJobs({download:async(_entries,_format,folder)=>{
+  await writeFile(path.join(folder,'source.opus'),'OggS');return 'source.opus';
+ }});t.after(()=>jobs.close());
+ const first=view();jobs.start(first,{ids:['0'],format:'original'});await jobs.jobs.get(first).task;
+ const ready=jobs.status(first);
+ const server=http.createServer((req,res)=>jobs.send(ready.link.split('/').at(-1),req,res).catch(e=>{res.writeHead(e.status||500);res.end(e.message);}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const response=await fetch(`http://127.0.0.1:${server.address().port}/?filename=`+encodeURIComponent('原音檔.flac'));
+ assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'application/octet-stream');
+ assert.match(response.headers.get('content-disposition'),new RegExp(encodeURIComponent('原音檔.opus')));
+ assert.equal(await response.text(),'OggS');
+});
+
 test('background audio survives polling disconnects, streams large files and supports retry/ranges',async t=>{
  const bytes=300*1024*1024+17;let folder;
  const jobs=new MediaJobs({download:async(entries,format,work,signal,report)=>{

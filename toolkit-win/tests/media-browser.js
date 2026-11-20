@@ -29,7 +29,7 @@ try{
   const original=chosen.ids.length>1?'selected-audio.zip':chosen.format==='original'?'source.opus':`source.${chosen.format}`;
   const filename=mediaDownloadName(url.searchParams.get('filename'),original);
   const body=Buffer.from('PK\x05\x06'+'\x00'.repeat(18),'binary');
-  res.writeHead(200,{'Content-Type':chosen.ids.length>1?'application/zip':chosen.format==='original'?'audio/ogg':'audio/flac',
+  res.writeHead(200,{'Content-Type':chosen.ids.length>1?'application/zip':chosen.format==='original'?'application/octet-stream':'audio/flac',
    'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,'Content-Length':body.length});res.end(body);
  });
  await page.goto(app.url);await page.waitForFunction(()=>history.state?.toolkitView);

@@ -5,7 +5,8 @@ import {randomBytes} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {assertMediaAvailable,selectedMedia,downloadMediaEntries,withMediaTask,URL_AUDIO_LIMIT} from './service.js';
-const types={'.mp3':'audio/mpeg','.flac':'audio/flac','.m4a':'audio/mp4','.opus':'audio/ogg','.ogg':'audio/ogg','.wav':'audio/wav','.aac':'audio/aac','.zip':'application/zip'};
+// Firefox on Windows otherwise rewrites Opus attachment names to .oga.
+const types={'.mp3':'audio/mpeg','.flac':'audio/flac','.m4a':'audio/mp4','.opus':'application/octet-stream','.ogg':'audio/ogg','.wav':'audio/wav','.aac':'audio/aac','.zip':'application/zip'};
 const failure=(message,status)=>Object.assign(new Error(message),{status});
 
 export function mediaDownloadName(value,original) {
