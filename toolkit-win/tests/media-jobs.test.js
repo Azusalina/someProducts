@@ -3,11 +3,25 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import {open,writeFile,access} from 'node:fs/promises';
 import path from 'node:path';
-import {MediaJobs} from '../src/media/jobs.js';
+import {MediaJobs,mediaDownloadName} from '../src/media/jobs.js';
 import {mediaState,runMediaProcess} from '../src/media/service.js';
 import {createToolkit} from '../src/server.js';
 const view=()=>{const value={};mediaState(value).entries=[{url:'https://example.com/audio',title:'Audio'}];return value;};
 const options={ids:['0'],format:'flac'};
+
+test('download filenames preserve Unicode, correct extensions and portable safe basenames',()=>{
+ assert.equal(mediaDownloadName('', 'source.flac'),'source.flac');
+ assert.equal(mediaDownloadName(null, 'source.opus'),'source.opus');
+ assert.equal(mediaDownloadName(' 課堂筆記 ', 'source.flac'),'課堂筆記.flac');
+ assert.equal(mediaDownloadName('Lecture.mp3','source.flac'),'Lecture.flac');
+ assert.equal(mediaDownloadName('Lecture.v2','source.opus'),'Lecture.v2.opus');
+ assert.equal(mediaDownloadName('Collection.flac','selected-audio.zip'),'Collection.zip');
+ assert.equal(mediaDownloadName('folder/name:notes.mp3','source.flac'),'folder_name_notes.flac');
+ assert.equal(mediaDownloadName('CON','source.mp3'),'_CON.mp3');
+ assert.equal(mediaDownloadName('..','source.flac'),'source.flac');
+ assert.equal(mediaDownloadName('report"\r\nX-Test:yes','source.flac'),'report___X-Test_yes.flac');
+ assert.throws(()=>mediaDownloadName('x'.repeat(513),'source.flac'),/filename/);
+});
 
 test('background audio survives polling disconnects, streams large files and supports retry/ranges',async t=>{
  const bytes=300*1024*1024+17;let folder;
@@ -27,6 +41,12 @@ test('background audio survives polling disconnects, streams large files and sup
  const head=await fetch(url,{method:'HEAD'});assert.equal(head.status,200);assert.equal(Number(head.headers.get('content-length')),bytes);
  const range=await fetch(url,{headers:{Range:'bytes=0-3'}});assert.equal(range.status,206);assert.equal(await range.text(),'fLaC');
  assert.equal(range.headers.get('content-range'),`bytes 0-3/${bytes}`);
+ const renamed=await fetch(url+'?filename='+encodeURIComponent('課堂筆記.mp3'),{headers:{Range:'bytes=0-3'}});
+ assert.equal(renamed.status,206);assert.equal(await renamed.text(),'fLaC');
+ assert.match(renamed.headers.get('content-disposition'),new RegExp(encodeURIComponent('課堂筆記.flac')));
+ const renamedHead=await fetch(url+'?filename='+encodeURIComponent('after-ready'),{method:'HEAD'});
+ assert.match(renamedHead.headers.get('content-disposition'),/after-ready\.flac/);assert.equal(Number(renamedHead.headers.get('content-length')),bytes);
+ assert.equal(jobs.status(first).filename,'long.flac');
  const tail=await fetch(url,{headers:{Range:'bytes=-17'}});assert.equal((await tail.arrayBuffer()).byteLength,17);
  const bad=await fetch(url,{headers:{Range:`bytes=${bytes}-`}});assert.equal(bad.status,416);await bad.text();
  // Abandon a full transfer, then retry without regenerating the FLAC.

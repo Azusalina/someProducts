@@ -8,6 +8,18 @@ import {assertMediaAvailable,selectedMedia,downloadMediaEntries,withMediaTask,UR
 const types={'.mp3':'audio/mpeg','.flac':'audio/flac','.m4a':'audio/mp4','.opus':'audio/ogg','.ogg':'audio/ogg','.wav':'audio/wav','.aac':'audio/aac','.zip':'application/zip'};
 const failure=(message,status)=>Object.assign(new Error(message),{status});
 
+export function mediaDownloadName(value,original) {
+  if(value==null)return original;
+  if(typeof value!=='string'||value.length>512)throw failure('Enter a download filename up to 512 characters.',400);
+  if(!value.trim())return original;
+  let stem=value.trim().toWellFormed().replace(/[<>:"/\\|?*\x00-\x1f\x7f]/g,'_')
+    .replace(/\.(?:mp3|flac|m4a|mp4|aac|opus|ogg|wav|webm|aiff?|wma|alac|mka|zip)$/i,'')
+    .replace(/^[. ]+|[. ]+$/g,'').slice(0,180).toWellFormed().replace(/[. ]+$/g,'');
+  if(!stem)return original;
+  if(/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(stem))stem='_'+stem;
+  return stem+path.extname(original);
+}
+
 // Download/conversion lives independently of a polling HTTP connection. Files
 // stay on disk; the browser's download manager streams them without a Blob copy.
 export class MediaJobs {
@@ -79,6 +91,7 @@ export class MediaJobs {
   async send(id,req,res) {
     const job=this.files.get(id);
     if(!job||job.state!=='ready')throw failure('This audio link expired. Download the selection again.',410);
+    const downloadName=mediaDownloadName(new URL(req.url||'/', 'http://localhost').searchParams.get('filename'),job.filename);
     job.readers++;
     try {
       const filename=path.join(job.folder,job.filename),size=job.bytes;
@@ -93,7 +106,7 @@ export class MediaJobs {
       }
       res.writeHead(status,{'Content-Type':types[path.extname(job.filename)]||'application/octet-stream',
         'Content-Length':end-start+1,'Accept-Ranges':'bytes',
-        'Content-Disposition':`attachment; filename="audio${path.extname(job.filename)}"; filename*=UTF-8''${encodeURIComponent(job.filename)}`});
+        'Content-Disposition':`attachment; filename="audio${path.extname(job.filename)}"; filename*=UTF-8''${encodeURIComponent(downloadName).replace(/['()*]/g,char=>'%'+char.charCodeAt(0).toString(16).toUpperCase())}`});
       if(req.method==='HEAD')return res.end();
       await pipeline(createReadStream(filename,{start,end}),res);
     }finally{job.readers--;if(job.deleted&&!job.readers&&job.folder)await rm(job.folder,{recursive:true,force:true,maxRetries:3,retryDelay:100});}

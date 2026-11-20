@@ -202,3 +202,5 @@ body.zen-mode{overflow:hidden}
 #office-canvas{width:100%;min-height:65vh;padding:12px;overflow:auto;text-align:center}
 #office-canvas canvas{display:block;margin:0 auto;max-width:100%;height:auto!important;background:white}
 @media(max-width:700px){.office-layout{grid-template-columns:minmax(0,1fr)}.office-controls{border-right:0;border-bottom:1px solid #333}}
+
+#media-output-name{width:100%;max-width:480px}

@@ -1090,3 +1090,31 @@ Chromium preview/PDF workflows passed, including printed line breaks, HTML table
 cell merges, style/alignment, sub/sup, lists, embedded images and saved-file updates.
 The Windows variant npm audit reported zero vulnerabilities after installing the
 HTML sanitizer. Screenshots and PDF page rendering were visually inspected.
+
+
+## Editable URL audio download names (2026-11-20)
+
+URL audio includes an optional Download filename field. Enter a name before
+starting a download, or edit it after the result is ready and click its download
+link again. Empty input keeps the source filename. The actual result extension is
+preserved: MP3, FLAC, the discovered Original audio extension, or ZIP for multiple
+selected items. A supplied old audio/ZIP suffix is replaced by the actual suffix,
+so changing a name does not imply transcoding. With multiple items the custom name
+applies to the ZIP; its numbered audio members retain their source names.
+
+`public/media.js` updates the ready attachment URL with an optional filename query
+parameter. `MediaJobs.send()` reads that display name independently of the stored
+working filename, emits it as a UTF-8 Content-Disposition filename and keeps the
+original content type, content length, range behavior and file bytes. It does not
+rename temporary files, restart extraction or re-encode audio. Names are bounded,
+retain Unicode, replace path/control/Windows-invalid characters, and avoid
+Windows reserved basenames. They stay independent in each page's form state;
+no filename preferences are persisted to localStorage.
+
+Focused verification: six media-job tests pass in each toolkit, including custom
+Unicode names over real HTTP range/HEAD requests and unchanged stored filenames.
+Chromium and Firefox UI checks cover default names, custom audio/ZIP names,
+extension correction, Original Opus, edits after readiness, clearing a custom
+name, page isolation, real local FLAC conversion and cancellation. Attachment
+fixtures use real HTTP responses to include older Chromium/Playwright download
+manager behavior in the check.

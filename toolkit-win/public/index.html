@@ -162,6 +162,9 @@
         <div class="pdf-save-controls"><button id="media-select-all" type="button" disabled>Select all</button><button id="media-select-none" type="button" disabled>Select none</button></div>
         <p id="media-list-source" class="media-help"></p>
         <ul id="media-list" aria-label="Discovered media"></ul>
+        <label for="media-output-name">Download filename</label>
+        <input id="media-output-name" placeholder="Use source filename" maxlength="180" autocomplete="off" aria-describedby="media-name-help">
+        <p id="media-name-help" class="media-help">Extension added automatically. For multiple items, this names the ZIP.</p>
         <button id="media-download" type="button" disabled>Download selected audio</button>
         <button id="media-resume" type="button" hidden>Check progress</button>
         <a id="media-result" hidden download>Download audio</a>

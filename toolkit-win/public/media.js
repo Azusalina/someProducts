@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-let items=[], busy=false, controller, urlTask=false, cancellation;
+let items=[], busy=false, controller, urlTask=false, cancellation, readyAudio;
 function status(text) { $('media-status').textContent=text; }
 function selected() { return [...$('media-list').querySelectorAll('input:checked')].map(input=>input.value); }
 function update() {
@@ -80,6 +80,14 @@ function progressText(job) {
   }
   return text;
 }
+function updateAudioLink() {
+  if(!readyAudio)return;
+  const link=$('media-result'),url=new URL(readyAudio.link,location.origin),name=$('media-output-name').value.trim();
+  if(name)url.searchParams.set('filename',name);
+  link.href=url.pathname+url.search;link.download='';link.hidden=false;
+  link.textContent=name?(/\.zip$/i.test(readyAudio.filename)?'Download ZIP':'Download audio'):`Download ${readyAudio.filename}`;
+}
+$('media-output-name').addEventListener('input',updateAudioLink);
 async function followTask(job) {
   let failures=0;
   while(job.state==='working') {
@@ -93,8 +101,8 @@ async function followTask(job) {
   }
   if(job.state==='error'||job.state==='expired')throw new Error(job.message);
   if(job.state!=='ready')throw new Error('No active audio task. Select audio and download again.');
-  const link=$('media-result');link.href=job.link;link.download=job.filename;link.hidden=false;
-  link.textContent=`Download ${job.filename}`;
+  readyAudio=job;updateAudioLink();
+  const link=$('media-result');
   status(`Ready · ${(job.bytes/1024/1024).toFixed(1)} MiB · download link available for 15 minutes.`);
   link.click();
 }
@@ -102,7 +110,7 @@ $('media-download').addEventListener('click',()=>{
   const ids=selected();
   if(ids.length>20){status('Select at most 20 media items per download.');return;}
   action('Starting audio task…',async()=>{
-    urlTask=true;$('media-result').hidden=true;$('media-resume').hidden=true;
+    urlTask=true;readyAudio=null;$('media-result').hidden=true;$('media-resume').hidden=true;
     await followTask(await(await request('/api/media/start',{ids,format:$('media-format').value})).json());
   });
 });

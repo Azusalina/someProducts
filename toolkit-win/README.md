@@ -140,3 +140,9 @@ dimensions and alignment are supported. For example, write
 `| Label | First<br>Second |` in a Markdown table row. Local HTML `<img>` sources
 use the same relative-image rules as Markdown images. Wrap HTML in backticks or
 a fenced code block when you want to display its source literally.
+
+
+In **URL audio**, **Download filename** sets the audio filename (or ZIP name for
+multiple items). Leave it empty to use the source name. The correct extension is
+added automatically. You can edit the name after the audio is ready and use the
+same download link again without another conversion.
