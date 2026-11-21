@@ -37,6 +37,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   publicFiles.set('/flowchart-render.js', ['flowchart-render.js', 'text/javascript']);
   publicFiles.set('/lib/mermaid.js', ['../.generated/mermaid.js', 'text/javascript']);
   publicFiles.set('/scribd.js', ['scribd.js', 'text/javascript']);
+  publicFiles.set('/theme.js', ['theme.js', 'text/javascript']);
   publicFiles.set('/office.js', ['office.js', 'text/javascript']);
   publicFiles.set('/tex-preview.js', ['tex-preview.js', 'text/javascript']);
   for (const name of ['pdf.mjs', 'pdf.worker.mjs']) publicFiles.set(`/lib/pdfjs/${name}`, [`../node_modules/pdfjs-dist/build/${name}`, 'text/javascript']);

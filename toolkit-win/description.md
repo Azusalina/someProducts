@@ -1119,3 +1119,24 @@ extension correction, Original Opus, edits after readiness, clearing a custom
 name, page isolation, real local FLAC conversion and cancellation. Attachment
 fixtures use real HTTP responses to include older Chromium/Playwright download
 manager behavior in the check.
+
+
+## Interface theme switch (2026-11-21)
+
+The top-right Light mode / Dark mode button switches every tool's interface and
+Markdown preview. Dark remains the default. The browser remembers the explicit
+choice under `toolkit-theme`; other open toolkit tabs synchronize their theme.
+When localStorage is unavailable, switching still works for the current page.
+The small CSP-compatible external `theme.js` restores the choice before the
+stylesheet loads. Shared CSS palette variables keep both themes monochrome and
+retain the existing glass surfaces and layout. Markdown preview changes its body
+class without reloading the iframe, preserving scroll and the loaded document;
+subsequent saved-file renders use the current theme. PDF export paper selection
+(white, yellow or black), rendered PDF pages, photos and generated SVG contents
+keep their independent settings.
+
+Validation: Chromium (Linux) and Firefox checks passed for both modes across all
+tools, preview scroll preservation, saved-file updates, reload persistence,
+cross-tab synchronization, mobile width and blocked localStorage. The existing
+Linux browser/PDF regression also passed, including Zen, Mermaid, source
+watching and white/yellow/black PDF export.

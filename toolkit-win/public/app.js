@@ -8,6 +8,11 @@ let previousFilename;
 let zenMode = false, focusBeforeZen;
 let texPreviewUrl;
 
+function updatePreviewTheme() {
+  $('preview').contentDocument?.body?.classList.toggle('document-theme-black', document.documentElement.dataset.theme !== 'light');
+}
+document.addEventListener('toolkit-theme-change', updatePreviewTheme);
+
 function setZenMode(active) {
   if (active && state?.html === undefined) return;
   if (active === zenMode) return;
@@ -101,12 +106,13 @@ function draw(next) {
   const scroll = sameFile ? (frame.contentWindow?.scrollY || 0) : 0;
   frame.dataset.filename = state.filename;
   frame.onload = () => {
+    updatePreviewTheme();
     frame.contentWindow?.scrollTo(0, scroll);
     // Keyboard events inside a focused iframe do not bubble to the parent.
     // Reattach after each saved-file render without enabling preview scripts.
     frame.contentDocument?.addEventListener('keydown', exitZenOnEscape);
   };
-  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="document-theme-black"><article class="document">${state.html || ''}</article></body></html>`;
+  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="${document.documentElement.dataset.theme === 'light' ? '' : 'document-theme-black'}"><article class="document">${state.html || ''}</article></body></html>`;
   const outline = $('outline');
   outline.replaceChildren();
   for (const heading of state.outline || []) {

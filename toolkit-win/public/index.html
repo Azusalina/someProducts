@@ -4,6 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Local Toolkit · Live Markdown</title>
   <link rel="icon" href="data:,">
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
   <script type="module" src="/pdf-pages.js"></script>
@@ -23,7 +24,7 @@
     <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
   </aside>
   <main>
-    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><span id="connection" role="status">Connecting…</span></header>
+    <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><div class="topbar-actions"><span id="connection" role="status">Connecting…</span><button id="theme-toggle" type="button" aria-label="Switch to light mode">Light mode</button></div></header>
     <nav class="tool-modes" aria-label="Toolkit tools"><div id="tool-buttons" class="tool-buttons"><button id="markdown-tab" aria-pressed="true">Markdown / TeX to PDF</button><button id="office-tab" aria-pressed="false">Word / Excel to PDF</button><button id="pdfmd-tab" aria-pressed="false">PDF to Markdown</button><button id="pdf-pages-tab" aria-pressed="false">PDF pages</button><button id="photos-tab" aria-pressed="false">Photos to PDF</button><button id="format-photo-tab" aria-pressed="false">Photo formats</button><button id="format-audio-tab" aria-pressed="false">Audio formats</button><button id="format-video-tab" aria-pressed="false">Video formats</button><button id="media-tab" aria-pressed="false">URL audio</button><button id="code-flowchart-tab" aria-pressed="false">JS / MJS → SVG</button><button id="scribd-tab" aria-pressed="false">Scribd PDF</button><button id="omr-tab" aria-pressed="false">OMR scan</button></div><button id="tools-customize" type="button" aria-haspopup="dialog">Customize tools</button></nav>
     <section class="file-panel" aria-label="Open local file">
       <label for="filepath">Markdown or TeX file</label>

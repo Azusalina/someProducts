@@ -146,3 +146,7 @@ In **URL audio**, **Download filename** sets the audio filename (or ZIP name for
 multiple items). Leave it empty to use the source name. The correct extension is
 added automatically. You can edit the name after the audio is ready and use the
 same download link again without another conversion.
+
+Use the top-right **Light mode / Dark mode** button to switch the interface and
+Markdown preview. Your browser remembers the choice. PDF paper color remains a
+separate export setting.
