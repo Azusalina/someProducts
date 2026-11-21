@@ -150,3 +150,23 @@ same download link again without another conversion.
 Use the top-right **Light mode / Dark mode** button to switch the interface and
 Markdown preview. Your browser remembers the choice. PDF paper color remains a
 separate export setting.
+
+Markdown math supports inline `$E=mc^2$` or `\(E=mc^2\)`, display `$$...$$` or
+`\[...\]`, and fenced `math` blocks. For example:
+
+```markdown
+$$
+\int_0^1 x^2\,dx = \frac{1}{3}
+$$
+```
+
+Formulas render in the live preview and exported PDF, including Markdown tables.
+Use backticks/code fences for literal syntax and `\$` for a literal dollar sign.
+See [examples/math.md](examples/math.md) for more examples.
+
+Use **Page breaks** beside Zen mode to switch between continuous reading and
+actual paper pages with print margins. A4 is the default; the existing paper and
+background selectors also update this preview. Saved-file changes update the
+pages automatically. The switch stays local to the current page, works with
+Source/Zen, and starts off. Paged preview needs the same Edge/Chrome/Chromium
+installation as PDF export; continuous Markdown/math preview works without it.

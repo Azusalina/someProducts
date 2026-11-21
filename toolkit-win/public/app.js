@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+import {PagePreview} from './page-preview.js';
 import { showTexPreview } from './tex-preview.js';
 const headers = { 'Content-Type': 'application/json' };
 let viewId;
@@ -7,6 +8,41 @@ let streamError = '', actionError = '', info;
 let previousFilename;
 let zenMode = false, focusBeforeZen;
 let texPreviewUrl;
+const pages = new PagePreview($('markdown-pages'));
+let pageMode = false, pageKey = '', pageTimer, pageRequest, pageGeneration = 0, pageFilename, pageScroll = 0;
+
+function schedulePages() {
+  const enabled = pageMode && state?.module === 'markdown' && !state.error;
+  const key = enabled ? JSON.stringify([viewId, state.filename, state.updatedAt, $('paper').value, $('pdf-background').value]) : '';
+  if (key === pageKey) return;
+  pageKey = key;
+  const generation = ++pageGeneration;
+  clearTimeout(pageTimer); pageRequest?.abort();
+  if (enabled && pageFilename !== state.filename) { pageScroll = 0; pageFilename = state.filename; }
+  else if (pages.items.length) pageScroll = $('markdown-pages').scrollTop;
+  pages.clear().catch(() => {});
+  if (!enabled) {
+    if (pageMode) $('pages-status').textContent = state?.error || 'Open a Markdown file to preview pages.';
+    return;
+  }
+  $('pages-status').textContent = 'Rendering pages…';
+  const options = {paper:$('paper').value, background:$('pdf-background').value};
+  pageTimer = setTimeout(async () => {
+    const controller = pageRequest = new AbortController();
+    try {
+      const response = await api('/api/preview/pdf', {method:'POST', body:JSON.stringify(options), signal:controller.signal});
+      const data = await response.arrayBuffer();
+      if (generation !== pageGeneration) return;
+      const count = await pages.show(data, options);
+      if (generation !== pageGeneration) return;
+      $('markdown-pages').scrollTop = pageScroll;
+      $('pages-status').textContent = `${options.paper} · ${count} page${count === 1 ? '' : 's'}`;
+    } catch (error) {
+      if (generation !== pageGeneration || controller.signal.aborted) return;
+      $('pages-status').textContent = `${error.message} Turn off Page breaks for continuous preview.`;
+    }
+  }, 350);
+}
 
 function updatePreviewTheme() {
   $('preview').contentDocument?.body?.classList.toggle('document-theme-black', document.documentElement.dataset.theme !== 'light');
@@ -21,7 +57,7 @@ function setZenMode(active) {
   document.body.classList.toggle('zen-mode', active);
   $('zen-button').setAttribute('aria-pressed', String(active));
   updateViews();
-  if (active) (state?.module === 'tex' ? $('tex-preview') : $('preview')).focus();
+  if (active) (state?.module === 'tex' ? $('tex-preview') : pageMode ? $('markdown-pages') : $('preview')).focus();
   else (focusBeforeZen?.isConnected ? focusBeforeZen : $('zen-button')).focus();
 }
 function exitZenOnEscape(event) {
@@ -61,7 +97,11 @@ function updateViews() {
   $('empty').hidden = Boolean(state?.html !== undefined);
   $('preview').hidden = !state || state.html === undefined || showSource;
   const tex = state?.module === 'tex';
-  if (tex) $('preview').hidden = true;
+  if (tex || pageMode) $('preview').hidden = true;
+  $('markdown-pages').hidden = !pageMode || tex || !state || state.html === undefined || showSource;
+  $('page-breaks').hidden = tex;
+  $('page-breaks').disabled = !pageMode && (!state || tex || Boolean(state.error));
+  $('page-breaks').setAttribute('aria-pressed', String(pageMode));
   $('tex-preview').hidden = !tex || !state?.pdf || showSource;
   $('tex-open-preview').hidden = !tex || !texPreviewUrl || showSource || zenMode;
   $('paper').disabled = tex;
@@ -77,6 +117,7 @@ function updateViews() {
 }
 function draw(next) {
   state = next;
+  schedulePages();
   if (!state) { updateViews(); return; }
   if (previousFilename !== state.filename) {
     $('filepath').value = state.filename;
@@ -112,7 +153,7 @@ function draw(next) {
     // Reattach after each saved-file render without enabling preview scripts.
     frame.contentDocument?.addEventListener('keydown', exitZenOnEscape);
   };
-  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="${document.documentElement.dataset.theme === 'light' ? '' : 'document-theme-black'}"><article class="document">${state.html || ''}</article></body></html>`;
+  frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'"><style>${style}</style></head><body class="${document.documentElement.dataset.theme === 'light' ? '' : 'document-theme-black'}"><article class="document">${state.html || ''}</article></body></html>`;
   const outline = $('outline');
   outline.replaceChildren();
   for (const heading of state.outline || []) {
@@ -122,7 +163,8 @@ function draw(next) {
     link.style.paddingLeft = `${5 + Math.min(heading.level - 1, 3) * 10}px`;
     link.addEventListener('click', event => {
       event.preventDefault(); sourceView = false; updateViews();
-      frame.contentDocument?.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
+      if (pageMode && state?.module === 'markdown') pages.reveal(heading.label).catch(() => {});
+      else frame.contentDocument?.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
     });
     outline.append(link);
   }
@@ -143,6 +185,8 @@ $('open-form').addEventListener('submit', event => { event.preventDefault(); ope
 $('example-button').addEventListener('click', () => openFile(info.examplePath));
 $('preview-tab').addEventListener('click', () => { sourceView = false; updateViews(); });
 $('source-tab').addEventListener('click', () => { sourceView = true; updateViews(); });
+$('page-breaks').addEventListener('click', () => { pageMode = !pageMode; schedulePages(); updateViews(); });
+for (const id of ['paper', 'pdf-background']) $(id).addEventListener('change', schedulePages);
 $('zen-button').addEventListener('click', () => setZenMode(true));
 $('sidebar-toggle').addEventListener('click', () => {
   const collapsed = !$('sidebar').hidden;

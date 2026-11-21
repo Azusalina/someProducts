@@ -1,5 +1,6 @@
 import { open, realpath, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import {mathStyle} from './math-style.js';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export async function readSource(filename) {
@@ -38,5 +39,6 @@ export async function localImage(src, filename) {
 }
 
 export async function documentStyle() {
-  return readFile(new URL('../../public/document.css', import.meta.url), 'utf8');
+  const [document, math] = await Promise.all([readFile(new URL('../../public/document.css', import.meta.url), 'utf8'), mathStyle()]);
+  return math + '\n' + document;
 }

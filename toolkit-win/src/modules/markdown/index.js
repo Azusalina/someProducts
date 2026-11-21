@@ -1,4 +1,6 @@
 import MarkdownIt from 'markdown-it';
+import {tex} from '@mdit/plugin-tex';
+import {renderMath, restoreMath} from './math.js';
 import taskLists from 'markdown-it-task-lists';
 import hljs from 'highlight.js';
 import { renderHtml } from './html.js';
@@ -10,7 +12,7 @@ const md = new MarkdownIt({
     return language && hljs.getLanguage(language)
       ? hljs.highlight(code, { language, ignoreIllegals: true }).value : '';
   }
-}).use(taskLists);
+}).use(taskLists).use(tex, {delimiters:'all', mathFence:true, render:renderMath});
 const defaultLink = md.renderer.rules.link_open;
 md.renderer.rules.link_open = (tokens, index, options, env, self) => {
   const href = tokens[index].attrGet('href');
@@ -59,9 +61,9 @@ function renderSections(tokens, env) {
 export const markdownModule = {
   id: 'markdown', name: 'Markdown', extensions: ['.md', '.markdown'], outputs: ['pdf'],
   async render(source, { filename }) {
-    const env = { trustedImages: new Set() };
+    const env = { trustedImages: new Set(), math: new Map(), warnings: [] };
     const tokens = md.parse(source, env);
-    const outline = [], warnings = [], counts = new Map();
+    const outline = [], warnings = env.warnings, counts = new Map();
     const diagrams = [];
     function visit(items) {
       for (let i = 0; i < items.length; i++) {
@@ -86,7 +88,8 @@ export const markdownModule = {
       if (result.svg) diagrams[index].mermaidSvg = result.svg;
       else warnings.push(`Mermaid diagram ${index + 1}: ${result.error} Source is shown instead.`);
     }
-    const html = await renderHtml(renderSections(tokens, env), { filename, warnings, trustedImages: env.trustedImages });
+    const cleaned = await renderHtml(renderSections(tokens, env), { filename, warnings, trustedImages: env.trustedImages });
+    const html = restoreMath(cleaned, env);
     return { html, outline, warnings, title: outline[0]?.label || 'Untitled document' };
   }
 };

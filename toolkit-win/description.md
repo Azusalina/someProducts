@@ -1140,3 +1140,59 @@ tools, preview scroll preservation, saved-file updates, reload persistence,
 cross-tab synchronization, mobile width and blocked localStorage. The existing
 Linux browser/PDF regression also passed, including Zen, Mermaid, source
 watching and white/yellow/black PDF export.
+
+
+## Markdown LaTeX math and paper-page preview (2026-11-21)
+
+Markdown uses KaTeX 0.19.1 with `@mdit/plugin-tex` 1.0.2, compatible with the
+existing Markdown-it 14 renderer. Both dollar and LaTeX bracket delimiters, math
+fences, and Markdown-table formulas are supported; ordinary code remains literal.
+This is KaTeX's supported math syntax, not a complete LaTeX document compiler;
+standalone `.tex` files still use the existing TeX module. Escape currency dollars
+with `\$` when delimiters would otherwise be ambiguous. Invalid formulas retain
+escaped source and add a warning without losing the rest of the document.
+
+The parser assigns unpredictable markers to generated formulas, sanitizes the
+complete ordinary HTML fragment using the existing policy, then restores only
+those exact KaTeX results. Raw source SVG/MathML remains filtered. KaTeX runs with
+`trust:false`, isolated formula macros, `maxExpand:1000` and `maxSize:20`.
+`documentStyle()` embeds the installed KaTeX stylesheet and only local WOFF2 font
+sources as data URLs. Both preview CSP layers and the print document allow these
+embedded fonts, with no external resources or preview scripts. Export waits for
+fonts to load. Mermaid and ordinary HTML share the same existing render path.
+
+`Page breaks` is an off-by-default page-local switch. It displays the actual
+in-memory PDF from the current rendered Markdown snapshot via local PDF.js,
+rather than drawing approximate fixed-height rules over HTML. Thus A4/Letter
+geometry, 18 mm print margins, section keep-together behavior and white/yellow/
+black paper match PDF export for the same saved revision and options. Explicit
+Export PDF still rereads the saved file at click time and is independent of the
+preview. Reading mode continues to follow the dark/light interface theme.
+
+The authenticated, view-scoped `POST /api/preview/pdf` accepts paper/background,
+cancels the previous preview for that view, and cancels Chromium when its HTTP
+response disconnects or the view closes. The client debounces saved-file/option
+changes, aborts superseded requests and rejects stale results. PDF.js creates
+page placeholders and renders canvases only near the scroll viewport; distant
+canvases are released. Resize re-renders nearby pages. The paper view preserves
+its reading position for the same file, supports heading-outline navigation,
+Source and Zen/Escape, and keeps its state independent between browser tabs.
+Disabling it releases the PDF worker/canvases and restores the existing HTML
+preview. Missing-browser errors leave continuous reading available.
+
+Sources: [KaTeX options](https://katex.org/docs/options.html),
+[KaTeX security](https://katex.org/docs/security.html),
+[Markdown TeX parser](https://mdit-plugins.github.io/tex.html).
+
+Validation commands: `node --test tests/markdown-math.test.js`,
+`node tests/markdown-pages-browser.js`, and the same browser script with
+`--firefox`. Windows CI includes both new checks. The tests compare actual preview
+and exported PDF page counts/text, A4/Letter dimensions, section boundaries,
+embedded fonts, paper pixels, live updates, Source/Zen, mobile, cancellation and
+page-local mode. PDF pages were rendered with Poppler for visual inspection.
+
+Verified locally: Linux 53/53 tests; Windows variant on Linux 60 passed and
+2 native-only tests skipped. Chromium and Firefox math/page browser checks and
+the existing Firefox HTML/PDF check passed. Both npm audits reported zero
+vulnerabilities. Linux renderer dependencies were updated within their declared
+compatible ranges, and the Node minimum is 22.12 to match the math CLI dependency.

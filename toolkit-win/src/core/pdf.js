@@ -18,13 +18,17 @@ export function documentHtml(html, style, { paper = 'A4', title = 'Document', ba
   const colors = { white: '#ffffff', yellow: '#fff4cc', black: '#161616' };
   if (!Object.hasOwn(colors, background)) throw new Error('Choose white, yellow, or black PDF background.');
   const escapedTitle = title.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; base-uri 'none'; form-action 'none'"><title>${escapedTitle}</title><style>${style}\n@page { size: ${paper}; margin: 18mm; background: ${colors[background]}; }</style></head><body class="document-theme-${background}"><article class="document">${html}</article></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'"><title>${escapedTitle}</title><style>${style}\n@page { size: ${paper}; margin: 18mm; background: ${colors[background]}; }</style></head><body class="document-theme-${background}"><article class="document">${html}</article></body></html>`;
 }
 
-export async function exportPdf(html, style, options) {
+export async function exportPdf(html, style, options, {signal} = {}) {
+  signal?.throwIfAborted();
   const executablePath = await findChromium();
   const browser = await chromium.launch({ executablePath, headless: true, timeout: 20000 });
+  const abort = () => { browser.close().catch(() => {}); };
+  signal?.addEventListener('abort', abort, {once:true});
   try {
+    signal?.throwIfAborted();
     const context = await browser.newContext({ javaScriptEnabled: false, serviceWorkers: 'block' });
     // Never navigate to the source file or a document server: all content stays in memory.
     await context.route('**/*', route => route.abort());
@@ -33,6 +37,7 @@ export async function exportPdf(html, style, options) {
     await session.send('Network.enable');
     await session.send('Network.setCacheDisabled', { cacheDisabled: true });
     await page.setContent(documentHtml(html, style, options), { waitUntil: 'load', timeout: 15000 });
+    await page.evaluate(() => document.fonts.ready);
     return await page.pdf({ format: options.paper, preferCSSPageSize: true, printBackground: true, timeout: 20000 });
-  } finally { await browser.close(); }
+  } finally { signal?.removeEventListener('abort', abort); await browser.close(); }
 }
