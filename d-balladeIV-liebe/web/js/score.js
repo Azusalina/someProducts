@@ -13,6 +13,7 @@ export async function loadScore(url) {
   s.maxDur = Math.max(...s.notes.map(n => n.end - n.t));
   s.t0 = s.notes[0].t;
   s.t1 = Math.max(...s.notes.map(n => n.end));
+  s.byId = new Map(s.notes.map(n => [n.id, n]));                 // ids follow the build order, not time order
   s.measureByNumber = new Map(s.measures.map(m => [m.n, m]));
   // every measure knows where it starts and how long it is (pickups and free-time cadenzas are not full bars)
   const bpm = s.meta.beatsPerMeasure || 3;
@@ -48,6 +49,22 @@ export function buildSteps(score, hands, tol = 0.04) {
   }
   steps.forEach((s, i) => { s.i = i; s.t = s.notes[0].t; });
   return steps;
+}
+
+/**
+ * Selected measures as playable blocks: runs of consecutive selected measures, each with its time span.
+ * `set` holds measure numbers. Returns { set, blocks: [{ t0, t1, first, last }] } or null when empty.
+ */
+export function selectionOf(score, set) {
+  if (!set || !set.size) return null;
+  const blocks = [];
+  for (const m of score.measures) {
+    if (!set.has(m.n)) continue;
+    const last = blocks[blocks.length - 1];
+    if (last && Math.abs(last.t1 - m.start) < 1e-6) { last.t1 = m.start + m.length; last.last = m; }
+    else blocks.push({ t0: m.start, t1: m.start + m.length, first: m, last: m });
+  }
+  return { set, blocks };
 }
 
 export function stepIndexAtOrAfter(steps, t) {

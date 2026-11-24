@@ -74,7 +74,11 @@ def main():
                  sheetFrom=a.sheet_from, section=a.section, tempo=a.tempo)
     if a.local_only:
         entry["localOnly"] = True
-    pieces = [p for p in pieces if p["id"] != a.id] + [entry]
+    ids = [p["id"] for p in pieces]
+    if a.id in ids:
+        pieces[ids.index(a.id)] = entry          # a rebuild keeps the piece's place in the menu
+    else:
+        pieces.append(entry)
     json.dump(pieces, open(idx_path, "w"), indent=1)
     print("pages", n, "measures", len(ms), "notes", len(score["notes"]), "->", out)
 

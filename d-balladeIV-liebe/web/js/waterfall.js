@@ -2,6 +2,7 @@
 // score's measures (a pickup or a free-time cadenza is not a full bar).
 import { layoutKeyboard, isBlack } from './piano.js';
 import { lowerBound, measureIndexAt } from './score.js';
+import { rhythmOf } from './rhythm.js';
 
 const rr = (ctx, x, y, w, h, r) => {
   r = Math.min(r, w / 2, h / 2);
@@ -31,6 +32,7 @@ export class Waterfall {
     this.wrong = new Map();        // midi -> expiry time (performance.now) of a red flash
     this.sounding = new Set();     // midi currently sounding (display mode)
     this.learn = false;
+    this.sel = null;               // selected measures ({ set, blocks }): looped, coloured by rhythm
     this.resize();
   }
 
@@ -57,6 +59,7 @@ export class Waterfall {
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, w, h);
     this.drawLanes(nowY);
+    this.drawSelection(nowY);
     this.drawGrid(nowY);
     this.drawNotes(nowY);
     this.drawKeyboard(nowY);
@@ -106,8 +109,28 @@ export class Waterfall {
     }
   }
 
-  /** colour of a note: its figure's cell colour, else its hand's */
-  colorOf(n) { return this.patterns && n.cell ? n.cell.color[n.hand] : this.colors[n.hand]; }
+  /** the selected (looped) measures: a lighter band with a bright edge at each end */
+  drawSelection(nowY) {
+    if (!this.sel) return;
+    const { ctx } = this;
+    for (const b of this.sel.blocks) {
+      const y0 = Math.max(0, this.yOf(b.t1)), y1 = Math.min(nowY, this.yOf(b.t0));
+      if (y1 <= 0 || y0 >= nowY) continue;
+      ctx.fillStyle = 'rgba(106,165,255,0.07)';
+      ctx.fillRect(0, y0, this.w, y1 - y0);
+      ctx.fillStyle = 'rgba(106,165,255,0.75)';
+      for (const y of [this.yOf(b.t1), this.yOf(b.t0)]) if (y >= 0 && y <= nowY) ctx.fillRect(0, Math.round(y) - 1, this.w, 2);
+    }
+  }
+
+  inSel(n) { return !!this.sel && this.sel.set.has(n.measure); }
+
+  /** colour of a note: inside a selection its rhythm's colour (left hand a shade darker), else its figure's cell
+   * colour, else its hand's */
+  colorOf(n) {
+    if (this.inSel(n)) { const c = rhythmOf(n).color; return n.hand === 'L' ? shade(c, -0.28) : c; }
+    return this.patterns && n.cell ? n.cell.color[n.hand] : this.colors[n.hand];
+  }
 
   drawNotes(nowY) {
     const { ctx, score } = this;
@@ -126,12 +149,13 @@ export class Waterfall {
       const x = k.x + (k.black ? 1 : 1.5);
       const wd = k.w - (k.black ? 2 : 3);
       const hh = Math.max(4, yBot - yTop);
-      const cell = this.patterns ? n.cell : null;
+      const selected = this.inSel(n);
+      const cell = this.patterns && !selected ? n.cell : null;
       const base = this.colorOf(n);
       const target = this.targets.has(n.id);
       const active = this.t >= n.t - 1e-6 && this.t < n.end;
       ctx.save();
-      ctx.globalAlpha = enabled ? 1 : 0.16;
+      ctx.globalAlpha = (enabled ? 1 : 0.16) * (this.sel && !selected ? 0.22 : 1);
       // clip the part below the keyboard line
       ctx.beginPath(); ctx.rect(0, 0, this.w, nowY); ctx.clip();
       const g = ctx.createLinearGradient(0, yTop, 0, yBot);
@@ -140,7 +164,7 @@ export class Waterfall {
       ctx.fillStyle = g;
       rr(ctx, x, yTop, wd, hh, Math.min(5, wd / 2));
       ctx.fill();
-      if (n.grace) { ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
+      if (n.grace && n.orn !== 'tr') { ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
       if (target || active) {
         ctx.lineWidth = 2;
         ctx.strokeStyle = target ? '#ffffff' : 'rgba(255,255,255,0.7)';
@@ -176,7 +200,7 @@ export class Waterfall {
     // key colour for a midi note: expected (hand colour), heard (green), wrong (red)
     const targetHands = new Map();
     for (const id of this.targets) {
-      const n = this.score.notes[id];
+      const n = this.score.byId.get(id);
       if (n) targetHands.set(n.midi, this.colorOf(n));
     }
     const activeHands = new Map();
@@ -236,10 +260,10 @@ export class Waterfall {
   }
 }
 
-function shade(hex, amt) {
+export function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
   const f = v => Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt))));
   r = f(r); g = f(g); b = f(b);
-  return `rgb(${r},${g},${b})`;
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);     // hex, so it can be shaded again
 }

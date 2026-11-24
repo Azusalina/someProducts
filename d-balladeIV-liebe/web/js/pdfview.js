@@ -1,5 +1,15 @@
 // Left pane: the sheet music (pre-rendered vector PDF pages) with live note highlighting.
 // Coordinates in the score are PDF points (page size differs per piece), so overlays are placed in percentages.
+// Every measure is a click target: a click asks to jump there, a drag or shift/ctrl-click to select measures
+// (onPick / onDrag callbacks; main.js decides what they mean).
+import { rhythmOf } from './rhythm.js';
+
+const place = (d, pg, x, y, w, h) => {
+  d.style.left = (x / pg.pw * 100) + '%';
+  d.style.top = (y / pg.ph * 100) + '%';
+  d.style.width = (w / pg.pw * 100) + '%';
+  d.style.height = (h / pg.ph * 100) + '%';
+};
 
 export class PdfView {
   constructor(container, score, firstPage = 11) {
@@ -8,8 +18,12 @@ export class PdfView {
     this.score = score;
     this.pages = new Map();
     this.hl = [];                 // currently drawn highlight elements
+    this.selEls = [];             // selection boxes and rhythm marks
     this.colors = { R: '#ff8a3d', L: '#2fc9b0' };
+    this.onPick = null;           // ({ a, b, shift, ctrl }) when a press on a measure is released (a = pressed, b = released)
+    this.onDrag = null;           // (a, b) while dragging across measures
     this.build(firstPage);
+    this.listen();
   }
 
   build(firstPage) {
@@ -19,6 +33,7 @@ export class PdfView {
       const wrap = document.createElement('div');
       wrap.className = 'page';
       wrap.dataset.page = p.index;
+      wrap.style.aspectRatio = `${p.w} / ${p.h}`;           // full height before the lazy image arrives (click targets)
       const img = document.createElement('img');
       img.src = p.src;
       img.loading = 'lazy';
@@ -31,6 +46,80 @@ export class PdfView {
       this.pages.set(p.index, { wrap, layer, pw: p.w / p.scale, ph: p.h / p.scale });   // page size in PDF points
     }
     this.buildPatterns();
+    this.buildHits();
+  }
+
+  /** one transparent click target per measure, over its system's staves */
+  buildHits() {
+    for (const m of this.score.measures) {
+      const pg = this.pages.get(m.page);
+      if (!pg || m.x0 == null) continue;
+      const d = document.createElement('div');
+      d.className = 'm-hit';
+      d.dataset.n = m.n;
+      d.title = `m.${m.label} · click: go there · drag / shift-click: select to loop · ctrl-click: add or remove`;
+      place(d, pg, m.x0, m.y0 - 14, m.x1 - m.x0, m.y1 - m.y0 + 28);
+      pg.layer.prepend(d);
+    }
+  }
+
+  listen() {
+    let drag = null;
+    this.el.addEventListener('pointerdown', e => {
+      const h = e.target.closest('.m-hit');
+      if (!h || e.button !== 0) return;
+      e.preventDefault();                                     // no text / image selection while dragging
+      const n = +h.dataset.n;
+      drag = { a: n, b: n, shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey };
+    });
+    this.el.addEventListener('pointerover', e => {
+      if (!drag) return;
+      const h = e.target.closest('.m-hit');
+      if (!h || +h.dataset.n === drag.b) return;
+      drag.b = +h.dataset.n;
+      this.onDrag?.(drag.a, drag.b);
+    });
+    addEventListener('pointerup', () => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      this.onPick?.(d);
+    });
+  }
+
+  /** boxes around the selected measures (set of measure numbers, or null), and a mark in its rhythm colour on every
+   * note head in them */
+  setSelection(set, notes = []) {
+    for (const e of this.selEls) e.remove();
+    this.selEls = [];
+    for (const h of this.el.querySelectorAll('.m-hit.sel')) h.classList.remove('sel');
+    if (!set) return;
+    for (const m of this.score.measures) {
+      if (!set.has(m.n)) continue;
+      const pg = this.pages.get(m.page);
+      if (!pg) continue;
+      const d = document.createElement('div');
+      d.className = 'sel-measure';
+      place(d, pg, m.x0, m.y0 - 16, m.x1 - m.x0, m.y1 - m.y0 + 32);
+      pg.layer.prepend(d);
+      this.selEls.push(d);
+      this.el.querySelector(`.m-hit[data-n="${m.n}"]`)?.classList.add('sel');
+    }
+    const seen = new Set();
+    for (const n of notes) {
+      const pg = this.pages.get(n.page);
+      const key = `${n.page}:${n.x}:${n.y}`;                 // a trill is many notes on one head: one mark
+      if (!pg || seen.has(key)) continue;
+      seen.add(key);
+      const r = rhythmOf(n);
+      const d = document.createElement('div');
+      d.className = 'rh-mark' + (n.grace && n.orn !== 'tr' ? ' grace' : '');
+      d.style.setProperty('--c', r.color);
+      place(d, pg, n.x - 1.4, n.y - 4.2, 10, 8.4);
+      d.title = r.label;
+      pg.layer.append(d);
+      this.selEls.push(d);
+    }
   }
 
   /** a tinted band behind every cell of a repeated figure, with its letter (right hand above, left hand below) */
@@ -72,6 +161,11 @@ export class PdfView {
   setPatterns(on) { this.el.classList.toggle('no-pat', !on); }
 
   setColors(c) { this.colors = c; }
+
+  /** while dragging: outline the measures between a and b */
+  preview(set) {
+    for (const h of this.el.querySelectorAll('.m-hit')) h.classList.toggle('pre', !!set && set.has(+h.dataset.n));
+  }
 
   clear() {
     for (const e of this.hl) e.remove();

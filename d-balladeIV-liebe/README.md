@@ -11,10 +11,11 @@ A web app for learning piano pieces from their printed score: the coda of Chopin
 **Run:** `python3 -m http.server 4310 --directory web`, then open <http://localhost:4310> in Chrome or Chromium. The microphone needs `localhost` or https.
 
 **Controls**
-- **Piece** menu (top left): switch between the Ballade coda, the Liebestraum and the Barcarolle. The choice, and the tempo of each piece, are remembered. Small grace notes are drawn with a dashed outline; Display mode plays them and Learn mode does not ask for them.
+- **Piece** menu (top left): switch between the Ballade coda, the Liebestraum and the Barcarolle. The choice, and the tempo of each piece, are remembered. Small grace notes are drawn with a dashed outline; Display mode plays them and Learn mode does not ask for them. In the Barcarolle every trill (tr) is played as an alternation of the note and the one above it; only its first note is a Learn step.
 - **Display / Learn:** Display plays the waterfall with real grand-piano samples (loaded from `web/assets/piano/`; the 🔊 button mutes). Learn waits for you.
 - **Left / Both / Right:** choose which hand is played or required, in both modes.
 - **Space:** play or pause. In Learn mode, ← and → step back and forward.
+- **Click a measure on the sheet** to jump there. **Drag** across measures, or **Shift-click** (a range from the last clicked measure) and **Ctrl/⌘-click** (add or remove one), to select measures: they loop in Display mode and Learn mode steps round them. While measures are selected, their notes are coloured by written value (32nd, 16th, 8th, dotted values, triplets, grace notes…) on the waterfall and on the sheet, with a legend at the top of the waterfall. **Esc** (or the ✕) ends the selection.
 - **Measure** menu and **Tempo** slider.
 - **⚙ settings:** hand colours, keyboard height, waterfall zoom, key range, learn strictness, sheet pages, and **Repeated figures**.
 - **Repeated figures (Liebestraum cadenzas, m.23–31 and m.64–73):** a figure that comes back moved by octaves is split into cells A, B, C… Each cell has its own colour on the waterfall (with its letter on the first note), on the keys, and as a tinted band on the sheet; a legend at the top right of the waterfall shows which cell is sounding. The settings switch turns the colours off.

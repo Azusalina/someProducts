@@ -1,4 +1,5 @@
-import { loadScore, lowerBound, buildSteps, stepIndexAtOrAfter, measureAtTime } from './score.js';
+import { loadScore, lowerBound, buildSteps, stepIndexAtOrAfter, measureAtTime, selectionOf } from './score.js';
+import { RHYTHMS, rhythmOf } from './rhythm.js';
 import { Waterfall } from './waterfall.js';
 import { PdfView } from './pdfview.js';
 import { Synth } from './synth.js';
@@ -16,6 +17,7 @@ const store = {
 const S = {
   cfg: store.get(), mode: 'display', hands: new Set(['R', 'L']), playing: false, bpm: 84, t: 0,
   steps: [], idx: 0, satisfied: new Set(), stepStart: 0, anim: null, scheduled: 0, lastSig: '',
+  sel: null, selAnchor: null,    // selected measures ({ set, blocks }) are looped; anchor = last clicked measure
 };
 
 /* ---------- which piece ---------- */
@@ -45,6 +47,9 @@ let pdf = null;
 function buildPdf() {
   pdf = new PdfView($('pages'), score, S.cfg.pages === 'all' ? 0 : (piece.sheetFrom ?? 0));
   pdf.setColors({ R: S.cfg.colR, L: S.cfg.colL });
+  pdf.onPick = pickMeasure;
+  pdf.onDrag = (a, b) => pdf.preview(new Set(measureRange(a, b)));
+  if (S.sel) pdf.setSelection(S.sel.set, selNotes());
   S.lastSig = '';
 }
 
@@ -110,6 +115,73 @@ const measureStart = n => score.measureByNumber.get(n).start;
 function setTempo(v) { S.bpm = +v; $('rngTempo').value = v; $('outTempo').value = v; S.cfg.tempos[piece.id] = +v; store.set(S.cfg); }
 $('rngTempo').oninput = e => setTempo(e.target.value);
 
+/* ---------- clicking measures on the sheet: jump, select, loop ---------- */
+const mIndex = new Map(score.measures.map((m, i) => [m.n, i]));
+function measureRange(a, b) {
+  const [i, j] = [mIndex.get(a), mIndex.get(b)].sort((x, y) => x - y);
+  return score.measures.slice(i, j + 1).map(m => m.n);
+}
+const selNotes = () => (S.sel ? score.notes.filter(n => S.sel.set.has(n.measure)) : []);
+function pickMeasure({ a, b, shift, ctrl }) {
+  pdf.preview(null);
+  if (a !== b) { setSelection(new Set(measureRange(a, b))); S.selAnchor = a; return; }        // dragged across measures
+  if (shift) { setSelection(new Set(measureRange(S.selAnchor ?? measureAtTime(score, S.t).n, b))); return; }
+  if (ctrl) {
+    const set = new Set(S.sel ? S.sel.set : []);
+    if (set.has(b)) set.delete(b); else set.add(b);
+    S.selAnchor = b;
+    setSelection(set);
+    return;
+  }
+  S.selAnchor = b;                                            // plain click: go to that measure
+  if (S.sel && !S.sel.set.has(b)) clearSelection();
+  seek(measureStart(b) - (S.playing ? 0 : 0.4));
+  if (S.mode === 'display') $('selMeasure').value = b;       // the lead-in beat lies in the bar before
+}
+function setSelection(set) {
+  S.sel = selectionOf(score, set);
+  if (!S.sel) { clearSelection(); return; }
+  wf.sel = S.sel;
+  pdf.setSelection(S.sel.set, selNotes());
+  showSelBar();
+  const inside = S.sel.blocks.some(b => S.t >= b.t0 - 0.5 && S.t < b.t1);
+  if (!inside) seek(S.sel.blocks[0].t0 - (S.playing ? 0 : 0.4));
+  else if (S.mode === 'learn') { S.idx = selStep(S.idx, 1, true); beginStep(true); }
+  S.lastSig = '';
+}
+function clearSelection() {
+  S.sel = null; wf.sel = null;
+  pdf.setSelection(null); pdf.preview(null);
+  $('selBar').hidden = true;
+  S.lastSig = '';
+}
+function showSelBar() {
+  const labels = S.sel.blocks.map(b => (b.first === b.last ? `m.${b.first.label}` : `m.${b.first.n}–${b.last.n2 ?? b.last.n}`));
+  const count = new Map();
+  for (const n of selNotes()) if (S.hands.has(n.hand)) { const r = rhythmOf(n); count.set(r, (count.get(r) || 0) + 1); }
+  const keys = RHYTHMS.filter(r => count.has(r))
+    .map(r => `<span class="rk${r.key === 'grace' ? ' grace' : ''}" style="--c:${r.color}"><i></i>${r.label}</span>`).join('');
+  const bar = $('selBar');
+  bar.innerHTML = `<b>🔁 Loop ${labels.join(', ')}</b>${keys}<button id="btnSelClear" title="Stop looping (Esc)">Esc ✕</button>`;
+  bar.classList.toggle('learn', S.mode === 'learn');
+  bar.hidden = false;
+  $('btnSelClear').onclick = clearSelection;
+}
+/** in a selection: the block holding beat t (with a little lead-in before it), or null */
+const blockAt = t => S.sel && S.sel.blocks.find(b => t >= b.t0 - 0.5 && t < b.t1);
+/** the next block to play after beat t, wrapping round to the first */
+const nextBlock = t => S.sel.blocks.find(b => b.t0 > t + 1e-6) || S.sel.blocks[0];
+/** step index from i in direction d that lies in the selection (wrapping round); `here` accepts i itself */
+function selStep(i, d, here = false) {
+  if (!S.sel || !S.steps.length) return i;
+  const n = S.steps.length;
+  for (let k = here ? 0 : 1; k <= n; k++) {
+    const j = ((i + d * k) % n + n) % n;
+    if (S.sel.set.has(S.steps[j].measure)) return j;
+  }
+  return i;
+}
+
 /* ---------- transport ---------- */
 function seek(t) {
   synth.silence();
@@ -128,7 +200,11 @@ function play(on) {
 }
 $('btnPlay').onclick = () => (S.mode === 'display' ? play(!S.playing) : skip(1));
 $('btnRestart').onclick = () => { play(false); seek(measureStart(+$('selMeasure').value) - 0.4); };
-$('selMeasure').onchange = e => { play(false); seek(measureStart(+e.target.value) - 0.4); };
+$('selMeasure').onchange = e => {
+  play(false);
+  if (S.sel && !S.sel.set.has(+e.target.value)) clearSelection();
+  seek(measureStart(+e.target.value) - 0.4);
+};
 $('btnSound').onclick = e => { synth.enabled = !synth.enabled; if (!synth.enabled) synth.silence(); e.currentTarget.classList.toggle('on', synth.enabled); e.currentTarget.textContent = synth.enabled ? '🔊' : '🔇'; };
 
 function segment(id, cb) {
@@ -143,7 +219,8 @@ segment('handSeg', v => {
   S.hands = new Set(v === 'B' ? ['R', 'L'] : [v]);
   wf.hands = S.hands;
   S.steps = buildSteps(score, S.hands);
-  if (S.mode === 'learn') { S.idx = stepIndexAtOrAfter(S.steps, S.t); beginStep(true); }
+  if (S.mode === 'learn') { S.idx = selStep(stepIndexAtOrAfter(S.steps, S.t), 1, true); beginStep(true); }
+  if (S.sel) showSelBar();
   S.lastSig = '';
 });
 segment('modeSeg', setMode);
@@ -155,13 +232,14 @@ function setMode(m) {
   play(false);
   if (m === 'learn') {
     S.steps = buildSteps(score, S.hands);
-    S.idx = stepIndexAtOrAfter(S.steps, S.t);
+    S.idx = selStep(stepIndexAtOrAfter(S.steps, S.t), 1, true);
     beginStep(true);
     if (!ear.running) toast('Learn mode: press the 🎤 button to enable the microphone (Calibrate first for best accuracy). ← / → skip steps.');
   } else {
     wf.targets = new Set(); wf.heard = new Set();
     sendExpect();
   }
+  if (S.sel) showSelBar();
   S.lastSig = '';
 }
 
@@ -203,6 +281,11 @@ function noteHeard(midi) {
   if (S.satisfied.size >= need(st)) advance(1);
 }
 function advance(d) {
+  if (S.sel) {                                                // a selection is practised round and round
+    const ni = selStep(S.idx, d);
+    if (d > 0 && ni <= S.idx) toast('Again from the start of the selection');
+    S.idx = ni; beginStep(false); return;
+  }
   const ni = Math.max(0, Math.min(S.steps.length - 1, S.idx + d));
   if (ni === S.idx && d > 0) { toast('End of the section — well done!'); return; }
   S.idx = ni; beginStep(false);
@@ -260,7 +343,8 @@ function toast(msg, ms = 5200) {
 /* ---------- keyboard shortcuts ---------- */
 addEventListener('keydown', e => {
   if (e.target.closest('input, select, textarea, dialog')) return;
-  if (e.code === 'Space') { e.preventDefault(); $('btnPlay').click(); }
+  if (e.key === 'Escape' && S.sel) { e.preventDefault(); clearSelection(); }
+  else if (e.code === 'Space') { e.preventDefault(); $('btnPlay').click(); }
   else if (e.code === 'ArrowRight') skip(1);
   else if (e.code === 'ArrowLeft') skip(-1);
   else if (e.code === 'Home') $('btnRestart').click();
@@ -273,11 +357,20 @@ function frame(now) {
   if (S.mode === 'display') {
     if (S.playing) {
       S.t += dt * S.bpm / 60;
+      if (S.sel) {                                            // loop the selected measures
+        const b = blockAt(S.t);
+        if (!b || S.t >= b.t1) {
+          S.t = nextBlock(b ? b.t1 - 1e-3 : S.t).t0 - 0.25;
+          S.scheduled = lowerBound(score.notes, S.t - 1e-6);
+          S.lastSig = '';
+        }
+      }
       // schedule audio ~120 ms ahead
       const ahead = S.t + 0.12 * S.bpm / 60;
       while (S.scheduled < score.notes.length && score.notes[S.scheduled].t < ahead) {
         const n = score.notes[S.scheduled++];
         if (!S.hands.has(n.hand)) continue;
+        if (S.sel && !S.sel.set.has(n.measure)) continue;      // nothing outside the loop sounds
         const delay = Math.max(0, (n.t - S.t) * 60 / S.bpm);
         synth.note(n.midi, delay, n.d * 60 / S.bpm, 0.75);
       }
@@ -353,4 +446,4 @@ seek(measureStart(score.meta.firstMeasure) - 0.4);
 requestAnimationFrame(frame);
 
 // small hook for automated tests / debugging
-window.ballade = { S, wf, score, ear, synth, seek, play, setMode, noteHeard, advance, beginStep };
+window.ballade = { S, wf, score, ear, synth, seek, play, setMode, noteHeard, advance, beginStep, setSelection, clearSelection, pickMeasure };

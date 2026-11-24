@@ -208,6 +208,67 @@ try {
   await p3.click('#btnPlay');
   ok('Barcarolle plays and highlights notes on the sheet', run3.hl > 0 && +run3.m >= 6, JSON.stringify(run3));
   await p3.screenshot({ path: 'tests/out-barcarolle.png' });
+  // trills: every "tr" becomes main/upper alternation (m.82: C#5 with the sharp over the sign -> D#5)
+  const T = await R3(() => { const sc = window.ballade.score, tr = sc.notes.filter(n => n.orn === 'tr');
+    const heads = new Set(tr.map(n => `${n.page}:${n.x}:${n.y}`));
+    const m82 = tr.filter(n => n.measure === 82).sort((a, b) => a.t - b.t);
+    return { trilled: heads.size, m82: [...new Set(m82.map(n => n.midi))].join(), alt: m82.every((n, i) => n.midi === (i % 2 ? 75 : 73)),
+      firstRequired: !m82[0].grace && m82.slice(1).every(n => n.grace) }; });
+  ok('all 25 trills are played as alternations; m.82 trills C#5-D#5, only its first note is a learn step',
+    T.trilled === 25 && T.m82 === '73,75' && T.alt && T.firstRequired, JSON.stringify(T));
+  // click a measure on the sheet: jump there
+  await p3.locator('.m-hit[data-n="20"]').click();
+  const J = await R3(() => ({ m: document.getElementById('selMeasure').value, t: window.ballade.S.t, s: window.ballade.score.measureByNumber.get(20).start }));
+  ok('clicking a measure on the sheet jumps to it', J.m === '20' && Math.abs(J.t - (J.s - 0.4)) < 1e-6, JSON.stringify(J));
+  // drag across measures 4..6: they become the loop
+  await p3.locator('.m-hit[data-n="4"]').scrollIntoViewIfNeeded();
+  const b4 = await p3.locator('.m-hit[data-n="4"]').boundingBox(), b6 = await p3.locator('.m-hit[data-n="6"]').boundingBox();
+  await p3.mouse.move(b4.x + 10, b4.y + b4.height / 2); await p3.mouse.down();
+  await p3.mouse.move(b4.x + b4.width + 10, b4.y + b4.height / 2, { steps: 4 });
+  await p3.mouse.move(b6.x + 10, b6.y + b6.height / 2, { steps: 4 }); await p3.mouse.up();
+  const D = await R3(() => ({ sel: [...(window.ballade.S.sel?.set || [])].join(), boxes: document.querySelectorAll('.sel-measure').length,
+    marks: document.querySelectorAll('.rh-mark').length, bar: !document.getElementById('selBar').hidden, legend: document.getElementById('selBar').innerText }));
+  ok('dragging across measures selects them (boxes on the sheet, rhythm marks, loop bar with legend)',
+    D.sel === '4,5,6' && D.boxes === 3 && D.marks > 40 && D.bar && /Loop m\.4–6/.test(D.legend) && /8th/.test(D.legend) && /16th/.test(D.legend), JSON.stringify(D));
+  const RC = await R3(() => { const b = window.ballade, sc = b.score, wf = b.wf;
+    const lh = sc.notes.filter(n => n.measure === 4 && n.hand === 'L' && !n.grace);
+    const e8 = lh.find(n => n.v === 0.5), e16 = lh.find(n => n.v === 0.25), out = sc.notes.find(n => n.measure === 8 && n.hand === 'L');
+    return { e8: wf.colorOf(e8), e16: wf.colorOf(e16), out: wf.colorOf(out), hand: wf.colors.L }; });
+  ok('in the selection notes are coloured by rhythm (8th and 16th differ), outside by hand', RC.e8 !== RC.e16 && RC.out === RC.hand && RC.e8 !== RC.hand, JSON.stringify(RC));
+  // shift-click extends from the last clicked measure; ctrl-click adds one more
+  await p3.locator('.m-hit[data-n="10"]').click();
+  await p3.locator('.m-hit[data-n="12"]').click({ modifiers: ['Shift'] });
+  const sh = await R3(() => [...window.ballade.S.sel.set].join());
+  await p3.locator('.m-hit[data-n="15"]').click({ modifiers: ['Control'] });
+  const ct = await R3(() => ({ set: [...window.ballade.S.sel.set].sort((a, b) => a - b).join(), blocks: window.ballade.S.sel.blocks.length }));
+  ok('shift-click selects a range, ctrl-click adds a measure', sh === '10,11,12' && ct.set === '10,11,12,15' && ct.blocks === 2, `${sh} | ${JSON.stringify(ct)}`);
+  // play the loop fast: time never leaves the selected blocks and wraps round
+  await R3(() => { document.getElementById('rngTempo').value = 220; document.getElementById('rngTempo').dispatchEvent(new Event('input')); });
+  await p3.click('#btnPlay');
+  const ts = [];
+  for (let k = 0; k < 28; k++) { await p3.waitForTimeout(250); ts.push(await R3(() => window.ballade.S.t)); }
+  await p3.click('#btnPlay');
+  const L3 = await R3(ts => { const bl = window.ballade.S.sel.blocks;
+    return { outside: ts.filter(t => !bl.some(b => t >= b.t0 - 0.5 && t < b.t1)).length, wraps: ts.filter((t, i) => i && t < ts[i - 1]).length,
+      visited: bl.map(b => ts.some(t => t >= b.t0 - 0.5 && t < b.t1)) }; }, ts);
+  ok('looping: playback stays inside the selection, visits both blocks and wraps round', L3.outside === 0 && L3.wraps >= 1 && L3.visited.every(Boolean), JSON.stringify(L3));
+  // learn mode cycles inside the selection
+  await R3(() => window.ballade.setMode('learn'));
+  const LS = await R3(() => { const b = window.ballade, S = b.S, ms = [];
+    for (let k = 0; k < 60; k++) { b.advance(1); ms.push(S.steps[S.idx].measure); }
+    return { all: [...new Set(ms)].sort((a, c) => a - c).join() }; });
+  await R3(() => window.ballade.setMode('display'));
+  ok('learn mode steps only through the selected measures, round and round', LS.all === '10,11,12,15', JSON.stringify(LS));
+  // Escape leaves the selection
+  await p3.keyboard.press('Escape');
+  const E = await R3(() => ({ sel: window.ballade.S.sel, bar: document.getElementById('selBar').hidden, marks: document.querySelectorAll('.rh-mark').length,
+    boxes: document.querySelectorAll('.sel-measure').length, wf: window.ballade.wf.sel }));
+  ok('Escape ends the selection (no boxes, marks or loop bar)', E.sel === null && E.bar && E.marks === 0 && E.boxes === 0 && E.wf === null, JSON.stringify(E));
+  await R3(() => window.ballade.setSelection(new Set([82, 83])));
+  await R3(() => window.ballade.seek(window.ballade.score.measureByNumber.get(82).start + 0.6));
+  await p3.waitForTimeout(400);
+  await p3.screenshot({ path: 'tests/out-selection.png' });
+  await R3(() => window.ballade.clearSelection());
   ok('no console / page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } catch (e) {
   console.error('TEST CRASH', e);

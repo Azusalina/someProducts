@@ -12,6 +12,7 @@ from .analyze import analyze_page
 from .pitch import compute_pitches
 from .marks import ottava_spans, apply_ottava, find_ties
 from .measures import number_systems
+from .ornaments import find_trills, move_to_tie_start
 
 
 def _analyze(args):
@@ -19,6 +20,7 @@ def _analyze(args):
     doc = pymupdf.open(path)
     pg = load_page(doc, pi)
     systems, _ = analyze_page(pg)
+    find_trills(pg, systems)
     spans = ottava_spans(doc, pi, pg, systems)
     for sy in systems:
         sy.page = pi
@@ -45,5 +47,6 @@ def parse_document(path, first=None, last=None, jobs=None):
             pending = find_ties(pg, sy, pending)
             compute_pitches(sy)
         pages.append(systems)
+    move_to_tie_start(pages)
     warnings = number_systems(doc, pages) if lo == 0 else []
     return doc, pages, warnings

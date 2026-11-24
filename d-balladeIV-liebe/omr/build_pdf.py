@@ -14,6 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 from fractions import Fraction
 from .score import parse_document
 from .rhythm import solve_bar, columns
+from .ornaments import upper_midi, realise
 
 NAME12 = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
 FREE_MIN_SMALL = 8          # a bar with a run of at least this many small-size notes on one staff is a free-time cadenza bar
@@ -126,8 +127,8 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
                 notes.append(dict(
                     id=nid, measure=m, hand="R" if h.staff == 0 else "L", midi=h.midi,
                     name=f"{NAME12[h.midi % 12]}{h.midi // 12 - 1}",
-                    t=float(t_start + e.onset_q), d=float(e.len_q), grace=False, tieNext=bool(h.tie_next),
-                    page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e))
+                    t=float(t_start + e.onset_q), d=float(e.len_q), v=float(e.len_q), grace=False,
+                    tieNext=bool(h.tie_next), page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e, _sy=sy))
                 nid += 1
         for e, t, d in place_graces(graces, real, onset, L):
             for h in e.heads:
@@ -135,7 +136,7 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
                     id=nid, measure=m, hand="R" if h.staff == 0 else "L", midi=h.midi,
                     name=f"{NAME12[h.midi % 12]}{h.midi // 12 - 1}",
                     t=float(t_start + t), d=float(d), grace=True, tieNext=False,
-                    page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e))
+                    page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e, _sy=sy))
                 nid += 1
         gaps = {}
         for st, name in ((0, "R"), (1, "L")):
@@ -154,10 +155,33 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
         report.append(dict(measure=m, kind=kind, heads=heads, cost=round(cost, 2), length=float(L), gaps=gaps))
         t_start += L
     merge_ties(notes, pages)
-    for n in notes:
+    notes = expand_trills(notes)
+    for i, n in enumerate(notes):
+        n["id"] = i
         n.pop("_h", None)
         n.pop("_e", None)
+        n.pop("_sy", None)
     return dict(notes=notes, measures=measures_out, report=report, warnings=warns)
+
+
+def expand_trills(notes):
+    """A trilled note becomes its trill: main and upper note alternating over the note's whole length (ties
+    included). The first note keeps the main note's place in learn mode; the rest are marked grace (not required).
+    All carry orn="tr" and the written value v of the trilled note."""
+    out = []
+    for n in notes:
+        h = n["_h"]
+        if n["grace"] or not getattr(h, "trill", None):
+            out.append(n)
+            continue
+        up = upper_midi(n["_sy"], h)
+        for i, (t, d, midi) in enumerate(realise(n["t"], n["d"], n["midi"], up)):
+            s = dict(n, t=t, d=d, midi=midi, name=f"{NAME12[midi % 12]}{midi // 12 - 1}", orn="tr", tieNext=False)
+            s.pop("tied", None)
+            if i:
+                s["grace"] = True
+            out.append(s)
+    return out
 
 
 GRACE_STEP = Fraction(1, 8)    # quarters per grace note (a 32nd), played just before the note it ornaments
