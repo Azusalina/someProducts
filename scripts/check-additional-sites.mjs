@@ -17,7 +17,7 @@ async function asset(relative, base = runtime) {
 const json = async file => JSON.parse(await readFile(path.join(runtime, file), 'utf8'));
 if (name === 'balladeIV-liebe') {
   const pieces = await json('data/pieces.json');
-  assert.equal(pieces.length, 2);
+  assert.equal(pieces.filter(p => !p.localOnly).length, 2);   // local-only pieces are left out of the Pages build
   for (const piece of pieces) {
     const score = await json(piece.data);
     assert.ok(score.notes.length > 0 && score.measures.length > 0);

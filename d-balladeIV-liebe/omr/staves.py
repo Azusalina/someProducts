@@ -77,7 +77,10 @@ def build_systems(page):
         xs = []
         for v in page.vlines:
             ya, yb = sorted((v.y0, v.y1))
-            if ya <= tr.top + 1.5 and yb >= bs.bottom - 1.5 and v.w >= 0.5:
+            # Sibelius draws barlines thicker than stems; Finale (Maestro) draws both at 0.38 pt, so a thin
+            # stroke counts only when it runs exactly from the top staff line to the bottom one
+            exact = abs(ya - tr.top) < 0.3 and abs(yb - bs.bottom) < 0.3
+            if ya <= tr.top + 1.5 and yb >= bs.bottom - 1.5 and (v.w >= 0.5 or exact):
                 xs.append(round(v.x0, 2))
         xs = sorted(set(xs))
         # collapse a thin+thick final barline pair

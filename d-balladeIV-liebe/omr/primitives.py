@@ -68,6 +68,7 @@ class Page:
     beams: list = field(default_factory=list)    # filled polygons
     curves: list = field(default_factory=list)   # slurs/ties (bbox + endpoints)
     full: float = 19.8                            # point size of ordinary (full-size) noteheads on this page
+    small_bands: list = field(default_factory=list)   # areas of ossia / footnote staves left out
 
     @property
     def small_below(self):
@@ -87,17 +88,12 @@ def load_page(doc, index):
     p = doc[index]
     pg = Page(index=index, width=p.rect.width, height=p.rect.height)
     for tr in p.get_texttrace():
-        if "Opus" not in tr["font"]:
+        if "Opus" not in tr["font"] and "Maestro" not in tr["font"]:   # Sibelius (Opus) or Finale (Maestro): same Sonata layout
             continue
         for uni, gid, origin, bbox in tr["chars"]:
             if uni == 32:
                 continue
             pg.glyphs.append(Glyph(opus_code(uni), tr["font"], round(tr["size"], 1), origin[0], origin[1], tuple(bbox)))
-    sizes = [g.size for g in pg.glyphs if g.u == U["HEAD"]]
-    if sizes:
-        # full size is the largest notehead size that occurs more than a stray few times (grace/cue notes are smaller)
-        common = [s for s in set(sizes) if sizes.count(s) >= 8]
-        pg.full = max(common) if common else max(set(sizes), key=sizes.count)
     for dr in p.get_drawings():
         items = dr["items"]
         w = dr.get("width") or 0
@@ -121,13 +117,70 @@ def load_page(doc, index):
             pts = []
             for i in items:
                 pts.append((i[1].x, i[1].y))
+            end = (items[-1][2].x, items[-1][2].y)      # Finale leaves the path open (implicit close): keep its last corner
+            if abs(end[0] - pts[0][0]) > 1e-3 or abs(end[1] - pts[0][1]) > 1e-3:
+                pts.append(end)
             r = dr["rect"]
             pg.beams.append(Poly(pts, (r.x0, r.y0, r.x1, r.y1)))
         elif any(i[0] == "c" for i in items):
             r = dr["rect"]
             first = items[0]
             last = items[-1]
-            pg.curves.append(dict(bbox=(r.x0, r.y0, r.x1, r.y1), width=w,
-                                  p0=(first[1].x, first[1].y), p1=(last[-1].x, last[-1].y), n=len(items),
+            p0, p1 = (first[1].x, first[1].y), (last[-1].x, last[-1].y)
+            if abs(p0[0] - p1[0]) < 0.5 and abs(p0[1] - p1[1]) < 0.5:
+                # Finale draws a tie/slur as a closed filled outline (out along one edge, back along the other):
+                # its ends are the leftmost and rightmost points, not the path's first and last
+                pts = [(it[1].x, it[1].y) for it in items] + [(it[-1].x, it[-1].y) for it in items]
+                p0, p1 = min(pts), max(pts)
+            pg.curves.append(dict(bbox=(r.x0, r.y0, r.x1, r.y1), width=w, p0=p0, p1=p1, n=len(items),
                                   filled=fill is not None))
+    drop_small_staves(pg)
+    sizes = [g.size for g in pg.glyphs if g.u == U["HEAD"]]
+    if sizes:
+        # full size is the largest notehead size that occurs more than a stray few times (grace/cue notes are smaller)
+        common = [s for s in set(sizes) if sizes.count(s) >= 8]
+        pg.full = max(common) if common else max(set(sizes), key=sizes.count)
     return pg
+
+
+def small_staves(pg):
+    """Five-line staves engraved smaller than the music (ossia variants above a system, music examples in
+    footnotes; critical editions have them): staves spaced under 85% of the page's widest staff spacing.
+    Returns [(x0, x1, top, bottom, space)]."""
+    hs = sorted((s for s in pg.hlines if abs(s.x1 - s.x0) > 25), key=lambda s: s.y0)
+    out, used = [], set()
+    for i, a in enumerate(hs):
+        if id(a) in used:
+            continue
+        grp = [a]
+        for b in hs[i + 1:]:
+            if b.y0 - grp[-1].y0 > 6:
+                break
+            if abs(b.x0 - a.x0) < 1 and abs(b.x1 - a.x1) < 1 and 2.0 < b.y0 - grp[-1].y0 < 6.5:
+                grp.append(b)
+        if len(grp) == 5:
+            d = [grp[k + 1].y0 - grp[k].y0 for k in range(4)]
+            if max(d) - min(d) < 0.3:
+                used.update(id(g) for g in grp)
+                out.append((min(a.x0, a.x1), max(a.x0, a.x1), grp[0].y0, grp[-1].y0, sum(d) / 4))
+    if not out:
+        return []
+    main = max(s[4] for s in out)
+    return [s for s in out if s[4] < 0.85 * main]
+
+
+def drop_small_staves(pg):
+    """Remove everything drawn on small staves, so only the main text is read."""
+    bands = [(x0 - 30, x1 + 3, top - 3.5 * sp, bot + 3.5 * sp) for x0, x1, top, bot, sp in small_staves(pg)]
+    if not bands:
+        return
+    pg.small_bands = bands
+
+    def inside(x, y):
+        return any(xa <= x <= xb and ya <= y <= yb for xa, xb, ya, yb in bands)
+    pg.glyphs = [g for g in pg.glyphs if not inside(g.cx, g.cy)]
+    pg.hlines = [s for s in pg.hlines if not inside((s.x0 + s.x1) / 2, s.y0)]
+    pg.vlines = [s for s in pg.vlines if not inside(s.x0, (s.y0 + s.y1) / 2)]
+    pg.slants = [s for s in pg.slants if not inside((s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2)]
+    pg.beams = [b for b in pg.beams if not inside((b.bbox[0] + b.bbox[2]) / 2, (b.bbox[1] + b.bbox[3]) / 2)]
+    pg.curves = [c for c in pg.curves if not inside((c["bbox"][0] + c["bbox"][2]) / 2, (c["bbox"][1] + c["bbox"][3]) / 2)]

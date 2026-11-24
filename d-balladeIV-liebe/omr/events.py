@@ -6,6 +6,11 @@ from .analyze import (Head, Event, quad_span_at, staff_for, REST_BASE, BAR, HEAD
 
 STEM_DOWN = 0.2     # stem x - head x for a down stem (stem on the head's left edge)
 STEM_UP = 6.7       # stem x - head x for an up stem (stem on the head's right edge)
+STEM_UP_MAESTRO = 6.13   # Finale's Maestro notehead is narrower than Opus's
+
+
+def stem_up(g):
+    return STEM_UP_MAESTRO if "Maestro" in g.font else STEM_UP
 FLAGS = {U["FLAG_UP8"]: 1, U["FLAG_DN8"]: 1, U["FLAG_16"]: 2}
 DOT_GLYPHS = (U["DOT"], U["DOT_SPECIAL"])
 
@@ -69,7 +74,7 @@ def build_note_events(page, sy, gl, heads, stems):
             if not (ya - 1.5 <= h.y <= yb + 1.5):
                 continue
             dl = abs(sx - h.x - STEM_DOWN * s)    # stem at left edge -> down stem
-            dr = abs(sx - h.x - STEM_UP * s)      # stem at right edge -> up stem
+            dr = abs(sx - h.x - stem_up(h.g) * s)      # stem at right edge -> up stem
             d = min(dl, dr)
             if d < 0.6:
                 cands.append((d, si_))
@@ -87,7 +92,7 @@ def build_note_events(page, sy, gl, heads, stems):
         # heads on the "normal" side decide the column x
         grace = all(h.grace for h in hs)
         s = hs[0].g.size / 19.8
-        x = sx - (STEM_UP if up else STEM_DOWN) * s
+        x = sx - (stem_up(hs[0].g) if up else STEM_DOWN) * s
         e = Event(id=-1, system=sy.index, staff=majority_staff(hs), kind="note", x=x, heads=hs,
                   stem=(sx, ya, yb), stem_dir="up" if up else "down", grace=grace)
         tipy = ya if up else yb
@@ -102,7 +107,8 @@ def build_note_events(page, sy, gl, heads, stems):
             if sp is None:
                 continue
             t, b = sp
-            if t >= ya - 1.0 and b <= yb + 1.0 and (b - t) < 4.5:
+            # Sibelius ends a stem at the beam's outer edge, Finale inside the beam: allow one beam thickness
+            if t >= ya - 3.0 and b <= yb + 3.0 and (b - t) < 4.5:
                 # must be at the tip side
                 if abs((t + b) / 2 - tipy) <= 12:
                     spans.append((t, b, poly))
@@ -169,7 +175,9 @@ def attach_dots(sy, gl, events):
                 continue
             dx = d.x - h.g.bbox[2]
             dy = d.y - h.y
-            if d.u == U["DOT_SPECIAL"] and -0.5 < dx < 14 and abs(dy) < 3.1:
+            # Opus has its own augmentation-dot glyph; Finale's Maestro uses the plain "." for it
+            aug = d.u == U["DOT_SPECIAL"] or (d.u == U["DOT"] and "Maestro" in d.font)
+            if aug and -0.5 < dx < 14 and abs(dy) < 3.1:
                 score = (abs(dx - 2.0), abs(dy))
                 if best is None or score < best[0]:
                     best = (score, ("head", h, e))

@@ -2,7 +2,7 @@
 
 ## What is it?
 
-A web app for learning piano pieces from their printed score: the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-pdf/ballde4.pdf`) and the whole of Liszt's Liebestraum No. 3 (from `sheet-pdf/liebestraum3.pdf`). The left pane shows the sheet music with the current notes highlighted, and the right pane shows a falling-notes waterfall above a piano keyboard. It has a **Display** mode and a **Learn** mode, where your piano is recognised through the microphone and the waterfall advances as you play. Notes are read from the PDF's vector data, not from images. Details are in [description.md](description.md).
+A web app for learning piano pieces from their printed score: the coda of Chopin's Ballade No. 4 (Op. 52, from `sheet-pdf/ballde4.pdf`), the whole of Liszt's Liebestraum No. 3 (from `sheet-pdf/liebestraum3.pdf`) and the whole of Chopin's Barcarolle (Op. 60, from `sheet-pdf/barcarolle.pdf`, kept local only because that edition is copyrighted). The left pane shows the sheet music with the current notes highlighted, and the right pane shows a falling-notes waterfall above a piano keyboard. It has a **Display** mode and a **Learn** mode, where your piano is recognised through the microphone and the waterfall advances as you play. Notes are read from the PDF's vector data, not from images. Details are in [description.md](description.md).
 
 ## How to use
 
@@ -11,7 +11,7 @@ A web app for learning piano pieces from their printed score: the coda of Chopin
 **Run:** `python3 -m http.server 4310 --directory web`, then open <http://localhost:4310> in Chrome or Chromium. The microphone needs `localhost` or https.
 
 **Controls**
-- **Piece** menu (top left): switch between the Ballade coda and the Liebestraum. The choice, and the tempo of each piece, are remembered.
+- **Piece** menu (top left): switch between the Ballade coda, the Liebestraum and the Barcarolle. The choice, and the tempo of each piece, are remembered. Small grace notes are drawn with a dashed outline; Display mode plays them and Learn mode does not ask for them.
 - **Display / Learn:** Display plays the waterfall with real grand-piano samples (loaded from `web/assets/piano/`; the 🔊 button mutes). Learn waits for you.
 - **Left / Both / Right:** choose which hand is played or required, in both modes.
 - **Space:** play or pause. In Learn mode, ← and → step back and forward.
@@ -23,7 +23,8 @@ A web app for learning piano pieces from their printed score: the coda of Chopin
 **Rebuild the data:** `python3 -m venv .venv && .venv/bin/pip install pymupdf pillow numpy`, then
 - Ballade: `.venv/bin/python tools/export_web.py sheet-pdf/ballde4.pdf <ballade-4.mid> web 168 239`. The MIDI is the Mutopia Project file, used for rhythm only.
 - Liebestraum (rhythm from the PDF alone, about a minute): `.venv/bin/python tools/export_piece.py sheet-pdf/liebestraum3.pdf web liebestraum3 "Liebestraum No. 3" "Liszt · Notturno in A♭ major" --time 6/4 --bar 6 --tempo 92`. Add `--patterns 23-31,64-73` to find the repeated figures. It prints the bars worth a look. To add the figures to an existing score without rebuilding: `.venv/bin/python tools/add_patterns.py web/data/liebestraum3.json 23-31,64-73`.
+- Barcarolle (a Finale PDF, about a minute): `.venv/bin/python tools/export_piece.py sheet-pdf/barcarolle.pdf web barcarolle "Barcarolle" "Chopin · Op. 60 in F♯ major" --time 12/8 --bar 6 --tempo 66 --anchor --local-only`. `--anchor` fixes the voices whose values fill their bar before solving the rest; `--local-only` keeps the piece out of the public site.
 
-**Tests:** `python3 -I tests/patterns_test.py` (figure finder) and `npm install && node tests/browser.mjs` cover both pieces (add `--mic --wav tests/audio/short --octs 2` for the live microphone test, which uses the Ballade). `tools/validate_rhythm.py` and `tools/audit_pdf.py` check a PDF-built score; see the description.
+**Tests:** `python3 -I tests/patterns_test.py` (figure finder) and `npm install && node tests/browser.mjs` cover all three pieces (add `--mic --wav tests/audio/short --octs 2` for the live microphone test, which uses the Ballade). `tools/validate_rhythm.py` and `tools/audit_pdf.py` check a PDF-built score; see the description.
 
-**Online:** https://azusalina.github.io/someProducts/balladeIV-liebe/ . Local source lives in `d-balladeIV-liebe/`; the published route stays unchanged.
+**Online:** https://azusalina.github.io/someProducts/balladeIV-liebe/ . Local source lives in `d-balladeIV-liebe/`; the published route stays unchanged. Pieces marked `localOnly` in `web/data/pieces.json` (the Barcarolle) are left out of the published copy; run the app locally to use them.

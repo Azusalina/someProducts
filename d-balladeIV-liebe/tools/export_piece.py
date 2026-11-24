@@ -1,7 +1,7 @@
 """Export a piece built from a vector PDF alone (no MIDI) for the web app.
 
 usage: export_piece.py pdf web_dir id title composer [--time 6/4] [--bar 6] [--tempo 92] [--sheet-from 0] [--section Name]
-                       [--patterns 23-31,64-73]
+                       [--patterns 23-31,64-73] [--anchor] [--local-only]
 
 Writes web/assets/<id>/pNN.png (page images), web/data/<id>.json (score) and registers the piece in
 web/data/pieces.json. Rhythm is solved from the engraving (omr/rhythm.py); see description.md for its limits.
@@ -31,6 +31,10 @@ def main():
     ap.add_argument("--sheet-from", type=int, default=0, help="first page index shown when 'section only' is chosen")
     ap.add_argument("--section", default="", help="name of that section, e.g. Coda")
     ap.add_argument("--patterns", default="", help="measure ranges to search for repeated figures, e.g. 23-31,64-73")
+    ap.add_argument("--local-only", action="store_true",
+                    help="mark the piece localOnly in pieces.json: the GitHub Pages build leaves it out (e.g. a copyrighted edition)")
+    ap.add_argument("--anchor", action="store_true",
+                    help="fix the onsets of voices that fill their bar exactly before solving the rest (Finale PDFs)")
     a = ap.parse_args()
 
     pdir = os.path.join(a.web, "assets", a.id)
@@ -42,7 +46,7 @@ def main():
     with ProcessPoolExecutor(max_workers=os.cpu_count(), mp_context=ctx) as ex:
         dims = list(ex.map(render_page, jobs))
 
-    score = build(a.pdf, bar=a.bar)
+    score = build(a.pdf, bar=a.bar, anchor=a.anchor)
     score["pages"] = [dict(index=i, w=w, h=h, scale=SCALE, src=f"assets/{a.id}/p{i + 1:02d}.png") for i, w, h in dims]
     ms = score["measures"]
     score["meta"] = dict(title=a.title, composer=a.composer, timeSignature=a.time, beatsPerMeasure=a.bar,
@@ -68,6 +72,8 @@ def main():
     pieces = json.load(open(idx_path)) if os.path.exists(idx_path) else []
     entry = dict(id=a.id, title=a.title, composer=a.composer, data=f"data/{a.id}.json",
                  sheetFrom=a.sheet_from, section=a.section, tempo=a.tempo)
+    if a.local_only:
+        entry["localOnly"] = True
     pieces = [p for p in pieces if p["id"] != a.id] + [entry]
     json.dump(pieces, open(idx_path, "w"), indent=1)
     print("pages", n, "measures", len(ms), "notes", len(score["notes"]), "->", out)

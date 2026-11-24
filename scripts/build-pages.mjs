@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,7 +54,19 @@ for (const [name, files] of Object.entries(sites)) {
   }
   const target = path.join(output, name);
   await mkdir(target, { recursive: true });
-  if (name === 'balladeIV-liebe') await cp(path.join(source, 'web'), target, { recursive: true });
+  if (name === 'balladeIV-liebe') {
+    await cp(path.join(source, 'web'), target, { recursive: true });
+    // pieces marked localOnly (copyrighted editions) stay on the developer's machine: drop their score, page images
+    // and menu entry from the public copy
+    const index = path.join(target, 'data/pieces.json');
+    const pieces = JSON.parse(await readFile(index, 'utf8'));
+    for (const piece of pieces.filter(p => p.localOnly)) {
+      await rm(path.join(target, piece.data), { force: true });
+      await rm(path.join(target, 'assets', piece.id), { recursive: true, force: true });
+      console.log(`Left out local-only piece ${piece.id}`);
+    }
+    await writeFile(index, JSON.stringify(pieces.filter(p => !p.localOnly), null, 1));
+  }
   else if (name === 'ict-notes') await cp(path.join(source, 'learn'), target, { recursive: true });
   else if (name === 'yupi-econ') await cp(path.join(source, 'claude-product/study-site'), target, { recursive: true });
   else if (name === 'todos') await cp(path.join(source, 'product1'), target, { recursive: true });

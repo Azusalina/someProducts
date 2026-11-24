@@ -16,12 +16,19 @@ from .score import parse_document
 from .rhythm import solve_bar, columns
 
 NAME12 = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
-FREE_MIN_SMALL = 8          # a bar with at least this many small-size notes is a free-time cadenza bar
+FREE_MIN_SMALL = 8          # a bar with a run of at least this many small-size notes on one staff is a free-time cadenza bar
 
 
 def bar_kind(evs):
-    small = sum(1 for e in evs if e.kind == "note" and e.grace)
-    return "free" if small >= FREE_MIN_SMALL else "normal"
+    """A cadenza is a long run of small notes. Grace notes before a beat or after a trill come in ones, twos or
+    threes between full-size notes, so they are counted per uninterrupted run, not per bar."""
+    best = 0
+    for st in (0, 1):
+        run = 0
+        for e in sorted((e for e in evs if e.kind == "note" and e.staff == st), key=lambda e: e.x):
+            run = run + 1 if e.grace else 0
+            best = max(best, run)
+    return "free" if best >= FREE_MIN_SMALL else "normal"
 
 
 def solve_free(evs, x_right, free_step):
@@ -52,17 +59,17 @@ _JOBS = []
 
 
 def _solve(i):
-    kind, real, x0, x1, L, free_step = _JOBS[i]
+    kind, real, x0, x1, L, free_step, anchor = _JOBS[i]
     if not real:
         return {}, {}, L, 0.0
     if kind == "free":
         onset, length, L = solve_free(real, x1, free_step)
         return onset, length, L, 0.0
-    onset, length, info = solve_bar(real, x0, x1, L)
+    onset, length, info = solve_bar(real, x0, x1, L, anchor=anchor)
     return onset, length, L, info.get("cost", 0.0)
 
 
-def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_measure=None, jobs=None):
+def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_measure=None, jobs=None, anchor=False):
     doc, pages, warns = parse_document(pdf_path)
     systems = [(pi, sy) for pi, ss in enumerate(pages) for sy in ss]
     L_full = Fraction(bar)
@@ -87,8 +94,9 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
                     L, kind = fill, "pickup"
             # a free (cadenza) row stands for the printed numbers up to the next row's first one
             span = max(1, nxt_first - m) if (kind == 'free' and k == nbars - 1 and nxt_first is not None) else 1
-            plan.append((pi, sy, k, m, span, kind, real))
-            _JOBS.append((kind, real, sy.barlines[k], sy.barlines[k + 1], L, free_step))
+            graces = [e for e in evs if e.grace and e.kind == "note"] if kind != "free" else []
+            plan.append((pi, sy, k, m, span, kind, real, graces))
+            _JOBS.append((kind, real, sy.barlines[k], sy.barlines[k + 1], L, free_step, anchor))
     jobs = jobs or os.cpu_count() or 1
     if jobs > 1 and len(_JOBS) > 1 and "fork" in multiprocessing.get_all_start_methods():
         with ProcessPoolExecutor(max_workers=min(jobs, len(_JOBS)), mp_context=multiprocessing.get_context("fork")) as ex:
@@ -99,7 +107,7 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
     measures_out, report, notes = [], [], []
     t_start = Fraction(0)
     nid = 0
-    for (pi, sy, k, m, span, kind, real), (onset, length, L, cost) in zip(plan, solved):
+    for (pi, sy, k, m, span, kind, real, graces), (onset, length, L, cost) in zip(plan, solved):
         x0, x1 = sy.barlines[k], sy.barlines[k + 1]
         measures_out.append(dict(n=m, n2=m + span - 1, page=pi, system=sy.index, index=k, kind=kind,
                                  start=float(t_start), length=float(L),
@@ -119,6 +127,14 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
                     id=nid, measure=m, hand="R" if h.staff == 0 else "L", midi=h.midi,
                     name=f"{NAME12[h.midi % 12]}{h.midi // 12 - 1}",
                     t=float(t_start + e.onset_q), d=float(e.len_q), grace=False, tieNext=bool(h.tie_next),
+                    page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e))
+                nid += 1
+        for e, t, d in place_graces(graces, real, onset, L):
+            for h in e.heads:
+                notes.append(dict(
+                    id=nid, measure=m, hand="R" if h.staff == 0 else "L", midi=h.midi,
+                    name=f"{NAME12[h.midi % 12]}{h.midi // 12 - 1}",
+                    t=float(t_start + t), d=float(d), grace=True, tieNext=False,
                     page=pi, x=round(h.x, 2), y=round(h.y, 2), src="pdf", _h=h, _e=e))
                 nid += 1
         gaps = {}
@@ -142,6 +158,23 @@ def build(pdf_path, bar=6, free_step=Fraction(1, 4), first_measure=None, last_me
         n.pop("_h", None)
         n.pop("_e", None)
     return dict(notes=notes, measures=measures_out, report=report, warnings=warns)
+
+
+GRACE_STEP = Fraction(1, 8)    # quarters per grace note (a 32nd), played just before the note it ornaments
+
+
+def place_graces(graces, real, onset, L):
+    """Time the grace notes of a metred bar: a run of small notes leads into the next full-size note on its staff
+    (or into the barline), one GRACE_STEP each, ending where that note starts. Yields (event, onset, length)."""
+    for st in (0, 1):
+        targets = sorted((e.x, onset[e.id]) for e in real if e.staff == st and e.kind == "note" and e.id in onset)
+        runs = {}
+        for g in sorted((g for g in graces if g.staff == st), key=lambda g: g.x):
+            T = next((t for x, t in targets if x > g.x), L)
+            runs.setdefault(T, []).append(g)
+        for T, run in runs.items():
+            for i, g in enumerate(run):
+                yield g, T - (len(run) - i) * GRACE_STEP, GRACE_STEP
 
 
 def merge_ties(notes, pages):

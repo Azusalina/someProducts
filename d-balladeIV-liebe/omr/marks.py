@@ -30,13 +30,36 @@ def dashed_lines(doc, page_index, page):
     return out
 
 
+def finale_ottavas(doc, page_index, page):
+    """Finale (Maestro) ottavas: an "8va" glyph followed by a dashed horizontal path. Dashed lines also extend
+    cresc./dim./calando, so a line counts only with the label at its left end. Returns [(x0, x1, y)]."""
+    labels = [g for g in page.glyphs if g.u == MAESTRO_8VA and "Maestro" in g.font]
+    if not labels:
+        return []
+    out = []
+    for dr in doc[page_index].get_drawings():
+        dash = dr.get("dashes") or ""
+        r = dr["rect"]
+        if not dash.startswith("[ ") or r.height > 0.5 or r.width < 15:
+            continue
+        if any(g.x < r.x0 + 2 and r.x0 - g.x < 40 and abs(g.cy - r.y0) < 12 for g in labels):
+            out.append((r.x0, r.x1, r.y0))
+    return out
+
+
+MAESTRO_8VA = 8730          # Sonata-layout fonts put "8va" on option-v
+
+
 def ottava_spans(doc, page_index, page, systems):
     """Return {system index: [(staff, x0, x1, shift)]} for the dashed ottava lines of a page.
     Each dashed line is owned by exactly one staff: a line above a staff is an 8va for that staff (the lower staff
     included: its line runs in the gap between the staves); a line just below a bass staff is an 8vb."""
-    labels = [g for g in page.glyphs if g.u == 8220 and g.size > page.full * 0.75]
+    labels = [g for g in page.glyphs if (g.u == 8220 or (g.u == MAESTRO_8VA and "Maestro" in g.font))
+              and g.size > page.full * 0.75]
     out = {sy.index: [] for sy in systems}
-    for xa, xb, y in dashed_lines(doc, page_index, page):
+    for xa, xb, y in dashed_lines(doc, page_index, page) + finale_ottavas(doc, page_index, page):
+        if any(bx0 <= (xa + xb) / 2 <= bx1 and by0 <= y <= by1 for bx0, bx1, by0, by1 in page.small_bands):
+            continue                                   # an ossia's own ottava
         best = None
         for sy in systems:
             for si, st in enumerate(sy.staves):

@@ -35,6 +35,8 @@ runtime asset before packaging; the public URL remains stable after renaming.
 Ballade IV / Liebestraum publishes prebuilt `web/` data, sheet images, piano
 samples, and browser modules. Microphone learning uses HTTPS on Pages. Rebuilding
 the OMR/vector data remains a local development step; no Python server is required
-on the published site. HKU publishes its offline app and referenced research/PDF
+on the published site. Pieces marked `localOnly` in `web/data/pieces.json` (the
+Barcarolle, a copyrighted edition) are removed from the packaged copy: their score,
+page images and menu entry stay local. HKU publishes its offline app and referenced research/PDF
 data; ICT notes publishes `learn/`. Original names are accepted until initial live
 publication is verified, then sources gain their requested `d-` prefixes.

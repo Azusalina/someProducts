@@ -117,7 +117,7 @@ try {
     sel: document.getElementById('selMeasure').options.length, pages: sc.pages.length,
     pagesHidden: document.getElementById('lblPages').hidden, tempo: b.S.bpm,
     free: sc.measures.filter(m => m.kind === 'free').map(m => m.label) }; });
-  ok('piece selector lists both pieces', L.pieces.length === 2 && /Liebestraum/.test(L.title), JSON.stringify(L.pieces));
+  ok('piece selector lists all three pieces', L.pieces.join() === 'ballade4-coda,liebestraum3,barcarolle' && /Liebestraum/.test(L.title), JSON.stringify(L.pieces));
   ok('Liebestraum score loaded', L.ts === '6/4' && L.n > 1700 && L.measures === 88 && L.sel === 88 && L.pages === 6 && L.pagesHidden && L.tempo === 92, JSON.stringify(L));
   ok('pickup bar is one quarter, cadenzas are free-time rows', L.pickup === 1 && L.free.join() === '26–28,29–31,65–68,69–72,73', L.free.join());
   // every ordinary bar is 6 quarters, notes sit inside their measure and never earlier than their column neighbours
@@ -173,6 +173,41 @@ try {
   const ls = await Q(() => { const S = window.ballade.S; return { steps: S.steps.length, m: S.steps[S.idx].notes[0].measure }; });
   ok('learn mode builds steps for the whole piece', ls.steps > 800 && ls.m === 5, JSON.stringify(ls));
   await p2.screenshot({ path: 'tests/out-liebestraum.png' });
+  // ---- third piece: Barcarolle (Finale/Maestro PDF, critical edition with ossia staves, 12/8, grace notes) ----
+  const p3 = await ctx.newPage();
+  p3.on('pageerror', e => errors.push('barcarolle: ' + e.message));
+  p3.on('console', m => { if (m.type() === 'error') errors.push('barcarolle: ' + m.text()); });
+  await p3.goto(`http://127.0.0.1:${port}/?piece=barcarolle`);
+  await p3.waitForFunction(() => window.ballade);
+  const R3 = (fn, arg) => p3.evaluate(fn, arg);
+  const C = await R3(() => { const b = window.ballade, sc = b.score, M = sc.measureByNumber;
+    const at = (m, h, g = false) => sc.notes.filter(n => n.measure === m && n.hand === h && !!n.grace === g);
+    const inside = sc.notes.filter(n => !n.grace).every(n => { const m = M.get(n.measure); return n.t >= m.start - 1e-6 && n.t < m.start + m.length - 1e-6; });
+    return { title: document.title, ts: sc.meta.timeSignature, n: sc.notes.length, measures: sc.measures.length, pages: sc.pages.length,
+      tempo: b.S.bpm, free: sc.measures.filter(m => m.kind === 'free').map(m => m.label).join(), inside,
+      odd: sc.measures.filter(m => m.kind === 'normal' && m.length !== 6).length,
+      graces: sc.notes.filter(n => n.grace).length,
+      m1: at(1, 'L').map(n => n.midi).sort().join(),
+      m82: [...new Set(at(82, 'L').map(n => +(n.t - M.get(82).start).toFixed(3)))].sort((a, b) => a - b).join(),
+      top80: Math.max(...sc.notes.filter(n => n.measure === 80).map(n => n.midi)),
+      top79: Math.max(...sc.notes.filter(n => n.measure === 79).map(n => n.midi)) }; });
+  ok('Barcarolle score loaded (12/8, 116 bars, 13 pages)', C.ts === '12/8' && C.measures === 116 && C.pages === 13 && C.tempo === 66 && C.n > 4000, JSON.stringify(C));
+  ok('only the small-note cadenzas (m.110, m.115) are free-time rows; every other bar is 6 quarters', C.free === '110,115' && C.odd === 0, C.free);
+  ok('every full-size note lies inside its measure', C.inside);
+  ok('m.1 left hand is the C#1-C#2 octave; m.82 left hand runs in plain eighths', C.m1 === '25,37' && C.m82 === '0,0.5,1,1.5,2,3,3.5,4,4.5,5', `${C.m1} | ${C.m82}`);
+  ok('the 8va of m.80 sounds an octave up (E7); ossia staves above it are not read', C.top80 === 100 && C.top79 === 80, `${C.top80} ${C.top79}`);
+  await R3(() => window.ballade.setMode('learn'));
+  const G = await R3(() => { const S = window.ballade.S; return { graces: window.ballade.score.notes.filter(n => n.grace).length,
+    inSteps: S.steps.reduce((a, s) => a + s.notes.filter(n => n.grace).length, 0) }; });
+  ok('grace notes are shown but not required in learn mode', G.graces > 80 && G.inSteps === 0, JSON.stringify(G));
+  await R3(() => window.ballade.setMode('display'));
+  await R3(() => window.ballade.seek(window.ballade.score.measureByNumber.get(6).start));
+  await p3.click('#btnPlay');
+  await p3.waitForTimeout(2000);
+  const run3 = await R3(() => ({ t: window.ballade.S.t, m: document.getElementById('selMeasure').value, hl: document.querySelectorAll('.hl-note').length }));
+  await p3.click('#btnPlay');
+  ok('Barcarolle plays and highlights notes on the sheet', run3.hl > 0 && +run3.m >= 6, JSON.stringify(run3));
+  await p3.screenshot({ path: 'tests/out-barcarolle.png' });
   ok('no console / page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } catch (e) {
   console.error('TEST CRASH', e);

@@ -16,5 +16,15 @@
   "sheetFrom": 0,
   "section": "",
   "tempo": 92
+ },
+ {
+  "id": "barcarolle",
+  "title": "Barcarolle",
+  "composer": "Chopin \u00b7 Op. 60 in F\u266f major",
+  "data": "data/barcarolle.json",
+  "sheetFrom": 0,
+  "section": "",
+  "tempo": 66,
+  "localOnly": true
  }
 ]

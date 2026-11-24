@@ -26,7 +26,7 @@ SCALES = (Fraction(1), Fraction(2, 3))
 BEAM = 64
 TRACE = []             # per-column cost parts of a forced hypothesis (debugging aid)
 # search costs (tuned on bars whose single voice tiles exactly, then checked on audited bars)
-P = dict(off=3.5, same=1.0, twin=1.5, skip=2.0, tail=1.0, cover=1.5, grid=0.5, align=1.5,
+P = dict(off=3.5, same=1.0, twin=1.5, skip=2.0, tail=1.0, cover=1.5, grid=0.5, align=1.5, tie=4.0,
          sx=1.2, cap=9.0, sa=0.4, sk=0.3, p=0.6, window=0.6)
 
 
@@ -118,8 +118,32 @@ class Layout:
         return float(0.5 * np.minimum(r * r, P["cap"]).sum() + 0.5 * (d * d).sum())
 
 
-def solve_bar(evs, x_first, x_right, L, beam=BEAM):
-    """Return (onset {event id: Fraction}, length {event id: Fraction}, info dict)."""
+def known_onsets(evs, L):
+    """Onsets that follow from the notated values alone: a voice (a staff's notes and rests of one stem direction,
+    one event per column, at least four) whose values add up to exactly the bar. {event id: onset in quarters}"""
+    truth = {}
+    for st in (0, 1):
+        for sd in ("up", "down"):
+            v = sorted([e for e in evs if e.staff == st and not e.grace and not getattr(e, "bar_rest", False) and
+                        (e.stem_dir == sd if e.kind == "note" and e.stem_dir
+                         else (("up" if getattr(e, "rest_up", False) else "down") == sd))], key=lambda e: e.x)
+            if len(v) < 4 or sum((e.dur for e in v), Fraction(0)) * 4 != L:
+                continue
+            if any(b.x - a.x < COL_TOL for a, b in zip(v, v[1:])):
+                continue
+            t = Fraction(0)
+            for e in v:
+                truth[e.id] = t
+                t += e.dur * 4
+    return truth
+
+
+def solve_bar(evs, x_first, x_right, L, beam=BEAM, anchor=False):
+    """Return (onset {event id: Fraction}, length {event id: Fraction}, info dict).
+    anchor: fix the columns of voices whose onsets follow from their values alone (known_onsets), start a note tied
+    from earlier in the bar where its source ends (tie_links), and search only the rest. Off by default: the Sibelius
+    pieces were tuned and built without it (the tie rule alone moves Liebestraum m.41 the wrong way). Used for Finale
+    engravings, whose spacing the layout model fits less well."""
     evs = [e for e in evs if not e.grace]
     # a whole-bar rest is centred in its bar: it spans the bar from 0 whatever its x
     whole = [e for e in evs if getattr(e, "bar_rest", False)]
@@ -132,7 +156,23 @@ def solve_bar(evs, x_first, x_right, L, beam=BEAM):
     a0 = max((x_right - first_x) / float(L), 4.0)
     accum = np.array([c.acc for c in cols])
     est = [(c.x - first_x - 0.3 * np.sum(accum[1:i + 1])) / a0 for i, c in enumerate(cols)]
-    best = _search(cols, evs, gid, groups, est, L, beam, Layout(a0, first_x), accum, twin=twins(cols, L))
+    force = None
+    if anchor:
+        known = known_onsets(evs, L)
+        force = {}
+        for ci, c in enumerate(cols):
+            ts = {known[e.id] for e in c.events if e.id in known}
+            if len(ts) == 1:
+                force[ci] = ts.pop()
+        seq = [force[ci] for ci in sorted(force)]
+        if (0 in force and force[0] != 0) or any(b < a for a, b in zip(seq, seq[1:])):
+            force = {}                 # the known voice does not open the bar, or runs against x order: do not trust it
+        force = force or None
+    ties = tie_links(cols) if anchor else None
+    best = _search(cols, evs, gid, groups, est, L, beam, Layout(a0, first_x), accum, twin=twins(cols, L),
+                   ties=ties, force=force)
+    if best is None and force:
+        best = _search(cols, evs, gid, groups, est, L, beam, Layout(a0, first_x), accum, twin=twins(cols, L), ties=ties)
     if best is None:
         return {}, {}, dict(cost=1e9, failed=True, times=[], cols=[])
     onset, length, cost, times = best
@@ -141,8 +181,27 @@ def solve_bar(evs, x_first, x_right, L, beam=BEAM):
     return onset, length, dict(cost=cost, est=est, cols=[c.x for c in cols], times=[float(t) for t in times])
 
 
-def _search(cols, evs, gid, groups, est, L, beam, layout, accum, force=None, twin=None):
+def tie_links(cols):
+    """ties[i]: [(j, event)] for a note in column i tied from `event` in an earlier column j of the same bar.
+    The tied note starts where that event ends, so the tie fixes column i's onset."""
+    where = {}
+    for j, c in enumerate(cols):
+        for e in c.events:
+            for h in (e.heads if e.kind == "note" else []):
+                where[id(h)] = (j, e)
+    out = [[] for _ in cols]
+    for i, c in enumerate(cols):
+        for e in c.events:
+            for h in (e.heads if e.kind == "note" else []):
+                src = where.get(id(getattr(h, "tie_from", None))) if getattr(h, "tie_prev", False) else None
+                if src and src[0] < i and src not in out[i]:
+                    out[i].append(src)
+    return out
+
+
+def _search(cols, evs, gid, groups, est, L, beam, layout, accum, force=None, twin=None, ties=None):
     twin = twin or [False] * len(cols)
+    ties = ties or [[] for _ in cols]
     # path: (cost, times, pending ends, scales, layout observations, layout cost so far)
     paths = [(0.0, (), (), (), (), 0.0)]
     group_seen = set()
@@ -180,7 +239,15 @@ def _search(cols, evs, gid, groups, est, L, beam, layout, accum, force=None, twi
                             cset[t] = P["off"] + (0.0 if (t * 2).denominator == 1 else (P["grid"] if (t * 4).denominator == 1 else 2 * P["grid"]))
                         t += GRID
                     cands = [(t, b + (P["twin"] if twin[ci] and t != Tp else 0.0)) for t, b in cset.items()]
+                    if ties[ci]:
+                        # a note tied from an earlier column starts where that note ends
+                        need = {times[j] + quarters(e, L) * sd.get(gid[e.id], Fraction(1)) for j, e in ties[ci]}
+                        cands = [(t, b + (0.0 if t in need else P["tie"])) for t, b in cands]
+                        have = {t for t, _ in cands}
+                        cands += [(t, 0.0) for t in need if t >= Tp and t < L and t not in have]
                 if force is not None and ci in force:
+                    if ci > 0 and force[ci] < Tp:
+                        continue                   # this path already went past the fixed onset
                     cands = [(force[ci], 0.0 if (force[ci] in pend or force[ci] == Tp or ci == 0) else P["off"])]
                 for T, base in cands:
                     if ci > 0 and T == Tp:
