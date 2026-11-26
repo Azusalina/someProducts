@@ -1,3 +1,4 @@
+import {applyLayout, normalizeLayout} from './core/layout.js';
 import { OfficeConverter } from './office/service.js';
 import { MediaJobs } from './media/jobs.js';
 import {pythonExecutable,nativeTool,resolveUserFile} from './platform/runtime.js';
@@ -37,6 +38,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
   publicFiles.set('/flowchart-render.js', ['flowchart-render.js', 'text/javascript']);
   publicFiles.set('/lib/mermaid.js', ['../.generated/mermaid.js', 'text/javascript']);
   publicFiles.set('/scribd.js', ['scribd.js', 'text/javascript']);
+  publicFiles.set('/layout-editor.js', ['layout-editor.js', 'text/javascript']);
   publicFiles.set('/page-preview.js', ['page-preview.js', 'text/javascript']);
   publicFiles.set('/theme.js', ['theme.js', 'text/javascript']);
   publicFiles.set('/office.js', ['office.js', 'text/javascript']);
@@ -215,6 +217,13 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
           return json(res,data);
         } finally {await rm(work,{recursive:true,force:true});}
       }
+      if (req.method === 'POST' && url.pathname === '/api/layout') {
+        if (!view.state?.layoutRevision || view.state.error || !view.baseHtml) throw new Error('Open a valid Markdown file to edit its layout.');
+        const layout = normalizeLayout(await body(req, 512 * 1024), view.state);
+        view.layout = layout;
+        view.state = {...view.state, html:applyLayout(view.baseHtml, layout), layout, layoutVersion:++view.layoutVersion};
+        return json(res, view.state);
+      }
       if (req.method === 'POST' && url.pathname === '/api/preview/pdf') {
         const options = await body(req);
         if (!['A4', 'Letter'].includes(options.paper)) throw new Error('Choose A4 or Letter paper.');
@@ -252,7 +261,7 @@ export async function createToolkit({ port = 4177, filename, interval = 300, bas
           ).then(values => values.every(Boolean));
           const snapshot = dependenciesFresh && !view.state.error && view.state.source === source
             ? view.state : await registry.forFile(target).render(source, { filename: target });
-          const buffer = snapshot.pdf ? Buffer.from(snapshot.pdf, 'base64') : await exportPdf(snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
+          const buffer = snapshot.pdf ? Buffer.from(snapshot.pdf, 'base64') : await exportPdf(snapshot.layoutRevision && view.layout?.revision === snapshot.layoutRevision ? applyLayout(snapshot.html, view.layout) : snapshot.html, style, { paper: options.paper, background, title: snapshot.title });
           const download = `${path.basename(target, path.extname(target))}.pdf`;
           res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="document.pdf"; filename*=UTF-8''${encodeURIComponent(download)}` });
           return res.end(buffer);

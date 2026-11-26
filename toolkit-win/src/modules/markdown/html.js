@@ -1,4 +1,5 @@
 import sanitizeHtml from 'sanitize-html';
+import {embedInlineSvg} from '../../core/svg.js';
 import {localImage} from '../../core/files.js';
 
 const color=/^(?:#[\da-f]{3,8}|[a-z]+|(?:rgb|hsl)a?\([\d\s.,%+\-/]+\))$/i;
@@ -73,7 +74,8 @@ function presentation(tagName,attrs){
 }
 
 
-export async function renderHtml(html,{filename,warnings,trustedImages=new Set()}) {
+export async function renderHtml(html,{filename,warnings,trustedImages=new Set(),dependencies}) {
+  html=embedInlineSvg(html,trustedImages,warnings);
   const sources=new Set();
   // Parse complete HTML, not individual inline tokens: tag pairs and tables can
   // span multiple Markdown tokens. This pass never reaches a browser.
@@ -83,7 +85,7 @@ export async function renderHtml(html,{filename,warnings,trustedImages=new Set()
   }}});
   const images=new Map();
   await Promise.all([...sources].map(async src=>{
-    try{images.set(src,trustedImages.has(src)?src:await localImage(src,filename));}
+    try{images.set(src,trustedImages.has(src)?src:await localImage(src,filename,{dependencies}));}
     catch(error){warnings.push(`Image “${src}”: ${error.code==='ENOENT'?'file not found':error.message}`);}
   }));
   return sanitizeHtml(cleaned,{...options,transformTags:{'*':presentation,a:anchor,input:checkbox,img:(_tag,attrs)=>{

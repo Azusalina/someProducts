@@ -62,7 +62,7 @@ $\htmlStyle{background:url(https://example.com)}{x}$
 <math><mi>FORGEDMATH</mi></math><svg><text>FORGEDSVG</text></svg>
 <script>window.HACKED=true</script>
 `);
- assert.doesNotMatch(html,/<a\b|<img\b|<script\b|FORGEDMATH|FORGEDSVG|HACKED|style="[^"]*url\(/);
+ assert.doesNotMatch(html,/<a\b|<img[^>]+src="(?:https?:|file:)|<script\b|FORGEDMATH|FORGEDSVG|HACKED|style="[^"]*url\(/);
 });
 
 test('math styles embed local WOFF2 fonts for offline preview and PDF export',async()=>{

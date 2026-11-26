@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="110" viewBox="0 0 480 110">
+  <title>Source to layout to PDF</title>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z"/></marker></defs>
+  <g fill="white" stroke="black"><rect x="5" y="25" width="120" height="60"/><rect x="180" y="25" width="120" height="60"/><rect x="355" y="25" width="120" height="60"/></g>
+  <g stroke="black" marker-end="url(#arrow)"><path d="M125 55H175"/><path d="M300 55H350"/></g>
+  <g font-family="sans-serif" font-size="19" text-anchor="middle"><text x="65" y="62">Source</text><text x="240" y="62">Layout</text><text x="415" y="62">PDF</text></g>
+</svg>

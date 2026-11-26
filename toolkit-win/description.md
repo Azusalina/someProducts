@@ -1196,3 +1196,77 @@ Verified locally: Linux 53/53 tests; Windows variant on Linux 60 passed and
 the existing Firefox HTML/PDF check passed. Both npm audits reported zero
 vulnerabilities. Linux renderer dependencies were updated within their declared
 compatible ranges, and the Node minimum is 22.12 to match the math CLI dependency.
+
+
+## Interactive content layout, SVG and heading references (2026-11-26)
+
+The Markdown preview has an Edit layout mode. Clicking a rendered block selects
+it and shows position, size, alignment, ordering and page controls. The selected
+item's Drag handle adjusts X/Y offsets in mm; Move up/down reorders its flow
+block. Text movement operates on paragraphs/headings/list blocks rather than
+individual characters. Images and tables expose Resize handles plus width as a
+percentage of their content area and optional height in mm. Image corner resizing
+changes width and normally retains its aspect ratio. Relative offsets do not
+reflow surrounding text; use ordering and Start new page for page membership.
+Source/Zen and paper-page view remain available; editing uses the HTML view and
+Done returns to paper view when that was active before editing.
+
+`src/core/layout.js` assigns renderer-owned content IDs after source sanitization,
+math restoration and heading-link resolution. It flattens/rebuilds generated
+heading groups, preserving automatic section keep-together behavior while
+splitting groups at manual page boundaries. Metadata includes nested image/table
+targets and their owning flow block. Only numeric offsets/sizes, alignment,
+boolean page flags and a complete unique permutation of known flow IDs are
+accepted by authenticated view-scoped `POST /api/layout`; arbitrary HTML/CSS is
+never accepted. Changes apply to a private original HTML snapshot, preventing
+style accumulation. Revision hashes include the source filename and exact
+Markdown content. A stale update returns 409; a Markdown save resets adjustments
+rather than applying old IDs to unrelated content. Referenced-image changes keep
+layout because the Markdown revision remains the same.
+
+Layout state lives only in the existing in-memory view. Reload/fork can inherit
+that view while it exists, and subsequent edits are isolated. No layout sidecar,
+source edit, disk preview or automatic output file is created. The page-mode
+cache includes layoutVersion; preview uses the adjusted current snapshot, while
+explicit export rereads saved Markdown and reapplies only a matching layout.
+Pending edits are flushed before export or leaving edit mode. Reset selected
+clears styling/page flags; Reset layout also restores the original order.
+
+`<!-- pagebreak -->`, `<!-- page-break -->`, `<!-- newpage -->` and `\newpage`
+on their own Markdown line create an explicit page boundary; code remains
+literal. Leading/repeated/trailing markers do not create empty pages. The
+continuous preview shows a small boundary marker; print output contains only the
+actual page break.
+
+SVG support covers relative `.svg` images, base64 SVG image URIs, HTML img tags,
+inline SVG and fenced svg blocks. `src/core/svg.js` reads one bounded SVG root,
+adds its XML namespaces, preserves viewBox/gradient/style/foreign-content data,
+and embeds it as a data-URL img. It is never inserted as an active SVG document,
+iframe or object. This uses browser SVG-image restrictions (scripts, interaction
+and external resources are disabled), preserving complex self-contained drawings
+without expanding the ordinary source-HTML allowlist. Relative image reads retain
+folder/symlink/size restrictions and are watched as dependencies. Existing Mermaid
+and KaTeX output keep their separate renderer-controlled paths. Unsupported SVG
+fences fall back to literal source with a warning. Self-contained SVG is needed
+for referenced raster images/fonts; external SVG resources are not fetched.
+
+`src/core/heading-links.js` resolves a hash matching a heading label to its exact
+ID while preserving already exact IDs and ordinary custom anchors. The outline
+copies ready-to-paste Markdown references, with a selectable-field fallback if
+clipboard access is blocked. The iframe handles local heading clicks directly.
+PDF.js page preview exposes PDF Link annotations as transparent focusable links;
+internal named/direct destinations resolve to the target page/position and
+external HTTP/mail links open with noopener. Focus is set without cancelling
+Chromium's smooth scroll. PDF exports retain native internal links.
+
+Primary reference: [SVG as an image (MDN)](https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_as_an_image).
+
+Validation: Linux 57/57 unit/integration tests; Windows variant on Linux 64 passed,
+2 native-only tests skipped. Both Chromium and Firefox layout/SVG browser checks
+passed real pointer movement and resizing, table dimensions, flow reordering,
+manual page membership, heading-link copying and PDF jumps, live SVG updates,
+view isolation, original-source preservation and mobile width. Existing math/page
+and HTML/PDF browser workflows also passed in both browsers. Poppler rendered all
+three edited PDF pages for visual review; SVG text/gradients, resized tables,
+positioned text and forced page starts were intact. Windows CI runs the new
+`tests/layout-svg.test.js` and `tests/layout-svg-browser.js --firefox` checks.

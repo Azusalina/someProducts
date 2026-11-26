@@ -1,5 +1,6 @@
 import {resolveUserFile} from '../platform/runtime.js';
 import path from 'node:path';
+import {applyLayout} from './layout.js';
 import { FileWatcher } from './watcher.js';
 import { readSource } from './files.js';
 
@@ -11,6 +12,8 @@ export class DocumentSession {
     this.generation = 0;
     this.rendering = Promise.resolve();
     this.exporting = false;
+    this.layout = state?.layout ?? null;
+    this.layoutVersion = state?.layoutVersion || 0;
   }
   sendState() {
     for (const client of this.clients) client.write(`data: ${JSON.stringify(this.state)}\n\n`);
@@ -36,7 +39,10 @@ export class DocumentSession {
           if (current !== this.generation || version !== revision) return;
           await this.watcher.setDependencies(result.dependencies);
           if (current !== this.generation || version !== revision) return;
-          this.state = { ...result, source, filename: target, module: module.id, updatedAt: new Date().toISOString(), error: null };
+          this.baseHtml = result.html;
+          if (this.layout?.revision !== result.layoutRevision) this.layout = null;
+          const html = result.layoutRevision ? applyLayout(result.html, this.layout) : result.html;
+          this.state = { ...result, html, layout:this.layout, layoutVersion:++this.layoutVersion, source, filename: target, module: module.id, updatedAt: new Date().toISOString(), error: null };
         } catch (error) {
           if (current !== this.generation || version !== revision) return;
           this.state = { ...(this.state?.filename === target ? this.state : {}), source, module: module.id, filename: target, error: `Rendering failed: ${error.message}` };

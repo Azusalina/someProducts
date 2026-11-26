@@ -170,3 +170,26 @@ background selectors also update this preview. Saved-file changes update the
 pages automatically. The switch stays local to the current page, works with
 Source/Zen, and starts off. Paged preview needs the same Edge/Chrome/Chromium
 installation as PDF export; continuous Markdown/math preview works without it.
+
+Use **Edit layout** to select a rendered text block, image or table. Its **Drag**
+handle moves it; **Move up / Move down** changes document order. X/Y are offsets
+in millimetres. Images and tables have a **Resize** handle and width (%) / height
+(mm) controls; image corner resizing keeps the natural aspect ratio unless a
+height was explicitly set. **Start new page** controls which content begins the
+next page; **Keep with next** avoids separating adjacent content. Click **Done**,
+then **Page breaks** to check the actual PDF pages, or **Export PDF** directly.
+**Reset selected** clears selected styling/page adjustments; **Reset layout**
+restores all adjustments and order. These changes stay in the current page's
+server memory and do not rewrite Markdown. Editing the saved Markdown resets
+layout adjustments; updating a referenced SVG/image keeps them.
+
+To put a persistent page boundary in your Markdown, place `<!-- pagebreak -->`
+(or `\newpage`) on its own line outside code. SVG can be a relative image
+(`![Diagram](drawing.svg)`), an HTML `<img>`, inline `<svg>...</svg>`, or a fenced
+`svg` block. SVG should be self-contained: embed images/fonts instead of linking
+external resources. See [examples/layout.md](examples/layout.md).
+
+Use `[Jump to subtitle](#subtitle)` for a heading reference. Each outline entry's
+**Copy link** button copies its exact Markdown link, including duplicate/CJK
+heading IDs. Links work in the continuous preview, paginated preview and the
+exported PDF. `#Subtitle` also resolves a matching heading label.

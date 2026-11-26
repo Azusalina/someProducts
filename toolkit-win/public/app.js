@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+import {LayoutEditor} from './layout-editor.js';
 import {PagePreview} from './page-preview.js';
 import { showTexPreview } from './tex-preview.js';
 const headers = { 'Content-Type': 'application/json' };
@@ -8,12 +9,41 @@ let streamError = '', actionError = '', info;
 let previousFilename;
 let zenMode = false, focusBeforeZen;
 let texPreviewUrl;
+let layoutEditing = false, layoutReturnPages = false, layoutPending, layoutTimer;
+let layoutSaving = Promise.resolve();
+const layoutEditor = new LayoutEditor($('preview'), value => {
+  layoutPending = value; clearTimeout(layoutTimer);
+  $('layout-status').textContent = 'Applying layout…';
+  layoutTimer = setTimeout(() => flushLayout().catch(error => { $('layout-status').textContent = error.message; }), 180);
+});
 const pages = new PagePreview($('markdown-pages'));
 let pageMode = false, pageKey = '', pageTimer, pageRequest, pageGeneration = 0, pageFilename, pageScroll = 0;
 
+async function flushLayout() {
+  clearTimeout(layoutTimer);
+  if (!layoutPending) return layoutSaving;
+  const value = layoutPending, page = viewId; layoutPending = null;
+  layoutSaving = layoutSaving.catch(() => {}).then(async () => {
+    const next = await (await api('/api/layout', {method:'POST', body:JSON.stringify(value)})).json();
+    if (page !== viewId || value.revision !== state?.layoutRevision || layoutPending) return;
+    draw(next); $('layout-status').textContent = 'Layout applied to this page.';
+  });
+  return layoutSaving;
+}
+async function finishLayout() {
+  await flushLayout(); layoutEditing = false;
+  if (layoutReturnPages) pageMode = true;
+  layoutEditor.setEnabled(false); schedulePages(); updateViews();
+}
+async function copyHeading(heading, button) {
+  const value = `[${heading.label.replace(/[\[\]\\]/g, '\\$&')}](#${encodeURIComponent(heading.id)})`;
+  try { await navigator.clipboard.writeText(value); button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy link'; }, 1200); }
+  catch { const field = $('heading-link-value'); field.hidden = false; field.value = value; field.focus(); field.select(); }
+}
+
 function schedulePages() {
   const enabled = pageMode && state?.module === 'markdown' && !state.error;
-  const key = enabled ? JSON.stringify([viewId, state.filename, state.updatedAt, $('paper').value, $('pdf-background').value]) : '';
+  const key = enabled ? JSON.stringify([viewId, state.filename, state.updatedAt, state.layoutVersion, $('paper').value, $('pdf-background').value]) : '';
   if (key === pageKey) return;
   pageKey = key;
   const generation = ++pageGeneration;
@@ -100,6 +130,12 @@ function updateViews() {
   if (tex || pageMode) $('preview').hidden = true;
   $('markdown-pages').hidden = !pageMode || tex || !state || state.html === undefined || showSource;
   $('page-breaks').hidden = tex;
+  $('edit-layout').hidden = tex;
+  $('edit-layout').disabled = !layoutEditing && (!state?.layoutRevision || Boolean(state.error));
+  $('edit-layout').setAttribute('aria-pressed', String(layoutEditing));
+  $('edit-layout').textContent = layoutEditing ? 'Done' : 'Edit layout';
+  $('layout-toolbar').hidden = !layoutEditing || tex || showSource || zenMode;
+  layoutEditor.setEnabled(layoutEditing && Boolean(state?.layoutRevision) && !showSource && !tex);
   $('page-breaks').disabled = !pageMode && (!state || tex || Boolean(state.error));
   $('page-breaks').setAttribute('aria-pressed', String(pageMode));
   $('tex-preview').hidden = !tex || !state?.pdf || showSource;
@@ -116,7 +152,9 @@ function updateViews() {
   $('zen-button').disabled = state?.html === undefined;
 }
 function draw(next) {
+  if (state?.layoutRevision !== next?.layoutRevision) { clearTimeout(layoutTimer); layoutPending = null; layoutSaving = Promise.resolve(); $('layout-status').textContent = ''; }
   state = next;
+  layoutEditor.setState(state);
   schedulePages();
   if (!state) { updateViews(); return; }
   if (previousFilename !== state.filename) {
@@ -148,6 +186,15 @@ function draw(next) {
   frame.dataset.filename = state.filename;
   frame.onload = () => {
     updatePreviewTheme();
+    layoutEditor.attach();
+    frame.contentDocument?.addEventListener('click', event => {
+      if (layoutEditing) return;
+      const link = event.target.closest?.('a[href^="#"]');
+      if (!link) return;
+      let id; try { id = decodeURIComponent(link.getAttribute('href').slice(1)); } catch { return; }
+      const target = frame.contentDocument.getElementById(id);
+      if (target) { event.preventDefault(); target.scrollIntoView({behavior:'smooth'}); }
+    });
     frame.contentWindow?.scrollTo(0, scroll);
     // Keyboard events inside a focused iframe do not bubble to the parent.
     // Reattach after each saved-file render without enabling preview scripts.
@@ -166,7 +213,10 @@ function draw(next) {
       if (pageMode && state?.module === 'markdown') pages.reveal(heading.label).catch(() => {});
       else frame.contentDocument?.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
     });
-    outline.append(link);
+    const row = document.createElement('div'); row.className = 'outline-item';
+    const copy = document.createElement('button'); copy.type = 'button'; copy.textContent = 'Copy link';
+    copy.setAttribute('aria-label', `Copy link to ${heading.label}`); copy.addEventListener('click', () => copyHeading(heading, copy));
+    row.append(link, copy); outline.append(row);
   }
   if (!outline.childElementCount) outline.textContent = 'No headings in this document.';
   document.title = `${state.title || 'Markdown'} · Local Toolkit`;
@@ -185,9 +235,21 @@ $('open-form').addEventListener('submit', event => { event.preventDefault(); ope
 $('example-button').addEventListener('click', () => openFile(info.examplePath));
 $('preview-tab').addEventListener('click', () => { sourceView = false; updateViews(); });
 $('source-tab').addEventListener('click', () => { sourceView = true; updateViews(); });
-$('page-breaks').addEventListener('click', () => { pageMode = !pageMode; schedulePages(); updateViews(); });
+$('edit-layout').addEventListener('click', async () => {
+  try {
+    if (layoutEditing) return await finishLayout();
+    layoutReturnPages = pageMode; pageMode = false; sourceView = false; layoutEditing = true;
+    schedulePages(); updateViews();
+  } catch (error) { $('layout-status').textContent = error.message; }
+});
+$('page-breaks').addEventListener('click', async () => {
+  try {
+    if (layoutEditing) { await flushLayout(); layoutEditing = false; layoutEditor.setEnabled(false); }
+    pageMode = !pageMode; schedulePages(); updateViews();
+  } catch (error) { actionError = error.message; message(); }
+});
 for (const id of ['paper', 'pdf-background']) $(id).addEventListener('change', schedulePages);
-$('zen-button').addEventListener('click', () => setZenMode(true));
+$('zen-button').addEventListener('click', async () => { try { if (layoutEditing) await finishLayout(); setZenMode(true); } catch (error) { actionError = error.message; message(); } });
 $('sidebar-toggle').addEventListener('click', () => {
   const collapsed = !$('sidebar').hidden;
   $('sidebar').hidden = collapsed;
@@ -203,6 +265,7 @@ $('export-button').addEventListener('click', async () => {
   exporting = true; actionError = ''; message(); updateViews();
   $('export-button').textContent = 'Exporting…';
   try {
+    await flushLayout();
     const response = await api('/api/export/pdf', { method: 'POST', body: JSON.stringify({ paper: $('paper').value, background: $('pdf-background').value }) });
     const url = URL.createObjectURL(await response.blob());
     const link = document.createElement('a');

@@ -22,6 +22,7 @@
   <aside class="sidebar" id="sidebar">
     <h2>Outline</h2>
     <nav id="outline" aria-label="Document outline"><p>No document open.</p></nav>
+    <input id="heading-link-value" aria-label="Markdown heading link" readonly hidden>
   </aside>
   <main>
     <header class="topbar"><div class="topbar-heading"><button id="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar">Hide sidebar</button><h1 id="tool-title">Markdown / TeX to PDF</h1></div><div class="topbar-actions"><span id="connection" role="status">Connecting…</span><button id="theme-toggle" type="button" aria-label="Switch to light mode">Light mode</button></div></header>
@@ -33,8 +34,23 @@
     </section>
     <div id="message" role="status" aria-live="polite" hidden></div>
     <section class="workspace" id="markdown-workspace">
-      <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><button id="page-breaks" type="button" aria-pressed="false" aria-controls="markdown-pages" title="Show paper pages and print margins" disabled>Page breaks</button><button id="zen-button" aria-pressed="false" aria-controls="preview" title="Show only the document. Press Esc to exit." disabled>Zen mode</button><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
+      <div class="preview-toolbar"><div class="view-tabs" role="group" aria-label="Document view"><button id="preview-tab" class="selected" aria-pressed="true">Preview</button><button id="source-tab" aria-pressed="false">Source</button></div><div class="export-controls"><button id="edit-layout" type="button" aria-pressed="false" aria-controls="layout-toolbar preview" disabled>Edit layout</button><button id="page-breaks" type="button" aria-pressed="false" aria-controls="markdown-pages" title="Show paper pages and print margins" disabled>Page breaks</button><button id="zen-button" aria-pressed="false" aria-controls="preview" title="Show only the document. Press Esc to exit." disabled>Zen mode</button><label for="paper" class="sr-only">Paper size</label><select id="paper"><option>A4</option><option>Letter</option></select><label for="pdf-background" class="sr-only">PDF background</label><select id="pdf-background" title="PDF background"><option value="white">White paper</option><option value="yellow">Yellow paper</option><option value="black">Black paper</option></select><button id="export-button" disabled>Export PDF</button></div></div>
       <div class="document-meta"><span id="filename">No file open</span><span id="updated">Waiting for your document</span></div>
+      <section id="layout-toolbar" aria-label="Content layout editor" hidden>
+        <p id="layout-selection">Select text, an image or a table.</p>
+        <fieldset id="layout-fields" disabled>
+          <button id="layout-up" type="button">Move up</button><button id="layout-down" type="button">Move down</button>
+          <label>X (mm)<input id="layout-x" type="number" step="0.1" min="-180" max="180" value="0"></label>
+          <label>Y (mm)<input id="layout-y" type="number" step="0.1" min="-250" max="250" value="0"></label>
+          <label>Width (%)<input id="layout-width" type="number" step="1" min="5" max="100" placeholder="Auto"></label>
+          <label>Height (mm)<input id="layout-height" type="number" step="0.1" min="1" max="300" placeholder="Auto"></label>
+          <label>Align<select id="layout-align"><option value="">Original</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+          <label><input id="layout-pageBefore" type="checkbox">Start new page</label>
+          <label><input id="layout-keepNext" type="checkbox">Keep with next</label>
+          <button id="layout-reset-item" type="button">Reset selected</button>
+        </fieldset>
+        <div class="layout-footer"><button id="layout-reset-all" type="button">Reset layout</button><span id="layout-status" role="status" aria-live="polite"></span></div>
+      </section>
       <div class="preview-area" id="preview-area">
         <div class="empty-state" id="empty"><p>Open a Markdown or TeX file to preview it.</p><button id="example-button">Open example</button></div>
         <iframe id="preview" title="Formatted Markdown preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" hidden></iframe>

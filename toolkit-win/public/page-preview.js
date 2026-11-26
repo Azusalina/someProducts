@@ -89,12 +89,44 @@ export class PagePreview {
       const task = item.task = page.render({canvasContext:canvas.getContext('2d'), viewport, transform:[ratio,0,0,ratio,0,0]});
       await task.promise;
       if (version !== this.version || paintVersion !== item.version) return;
-      item.holder.replaceChildren(canvas); item.figure.dataset.rendered = 'true'; item.task = null;
+      const links = await this.links(page, viewport, document);
+      if (version !== this.version || paintVersion !== item.version) return;
+      item.holder.replaceChildren(canvas, ...links); item.figure.dataset.rendered = 'true'; item.task = null;
     } catch (error) {
       if (version !== this.version || paintVersion !== item.version || error.name === 'RenderingCancelledException') return;
       item.task = null;
       item.holder.textContent = `Page ${item.number}: ${error.message}`;
     }
+  }
+  async links(page, viewport, document) {
+    const links = [];
+    for (const annotation of await page.getAnnotations({intent:'display'})) {
+      if (annotation.subtype !== 'Link' || !annotation.rect || (!annotation.dest && !/^(https?:|mailto:)/i.test(annotation.url || ''))) continue;
+      const link = window.document.createElement('a'); link.className = 'pdf-page-link';
+      const rect = [...viewport.convertToViewportPoint(annotation.rect[0], annotation.rect[1]), ...viewport.convertToViewportPoint(annotation.rect[2], annotation.rect[3])];
+      Object.assign(link.style, {left:`${Math.min(rect[0],rect[2]) / viewport.width * 100}%`, top:`${Math.min(rect[1],rect[3]) / viewport.height * 100}%`,
+        width:`${Math.abs(rect[2]-rect[0]) / viewport.width * 100}%`, height:`${Math.abs(rect[3]-rect[1]) / viewport.height * 100}%`});
+      if (annotation.dest) {
+        link.href = '#referenced-section'; link.setAttribute('aria-label','Jump to referenced section');
+        link.addEventListener('click', event => { event.preventDefault(); this.destination(annotation.dest, document).catch(() => {}); });
+      } else { link.href = annotation.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.setAttribute('aria-label',annotation.url); }
+      links.push(link);
+    }
+    return links;
+  }
+  async destination(destination, document = this.document) {
+    if (!document || document !== this.document) return;
+    const resolved = typeof destination === 'string' ? await document.getDestination(destination) : destination;
+    if (!Array.isArray(resolved)) return;
+    const index = typeof resolved[0] === 'number' ? resolved[0] : await document.getPageIndex(resolved[0]);
+    if (document !== this.document) return;
+    const item = this.items[index]; if (!item) return;
+    const page = await document.getPage(index + 1), viewport = page.getViewport({scale:1});
+    let offset = 0;
+    if (resolved[1]?.name === 'XYZ' && typeof resolved[3] === 'number') offset = viewport.convertToViewportPoint(0,resolved[3])[1] / viewport.height * item.holder.clientHeight;
+    if (document !== this.document) return;
+    this.element.focus({preventScroll:true});
+    this.element.scrollTo({top:this.element.scrollTop + item.figure.getBoundingClientRect().top - this.element.getBoundingClientRect().top + offset - 12, behavior:'smooth'});
   }
   async reveal(label) {
     const document = this.document;
@@ -105,8 +137,9 @@ export class PagePreview {
       const text = await page.getTextContent();
       if (document !== this.document) return;
       if (normalize(text.items.map(part => part.str || '').join(' ')).includes(normalize(label))) {
+        this.element.focus({preventScroll:true});
         this.element.scrollTo({top:this.element.scrollTop + item.figure.getBoundingClientRect().top - this.element.getBoundingClientRect().top - 12, behavior:'smooth'});
-        this.element.focus(); return;
+        return;
       }
     }
   }

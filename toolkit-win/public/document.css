@@ -4,3 +4,7 @@
 .mermaid-diagram{margin:20px 0;break-inside:avoid}.mermaid-diagram img{max-width:100%;height:auto;filter:grayscale(1)}.document-theme-black .mermaid-diagram img{filter:grayscale(1) invert(1)}
 
 .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0;break-inside:avoid}.katex{font-size:1.1em}.katex .base{white-space:nowrap}.math-error{white-space:pre-wrap}@media print{.katex-display{overflow:visible}}
+
+.svg-diagram{margin:20px 0;break-inside:avoid}.svg-diagram img,.svg-image{max-width:100%;height:auto}
+@media screen{.manual-page-start{display:block;border-top:1px dashed currentColor;margin-top:24px;padding-top:12px}.manual-page-start::before{content:"Page break";display:block;font:11px system-ui;opacity:.6;margin-bottom:12px}}
+@media print{.manual-page-start,.toolkit-page-break{break-before:page}.toolkit-page-break{height:0;margin:0;padding:0}}

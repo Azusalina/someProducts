@@ -218,3 +218,17 @@ a{color:var(--emphasis)}
 .paper-sheet canvas{display:block;width:100%;height:auto}
 .paper-page figcaption{text-align:center;font-size:12px;color:var(--muted);padding-top:8px}
 .zen-mode #markdown-pages{height:100vh;min-height:0}
+
+#layout-toolbar{padding:12px;border-bottom:1px solid var(--separator)}
+#layout-selection{font-size:12px;margin:0 0 10px;overflow-wrap:anywhere}
+#layout-fields{display:flex;flex-wrap:wrap;align-items:end;gap:10px;border:0;margin:0;padding:0;min-width:0}
+#layout-fields label{display:flex;align-items:center;gap:5px;font-size:12px}
+#layout-fields input[type=number]{width:80px;padding:6px}
+.layout-footer{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px;color:var(--muted)}
+#edit-layout[aria-pressed="true"]{background:var(--edge);border-color:var(--emphasis)}
+.zen-mode #layout-toolbar{display:none}
+.outline-item{display:flex;align-items:center;gap:4px}.outline-item a{flex:1;min-width:0}.outline-item button{padding:3px 5px;font-size:10px}
+#heading-link-value{width:100%;font-size:11px}
+.paper-sheet{position:relative}.pdf-page-link{position:absolute;display:block;background:transparent}.pdf-page-link:focus-visible{outline:2px solid #777;outline-offset:1px}
+
+#layout-fields input[type=checkbox]{accent-color:var(--emphasis)}

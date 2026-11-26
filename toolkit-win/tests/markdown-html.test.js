@@ -26,7 +26,7 @@ test('Markdown table cells and standalone HTML render rich content with safe inl
   assert.match(html,/<td>First<br\s*\/>Second<br\s*\/>Third<\/td>/);
   assert.match(html,/<td>Chemistry<\/td>[\s\S]*H<sub>2<\/sub>O \/ x<sup>2<\/sup>/);
   assert.match(html,/<span style="color:#b00020;font-weight:bold">Styled cell<\/span>/);
-  assert.match(html,/<div style="text-align:center;background-color:rgb\(240, 240, 240\);padding:8px">/);
+  assert.match(html,/<div style="text-align:center;background-color:rgb\(240, 240, 240\);padding:8px"[^>]*>/);
   assert.match(html,/<strong>Outside block<\/strong>/);assert.match(html,/<ul><li>HTML list<\/li><\/ul>/);
   assert.match(html,/<td[^>]+rowspan="2"[^>]+style="[^"]*text-align:center[^"]*vertical-align:middle[^"]*width:40%/);
   assert.match(html,/&lt;span&gt;inline code&lt;\/span&gt;/);
@@ -63,7 +63,7 @@ test('HTML strips executable elements, network resources, dangerous CSS and even
     '<a href="https://example.com/read" target="_parent" ping="https://example.com/log">Read</a>',
     '<a href="#a-formatted-title" target="_top">Jump</a>', '', '- [x] Markdown task',
   ].join('\n'),{filename});
-  assert.match(html,/<div style="color:red">Visible<\/div>/);
+  assert.match(html,/<div style="color:red"[^>]*>Visible<\/div>/);
   assert.doesNotMatch(html,/<(?:script|style|iframe|object|svg|meta|form|button)\b|HACKED|Frame content|Object content|onclick=|onfocus=|autofocus|javascript:|file:\/\/|background-image|position:|expression\(|ping=|target="_top"|target="_parent"/);
   assert.match(html,/<a href="https:\/\/example.com\/read" target="_blank" rel="noopener noreferrer">Read<\/a>/);
   assert.match(html,/<a href="#a-formatted-title">Jump<\/a>/);

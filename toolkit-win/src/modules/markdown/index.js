@@ -1,3 +1,6 @@
+import {annotateLayout} from '../../core/layout.js';
+import {svgImage} from '../../core/svg.js';
+import {resolveHeadingLinks} from '../../core/heading-links.js';
 import MarkdownIt from 'markdown-it';
 import {tex} from '@mdit/plugin-tex';
 import {renderMath, restoreMath} from './math.js';
@@ -13,6 +16,14 @@ const md = new MarkdownIt({
       ? hljs.highlight(code, { language, ignoreIllegals: true }).value : '';
   }
 }).use(taskLists).use(tex, {delimiters:'all', mathFence:true, render:renderMath});
+md.block.ruler.before('html_block', 'page_break', (state, start, end, silent) => {
+  const line = state.src.slice(state.bMarks[start] + state.tShift[start], state.eMarks[start]).trim();
+  if (!/^(?:<!--\s*(?:pagebreak|page-break|newpage)\s*-->|\\newpage)$/i.test(line)) return false;
+  if (silent) return true;
+  const token = state.push('page_break', '', 0); token.block = true; token.map = [start, start + 1];
+  state.line = start + 1; return true;
+}, {alt:['paragraph','reference','blockquote','list']});
+md.renderer.rules.page_break = () => '<div class="toolkit-page-break"></div>\n';
 const defaultLink = md.renderer.rules.link_open;
 md.renderer.rules.link_open = (tokens, index, options, env, self) => {
   const href = tokens[index].attrGet('href');
@@ -25,6 +36,8 @@ md.renderer.rules.link_open = (tokens, index, options, env, self) => {
   }
   return defaultLink ? defaultLink(tokens, index, options, env, self) : self.renderToken(tokens, index, options);
 };
+const defaultValidateLink = md.validateLink;
+md.validateLink = value => /^data:image\/svg\+xml;base64,[a-z0-9+/=]+$/i.test(value) || defaultValidateLink(value);
 const defaultImage = md.renderer.rules.image;
 md.renderer.rules.image = (tokens, index, options, env, self) => {
   if (!tokens[index].attrGet('src')) return `<span class="missing-image">[Image: ${md.utils.escapeHtml(tokens[index].content)}]</span>`;
@@ -33,6 +46,12 @@ md.renderer.rules.image = (tokens, index, options, env, self) => {
 const defaultFence = md.renderer.rules.fence;
 md.renderer.rules.fence = (tokens, index, options, env, self) => {
   const token = tokens[index];
+  if (token.info.trim().toLowerCase() === 'svg') {
+    try {
+      const data = svgImage(token.content); env.trustedImages.add(data);
+      return `<figure class="svg-diagram"><img src="${data}" alt="SVG drawing"></figure>\n`;
+    } catch (error) { env.warnings.push(`SVG: ${error.message} Source is shown instead.`); }
+  }
   if (!token.mermaidSvg) return defaultFence(tokens, index, options, env, self);
   const data = `data:image/svg+xml;base64,${Buffer.from(token.mermaidSvg).toString('base64')}`;
   env.trustedImages.add(data);
@@ -61,7 +80,7 @@ function renderSections(tokens, env) {
 export const markdownModule = {
   id: 'markdown', name: 'Markdown', extensions: ['.md', '.markdown'], outputs: ['pdf'],
   async render(source, { filename }) {
-    const env = { trustedImages: new Set(), math: new Map(), warnings: [] };
+    const env = { trustedImages: new Set(), math: new Map(), warnings: [], dependencies: new Set() };
     const tokens = md.parse(source, env);
     const outline = [], warnings = env.warnings, counts = new Map();
     const diagrams = [];
@@ -88,8 +107,8 @@ export const markdownModule = {
       if (result.svg) diagrams[index].mermaidSvg = result.svg;
       else warnings.push(`Mermaid diagram ${index + 1}: ${result.error} Source is shown instead.`);
     }
-    const cleaned = await renderHtml(renderSections(tokens, env), { filename, warnings, trustedImages: env.trustedImages });
-    const html = restoreMath(cleaned, env);
-    return { html, outline, warnings, title: outline[0]?.label || 'Untitled document' };
+    const cleaned = await renderHtml(renderSections(tokens, env), { filename, warnings, trustedImages: env.trustedImages, dependencies:env.dependencies });
+    const result = annotateLayout(resolveHeadingLinks(restoreMath(cleaned, env), outline), filename, source);
+    return { ...result, dependencies:[...env.dependencies], outline, warnings, title: outline[0]?.label || 'Untitled document' };
   }
 };
