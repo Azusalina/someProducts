@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,readFile,readdir,rm} from 'node:fs/promises';import path from 'node:path';import {tmpdir} from 'node:os';
+import {mkdtemp,writeFile,readFile,readdir,realpath,rm} from 'node:fs/promises';import path from 'node:path';import {tmpdir} from 'node:os';
 import {parseDocument} from 'htmlparser2';import {findAll} from 'domutils';
 import {markdownModule} from '../src/modules/markdown/index.js';import {applyLayout,normalizeLayout} from '../src/core/layout.js';
 import {createToolkit} from '../src/server.js';
@@ -12,7 +12,7 @@ test('SVG paths, HTML, inline SVG and SVG fences become self-contained images wi
  const result=await markdownModule.render(`![Local](drawing.svg)\n\n<img src="drawing.svg" width="60">\n\n${svg}\n\n~~~svg\n${svg}\n~~~`,{filename});
  const images=findAll(node=>node.name==='img',parseDocument(result.html).children);assert.equal(images.length,4);
  for(const image of images){assert.match(image.attribs.src,/^data:image\/svg\+xml;base64,/);const xml=Buffer.from(image.attribs.src.split(',')[1],'base64').toString();assert.match(xml,/viewBox=/);assert.match(xml,/<linearGradient/);assert.match(xml,/xmlns="http:\/\/www.w3.org\/2000\/svg"/);}
- assert.deepEqual(result.dependencies,[path.join(folder,'drawing.svg')]);assert.deepEqual(result.warnings,[]);
+ assert.deepEqual(result.dependencies,[await realpath(path.join(folder,'drawing.svg'))]);assert.deepEqual(result.warnings,[]);
 });
 
 test('manual page markers split heading groups while code stays literal and heading references resolve',async t=>{
